@@ -33,7 +33,7 @@ export class RepositoryClient {
     private _nodePort = (typeof process !== "undefined" && process.env.NODE_PORT) || 3005
     private _SERVER_IP = (typeof process !== "undefined" && process.env.REPO_IP) || "http://127.0.0.1"
     private _SERVER_URL = `${this._SERVER_IP}:${this._nodePort}/`
-    private TIMEOUT = typeof process !== "undefined" ? Number.parseInt(process.env.TIMEOUT) || 20000 : 20000;
+    private DEFAULT_TIMEOUT = typeof process !== "undefined" ? Number.parseInt(process.env.TIMEOUT) || 20000 : 20000;
 
     loggingOn = false
     logMessage(logMessage: string): string {
@@ -49,9 +49,10 @@ export class RepositoryClient {
 
     /**
      * The name of the repository used for all Api calls
-     */        
+     */
     repository: string | null = "default"
-    
+    timeout: number = this.DEFAULT_TIMEOUT;
+
     // The different API's that the repository provides
     dbAdmin: DbAdminApi
     bulk: BulkApi
@@ -65,7 +66,7 @@ export class RepositoryClient {
      * @param repository we may want to pass a null repository if we are interested only in using the APIs that list,
      * create, or delete repositories and do not operate on a specific repository.
      */
-    constructor(clientId: string, repository: string | null = "default") {
+    constructor(clientId: string, repository: string | null = "default", timeout: number | null = null) {
         this.clientId = clientId
         this.repository = repository
         this.dbAdmin = new DbAdminApi(this)
@@ -74,6 +75,7 @@ export class RepositoryClient {
         this.history = new HistoryApi(this)
         this.inspection = new InspectionApi(this)
         this.languages = new LanguagesApi(this)
+        this.timeout = timeout || this.DEFAULT_TIMEOUT;
     }
 
     withClientId(id: string): RepositoryClient {
@@ -96,7 +98,7 @@ export class RepositoryClient {
         const params = this.findParams(parameters.params)
         try {
             const controller = new AbortController()
-            const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT)
+            const timeoutId = setTimeout(() => controller.abort(), this.timeout)
             this.log("getWithTimeout: " + `${this._SERVER_URL}${method}${params}`)
             const promise = await fetch(`${this._SERVER_URL}${method}${params}`, {
                 signal: controller.signal,
@@ -118,7 +120,7 @@ export class RepositoryClient {
         const allParams = this.findParams(parameters.params)
         try {
             const controller = new AbortController()
-            const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT)
+            const timeoutId = setTimeout(() => controller.abort(), this.timeout)
             this.log("postWithTimeout: " + `${this._SERVER_URL}${method}${allParams}`)
             const promise: Response = await fetch(`${this._SERVER_URL}${method}${allParams}`, {
                 signal: controller.signal,
@@ -148,7 +150,7 @@ export class RepositoryClient {
     private async putWithTimeout(method: string, data: unknown, params?: string) {
         params = this.findParams(params)
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT)
+        const timeoutId = setTimeout(() => controller.abort(), this.timeout)
         this.log("putWithTimeout: " + `${this._SERVER_URL}${method}${params}`)
         let response
         try {

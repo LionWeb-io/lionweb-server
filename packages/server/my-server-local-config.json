@@ -1,0 +1,28 @@
+{
+    "server": {
+        "serverPort": 3005,
+        "expectedToken": null,
+        "bodyLimit": "500mb"
+    },
+    "startup": {
+        "createDatabase": "if-not-exists"
+    },
+    "logging": {
+        "request": "info",
+        "database": "silent",
+        "express": "silent"
+    },
+    "postgres": {
+        "database": {
+            "host": "localhost",
+            "user": "postgres",
+            "db": "lionweb_test",
+            "password": "lionweb",
+            "port": "5432"
+        },
+        "certificates": {
+            "rootcert": null,
+            "rootcertcontent": null
+        }
+    }
+}
