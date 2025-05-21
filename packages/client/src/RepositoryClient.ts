@@ -30,10 +30,10 @@ export function getVersionFromResponse(response: ClientResponse<LionwebResponse>
  */
 export class RepositoryClient {
     // Server parameters
-    private _nodePort = (typeof process !== "undefined" && process.env.NODE_PORT) || 3005
-    private _SERVER_IP = (typeof process !== "undefined" && process.env.REPO_IP) || "http://127.0.0.1"
-    private _SERVER_URL = `${this._SERVER_IP}:${this._nodePort}/`
-    private DEFAULT_TIMEOUT = typeof process !== "undefined" ? Number.parseInt(process.env.TIMEOUT) || 20000 : 20000;
+    private _DEFAULT_NODE_PORT = (typeof process !== "undefined" && process.env.NODE_PORT) || 3005
+    private _DEFAULT_SERVER_IP = (typeof process !== "undefined" && process.env.REPO_IP) || "http://127.0.0.1"
+    private _DEFAULT_SERVER_URL = `${this._DEFAULT_SERVER_IP}:${this._DEFAULT_NODE_PORT}/`
+    private _DEFAULT_TIMEOUT = typeof process !== "undefined" ? Number.parseInt(process.env.TIMEOUT) || 20000 : 20000;
 
     loggingOn = false
     logMessage(logMessage: string): string {
@@ -51,7 +51,8 @@ export class RepositoryClient {
      * The name of the repository used for all Api calls
      */
     repository: string | null = "default"
-    timeout: number = this.DEFAULT_TIMEOUT;
+    timeout: number = this._DEFAULT_TIMEOUT;
+    serverUrl : string = this._DEFAULT_SERVER_URL;
 
     // The different API's that the repository provides
     dbAdmin: DbAdminApi
@@ -66,7 +67,7 @@ export class RepositoryClient {
      * @param repository we may want to pass a null repository if we are interested only in using the APIs that list,
      * create, or delete repositories and do not operate on a specific repository.
      */
-    constructor(clientId: string, repository: string | null = "default", timeout: number | null = null) {
+    constructor(clientId: string, repository: string | null = "default") {
         this.clientId = clientId
         this.repository = repository
         this.dbAdmin = new DbAdminApi(this)
@@ -75,7 +76,6 @@ export class RepositoryClient {
         this.history = new HistoryApi(this)
         this.inspection = new InspectionApi(this)
         this.languages = new LanguagesApi(this)
-        this.timeout = timeout || this.DEFAULT_TIMEOUT;
     }
 
     withClientId(id: string): RepositoryClient {
@@ -99,8 +99,8 @@ export class RepositoryClient {
         try {
             const controller = new AbortController()
             const timeoutId = setTimeout(() => controller.abort(), this.timeout)
-            this.log("getWithTimeout: " + `${this._SERVER_URL}${method}${params}`)
-            const promise = await fetch(`${this._SERVER_URL}${method}${params}`, {
+            this.log("getWithTimeout: " + `${this.serverUrl}${method}${params}`)
+            const promise = await fetch(`${this.serverUrl}${method}${params}`, {
                 signal: controller.signal,
                 method: "get",
                 headers: {
@@ -121,8 +121,8 @@ export class RepositoryClient {
         try {
             const controller = new AbortController()
             const timeoutId = setTimeout(() => controller.abort(), this.timeout)
-            this.log("postWithTimeout: " + `${this._SERVER_URL}${method}${allParams}`)
-            const promise: Response = await fetch(`${this._SERVER_URL}${method}${allParams}`, {
+            this.log("postWithTimeout: " + `${this.serverUrl}${method}${allParams}`)
+            const promise: Response = await fetch(`${this.serverUrl}${method}${allParams}`, {
                 signal: controller.signal,
                 method: "post",
                 headers: parameters.headers || {
@@ -151,10 +151,10 @@ export class RepositoryClient {
         params = this.findParams(params)
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), this.timeout)
-        this.log("putWithTimeout: " + `${this._SERVER_URL}${method}${params}`)
+        this.log("putWithTimeout: " + `${this.serverUrl}${method}${params}`)
         let response
         try {
-            response = await fetch(`${this._SERVER_URL}${method}${params}`, {
+            response = await fetch(`${this.serverUrl}${method}${params}`, {
                 signal: controller.signal,
                 method: "put",
                 headers: {
@@ -190,7 +190,7 @@ export class RepositoryClient {
     private handleError(e: Error, method: string = null): void {
         let errorMess: string = e.message
         if (e.message.includes("aborted")) {
-            errorMess = `Time out: no response from ${this._SERVER_URL}.`
+            errorMess = `Time out: no response from ${this.serverUrl}.`
             console.error(errorMess)
         }
         if (method == null) {
