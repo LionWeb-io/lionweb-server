@@ -116,7 +116,7 @@ export class RepositoryClient {
         return null
     }
 
-    async postWithTimeout(method: string, parameters: { body: unknown; params: string }): Promise<ClientResponse<LionwebResponse>> {
+    async postWithTimeout(method: string, parameters: { body: unknown; params: string, headers? : Record<string, string>}): Promise<ClientResponse<LionwebResponse>> {
         const allParams = this.findParams(parameters.params)
         try {
             const controller = new AbortController()
@@ -125,7 +125,7 @@ export class RepositoryClient {
             const promise: Response = await fetch(`${this._SERVER_URL}${method}${allParams}`, {
                 signal: controller.signal,
                 method: "post",
-                headers: {
+                headers: parameters.headers || {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(parameters.body)

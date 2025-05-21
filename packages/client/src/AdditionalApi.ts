@@ -23,10 +23,31 @@ export class AdditionalApi {
     async bulkImport(bulkImport: BulkImport, transferFormat: TransferFormat, compress: boolean) : Promise<ClientResponse<LionwebResponse>> {
         this.client.log(`AdditionalApi.store transferFormat=${transferFormat}, compress=${compress}`)
         if (transferFormat == TransferFormat.JSON) {
+            let body: BodyInit;
+            let headers: Record<string, string> = {};
+
+            const json = JSON.stringify(bulkImport);
             if (compress) {
-                throw new Error("Not yet supported")
+
+                const stream = new CompressionStream('gzip');
+                const compressedStream = new Blob([json]).stream().pipeThrough(stream);
+                body = await new Response(compressedStream).arrayBuffer();
+                headers = {
+                    'Content-Type': 'application/json',
+                    'Content-Encoding': 'gzip',
+                };
+            } else {
+                body = json;
+                headers = {
+                    'Content-Type': 'application/json',
+                };
             }
-            return await this.client.postWithTimeout(`additional/bulkImport`, { body: bulkImport, params: "" })
+
+            return await this.client.postWithTimeout(`additional/bulkImport`, {
+                body,
+                params: "",
+                headers
+            });
         } else {
             throw new Error("Not yet supported")
         }
