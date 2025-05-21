@@ -26,18 +26,14 @@ export class AdditionalApi {
             let body: BodyInit;
             let headers: Record<string, string> = {};
 
-            const json = JSON.stringify(bulkImport);
             if (compress) {
-
-                const stream = new CompressionStream('gzip');
-                const compressedStream = new Blob([json]).stream().pipeThrough(stream);
-                body = compressedStream;
+                body = await compressJSON(bulkImport);
                 headers = {
                     'Content-Type': 'application/json',
                     'Content-Encoding': 'gzip',
                 };
             } else {
-                body = json;
+                body = JSON.stringify(bulkImport);
                 headers = {
                     'Content-Type': 'application/json',
                 };
@@ -51,5 +47,31 @@ export class AdditionalApi {
         } else {
             throw new Error("Not yet supported")
         }
+    }
+}
+
+function isNode(): boolean {
+    return typeof process !== "undefined" &&
+        process.versions != null &&
+        process.versions.node != null;
+}
+
+async function compressJSON(input: object): Promise<BodyInit> {
+    const json = JSON.stringify(input);
+
+    if (isNode()) {
+        // Node.js: use CompressionStream (Node >= 18) + bridge
+        const stream = new CompressionStream("gzip");
+        const readableWebStream = new Blob([json]).stream().pipeThrough(stream);
+
+        // Convert to Node.js Readable
+        const nodeStream = require("stream").Readable.from(
+            readableWebStream as any  // only works in Node ≥18.17+
+        );
+        return nodeStream;
+    } else {
+        // Browser: just return the native web stream
+        const stream = new CompressionStream("gzip");
+        return new Blob([json]).stream().pipeThrough(stream);
     }
 }
