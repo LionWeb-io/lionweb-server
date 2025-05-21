@@ -31,7 +31,7 @@ export class AdditionalApi {
 
                 const stream = new CompressionStream('gzip');
                 const compressedStream = new Blob([json]).stream().pipeThrough(stream);
-                body = await new Response(compressedStream).arrayBuffer();
+                body = compressedStream;
                 headers = {
                     'Content-Type': 'application/json',
                     'Content-Encoding': 'gzip',
