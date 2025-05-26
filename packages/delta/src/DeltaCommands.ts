@@ -28,6 +28,7 @@ export type AddPropertyCommand = ICommand & {
  * Delete existing `property` with oldValue from `node`.
  */
 export type DeletePropertyCommand = ICommand & {
+    kind: CommandKind 
     node: LionWebId
     property: LionWebJsonMetaPointer
 }

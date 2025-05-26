@@ -1,5 +1,4 @@
-import { JsonContext } from "@lionweb/json-utils"
-import { ValidationResult, SyntaxValidator, TypeDefinition } from "@lionweb/validation"
+import { ValidationResult, SyntaxValidator } from "@lionweb/validation"
 import { commandMap } from "./CommandDefinitions.js"
 import { CommandKind } from "./DeltaCommands.js"
 

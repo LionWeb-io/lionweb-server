@@ -1,5 +1,5 @@
 import { JsonContext } from "@lionweb/json-utils"
-import { TypeDefinition, PrimitiveDef, expectedTypes, PropertyDef, PropertyDefinition, ValidationResult } from "@lionweb/validation"
+import { TypeDefinition, PrimitiveDef, PropertyDef, PropertyDefinition, ValidationResult, expectedTypes } from "@lionweb/validation"
 
 // Make boolean argument more readable.
 export const MAY_BE_NULL = true
@@ -14,27 +14,47 @@ const ProtocolMessageProperty: PropertyDefinition = PropertyDef({
 })
 // const ResponseMessage: PropertyDefinition = { property: "protocolMessage", expectedType: "ResponseMessage", mayBeNull: MAY_BE_NULL }
 
+/**
+ * No-op validation function used as default value.
+ * @param object Object to validate.
+ * @param result Object where issues should be stored.
+ * @param ctx    The JsonContext, to be used for issue location.
+ * @param pdef   The property definitions
+ */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function emptyValidation<T>(object: T, result: ValidationResult, ctx: JsonContext, pdef?: PropertyDefinition): void {}
 
 export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefinition>([
-    ["AddPartition", [PropertyDef({ property: "newPartition", expectedType: "LionWebChunk" }), CommandKindProperty, ProtocolMessageProperty]],
-    ["DeletePartition", [PropertyDef({ property: "deletedPartition", expectedType: "LionWebId" }), CommandKindProperty, ProtocolMessageProperty]],
+    [
+        "LionWebJsonDeltaChunk",
+        [
+            PropertyDef({ property: "nodes", expectedType: "LionWebJsonNode", isList: true }),
+        ],
+    ],
+
+    ["AddPartition", [PropertyDef({ property: "newPartition", expectedType: "LionWebJsonDeltaChunk" }), CommandKindProperty, ProtocolMessageProperty]],
+    ["DeletePartition",
+        [
+            PropertyDef({ property: "deletedPartition", expectedType: "LionWebId" }),
+            CommandKindProperty,
+            ProtocolMessageProperty
+        ]]
+    ,
     [
         "ChangeClassifier",
         [
             PropertyDef({ property: "node", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newClassifier", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "newClassifier", expectedType: "LionWebJsonMetaPointer" }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "addProperty",
+        "AddProperty",
         [
-            PropertyDef({ property: "node", expectedType: "LionWebId", validate: emptyValidation }),
-            PropertyDef({ property: "property", expectedType: "LionWebMetaPointer", validate: emptyValidation }),
-            PropertyDef({ property: "newValue", expectedType: "string", validate: emptyValidation }),
+            PropertyDef({ property: "node", expectedType: "LionWebId"}),
+            PropertyDef({ property: "property", expectedType: "LionWebJsonMetaPointer" }),
+            PropertyDef({ property: "newValue", expectedType: "string" }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
@@ -43,7 +63,7 @@ export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefin
         "DeleteProperty",
         [
             PropertyDef({ property: "node", expectedType: "LionWebId" }),
-            PropertyDef({ property: "property", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "property", expectedType: "LionWebJsonMetaPointer" }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
@@ -52,7 +72,7 @@ export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefin
         "ChangeProperty",
         [
             PropertyDef({ property: "node", expectedType: "LionWebId" }),
-            PropertyDef({ property: "property", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "property", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "newValue", expectedType: "string" }),
             CommandKindProperty,
             ProtocolMessageProperty,
@@ -62,8 +82,8 @@ export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefin
         "AddChild",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newChild", expectedType: "LionWebChunk" }),
-            PropertyDef({ property: "containment", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "newChild", expectedType: "LionWebJsonDeltaChunk" }),
+            PropertyDef({ property: "containment", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
             CommandKindProperty,
             ProtocolMessageProperty,
@@ -73,7 +93,7 @@ export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefin
         "DeleteChild",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "containment", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "containment", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
             CommandKindProperty,
             ProtocolMessageProperty,
@@ -83,28 +103,28 @@ export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefin
         "ReplaceChild",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newChild", expectedType: "LionWebChunk" }),
-            PropertyDef({ property: "containment", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "newChild", expectedType: "LionWebJsonDeltaChunk" }),
+            PropertyDef({ property: "containment", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "moveChildFromOtherContainment",
+        "MoveChildFromOtherContainment",
         [
             PropertyDef({ property: "newParent", expectedType: "LionWebId" }),
             PropertyDef({ property: "movedChild", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newContainment", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "newContainment", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "newIndex", expectedType: "number" }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "moveChildFromOtherContainmentInSameParent",
+        "MoveChildFromOtherContainmentInSameParent",
         [
-            PropertyDef({ property: "newContainment", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "newContainment", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "movedChild", expectedType: "LionWebId" }),
             PropertyDef({ property: "newIndex", expectedType: "number" }),
             CommandKindProperty,
@@ -112,7 +132,7 @@ export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefin
         ],
     ],
     [
-        "moveChildInSameContainment",
+        "MoveChildInSameContainment",
         [
             PropertyDef({ property: "movedChild", expectedType: "LionWebId" }),
             PropertyDef({ property: "newIndex", expectedType: "number" }),
@@ -121,10 +141,10 @@ export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefin
         ],
     ],
     [
-        "moveAndReplaceChildFromOtherContainment",
+        "MoveAndReplaceChildFromOtherContainment",
         [
             PropertyDef({ property: "newParent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newContainment", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "newContainment", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "newIndex", expectedType: "number" }),
             PropertyDef({ property: "movedChild", expectedType: "LionWebId" }),
             CommandKindProperty,
@@ -132,9 +152,9 @@ export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefin
         ],
     ],
     [
-        "moveAndReplaceChildFromOtherContainmentInSameParent",
+        "MoveAndReplaceChildFromOtherContainmentInSameParent",
         [
-            PropertyDef({ property: "newContainment", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "newContainment", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "newIndex", expectedType: "number" }),
             PropertyDef({ property: "movedChild", expectedType: "LionWebId" }),
             CommandKindProperty,
@@ -142,7 +162,7 @@ export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefin
         ],
     ],
     [
-        "moveAndReplaceChildInSameContainment",
+        "MoveAndReplaceChildInSameContainment",
         [
             PropertyDef({ property: "newIndex", expectedType: "number" }),
             PropertyDef({ property: "movedChild", expectedType: "LionWebId" }),
@@ -151,16 +171,16 @@ export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefin
         ],
     ],
     [
-        "addAnnotation",
+        "AddAnnotation",
         [
-            PropertyDef({ property: "newAnnotation", expectedType: "LionWebChunk" }),
+            PropertyDef({ property: "newAnnotation", expectedType: "LionWebJsonDeltaChunk" }),
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "deleteAnnotation",
+        "DeleteAnnotation",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
             PropertyDef({ property: "index", expectedType: "number" }),
@@ -169,36 +189,17 @@ export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefin
         ],
     ],
     [
-        "replaceAnnotation",
+        "ReplaceAnnotation",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newAnnotation", expectedType: "LionWebChunk" }),
+            PropertyDef({ property: "newAnnotation", expectedType: "LionWebJsonDeltaChunk" }),
             PropertyDef({ property: "index", expectedType: "number" }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "moveAnnotationFromOtherParent",
-        [
-            PropertyDef({ property: "newParent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newIndex", expectedType: "number" }),
-            PropertyDef({ property: "movedAnnotation", expectedType: "LionWebId" }),
-            CommandKindProperty,
-            ProtocolMessageProperty,
-        ],
-    ],
-    [
-        "moveAnnotationInSameParent",
-        [
-            PropertyDef({ property: "newIndex", expectedType: "number" }),
-            PropertyDef({ property: "movedAnnotation", expectedType: "LionWebId" }),
-            CommandKindProperty,
-            ProtocolMessageProperty,
-        ],
-    ],
-    [
-        "moveAndReplaceAnnotationFromOtherParent",
+        "MoveAnnotationFromOtherParent",
         [
             PropertyDef({ property: "newParent", expectedType: "LionWebId" }),
             PropertyDef({ property: "newIndex", expectedType: "number" }),
@@ -208,7 +209,7 @@ export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefin
         ],
     ],
     [
-        "moveAndReplaceAnnotationInSameParent",
+        "MoveAnnotationInSameParent",
         [
             PropertyDef({ property: "newIndex", expectedType: "number" }),
             PropertyDef({ property: "movedAnnotation", expectedType: "LionWebId" }),
@@ -217,199 +218,216 @@ export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefin
         ],
     ],
     [
-        "addReference",
+        "MoveAndReplaceAnnotationFromOtherParent",
+        [
+            PropertyDef({ property: "newParent", expectedType: "LionWebId" }),
+            PropertyDef({ property: "newIndex", expectedType: "number" }),
+            PropertyDef({ property: "movedAnnotation", expectedType: "LionWebId" }),
+            CommandKindProperty,
+            ProtocolMessageProperty,
+        ],
+    ],
+    [
+        "MoveAndReplaceAnnotationInSameParent",
+        [
+            PropertyDef({ property: "newIndex", expectedType: "number" }),
+            PropertyDef({ property: "movedAnnotation", expectedType: "LionWebId" }),
+            CommandKindProperty,
+            ProtocolMessageProperty,
+        ],
+    ],
+    [
+        "AddReference",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId" }),
+            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
             PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "deleteReference",
+        "DeleteReference",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId" }),
+            CommandKindProperty,
+            ProtocolMessageProperty,
+        ],
+    ],
+    [
+        "ChangeReference",
+        [
+            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
+            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
+            PropertyDef({ property: "index", expectedType: "number" }),
+            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
             PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "changeReference",
+        "MoveEntryFromOtherReference",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId" }),
+            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
             PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "moveEntryFromOtherReference",
+        "MoveEntryFromOtherReferenceInSameParent",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId" }),
+            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
             PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "moveEntryFromOtherReferenceInSameParent",
+        "MoveEntryInSameReference",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId" }),
+            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
             PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "moveEntryInSameReference",
+        "MoveAndReplaceEntryFromOtherReference",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId" }),
+            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
             PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "moveAndReplaceEntryFromOtherReference",
+        "MoveAndReplaceEntryFromOtherReferenceInSameParent",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId" }),
+            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
             PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "moveAndReplaceEntryFromOtherReferenceInSameParent",
+        "MoveAndReplaceEntryInSameReference",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId" }),
+            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
             PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "moveAndReplaceEntryInSameReference",
+        "AddReferenceResolveInfo",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId" }),
+            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
             PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "addReferenceResolveInfo",
+        "DeleteReferenceResolveInfo",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId" }),
+            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
             PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "deleteReferenceResolveInfo",
+        "ChangeReferenceResolveInfo",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId" }),
+            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
             PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "changeReferenceResolveInfo",
+        "AddReferenceTarget",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId" }),
+            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
             PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "addReferenceTarget",
+        "DeleteReferenceTarget",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId" }),
+            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
             PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "deleteReferenceTarget",
+        "ChangeReferenceTarget",
         [
             PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId" }),
+            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
             PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
     [
-        "changeReferenceTarget",
+        "Composite",
         [
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebMetaPointer" }),
+            PropertyDef({ property: "parts", expectedType: "ICommand" }),
+            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
             PropertyDef({ property: "index", expectedType: "number" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId" }),
+            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
             PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
             CommandKindProperty,
             ProtocolMessageProperty,
         ],
     ],
-    [
-        "composite",
-        [
-            PropertyDef({ property: "parts", expectedType: "CommandType" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebMetaPointer" }),
-            PropertyDef({ property: "index", expectedType: "number" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
-            CommandKindProperty,
-            ProtocolMessageProperty,
-        ],
-    ],
-    ["CommandKind", PrimitiveDef({ primitiveType: "string", validate: emptyValidation })],
-    ["string", PrimitiveDef({ primitiveType: "string", validate: emptyValidation })],
+    ["CommandKind", PrimitiveDef({ primitiveType: "string" })],
+    // ["string", PrimitiveDef({ primitiveType: "string" })],
 ])
 
 // Add any Map or Set to another
