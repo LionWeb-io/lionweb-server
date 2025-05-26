@@ -47,7 +47,7 @@ export class BulkApiImpl implements BulkApi {
         if (isParameterError(repositoryData)) {
             lionwebResponse<ListPartitionsResponse>(response, HttpClientErrors.PreconditionFailed, {
                 success: false,
-                chunk: null,
+                chunk: null, 
                 messages: [repositoryData.error]
             })
         } else {

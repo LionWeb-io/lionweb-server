@@ -32,6 +32,12 @@ export type ResponseMessage = {
     data?: Record<string, string>
 }
 
+export type ProtocolMessage = {
+    kind: MessageKind
+    message: string
+    data?: Record<string, string>
+}
+
 /**
  * Checks whether the _object_ is a ResponseMessage
  * @param object

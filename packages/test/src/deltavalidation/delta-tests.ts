@@ -1,8 +1,9 @@
-import { DeltaValidation } from "@lionweb/repository-delta/dist/DeltaValidation.js"
+
+import { DeltaValidation } from "@lionweb/repository-delta"
+import { ValidationResult } from "@lionweb/validation"
 import fs from "node:fs"
 import { assert } from "chai"
 // const { deepEqual, fail } = assert
-import { ValidationResult } from "@lionweb/validation"
 import sm from "source-map-support"
 
 sm.install()
