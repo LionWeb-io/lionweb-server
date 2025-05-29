@@ -1,11 +1,12 @@
 import { TypeDefinition, isObjectDefinition, isPrimitiveDefinition } from "@lionweb/validation"
 import { commandMap } from "./CommandDefinitions.js"
+import { Event_Definitions_Map } from "./EventDefinitions.js"
 
 let result = `import { LionWebId, LionWebJsonNode, LionWebJsonMetaPointer } from "@lionweb/json"
 import { ResponseMessage } from "@lionweb/repository-shared"
 import { ICommand } from "./DeltaCommands.js"
 `
-commandMap.forEach((value: TypeDefinition, key: string) => {
+Event_Definitions_Map.forEach((value: TypeDefinition, key: string) => {
     if (isObjectDefinition(value)) {
         result += `
 /**

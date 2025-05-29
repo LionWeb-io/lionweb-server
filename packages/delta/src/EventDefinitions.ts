@@ -26,7 +26,7 @@ const ProtocolMessageProperty: PropertyDefinition = PropertyDef({
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function emptyValidation<T>(object: T, result: ValidationResult, ctx: JsonContext, pdef?: PropertyDefinition): void {}
 
-export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefinition>([
+export const Event_Definitions_Map: Map<string, TypeDefinition> = new Map<string, TypeDefinition>([
     [
         "LionWebJsonDeltaChunk",
         [
@@ -72,7 +72,7 @@ export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefin
         ]
     ],
     [
-        "Classifier Changed",
+        "ClassifierEntryMovedAndReplacedFromOtherReferenceChanged",
         [
             PropertyDef({ property: "node", expectedType: "LionWebId" }),
             PropertyDef({ property: "newClassifier", expectedType: "LionWebJsonMetaPointer" }),
