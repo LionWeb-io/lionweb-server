@@ -1,1 +1,1 @@
-export * from "./DeltaValidation.js"
+export * from "./types/index.js"
