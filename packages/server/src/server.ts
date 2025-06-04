@@ -3,6 +3,7 @@ import express, { Express, NextFunction, Response, Request } from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
 import pgPromise from "pg-promise"
+import { WebSocketServer } from "ws"
 import { postgresConnectionWithDatabase, pgp, postgresConnectionWithoutDatabase, postgresPool } from "./DbConnection.js"
 import {
     DbConnection,
@@ -225,4 +226,25 @@ async function startServer() {
             requestLogger.warn("WARNING! The used token is quite short. Consider using a token of 24 characters or more.")
         }
     })
+    
+    const wsServer = new WebSocketServer({server: httpServer})
+    wsServer.on('connection', (socket, request) => {
+        // @ts-ignore
+        console.log(`Client connected ${socket["sec-websocket-key"]} +  ${JSON.stringify(socket, null, 4)} +`);
+
+        socket.on('message', (message) => {
+            console.log(`Received: ${message}`);
+            // const m = JSON.parse(message.toString())
+            // console.log(JSON.stringify(m, null, 4))
+            socket.send(`Server sends: ${message}`);
+        });
+
+        socket.on('close', () => {
+            console.log('Client disconnected');
+        });
+    });
+    
+    // wsServer.clients.forEach(cl => cl.)
+
+
 }

@@ -3,7 +3,7 @@
     {
       "expectedError": "KeyFormat",
       "command": {
-        "kind": "addProperty",
+        "messageKind": "AddProperty",
         "node": "123",
         "property": {
           "key": "",
@@ -16,7 +16,7 @@
     {
       "expectedError": "PropertyNull",
       "command": {
-        "kind": "addProperty",
+        "messageKind": "AddProperty",
         "node": "123",
         "property": {
           "key": "key",
@@ -29,7 +29,7 @@
     {
       "expectedError": "IdFormat",
       "command": {
-        "kind": "addProperty",
+        "messageKind": "AddProperty",
         "node": "%#&@%@",
         "property": {
           "key": "key",
@@ -42,7 +42,7 @@
     {
       "expectedError": "VersionFormat",
       "command": {
-        "kind": "addProperty",
+        "messageKind": "AddProperty",
         "node": "123",
         "property": {
           "key": "key",
@@ -55,7 +55,7 @@
     {
       "expectedError": "PropertyMissing",
       "command": {
-        "kind": "addProperty",
+        "messageKind": "AddProperty",
         "node": "123",
         "property": {
           "key": "key",
@@ -67,7 +67,7 @@
     {
       "expectedError": "PropertyMissing",
       "command": {
-        "kind": "addProperty",
+        "messageKind": "AddProperty",
         "property": {
           "key": "key",
           "language": "l1",
@@ -79,7 +79,7 @@
     {
       "expectedError": "PropertyMissing",
       "command": {
-        "kind": "addProperty",
+        "messageKind": "AddProperty",
         "node": "id",
         "property": {
           "key": "key",
@@ -95,7 +95,7 @@
     {
       "expectedError": null,
       "command": {
-        "kind": "addProperty",
+        "messageKind": "AddProperty",
         "node": "id",
         "property": {
           "key": "key",
