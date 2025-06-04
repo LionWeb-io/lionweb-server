@@ -1,18 +1,8 @@
 import { JsonContext } from "@lionweb/json-utils"
-import { TypeDefinition, PrimitiveDef, PropertyDef, PropertyDefinition, ValidationResult, expectedTypes } from "@lionweb/validation"
+import { TypeDefinition, PrimitiveDef, PropertyDef, PropertyDefinition, ValidationResult } from "@lionweb/validation"
+import { MAY_BE_NULL, NOT_NULL, ProtocolMessageProperty } from "./SharedDefinitions.js"
 
-// Make boolean argument more readable.
-export const MAY_BE_NULL = true
-export const NOT_NULL = false
-
-const CommandKindProperty: PropertyDefinition = PropertyDef({ property: "kind", expectedType: "CommandKind", mayBeNull: NOT_NULL, validate: emptyValidation })
-const ProtocolMessageProperty: PropertyDefinition = PropertyDef({
-    property: "protocolMessage",
-    expectedType: "ResponseMessage",
-    mayBeNull: MAY_BE_NULL,
-    isOptional: true,
-})
-// const ResponseMessage: PropertyDefinition = { property: "protocolMessage", expectedType: "ResponseMessage", mayBeNull: MAY_BE_NULL }
+const CommandKindProperty: PropertyDefinition = PropertyDef({ property: "messageKind", expectedType: "CommandKind", mayBeNull: NOT_NULL, validate: emptyValidation })
 
 /**
  * No-op validation function used as default value.
@@ -26,14 +16,15 @@ function emptyValidation<T>(object: T, result: ValidationResult, ctx: JsonContex
 
 export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefinition>([
     [
-        "LionWebJsonDeltaChunk",
+        "AddPartition",
         [
-            PropertyDef({ property: "nodes", expectedType: "LionWebJsonNode", isList: true }),
-        ],
+            PropertyDef({ property: "newPartition", expectedType: "LionWebJsonDeltaChunk" }),
+            CommandKindProperty,
+            ProtocolMessageProperty
+        ]
     ],
-
-    ["AddPartition", [PropertyDef({ property: "newPartition", expectedType: "LionWebJsonDeltaChunk" }), CommandKindProperty, ProtocolMessageProperty]],
-    ["DeletePartition",
+    [
+        "DeletePartition",
         [
             PropertyDef({ property: "deletedPartition", expectedType: "LionWebId" }),
             CommandKindProperty,
@@ -415,7 +406,7 @@ export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefin
         ],
     ],
     [
-        "Composite",
+        "CompositeCommand",
         [
             PropertyDef({ property: "parts", expectedType: "ICommand" }),
             PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),

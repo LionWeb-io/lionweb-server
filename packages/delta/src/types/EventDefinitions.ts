@@ -1,19 +1,13 @@
 import { JsonContext } from "@lionweb/json-utils"
-import { TypeDefinition, PrimitiveDef, PropertyDef, PropertyDefinition, ValidationResult, expectedTypes } from "@lionweb/validation"
+import { TypeDefinition, PrimitiveDef, PropertyDef, PropertyDefinition, ValidationResult } from "@lionweb/validation"
+import { MAY_BE_NULL, NOT_NULL, ProtocolMessageProperty } from "./SharedDefinitions.js"
 
-// Make boolean argument more readable.
-export const MAY_BE_NULL = true
-export const NOT_NULL = false
 
-const EventKindProperty: PropertyDefinition = PropertyDef({ property: "kind", expectedType: "EventKind", mayBeNull: NOT_NULL, validate: emptyValidation })
+
+const EventKindProperty: PropertyDefinition = PropertyDef({ property: "messageKind", expectedType: "EventKind", mayBeNull: NOT_NULL, validate: emptyValidation })
 const CommandOriginProperty: PropertyDefinition = PropertyDef({ property: "originCommands", expectedType: "CommandSource", isList: true, mayBeNull: NOT_NULL, validate: emptyValidation })
 const SequenceNumberProperty: PropertyDefinition = PropertyDef({ property: "sequenceNumber", expectedType: "SequenceNumber", mayBeNull: NOT_NULL, validate: emptyValidation })
-const ProtocolMessageProperty: PropertyDefinition = PropertyDef({
-    property: "protocolMessage",
-    expectedType: "ResponseMessage",
-    mayBeNull: MAY_BE_NULL,
-    isOptional: true,
-})
+
 // const ResponseMessage: PropertyDefinition = { property: "protocolMessage", expectedType: "ResponseMessage", mayBeNull: MAY_BE_NULL }
 
 /**
@@ -27,12 +21,6 @@ const ProtocolMessageProperty: PropertyDefinition = PropertyDef({
 function emptyValidation<T>(object: T, result: ValidationResult, ctx: JsonContext, pdef?: PropertyDefinition): void {}
 
 export const Event_Definitions_Map: Map<string, TypeDefinition> = new Map<string, TypeDefinition>([
-    [
-        "LionWebJsonDeltaChunk",
-        [
-            PropertyDef({ property: "nodes", expectedType: "LionWebJsonNode", isList: true }),
-        ],
-    ],
     [
         "CommandSource",
         [
@@ -548,7 +536,7 @@ export const Event_Definitions_Map: Map<string, TypeDefinition> = new Map<string
         ],
     ],
     [
-        "Composite",
+        "CompositeEvent",
         [
             PropertyDef({ property: "parts", expectedType: "IEvent" }),
             EventKindProperty,
