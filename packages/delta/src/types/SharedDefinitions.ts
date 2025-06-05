@@ -1,5 +1,5 @@
 import { JsonContext } from "@lionweb/json-utils"
-import { TypeDefinition, PropertyDef, PropertyDefinition, ValidationResult, validateKey } from "@lionweb/validation"
+import { TypeDefinition, PropertyDef, PropertyDefinition, ValidationResult, validateKey, PrimitiveDef, ObjectDef } from "@lionweb/validation"
 
 export const MAY_BE_NULL = true
 export const NOT_NULL = false
@@ -8,7 +8,7 @@ export const ProtocolMessageProperty: PropertyDefinition = PropertyDef({
     property: "protocolMessage",
     expectedType: "ProtocolMessage",
     mayBeNull: MAY_BE_NULL,
-    isList: true,
+    // isList: true,
     isOptional: true,
 })
 
@@ -25,25 +25,26 @@ function emptyValidation<T>(object: T, result: ValidationResult, ctx: JsonContex
 export const sharedMap: Map<string, TypeDefinition> = new Map<string, TypeDefinition>([
     [
         "LionWebJsonDeltaChunk",
-        [
+        ObjectDef([
             PropertyDef({ property: "nodes", expectedType: "LionWebJsonNode", isList: true }),
-        ],
+        ]),
     ],
     [
         "ProtocolMessage",
-        [
+        ObjectDef([
             PropertyDef({ property: "kind", expectedType: "string", validate: validateKey }),
             PropertyDef({ property: "message", expectedType: "string" }),
             PropertyDef({ property: "data", expectedType: "KeyValuePair", isList: true }),
-        ],
+        ]),
     ],
     [
         "KeyValuePair",
-        [
+        ObjectDef([
             PropertyDef({ property: "key", expectedType: "string", validate: validateKey }),
             PropertyDef({ property: "value", expectedType: "string" }),
-        ],
+        ]),
     ],
+    ["numberString", PrimitiveDef({ primitiveType: "string" })],
 ])
 
 /**

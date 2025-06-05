@@ -23,3 +23,5 @@ export type KeyValuePair = {
     key: string;
     value: string;
 };
+
+export type numberString = string;
