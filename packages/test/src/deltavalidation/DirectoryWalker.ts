@@ -11,7 +11,7 @@ export class ValidationWorker implements DirectoryWorker {
 
     visitFile(file: string): void {
         const message = JSON.parse(fs.readFileSync(file).toString());
-        console.log("Found file " + file)
+        // console.log("Found file " + file)
     }
 }
 
@@ -28,7 +28,7 @@ export class DirectoryWalker {
                 this.worker.visitDir(dir)
                 const files = fs.readdirSync(dir)
                 for (const file of files) {
-                    console.log("walk.file "  + file)
+                    // console.log("walk.file "  + file)
                     this.walk(dir + "/" + file)
                 }
             } else if (fs.lstatSync(dir).isFile()) {
