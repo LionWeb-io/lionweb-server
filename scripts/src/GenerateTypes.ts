@@ -1,4 +1,4 @@
-import { commandMap, Event_Definitions_Map, queryMEssageDefinitions, sharedMap } from "@lionweb/repository-delta"
+import { DeltaCommandSchema, DeltaEventSchema, DeltaQuerySchema, DeltaSharedSchema } from "@lionweb/repository-delta"
 import fs from "fs"
 import { TypeTemplates } from "./TypeTemplates.js"
 
@@ -11,10 +11,10 @@ const typesTemplate = new TypeTemplates()
 
 
 
-const commands = typesTemplate.commandTemplate(commandMap, "https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd")
-const events = typesTemplate.commandTemplate(Event_Definitions_Map, "https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt")
-const shared = typesTemplate.sharedTemplate(sharedMap, "https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#")
-const queries = typesTemplate.sharedTemplate(queryMEssageDefinitions, "https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#")
+const commands = typesTemplate.commandTemplate(DeltaCommandSchema, "https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd")
+const events = typesTemplate.commandTemplate(DeltaEventSchema, "https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt")
+const shared = typesTemplate.sharedTemplate(DeltaSharedSchema, "https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#")
+const queries = typesTemplate.sharedTemplate(DeltaQuerySchema, "https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#")
 
 fs.writeFileSync(commandTargetFile, TypeTemplates.pretty(commands, "LionWeb Types Generator"));
 fs.writeFileSync(eventTargetFile, TypeTemplates.pretty(events, "LionWeb Types Generator"));

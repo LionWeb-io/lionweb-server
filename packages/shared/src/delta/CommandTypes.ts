@@ -1,23 +1,23 @@
 import { LionWebId, LionWebJsonMetaPointer } from "@lionweb/json";
-import { ProtocolMessage, LionWebJsonDeltaChunk, numberString } from "./SharedTypes.js"
+import { ProtocolMessage, LionWebJsonDeltaChunk, numberString, JS_string } from "./SharedTypes.js"
 
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-AddPartition
  */
-export type AddPartition = {
+export type AddPartition = ICommand & {
     newPartition: LionWebJsonDeltaChunk;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-DeletePartition
  */
-export type DeletePartition = {
+export type DeletePartition = ICommand & {
     deletedPartition: LionWebId;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -28,7 +28,7 @@ export type ChangeClassifier = ICommand & {
     node: LionWebId;
     newClassifier: LionWebJsonMetaPointer;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -38,9 +38,9 @@ export type ChangeClassifier = ICommand & {
 export type AddProperty = ICommand & {
     node: LionWebId;
     property: LionWebJsonMetaPointer;
-    newValue: string;
+    newValue: JS_string;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -51,7 +51,7 @@ export type DeleteProperty = ICommand & {
     node: LionWebId;
     property: LionWebJsonMetaPointer;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -61,9 +61,9 @@ export type DeleteProperty = ICommand & {
 export type ChangeProperty = ICommand & {
     node: LionWebId;
     property: LionWebJsonMetaPointer;
-    newValue: string;
+    newValue: JS_string;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -76,7 +76,7 @@ export type AddChild = ICommand & {
     containment: LionWebJsonMetaPointer;
     index: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -88,7 +88,7 @@ export type DeleteChild = ICommand & {
     containment: LionWebJsonMetaPointer;
     index: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -101,7 +101,7 @@ export type ReplaceChild = ICommand & {
     containment: LionWebJsonMetaPointer;
     index: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -114,7 +114,7 @@ export type MoveChildFromOtherContainment = ICommand & {
     newContainment: LionWebJsonMetaPointer;
     newIndex: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -126,7 +126,7 @@ export type MoveChildFromOtherContainmentInSameParent = ICommand & {
     movedChild: LionWebId;
     newIndex: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -137,7 +137,7 @@ export type MoveChildInSameContainment = ICommand & {
     movedChild: LionWebId;
     newIndex: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -150,7 +150,7 @@ export type MoveAndReplaceChildFromOtherContainment = ICommand & {
     newIndex: numberString;
     movedChild: LionWebId;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -162,7 +162,7 @@ export type MoveAndReplaceChildFromOtherContainmentInSameParent = ICommand & {
     newIndex: numberString;
     movedChild: LionWebId;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -173,7 +173,7 @@ export type MoveAndReplaceChildInSameContainment = ICommand & {
     newIndex: numberString;
     movedChild: LionWebId;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -185,7 +185,7 @@ export type AddAnnotation = ICommand & {
     parent: LionWebId;
     index: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -196,7 +196,7 @@ export type DeleteAnnotation = ICommand & {
     parent: LionWebId;
     index: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -208,7 +208,7 @@ export type ReplaceAnnotation = ICommand & {
     newAnnotation: LionWebJsonDeltaChunk;
     index: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -220,7 +220,7 @@ export type MoveAnnotationFromOtherParent = ICommand & {
     newIndex: numberString;
     movedAnnotation: LionWebId;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -231,7 +231,7 @@ export type MoveAnnotationInSameParent = ICommand & {
     newIndex: numberString;
     movedAnnotation: LionWebId;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -243,18 +243,18 @@ export type MoveAndReplaceAnnotationFromOtherParent = ICommand & {
     newIndex: numberString;
     movedAnnotation: LionWebId;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-MoveAndReplaceAnnotationInSameParent
  */
-export type MoveAndReplaceAnnotationInSameParent = {
+export type MoveAndReplaceAnnotationInSameParent = ICommand & {
     newIndex: numberString;
     movedAnnotation: LionWebId;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -266,9 +266,9 @@ export type AddReference = ICommand & {
     reference: LionWebJsonMetaPointer;
     index: numberString;
     newTarget: LionWebId;
-    newResolveInfo: string;
+    newResolveInfo: JS_string;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -280,7 +280,7 @@ export type DeleteReference = ICommand & {
     reference: LionWebJsonMetaPointer;
     index: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -292,9 +292,9 @@ export type ChangeReference = ICommand & {
     reference: LionWebJsonMetaPointer;
     index: numberString;
     newTarget: LionWebId;
-    newResolveInfo: string;
+    newResolveInfo: JS_string;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -309,7 +309,7 @@ export type MoveEntryFromOtherReference = ICommand & {
     newReference: LionWebJsonMetaPointer;
     newIndex: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -323,7 +323,7 @@ export type MoveEntryFromOtherReferenceInSameParent = ICommand & {
     newReference: LionWebJsonMetaPointer;
     newIndex: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -336,7 +336,7 @@ export type MoveEntryInSameReference = ICommand & {
     oldIndex: numberString;
     newIndex: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -351,7 +351,7 @@ export type MoveAndReplaceEntryFromOtherReference = ICommand & {
     newReference: LionWebJsonMetaPointer;
     newIndex: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -365,7 +365,7 @@ export type MoveAndReplaceEntryFromOtherReferenceInSameParent = ICommand & {
     newReference: LionWebJsonMetaPointer;
     newIndex: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -378,7 +378,7 @@ export type MoveAndReplaceEntryInSameReference = ICommand & {
     oldIndex: numberString;
     newIndex: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -389,9 +389,9 @@ export type AddReferenceResolveInfo = ICommand & {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: numberString;
-    newResolveInfo: string;
+    newResolveInfo: JS_string;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -403,7 +403,7 @@ export type DeleteReferenceResolveInfo = ICommand & {
     reference: LionWebJsonMetaPointer;
     index: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -414,9 +414,9 @@ export type ChangeReferenceResolveInfo = ICommand & {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: numberString;
-    newResolveInfo: string;
+    newResolveInfo: JS_string;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -429,7 +429,7 @@ export type AddReferenceTarget = ICommand & {
     index: numberString;
     newTarget: LionWebId;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -441,7 +441,7 @@ export type DeleteReferenceTarget = ICommand & {
     reference: LionWebJsonMetaPointer;
     index: numberString;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -454,7 +454,7 @@ export type ChangeReferenceTarget = ICommand & {
     index: numberString;
     newTarget: LionWebId;
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -463,7 +463,7 @@ export type ChangeReferenceTarget = ICommand & {
  */
 export type ICommand = {
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -473,7 +473,7 @@ export type ICommand = {
 export type CompositeCommand = ICommand & {
     parts: ICommand[];
     messageKind: CommandKind;
-    commandId: string;
+    commandId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 

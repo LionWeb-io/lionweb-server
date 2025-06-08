@@ -1,5 +1,5 @@
 import { LionWebId, LionWebJsonMetaPointer } from "@lionweb/json";
-import { ProtocolMessage, LionWebJsonDeltaChunk, numberString } from "./SharedTypes.js"
+import { ProtocolMessage, LionWebJsonDeltaChunk, numberString, JS_string } from "./SharedTypes.js"
 
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-CommandSource
@@ -56,7 +56,7 @@ export type PartitionDeleted = IEvent & {
 export type PropertyAdded = IEvent & {
     node: LionWebId;
     property: LionWebJsonMetaPointer;
-    newValue: string;
+    newValue: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -69,7 +69,7 @@ export type PropertyAdded = IEvent & {
 export type PropertyDeleted = IEvent & {
     node: LionWebId;
     property: LionWebJsonMetaPointer;
-    oldValue: string;
+    oldValue: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -82,8 +82,8 @@ export type PropertyDeleted = IEvent & {
 export type PropertyChanged = IEvent & {
     node: LionWebId;
     property: LionWebJsonMetaPointer;
-    newValue: string;
-    oldValue: string;
+    newValue: JS_string;
+    oldValue: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -340,7 +340,7 @@ export type ReferenceAdded = IEvent & {
     reference: LionWebJsonMetaPointer;
     index: numberString;
     newTarget: LionWebId;
-    newResolveInfo: string;
+    newResolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -355,7 +355,7 @@ export type ReferenceDeleted = IEvent & {
     reference: LionWebJsonMetaPointer;
     index: numberString;
     deletedTarget: LionWebId;
-    deletedResolveInfo: string;
+    deletedResolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -370,9 +370,9 @@ export type ReferenceChanged = IEvent & {
     reference: LionWebJsonMetaPointer;
     index: numberString;
     newTarget: LionWebId;
-    newResolveInfo: string;
+    newResolveInfo: JS_string;
     replacedTarget: LionWebId;
-    replacedResolveInfo: string;
+    replacedResolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -390,7 +390,7 @@ export type EntryMovedFromOtherReference = IEvent & {
     oldReference: LionWebJsonMetaPointer;
     oldIndex: numberString;
     target: LionWebId;
-    resolveInfo: string;
+    resolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -407,7 +407,7 @@ export type EntryMovedFromOtherReferenceInSameParent = IEvent & {
     oldReference: LionWebJsonMetaPointer;
     oldIndex: numberString;
     target: LionWebId;
-    resolveInfo: string;
+    resolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -423,7 +423,7 @@ export type EntryMovedInSameReference = IEvent & {
     newIndex: numberString;
     oldIndex: numberString;
     target: LionWebId;
-    resolveInfo: string;
+    resolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -441,9 +441,9 @@ export type EntryMovedAndReplacedFromOtherReference = IEvent & {
     oldReference: LionWebJsonMetaPointer;
     oldIndex: numberString;
     movedTarget: LionWebId;
-    movedResolveInfo: string;
+    movedResolveInfo: JS_string;
     replacedTarget: LionWebId;
-    replacedResolveInfo: string;
+    replacedResolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -460,9 +460,9 @@ export type EntryMovedAndReplacedFromOtherReferenceInSameParent = IEvent & {
     oldReference: LionWebJsonMetaPointer;
     oldIndex: numberString;
     movedTarget: LionWebId;
-    movedResolveInfo: string;
+    movedResolveInfo: JS_string;
     replacedTarget: LionWebId;
-    replacedResolveInfo: string;
+    replacedResolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -477,10 +477,10 @@ export type EntryMovedAndReplacedInSameReference = IEvent & {
     reference: LionWebJsonMetaPointer;
     newIndex: numberString;
     movedTarget: LionWebId;
-    movedResolveInfo: string;
+    movedResolveInfo: JS_string;
     oldIndex: numberString;
     replacedTarget: LionWebId;
-    replacedResolveInfo: string;
+    replacedResolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -495,7 +495,7 @@ export type ReferenceResolveInfoAdded = IEvent & {
     reference: LionWebJsonMetaPointer;
     index: numberString;
     target: LionWebId;
-    newResolveInfo: string;
+    newResolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -510,7 +510,7 @@ export type ReferenceResolveInfoDeleted = IEvent & {
     reference: LionWebJsonMetaPointer;
     index: numberString;
     target: LionWebId;
-    deletedResolveInfo: string;
+    deletedResolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -525,8 +525,8 @@ export type ReferenceResolveInfoChanged = IEvent & {
     reference: LionWebJsonMetaPointer;
     index: numberString;
     target: LionWebId;
-    newResolveInfo: string;
-    replacedResolveInfo: string;
+    newResolveInfo: JS_string;
+    replacedResolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -541,7 +541,7 @@ export type ReferenceTargetAdded = IEvent & {
     reference: LionWebJsonMetaPointer;
     index: numberString;
     newTarget: LionWebId;
-    resolveInfo: string;
+    resolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -556,7 +556,7 @@ export type ReferenceTargetDeleted = IEvent & {
     reference: LionWebJsonMetaPointer;
     index: numberString;
     deletedTarget: LionWebId;
-    resolveInfo: string;
+    resolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -572,7 +572,7 @@ export type ReferenceTargetChanged = IEvent & {
     index: numberString;
     newTarget: LionWebId;
     replacedTarget: LionWebId;
-    resolveInfo: string;
+    resolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -593,10 +593,8 @@ export type IEvent = {
  *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-CompositeEvent
  */
 export type CompositeEvent = {
-    parts: IEvent;
+    parts: IEvent[];
     messageKind: EventKind;
-    originCommands: CommandSource[];
-    sequenceNumber: SequenceNumber;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -604,8 +602,8 @@ export type CompositeEvent = {
  *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-Error
  */
 export type Error = IEvent & {
-    errorCode: string;
-    message: string;
+    errorCode: JS_string;
+    message: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
@@ -622,23 +620,4 @@ export type NoOpEvent = {
     protocolMessage?: ProtocolMessage;
 };
 
-export type EventKind =
-    | "PropertyAdded"
-    | "PropertyDeleted"
-    | "PropertyChanged"
-    | "ReferenceAdded"
-    | "ReferenceDeleted"
-    | "ReferenceChanged"
-    | "EntryMovedFromOtherReference"
-    | "EntryMovedFromOtherReferenceInSameParent"
-    | "EntryMovedInSameReference"
-    | "EntryMovedAndReplacedFromOtherReference"
-    | "EntryMovedAndReplacedFromOtherReferenceInSameParent"
-    | "EntryMovedAndReplacedInSameReference"
-    | "ReferenceResolveInfoAdded"
-    | "ReferenceResolveInfoDeleted"
-    | "ReferenceResolveInfoChanged"
-    | "ReferenceTargetAdded"
-    | "ReferenceTargetDeleted"
-    | "ReferenceTargetChanged"
-    | "Error";
+export type EventKind = string;

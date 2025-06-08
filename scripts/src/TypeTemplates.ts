@@ -1,106 +1,83 @@
-
 import synchronizedPrettier from "@prettier/sync";
-import { TypeDefinition, isObjectDefinition, isPrimitiveDefinition, PrimitiveDefinition, PropertyDef, PropertyDefinition } from "@lionweb/validation"
+import { DefinitionSchema, isObjectDefinition, isPrimitiveDefinition, PrimitiveDefinition } from "@lionweb/validation"
 
-type tmp = {
-    key: string,
-    value: TypeDefinition
-}
 export class TypeTemplates {
 
-    commandTemplate(typeMap: Map<string, TypeDefinition>, doclinkRoot: string ): string {
+    commandTemplate(schema: DefinitionSchema, doclinkRoot: string ): string {
+        const referredTypes: Set<string> = new Set<string>()
         let result = `
             import { LionWebId, LionWebJsonMetaPointer } from "@lionweb/json"
             import { ProtocolMessage, LionWebJsonDeltaChunk } from "./SharedTypes.js"
             
-            ${Array.from(typeMap).map((tuple: [string, TypeDefinition]) => {
-            const key = tuple[0]
-            const value = tuple[1]
-                if (isObjectDefinition(value)) {
-                    const extend = (value.extends ? `${value.extends} & ` : "")
+            ${schema.definitions().map(def => {
+                if (isObjectDefinition(def)) {
+                    const extend = (def.taggedUnionType ? `${def.taggedUnionType} & ` : "")
                     return`
                             /**
-                              *  @see ${doclinkRoot}-${key}
+                              *  @see ${doclinkRoot}-${def.name}
                               */
-                            export type ${key} = ${extend} {
-                            ${value.properties.map((propDef) => {
+                            export type ${def.name} = ${extend} {
+                            ${def.properties.map((propDef) => {
+                                    referredTypes.add(propDef.type)
                                     const optional = (propDef.isOptional ? "?" : "")
                                     const isList = propDef.isList ? "[]" : ""
-                                    return `${propDef.property}${optional} : ${propDef.expectedType}${isList} ${(propDef.isKey?`   // === "${key}"`:"")}`
+                                    return `${propDef.name}${optional} : ${propDef.type}${isList}`
                                 }).join(",\n")
                             }
                             }
                             `
-                } else if (isPrimitiveDefinition(value) && !value.isKey) {
+                } else if (isPrimitiveDefinition(def) && !schema.isUnionDiscriminator(def)){ //schdef.isTag) {
                     return  `
-                            export type ${key} = ${value.primitiveType}
+                            export type ${def.name} = ${def.primitiveType}
                             `
-                } else if (isPrimitiveDefinition(value) && value.isKey) {
-                    const keyTypes = Array.from(typeMap.entries())
-                        .filter(v => isObjectDefinition(v[1]) && (v[1].properties.find(p => p.expectedType === value.primitiveType)))
-                    return `export type ${tuple[0]} = ${keyTypes.map(key => `"${key[0]}"`).join((" | "))}`
+                } else if (isPrimitiveDefinition(def) && schema.isUnionDiscriminator(def)) {
+                    const keyTypes = schema.definitions()
+                        .filter(alldef => isObjectDefinition(alldef) && (alldef.properties.find(p => p.type === def.name)))
+                    return `export type ${def.name} = ${keyTypes.map(key => `"${key.name}"`).join((" | "))}`
                 }
             }).join("\n")}
             `
-        return result
-    }
-
-    eventTemplate(typeMap: Map<string, TypeDefinition>, doclinkRoot: string ): string {
-        let result = `
-            import { LionWebId, LionWebJsonMetaPointer } from "@lionweb/json"
-            import { ProtocolMessage, LionWebJsonDeltaChunk } from "./SharedTypes.js"
-            
-            ${Array.from(typeMap).map((tuple: [string, TypeDefinition]) => {
-            const key = tuple[0]
-            const value = tuple[1]
-            if (isObjectDefinition(value)) {
-                const extend = (value.extends ? `${value.extends} & ` : "")
-                return`
-                            /**
-                              *  @see ${doclinkRoot}-${key}
-                              */
-                            export type ${key} = ${extend} {
-                            ${value.properties.map((propDef) => `${propDef.property}${(propDef.isOptional ? "?" : "")} : ${propDef.expectedType}${propDef.isList ? "[]" : ""} ${(propDef.isKey?`   // === "${key}"`:"")}`).join(",\n")}
-                            }
-                            `
-            } else if (isPrimitiveDefinition(value) && !value.isKey) {
-                return  `
-                            export type ${key} = ${value.primitiveType}
-                            `
-            }
-        }).join("\n")}
-        export type EventKind = ${Array.from(typeMap.keys()).filter(key => key !== "EventKind").map(key => `"${key}"`).join((" | "))}
+        const defNames = schema.definitions().map(d => d.name)
+        const imports = Array.from(referredTypes.values()).filter(ref => !defNames.includes(ref) )
+        return `
+                ${result}
         `
-        return result
     }
 
-    sharedTemplate(typeMap: Map<string, TypeDefinition>, doclinkRoot: string ): string {
+    sharedTemplate(typeMap: DefinitionSchema, doclinkRoot: string ): string {
+        const referredTypes: Set<string> = new Set<string>()
         let result = `
             import { LionWebJsonNode } from "@lionweb/json"
 
-            ${Array.from(typeMap).map((tuple: [string, TypeDefinition]) => {
-            const key = tuple[0]
-            const value = tuple[1]
-            if (isObjectDefinition(value)) {
+            ${typeMap.definitions().map(def => {
+            if (isObjectDefinition(def)) {
                 return`
                             /**
-                              *  @see ${doclinkRoot}-${key}
+                              *  @see ${doclinkRoot}-${def.name}
                               */
-                            export type ${key} = {
-                            ${value.properties.map((propDef) => `${propDef.property}${(propDef.isOptional ? "?" : "")} : ${propDef.expectedType}${propDef.isList ? "[]" : ""}`).join(",\n")}
+                            export type ${def.name} = {
+                                ${def.properties.map((propDef) => {
+                                    referredTypes.add(propDef.type)
+                                    return`${propDef.name}${(propDef.isOptional ? "?" : "")} : ${propDef.type}${propDef.isList ? "[]" : ""}`
+                                }).join(",\n")}
                             }
                             `
-            } else if (isPrimitiveDefinition(value) ) {
+            } else if (isPrimitiveDefinition(def) ) {
                 return  `
-                            export type ${key} = ${value.primitiveType}
+                            export type ${def.name} = ${def.primitiveType}
                             `
             }
         }).join("\n")}
             `
-        return result
+        const defNames = typeMap.definitions().map(d => d.name)
+        const imports = Array.from(referredTypes.values()).filter(ref => !defNames.includes(ref) )
+        return `
+                ${result}
+        `
     }
 
     public static pretty(typescriptFile: string, message: string): string {
+        // return typescriptFile
         try {
             return (
                 // parser: the language used

@@ -1,35 +1,35 @@
 import { LionWebId, LionWebJsonNode } from "@lionweb/json"
-import { ProtocolMessage } from "./SharedTypes.js"
+import { JS_string, ProtocolMessage } from "./SharedTypes.js"
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-SubscribeToChangingPartitions
+ *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-SubscribeToChangingPartitionsRequest
  */
-export type SubscribeToChangingPartitions = {
-    creation: boolean;
-    deletion: boolean;
-    partitions: boolean;
+export type SubscribeToChangingPartitionsRequest = {
+    creation: primitiveBoolean;
+    deletion: primitiveBoolean;
+    partitions: primitiveBoolean;
     messageKind: QueryKind;
-    queryId: string;
+    queryId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-SubscribeToPartitionContents
+ *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-SubscribeToPartitionContentsRequest
  */
-export type SubscribeToPartitionContents = {
+export type SubscribeToPartitionContentsRequest = {
     partition: LionWebId;
     messageKind: QueryKind;
-    queryId: string;
+    queryId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-UnsubscribeFromPartitionContents
+ *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-UnsubscribeFromPartitionContentsRequest
  */
-export type UnsubscribeFromPartitionContents = {
+export type UnsubscribeFromPartitionContentsRequest = {
     partition: LionWebId;
     messageKind: QueryKind;
-    queryId: string;
+    queryId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
@@ -37,29 +37,53 @@ export type UnsubscribeFromPartitionContents = {
  *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-SignOnRequest
  */
 export type SignOnRequest = {
-    deltaProtocolVersion: string;
+    deltaProtocolVersion: JS_string;
     messageKind: QueryKind;
-    queryId: string;
+    queryId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-SignOff
+ *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-SignOffRequest
  */
-export type SignOff = {
+export type SignOffRequest = {
     messageKind: QueryKind;
-    queryId: string;
+    queryId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-Reconnect
+ *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-ListPartitionsRequest
  */
-export type Reconnect = {
-    lastReceivedSequenceNumber: string;
+export type ListPartitionsRequest = {
     messageKind: QueryKind;
-    queryId: string;
+    queryId: JS_string;
+    protocolMessage?: ProtocolMessage;
+};
+
+/**
+ *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-GetAvailableIdsRequest
+ */
+export type GetAvailableIdsRequest = {
+    count: primitiveNumber;
+    messageKind: QueryKind;
+    queryId: JS_string;
+    protocolMessage?: ProtocolMessage;
+};
+
+/**
+ *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-ReconnectRequest
+ */
+export type ReconnectRequest = {
+    lastReceivedSequenceNumber: JS_string;
+    participationId: JS_string;
+    messageKind: QueryKind;
+    queryId: JS_string;
     protocolMessage?: ProtocolMessage;
 };
 
 export type QueryKind = string;
+
+export type primitiveBoolean = boolean;
+
+export type primitiveNumber = number;

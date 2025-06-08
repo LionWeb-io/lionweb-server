@@ -1,15 +1,15 @@
 import { JsonContext } from "@lionweb/json-utils"
-import { TypeDefinition, PropertyDef, PropertyDefinition, ValidationResult, validateKey, PrimitiveDef, ObjectDef } from "@lionweb/validation"
+import { PropertyDef, PropertyDefinition, ValidationResult, validateKey, PrimitiveDef, DefinitionSchema } from "@lionweb/validation"
 
 export const MAY_BE_NULL = true
 export const NOT_NULL = false
 
 export const ProtocolMessageProperty: PropertyDefinition = PropertyDef({
-    property: "protocolMessage",
-    expectedType: "ProtocolMessage",
+    name: "protocolMessage",
+    type: "ProtocolMessage",
     mayBeNull: MAY_BE_NULL,
     // isList: true,
-    isOptional: true,
+    isOptional: true
 })
 
 /**
@@ -17,40 +17,35 @@ export const ProtocolMessageProperty: PropertyDefinition = PropertyDef({
  * @param object Object to validate.
  * @param result Object where issues should be stored.
  * @param ctx    The JsonContext, to be used for issue location.
- * @param pdef   The property definitions
+ * @param pdef   The name definitions
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function emptyValidation<T>(object: T, result: ValidationResult, ctx: JsonContext, pdef?: PropertyDefinition): void {}
-
-export const sharedMap: Map<string, TypeDefinition> = new Map<string, TypeDefinition>([
-    [
-        "LionWebJsonDeltaChunk",
-        ObjectDef([
-            PropertyDef({ property: "nodes", expectedType: "LionWebJsonNode", isList: true }),
-        ]),
-    ],
-    [
-        "ProtocolMessage",
-        ObjectDef([
-            PropertyDef({ property: "kind", expectedType: "string", validate: validateKey }),
-            PropertyDef({ property: "message", expectedType: "string" }),
-            PropertyDef({ property: "data", expectedType: "KeyValuePair", isList: true }),
-        ]),
-    ],
-    [
-        "KeyValuePair",
-        ObjectDef([
-            PropertyDef({ property: "key", expectedType: "string", validate: validateKey }),
-            PropertyDef({ property: "value", expectedType: "string" }),
-        ]),
-    ],
-    ["numberString", PrimitiveDef({ primitiveType: "string" })],
-])
-
-/**
- * Return a new Map which is the union of `map1` and `map2`
- */
-export function mapUnion(map1: Map<string, TypeDefinition>, map2: Map<string, TypeDefinition>) {
-    return new Map([...map1, ...map2])
+function emptyValidation<T>(object: T, result: ValidationResult, ctx: JsonContext, pdef?: PropertyDefinition): void {
 }
+
+export const DeltaSharedSchema: DefinitionSchema = new DefinitionSchema([], [
+    {
+        name: "LionWebJsonDeltaChunk",
+        properties: [
+            PropertyDef({ name: "nodes", type: "LionWebJsonNode", isList: true })
+        ]
+    },
+    {
+        name: "ProtocolMessage",
+        properties: [
+            PropertyDef({ name: "kind", type: "JS_string", validate: validateKey }),
+            PropertyDef({ name: "message", type: "JS_string" }),
+            PropertyDef({ name: "data", type: "KeyValuePair", isList: true })
+        ]
+    },
+    {
+        name: "KeyValuePair",
+        properties: [
+            PropertyDef({ name: "key", type: "JS_string", validate: validateKey }),
+            PropertyDef({ name: "value", type: "JS_string" })
+        ]
+    },
+    PrimitiveDef({ name: "numberString", primitiveType: "string" }),
+    PrimitiveDef({ name: "JS_string", primitiveType: "string" })
+])
 

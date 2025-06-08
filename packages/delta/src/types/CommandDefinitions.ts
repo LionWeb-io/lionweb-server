@@ -1,15 +1,14 @@
 import { JsonContext } from "@lionweb/json-utils"
-import { TypeDefinition, PrimitiveDef, PropertyDef, PropertyDefinition, ValidationResult, ObjectDef } from "@lionweb/validation"
+import { PrimitiveDef, PropertyDef, PropertyDefinition, DefinitionSchema, ValidationResult } from "@lionweb/validation"
 import { MAY_BE_NULL, NOT_NULL, ProtocolMessageProperty } from "./SharedDefinitions.js"
 
 const CommandKindProperty: PropertyDefinition = PropertyDef({
-    property: "messageKind",
-    expectedType: "CommandKind",
+    name: "messageKind",
+    type: "CommandKind",
     mayBeNull: NOT_NULL,
     validate: emptyValidation,
-    isKey: true
 })
-const CommandIdProperty: PropertyDefinition = PropertyDef({ property: "commandId", expectedType: "string" })
+const CommandIdProperty: PropertyDefinition = PropertyDef({ name: "commandId", type: "JS_string" })
 
 const ICommandProperties = [CommandKindProperty, CommandIdProperty, ProtocolMessageProperty]
 
@@ -23,358 +22,401 @@ const ICommandProperties = [CommandKindProperty, CommandIdProperty, ProtocolMess
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function emptyValidation<T>(object: T, result: ValidationResult, ctx: JsonContext, pdef?: PropertyDefinition): void {}
 
-export const commandMap: Map<string, TypeDefinition> = new Map<string, TypeDefinition>([
-    ["AddPartition", ObjectDef([PropertyDef({ property: "newPartition", expectedType: "LionWebJsonDeltaChunk" }), ...ICommandProperties])],
-    ["DeletePartition", ObjectDef([PropertyDef({ property: "deletedPartition", expectedType: "LionWebId" }), ...ICommandProperties])],
+export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
     [
-        "ChangeClassifier",
-        ObjectDef([
-            PropertyDef({ property: "node", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newClassifier", expectedType: "LionWebJsonMetaPointer" }),
-            ...ICommandProperties,
-        ], "ICommand"),
+        {
+            unionType: "ICommand",
+            unionDiscriminator: "CommandKind",
+            unionProperty: "messageKind",
+        },
     ],
     [
-        "AddProperty",
-        ObjectDef([
-            PropertyDef({ property: "node", expectedType: "LionWebId" }),
-            PropertyDef({ property: "property", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "newValue", expectedType: "string" }),
-            ...ICommandProperties,
-        ], "ICommand"),
+        {
+            name: "AddPartition",
+            properties: [PropertyDef({ name: "newPartition", type: "LionWebJsonDeltaChunk" }), ...ICommandProperties],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "DeletePartition",
+            properties: [PropertyDef({ name: "deletedPartition", type: "LionWebId" }), ...ICommandProperties],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "ChangeClassifier",
+            properties: [
+                PropertyDef({ name: "node", type: "LionWebId" }),
+                PropertyDef({ name: "newClassifier", type: "LionWebJsonMetaPointer" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "AddProperty",
+            properties: [
+                PropertyDef({ name: "node", type: "LionWebId" }),
+                PropertyDef({ name: "property", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "newValue", type: "JS_string" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "DeleteProperty",
+            properties: [
+                PropertyDef({ name: "node", type: "LionWebId" }),
+                PropertyDef({ name: "property", type: "LionWebJsonMetaPointer" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "ChangeProperty",
+            properties: [
+                PropertyDef({ name: "node", type: "LionWebId" }),
+                PropertyDef({ name: "property", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "newValue", type: "JS_string" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "AddChild",
+            properties: [
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "newChild", type: "LionWebJsonDeltaChunk" }),
+                PropertyDef({ name: "containment", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "index", type: "numberString" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "DeleteChild",
+            properties: [
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "containment", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "index", type: "numberString" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "ReplaceChild",
+            properties: [
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "newChild", type: "LionWebJsonDeltaChunk" }),
+                PropertyDef({ name: "containment", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "index", type: "numberString" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "MoveChildFromOtherContainment",
+            properties: [
+                PropertyDef({ name: "newParent", type: "LionWebId" }),
+                PropertyDef({ name: "movedChild", type: "LionWebId" }),
+                PropertyDef({ name: "newContainment", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "newIndex", type: "numberString" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "MoveChildFromOtherContainmentInSameParent",
+            properties: [
+                PropertyDef({ name: "newContainment", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "movedChild", type: "LionWebId" }),
+                PropertyDef({ name: "newIndex", type: "numberString" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "MoveChildInSameContainment",
+            properties: [
+                PropertyDef({ name: "movedChild", type: "LionWebId" }),
+                PropertyDef({ name: "newIndex", type: "numberString" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "MoveAndReplaceChildFromOtherContainment",
+            properties: [
+                PropertyDef({ name: "newParent", type: "LionWebId" }),
+                PropertyDef({ name: "newContainment", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "newIndex", type: "numberString" }),
+                PropertyDef({ name: "movedChild", type: "LionWebId" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "MoveAndReplaceChildFromOtherContainmentInSameParent",
+            properties: [
+                PropertyDef({ name: "newContainment", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "newIndex", type: "numberString" }),
+                PropertyDef({ name: "movedChild", type: "LionWebId" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "MoveAndReplaceChildInSameContainment",
+            properties: [
+                PropertyDef({ name: "newIndex", type: "numberString" }),
+                PropertyDef({ name: "movedChild", type: "LionWebId" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "AddAnnotation",
+            properties: [
+                PropertyDef({ name: "newAnnotation", type: "LionWebJsonDeltaChunk" }),
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "index", type: "numberString" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "DeleteAnnotation",
+            properties: [PropertyDef({ name: "parent", type: "LionWebId" }), PropertyDef({ name: "index", type: "numberString" }), ...ICommandProperties],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "ReplaceAnnotation",
+            properties: [
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "newAnnotation", type: "LionWebJsonDeltaChunk" }),
+                PropertyDef({ name: "index", type: "numberString" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "MoveAnnotationFromOtherParent",
+            properties: [
+                PropertyDef({ name: "newParent", type: "LionWebId" }),
+                PropertyDef({ name: "newIndex", type: "numberString" }),
+                PropertyDef({ name: "movedAnnotation", type: "LionWebId" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "MoveAnnotationInSameParent",
+            properties: [
+                PropertyDef({ name: "newIndex", type: "numberString" }),
+                PropertyDef({ name: "movedAnnotation", type: "LionWebId" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "MoveAndReplaceAnnotationFromOtherParent",
+            properties: [
+                PropertyDef({ name: "newParent", type: "LionWebId" }),
+                PropertyDef({ name: "newIndex", type: "numberString" }),
+                PropertyDef({ name: "movedAnnotation", type: "LionWebId" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "MoveAndReplaceAnnotationInSameParent",
+            properties: [
+                PropertyDef({ name: "newIndex", type: "numberString" }),
+                PropertyDef({ name: "movedAnnotation", type: "LionWebId" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "AddReference",
+            properties: [
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "reference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "index", type: "numberString" }),
+                PropertyDef({ name: "newTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
+                PropertyDef({ name: "newResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "DeleteReference",
+            properties: [
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "reference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "index", type: "numberString" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "ChangeReference",
+            properties: [
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "reference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "index", type: "numberString" }),
+                PropertyDef({ name: "newTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
+                PropertyDef({ name: "newResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "MoveEntryFromOtherReference",
+            properties: [
+                PropertyDef({ name: "oldParent", type: "LionWebId" }),
+                PropertyDef({ name: "oldReference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "oldIndex", type: "numberString" }),
+                PropertyDef({ name: "newParent", type: "LionWebId" }),
+                PropertyDef({ name: "newReference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "newIndex", type: "numberString" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "MoveEntryFromOtherReferenceInSameParent",
+            properties: [
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "oldReference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "oldIndex", type: "numberString" }),
+                PropertyDef({ name: "newReference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "newIndex", type: "numberString" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "MoveEntryInSameReference",
+            properties: [
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "reference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "oldIndex", type: "numberString" }),
+                PropertyDef({ name: "newIndex", type: "numberString" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "MoveAndReplaceEntryFromOtherReference",
+            properties: [
+                PropertyDef({ name: "oldParent", type: "LionWebId" }),
+                PropertyDef({ name: "oldReference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "oldIndex", type: "numberString" }),
+                PropertyDef({ name: "newParent", type: "LionWebId" }),
+                PropertyDef({ name: "newReference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "newIndex", type: "numberString" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "MoveAndReplaceEntryFromOtherReferenceInSameParent",
+            properties: [
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "oldReference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "oldIndex", type: "numberString" }),
+                PropertyDef({ name: "newReference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "newIndex", type: "numberString" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "MoveAndReplaceEntryInSameReference",
+            properties: [
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "reference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "oldIndex", type: "numberString" }),
+                PropertyDef({ name: "newIndex", type: "numberString" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "AddReferenceResolveInfo",
+            properties: [
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "reference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "index", type: "numberString" }),
+                PropertyDef({ name: "newResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "DeleteReferenceResolveInfo",
+            properties: [
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "reference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "index", type: "numberString" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "ChangeReferenceResolveInfo",
+            properties: [
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "reference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "index", type: "numberString" }),
+                PropertyDef({ name: "newResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "AddReferenceTarget",
+            properties: [
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "reference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "index", type: "numberString" }),
+                PropertyDef({ name: "newTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "DeleteReferenceTarget",
+            properties: [
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "reference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "index", type: "numberString" }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "ChangeReferenceTarget",
+            properties: [
+                PropertyDef({ name: "parent", type: "LionWebId" }),
+                PropertyDef({ name: "reference", type: "LionWebJsonMetaPointer" }),
+                PropertyDef({ name: "index", type: "numberString" }),
+                PropertyDef({ name: "newTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
+                ...ICommandProperties,
+            ],
+            taggedUnionType: "ICommand",
+        },
+        {
+            name: "ICommand",
+            properties: [...ICommandProperties],
+        },
+        {
+            name: "CompositeCommand",
+            properties: [PropertyDef({ name: "parts", type: "ICommand", isList: true }), ...ICommandProperties],
+            taggedUnionType: "ICommand",
+        },
+        PrimitiveDef({ name: "CommandKind", primitiveType: "string" }),
+        // ["string", PrimitiveDef({ primitiveType: "string" })],
     ],
-    [
-        "DeleteProperty",
-        ObjectDef([
-            PropertyDef({ property: "node", expectedType: "LionWebId" }),
-            PropertyDef({ property: "property", expectedType: "LionWebJsonMetaPointer" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "ChangeProperty",
-        ObjectDef([
-            PropertyDef({ property: "node", expectedType: "LionWebId" }),
-            PropertyDef({ property: "property", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "newValue", expectedType: "string" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "AddChild",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newChild", expectedType: "LionWebJsonDeltaChunk" }),
-            PropertyDef({ property: "containment", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "index", expectedType: "numberString" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "DeleteChild",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "containment", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "index", expectedType: "numberString" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "ReplaceChild",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newChild", expectedType: "LionWebJsonDeltaChunk" }),
-            PropertyDef({ property: "containment", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "index", expectedType: "numberString" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "MoveChildFromOtherContainment",
-        ObjectDef([
-            PropertyDef({ property: "newParent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "movedChild", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newContainment", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "newIndex", expectedType: "numberString" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "MoveChildFromOtherContainmentInSameParent",
-        ObjectDef([
-            PropertyDef({ property: "newContainment", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "movedChild", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newIndex", expectedType: "numberString" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "MoveChildInSameContainment",
-        ObjectDef([
-            PropertyDef({ property: "movedChild", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newIndex", expectedType: "numberString" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "MoveAndReplaceChildFromOtherContainment",
-        ObjectDef([
-            PropertyDef({ property: "newParent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newContainment", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "newIndex", expectedType: "numberString" }),
-            PropertyDef({ property: "movedChild", expectedType: "LionWebId" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "MoveAndReplaceChildFromOtherContainmentInSameParent",
-        ObjectDef([
-            PropertyDef({ property: "newContainment", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "newIndex", expectedType: "numberString" }),
-            PropertyDef({ property: "movedChild", expectedType: "LionWebId" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "MoveAndReplaceChildInSameContainment",
-        ObjectDef([
-            PropertyDef({ property: "newIndex", expectedType: "numberString" }),
-            PropertyDef({ property: "movedChild", expectedType: "LionWebId" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "AddAnnotation",
-        ObjectDef([
-            PropertyDef({ property: "newAnnotation", expectedType: "LionWebJsonDeltaChunk" }),
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "index", expectedType: "numberString" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "DeleteAnnotation",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "index", expectedType: "numberString" }),
-            ...ICommandProperties
-        ], "ICommand"),
-    ],
-    [
-        "ReplaceAnnotation",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newAnnotation", expectedType: "LionWebJsonDeltaChunk" }),
-            PropertyDef({ property: "index", expectedType: "numberString" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "MoveAnnotationFromOtherParent",
-        ObjectDef([
-            PropertyDef({ property: "newParent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newIndex", expectedType: "numberString" }),
-            PropertyDef({ property: "movedAnnotation", expectedType: "LionWebId" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "MoveAnnotationInSameParent",
-        ObjectDef([
-            PropertyDef({ property: "newIndex", expectedType: "numberString" }),
-            PropertyDef({ property: "movedAnnotation", expectedType: "LionWebId" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "MoveAndReplaceAnnotationFromOtherParent",
-        ObjectDef([
-            PropertyDef({ property: "newParent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newIndex", expectedType: "numberString" }),
-            PropertyDef({ property: "movedAnnotation", expectedType: "LionWebId" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "MoveAndReplaceAnnotationInSameParent",
-        ObjectDef([
-            PropertyDef({ property: "newIndex", expectedType: "numberString" }),
-            PropertyDef({ property: "movedAnnotation", expectedType: "LionWebId" }),
-            ...ICommandProperties,
-        ],)
-    ],
-    [
-        "AddReference",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "index", expectedType: "numberString" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
-            PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "DeleteReference",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "index", expectedType: "numberString" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "ChangeReference",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "index", expectedType: "numberString" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
-            PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "MoveEntryFromOtherReference",
-        ObjectDef([
-            PropertyDef({ property: "oldParent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "oldReference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "oldIndex", expectedType: "numberString" }),
-            PropertyDef({ property: "newParent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newReference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "newIndex", expectedType: "numberString" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "MoveEntryFromOtherReferenceInSameParent",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "oldReference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "oldIndex", expectedType: "numberString" }),
-            PropertyDef({ property: "newReference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "newIndex", expectedType: "numberString" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "MoveEntryInSameReference",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "oldIndex", expectedType: "numberString" }),
-            PropertyDef({ property: "newIndex", expectedType: "numberString" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "MoveAndReplaceEntryFromOtherReference",
-        ObjectDef([
-            PropertyDef({ property: "oldParent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "oldReference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "oldIndex", expectedType: "numberString" }),
-            PropertyDef({ property: "newParent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "newReference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "newIndex", expectedType: "numberString" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "MoveAndReplaceEntryFromOtherReferenceInSameParent",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "oldReference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "oldIndex", expectedType: "numberString" }),
-            PropertyDef({ property: "newReference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "newIndex", expectedType: "numberString" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "MoveAndReplaceEntryInSameReference",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "oldIndex", expectedType: "numberString" }),
-            PropertyDef({ property: "newIndex", expectedType: "numberString" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "AddReferenceResolveInfo",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "index", expectedType: "numberString" }),
-            PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "DeleteReferenceResolveInfo",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "index", expectedType: "numberString" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "ChangeReferenceResolveInfo",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "index", expectedType: "numberString" }),
-            PropertyDef({ property: "newResolveInfo", expectedType: "string", mayBeNull: MAY_BE_NULL }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "AddReferenceTarget",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "index", expectedType: "numberString" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "DeleteReferenceTarget",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "index", expectedType: "numberString" }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    [
-        "ChangeReferenceTarget",
-        ObjectDef([
-            PropertyDef({ property: "parent", expectedType: "LionWebId" }),
-            PropertyDef({ property: "reference", expectedType: "LionWebJsonMetaPointer" }),
-            PropertyDef({ property: "index", expectedType: "numberString" }),
-            PropertyDef({ property: "newTarget", expectedType: "LionWebId", mayBeNull: MAY_BE_NULL }),
-            ...ICommandProperties,
-        ],
-            "ICommand"),
-    ],
-    [
-        "ICommand",
-        ObjectDef([
-            ...ICommandProperties,
-        ]),
-    ],
-    [
-        "CompositeCommand",
-        ObjectDef([
-            PropertyDef({ property: "parts", expectedType: "ICommand", isList: true }),
-            ...ICommandProperties,
-        ], "ICommand"),
-    ],
-    ["CommandKind", PrimitiveDef({ primitiveType: "string", isKey: true })]
-    // ["string", PrimitiveDef({ primitiveType: "string" })],
-])
+)
 
 // Add any Map or Set to another
 // function addAll(target: Map<string, TypeDefinition>, source: Map<string, TypeDefinition>) {

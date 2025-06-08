@@ -1,6 +1,6 @@
 import { JsonContext } from "@lionweb/json-utils"
-import { TypeDefinition, PropertyDef, PropertyDefinition, ValidationResult, validateKey, PrimitiveDef, ObjectDef } from "@lionweb/validation"
-import { NOT_NULL, ProtocolMessageProperty } from "./SharedDefinitions.js"
+import { PropertyDef, PropertyDefinition, ValidationResult, PrimitiveDef, DefinitionSchema } from "@lionweb/validation"
+import { ProtocolMessageProperty } from "./SharedDefinitions.js"
 
 /**
  * No-op validation function used as default value.
@@ -13,74 +13,82 @@ import { NOT_NULL, ProtocolMessageProperty } from "./SharedDefinitions.js"
 function emptyValidation<T>(object: T, result: ValidationResult, ctx: JsonContext, pdef?: PropertyDefinition): void {}
 
 const QueryKindProperty: PropertyDefinition = PropertyDef({
-    property: "messageKind",
-    expectedType: "QueryKind"
+    name: "messageKind",
+    type: "QueryKind"
 })
-const queryIdProperty: PropertyDefinition = PropertyDef({ property: "queryId", expectedType: "string" })
+const queryIdProperty: PropertyDefinition = PropertyDef({ name: "queryId", type: "JS_string" })
 
 const IQueryProperties = [QueryKindProperty, queryIdProperty, ProtocolMessageProperty]
 
-export const queryMEssageDefinitions: Map<string, TypeDefinition> = new Map<string, TypeDefinition>([
+export const DeltaQuerySchema: DefinitionSchema = new DefinitionSchema(
     [
-        "SubscribeToChangingPartitionsRequest",
-        ObjectDef([
-            PropertyDef({ property: "creation", expectedType: "boolean" }),
-            PropertyDef({ property: "deletion", expectedType: "boolean" }),
-            PropertyDef({ property: "partitions", expectedType: "boolean" }),
-            ...IQueryProperties
-        ]),
+        {
+            unionType: "",
+            unionDiscriminator: "QueryKind",
+            unionProperty: "messageKind"
+        }    
     ],
     [
-        "SubscribeToPartitionContentsRequest",
-        ObjectDef([
-            PropertyDef({ property: "partition", expectedType: "LionWebId" }),
+    {
+        name: "SubscribeToChangingPartitionsRequest",
+        properties: [
+            PropertyDef({ name: "creation", type: "primitiveBoolean" }),
+            PropertyDef({ name: "deletion", type: "primitiveBoolean" }),
+            PropertyDef({ name: "partitions", type: "primitiveBoolean" }),
             ...IQueryProperties
-        ]),
-    ],
-    [
-        "UnsubscribeFromPartitionContentsRequest",
-        ObjectDef([
-            PropertyDef({ property: "partition", expectedType: "LionWebId" }),
+        ]
+    },
+    {
+        name: "SubscribeToPartitionContentsRequest",
+        properties: [
+            PropertyDef({ name: "partition", type: "LionWebId" }),
             ...IQueryProperties
-        ]),
-    ],
-    [
+        ]
+    },
+    {
+        name: "UnsubscribeFromPartitionContentsRequest",
+        properties: [
+            PropertyDef({ name: "partition", type: "LionWebId" }),
+            ...IQueryProperties
+        ]
+    },
+    {
         // TODO check name
-        "SignOnRequest",
-        ObjectDef([
-            PropertyDef({ property: "deltaProtocolVersion", expectedType: "string" }),
+        name: "SignOnRequest",
+        properties: [
+            PropertyDef({ name: "deltaProtocolVersion", type: "JS_string" }),
             ...IQueryProperties
-        ]),
-    ],
-    [
-        "SignOffRequest",
-        ObjectDef([
+        ]
+    },
+    {
+        name: "SignOffRequest",
+        properties: [
             ...IQueryProperties
-        ]),
-    ],
-    [
-        "ListPartitionsRequest",
-        ObjectDef([
+        ]
+    },
+    {
+        name: "ListPartitionsRequest",
+        properties: [
             ...IQueryProperties
-        ]),
-    ],
-    [
-        "GetAvailableIdsRequest",
-        ObjectDef([
-            PropertyDef({ property: "count", expectedType: "primitiveNumber"}),
+        ]
+    },
+    {
+        name: "GetAvailableIdsRequest",
+        properties: [
+            PropertyDef({ name: "count", type: "primitiveNumber"}),
             ...IQueryProperties
-        ]),
-    ],
-    [
-        "ReconnectRequest",
-        ObjectDef([
-            PropertyDef({ property: "lastReceivedSequenceNumber", expectedType: "string" }),
-            PropertyDef({ property: "participationId", expectedType: "string" }),
+        ]
+    },
+    {
+        name: "ReconnectRequest",
+        properties: [
+            PropertyDef({ name: "lastReceivedSequenceNumber", type: "JS_string" }),
+            PropertyDef({ name: "participationId", type: "JS_string" }),
             ...IQueryProperties
-        ]),
-    ],
-    ["QueryKind", PrimitiveDef({ primitiveType: "string" })],
-    ["boolean", PrimitiveDef({ primitiveType: "boolean" })],
-    ["primitiveNumber", PrimitiveDef({ primitiveType: "number" })],
+        ]
+    },
+    PrimitiveDef({ name: "QueryKind", primitiveType: "string" }),
+    PrimitiveDef({ name: "primitiveBoolean", primitiveType: "boolean" }),
+    PrimitiveDef({ name: "primitiveNumber", primitiveType: "number" })
 ])
 

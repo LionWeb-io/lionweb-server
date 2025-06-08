@@ -1,14 +1,13 @@
 import { JsonContext } from "@lionweb/json-utils"
-import { ValidationResult, SyntaxValidator, GenericIssue, expectedTypes } from "@lionweb/validation"
-import { commandMap } from "./CommandDefinitions.js"
-import { Event_Definitions_Map } from "./EventDefinitions.js"
-import { queryMEssageDefinitions } from "./QueryDefinitions.js"
-import { mapUnion, sharedMap } from "./SharedDefinitions.js"
+import { ValidationResult, SyntaxValidator, GenericIssue, LionWebSchema, DefinitionSchema } from "@lionweb/validation"
+import { DeltaCommandSchema } from "./CommandDefinitions.js"
+import { DeltaEventSchema } from "./EventDefinitions.js"
+import { DeltaQuerySchema } from "./QueryDefinitions.js"
+import { DeltaSharedSchema } from "./SharedDefinitions.js"
 
 export type UnknownObjectType = { [key: string]: unknown }
 
-const commandDefinitions = mapUnion(mapUnion(mapUnion(mapUnion(commandMap, sharedMap), expectedTypes), Event_Definitions_Map), queryMEssageDefinitions)
-// const eventDefinitions = mapUnion(Event_Definitions_Map, sharedMap)
+const commandDefinitions = DefinitionSchema.join(DeltaCommandSchema, DeltaSharedSchema, LionWebSchema, DeltaEventSchema, DeltaQuerySchema)
 
 export class DeltaValidation extends SyntaxValidator {
     constructor(validationResult: ValidationResult) {

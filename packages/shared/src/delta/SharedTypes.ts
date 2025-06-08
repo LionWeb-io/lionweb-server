@@ -11,8 +11,8 @@ export type LionWebJsonDeltaChunk = {
  *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-ProtocolMessage
  */
 export type ProtocolMessage = {
-    kind: string;
-    message: string;
+    kind: JS_string;
+    message: JS_string;
     data: KeyValuePair[];
 };
 
@@ -20,8 +20,10 @@ export type ProtocolMessage = {
  *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-KeyValuePair
  */
 export type KeyValuePair = {
-    key: string;
-    value: string;
+    key: JS_string;
+    value: JS_string;
 };
 
 export type numberString = string;
+
+export type JS_string = string;
