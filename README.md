@@ -1,4 +1,4 @@
-# lionweb-repository
+# lionweb-server
 Reference implementation of LionWeb repository
 
 ## Changes in Version 0.3.0
@@ -43,19 +43,19 @@ npm run build
 npm run lint
 ```
 
-### How to start the repository server
+### How to start the LionWeb server
 Ensure that Postgres is running.
-The repository server is started with `npm run dev-run` in  the `packages/server` folder:
+The server is started with `npm run dev-run` in  the `packages/server` folder:
 
 ```
 cd packages/server
 npm run dev-run
 ```
 
-For more information on how to configure the repository, please check [configuration.md](configuration.md).
+For more information on how to configure the server, please check [configuration.md](configuration.md).
 
 ### How to test
-Ensure the Postgres server and the repository server are both running.
+Ensure the Postgres server and the LionWeb server are both running.
 Then do
 
 ```
@@ -63,12 +63,14 @@ npm run test
 ```
 
 ## Status
-This repository is Work In Progress, currently:
+This server is Work In Progress, currently:
 - Changes in children: adding, removing, moving are supported
 - Changes of property values are supported
 - Changes of reference targets are supported
 - Changes of annotations are supported.
-- changes of order of containments, references and annotations are supported.  
+- changes of order of containments, references and annotations are supported. 
+
+This together is the full [Bulk API](https://lionweb.io/specification/bulk/repo-access-api.html) as defined in the LionWeb specification.
 
 ##  Main Packages
 
@@ -76,12 +78,12 @@ This repository is Work In Progress, currently:
 Contains code to manipulate the Postgres database (create, initialize)
 
 ### server
-The main repository server.
-Manages the connections to the databes.
+The main LionWeb server.
+Manages the connections to the databases.
 Gets all apis from other packages.
 
 ### common
-Utitilty classes and functions shared by all other packages.
+Utility classes and functions shared by all other packages.
 
 ## API packages
 These packagesa all provide an API with one or more functions.
@@ -96,8 +98,8 @@ Some additiona API functions.
 API's to inspect the contents of the nodes table.
 
 ### languages
-Thye API funxctions to add/remove LionWeb languages to the repository.
-NOTE: not implemented yet, ist is a placeholder.
+The API functions to add/remove LionWeb languages to the server.
+NOTE: not implemented yet, it is a placeholder.
 
 
 ### test
@@ -111,7 +113,7 @@ You need to ensure that this hostname points to the Postgres server.
 ## Authentication
 
 It is possible to specify a token to be expected by the server in each request (see [configuration.md](configuration.md)).
-This mechanism is intended to make possible to expose the LionWeb repository while providing a minimum level of 
+This mechanism is intended to make possible to expose the LionWeb server while providing a minimum level of 
 security. When the token is specified while launching the server, then each request to the server will be checked
 for the presence of the same token in the `Authorization` header.
 
@@ -127,7 +129,7 @@ are described in the [README.md](scripts/README.md) in the scripts folder.
 You can get the docker image from the Docker repository hosted by GitHub:
 
 ```
-docker pull ghcr.io/lionweb-io/lionweb-repository:latest 
+docker pull ghcr.io/lionweb-io/lionweb-server:latest 
 # alternatively you can specify a specific version
-docker pull ghcr.io/lionweb-io/lionweb-repository:release-lionweb-repository-0.1.1
+docker pull ghcr.io/lionweb-io/lionweb-server:release-lionweb-server-0.1.1
 ```
