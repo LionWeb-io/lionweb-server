@@ -1,4 +1,4 @@
-name: Build and test lioweb-repository
+name: Build and test lionweb-server
 on: [push, pull_request]
 
 jobs:
@@ -49,7 +49,7 @@ jobs:
 
       - name: start server and run tests (one step, else server will be down when tests start)
         run: |
-          npm run -w @lionweb/repository-server dev-setup
-          npm run -w @lionweb/repository-server dev-run &
+          npm run -w @lionweb/server-server dev-setup
+          npm run -w @lionweb/server-server dev-run &
           sleep 6
           npm run test
