@@ -1,4 +1,4 @@
-import { lionwebResponse, requestLogger } from "@lionweb/repository-common"
+import { lionwebResponse, requestLogger } from "@lionweb/server-common"
 import { Request, Response } from "express"
 import { LanguageApiContext } from "../main.js"
 

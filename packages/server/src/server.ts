@@ -1,4 +1,4 @@
-import { registerHistoryApi } from "@lionweb/repository-history"
+import { registerHistoryApi } from "@lionweb/server-history"
 import express, { Express, NextFunction, Response, Request } from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
@@ -13,18 +13,18 @@ import {
     SCHEMA_PREFIX,
     ServerConfig,
     initializeCommons
-} from "@lionweb/repository-common"
-import { registerDBAdmin, repositoryStore } from "@lionweb/repository-dbadmin"
-import { registerInspection } from "@lionweb/repository-inspection"
-import { registerBulkApi } from "@lionweb/repository-bulkapi"
+} from "@lionweb/server-common"
+import { registerDBAdmin, repositoryStore } from "@lionweb/server-dbadmin"
+import { registerInspection } from "@lionweb/server-inspection"
+import { registerBulkApi } from "@lionweb/server-bulkapi"
 import {
     FLATBUFFERS_CONTENT_TYPE,
     JSON_CONTENT_TYPE,
     PROTOBUF_CONTENT_TYPE,
     registerAdditionalApi
-} from "@lionweb/repository-additionalapi"
-import { registerLanguagesApi } from "@lionweb/repository-languages"
-import { HttpClientErrors } from "@lionweb/repository-shared"
+} from "@lionweb/server-additionalapi"
+import { registerLanguagesApi } from "@lionweb/server-languages"
+import { HttpClientErrors } from "@lionweb/server-shared"
 import { pinoHttp } from "pino-http"
 import * as http from "node:http"
 

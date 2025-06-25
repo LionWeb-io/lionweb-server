@@ -5,9 +5,9 @@ npx changeset add
 npx changeset version
 npx changeset tag
 
-# find the latest tag for the main repository package
+# find the latest tag for the main server package
 # use sort to ensure 0.0.10 comes after 0.0.1 and 0.0.2 etc.
-TAG=`git tag -l "@lionweb/repository@*"  --sort=v:refname | tail -1`
+TAG=`git tag -l "@lionweb/server@*"  --sort=v:refname | tail -1`
 
 # remove all tags for the individual paclages, as they will point to exactly the same commit.
 # This avoid too many tags in the repo

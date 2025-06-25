@@ -1,4 +1,4 @@
-import { REPOSITORIES_TABLE } from "@lionweb/repository-common";
+import { REPOSITORIES_TABLE } from "@lionweb/server-common";
 
 /**
  * Query to create the `schemaExists()` function in the _public_ schema of the database.

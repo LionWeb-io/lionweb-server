@@ -1,4 +1,4 @@
-import { RepositoryData } from "@lionweb/repository-common"
+import { RepositoryData } from "@lionweb/server-common"
 import { InspectionContext } from "../main.js"
 
 export interface LanguageNodes {

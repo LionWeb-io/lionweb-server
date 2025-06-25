@@ -1,4 +1,4 @@
-import { METAPOINTERS_TABLE, NODES_TABLE } from "@lionweb/repository-common"
+import { METAPOINTERS_TABLE, NODES_TABLE } from "@lionweb/server-common"
 
 /**
  * Database functions.

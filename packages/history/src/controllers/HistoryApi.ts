@@ -2,12 +2,12 @@
 // - unpack the request
 // - call controller to do actual work
 // - pack response
-import { getRepositoryData } from "@lionweb/repository-dbadmin"
-import { HttpClientErrors, ListPartitionsResponse, StoreResponse } from "@lionweb/repository-shared"
-import { lionwebResponse } from "@lionweb/repository-common"
+import { getRepositoryData } from "@lionweb/server-dbadmin"
+import { HttpClientErrors, ListPartitionsResponse, StoreResponse } from "@lionweb/server-shared"
+import { lionwebResponse } from "@lionweb/server-common"
 import { Request, Response } from "express"
 import { HistoryContext } from "../main.js"
-import { getIntegerParam, isParameterError, FOREVER, dbLogger, requestLogger, LionWebTask } from "@lionweb/repository-common"
+import { getIntegerParam, isParameterError, FOREVER, dbLogger, requestLogger, LionWebTask } from "@lionweb/server-common"
 
 export interface HistoryApi {
     listPartitions: (request: Request, response: Response) => void

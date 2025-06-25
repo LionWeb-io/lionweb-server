@@ -1,5 +1,5 @@
 {
-  "name": "@lionweb/repository-bulkapi",
+  "name": "@lionweb/server-bulkapi",
   "version": "0.3.0",
   "private": false,
   "main": "dist/index.js",
@@ -9,10 +9,10 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/LionWeb-io/lionweb-repository.git"
+    "url": "https://github.com/LionWeb-io/lionweb-server.git"
   },
   "bugs": {
-    "url": "https://github.com/LionWeb-io/lionweb-repository/issues"
+    "url": "https://github.com/LionWeb-io/lionweb-server/issues"
   },
   "scripts": {
     "clean": "rm -rf node_modules/ && rm -rf dist/",
@@ -35,8 +35,8 @@
     "typescript": "5.2.2"
   },
   "dependencies": {
-    "@lionweb/repository-common": "0.3.0",
-    "@lionweb/repository-dbadmin": "0.3.0",
+    "@lionweb/server-common": "0.3.0",
+    "@lionweb/server-dbadmin": "0.3.0",
     "@lionweb/validation": "0.6.13-beta.6",
     "@lionweb/json": "0.6.13-beta.5",
     "@lionweb/json-diff": "0.6.13-beta.5",

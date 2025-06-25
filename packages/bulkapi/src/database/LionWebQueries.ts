@@ -6,7 +6,7 @@ import {
     HttpClientErrors,
     LionwebResponse,
     DeletePartitionsResponse
-} from "@lionweb/repository-shared"
+} from "@lionweb/server-shared"
 import {
     asError,
     QueryReturnType,
@@ -20,7 +20,7 @@ import {
     requestLogger,
     CURRENT_DATA,
     CURRENT_DATA_REPO_VERSION_KEY
-} from "@lionweb/repository-common"
+} from "@lionweb/server-common"
 import { LionWebJsonChunkWrapper, NodeUtils, JsonContext } from "@lionweb/json-utils"
 import { LionWebJsonChunk, LionWebJsonNode } from "@lionweb/json"
 import {
@@ -48,7 +48,7 @@ import {
     QueryNodeForIdList,
     versionResultToResponse
 } from "./QueryNode.js"
-import { MetaPointersTracker } from "@lionweb/repository-dbadmin"
+import { MetaPointersTracker } from "@lionweb/server-dbadmin"
 
 function createDummyNode(nodeId: string): LionWebJsonNode {
     return {

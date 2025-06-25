@@ -1,14 +1,14 @@
 {
-  "name": "@lionweb/repository",
+  "name": "@lionweb/server",
   "version": "0.3.0",
   "private": true,
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/LionWeb-io/lionweb-repository.git"
+    "url": "https://github.com/LionWeb-io/lionweb-server.git"
   },
   "bugs": {
-    "url": "https://github.com/LionWeb-io/lionweb-repository/issues"
+    "url": "https://github.com/LionWeb-io/lionweb-server/issues"
   },
   "scripts": {
     "initialize": "npm run clean && npm install && npm run setup && npm run build",

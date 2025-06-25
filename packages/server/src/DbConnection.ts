@@ -1,5 +1,5 @@
-import { dbLogger, ServerConfig } from "@lionweb/repository-common"
-import { CREATE_CONFIG, PostgresConfig, pgSSLConf } from "@lionweb/repository-dbadmin"
+import { dbLogger, ServerConfig } from "@lionweb/server-common"
+import { CREATE_CONFIG, PostgresConfig, pgSSLConf } from "@lionweb/server-dbadmin"
 import pgPromise from "pg-promise"
 import dotenv from "dotenv"
 import pg from "pg"
