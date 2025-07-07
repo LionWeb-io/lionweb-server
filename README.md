@@ -63,14 +63,7 @@ npm run test
 ```
 
 ## Status
-This server is Work In Progress, currently:
-- Changes in children: adding, removing, moving are supported
-- Changes of property values are supported
-- Changes of reference targets are supported
-- Changes of annotations are supported.
-- changes of order of containments, references and annotations are supported. 
-
-This together is the full [Bulk API](https://lionweb.io/specification/bulk/repo-access-api.html) as defined in the LionWeb specification.
+This server implents the full LionWeb [Bulk API](https://lionweb.io/specification/bulk/repo-access-api.html) as defined in the LionWeb specification.
 
 ##  Main Packages
 
