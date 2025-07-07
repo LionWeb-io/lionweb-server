@@ -1,14 +1,14 @@
 import { LionWebJsonNode } from "@lionweb/json";
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-LionWebJsonDeltaChunk
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-LionWebJsonDeltaChunk
  */
 export type LionWebJsonDeltaChunk = {
     nodes: LionWebJsonNode[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-ProtocolMessage
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-ProtocolMessage
  */
 export type ProtocolMessage = {
     kind: JS_string;
@@ -17,7 +17,7 @@ export type ProtocolMessage = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-KeyValuePair
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-KeyValuePair
  */
 export type KeyValuePair = {
     key: JS_string;

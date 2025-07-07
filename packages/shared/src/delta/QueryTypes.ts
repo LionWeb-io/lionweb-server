@@ -3,7 +3,7 @@ import { ParticipationId } from "./EventTypes.js"
 import { JS_number, JS_string, LionWebJsonDeltaChunk, ProtocolMessage } from "./SharedTypes.js"
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-SubscribeToChangingPartitionsRequest
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-SubscribeToChangingPartitionsRequest
  */
 export type SubscribeToChangingPartitionsRequest = {
     creation: primitiveBoolean;
@@ -15,7 +15,7 @@ export type SubscribeToChangingPartitionsRequest = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-SubscribeToChangingPartitionsResponse
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-SubscribeToChangingPartitionsResponse
  */
 export type SubscribeToChangingPartitionsResponse = {
     messageKind: QueryKind;
@@ -24,7 +24,7 @@ export type SubscribeToChangingPartitionsResponse = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-SubscribeToPartitionContentsRequest
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-SubscribeToPartitionContentsRequest
  */
 export type SubscribeToPartitionContentsRequest = {
     partition: LionWebId;
@@ -34,7 +34,7 @@ export type SubscribeToPartitionContentsRequest = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-SubscribeToPartitionContentsResponse
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-SubscribeToPartitionContentsResponse
  */
 export type SubscribeToPartitionContentsResponse = {
     contents: LionWebJsonDeltaChunk;
@@ -44,7 +44,7 @@ export type SubscribeToPartitionContentsResponse = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-UnsubscribeFromPartitionContentsRequest
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-UnsubscribeFromPartitionContentsRequest
  */
 export type UnsubscribeFromPartitionContentsRequest = {
     partition: LionWebId;
@@ -54,7 +54,7 @@ export type UnsubscribeFromPartitionContentsRequest = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-UnsubscribeFromPartitionContentsResponse
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-UnsubscribeFromPartitionContentsResponse
  */
 export type UnsubscribeFromPartitionContentsResponse = {
     messageKind: QueryKind;
@@ -63,7 +63,7 @@ export type UnsubscribeFromPartitionContentsResponse = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-SignOnRequest
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-SignOnRequest
  */
 export type SignOnRequest = {
     deltaProtocolVersion: JS_string;
@@ -73,7 +73,7 @@ export type SignOnRequest = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-SignOnResponse
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-SignOnResponse
  */
 export type SignOnResponse = {
     participationId: ParticipationId;
@@ -83,7 +83,7 @@ export type SignOnResponse = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-SignOffRequest
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-SignOffRequest
  */
 export type SignOffRequest = {
     messageKind: QueryKind;
@@ -92,7 +92,7 @@ export type SignOffRequest = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-SignOffResponse
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-SignOffResponse
  */
 export type SignOffResponse = {
     messageKind: QueryKind;
@@ -101,7 +101,7 @@ export type SignOffResponse = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-ListPartitionsRequest
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-ListPartitionsRequest
  */
 export type ListPartitionsRequest = {
     messageKind: QueryKind;
@@ -110,9 +110,9 @@ export type ListPartitionsRequest = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-ListPartitionsResponse
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-ListPartitionsResponse
  */
-export type ListPartitionsResponse = {
+export type ListPartitionsResponseDelta = {
     partitions: LionWebJsonDeltaChunk;
     messageKind: QueryKind;
     queryId: JS_string;
@@ -120,7 +120,7 @@ export type ListPartitionsResponse = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-GetAvailableIdsRequest
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-GetAvailableIdsRequest
  */
 export type GetAvailableIdsRequest = {
     count: primitiveNumber;
@@ -130,7 +130,7 @@ export type GetAvailableIdsRequest = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-GetAvailableIdsResponse
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-GetAvailableIdsResponse
  */
 export type GetAvailableIdsResponse = {
     ids: LionWebId[];
@@ -140,7 +140,7 @@ export type GetAvailableIdsResponse = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-ReconnectRequest
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-ReconnectRequest
  */
 export type ReconnectRequest = {
     participationId: JS_string;
@@ -151,7 +151,7 @@ export type ReconnectRequest = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/introduction.adoc#-ReconnectResponse
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-ReconnectResponse
  */
 export type ReconnectResponse = {
     lastSentSequenceNumber: JS_number;

@@ -3,6 +3,9 @@ import { DefinitionSchema, isObjectDefinition, isPrimitiveDefinition, PrimitiveD
 
 export class TypeTemplates {
 
+    /** 
+     * Convert a DefinitionSchema to a collection of typescript types
+     */
     commandTemplate(schema: DefinitionSchema, doclinkRoot: string ): string {
         const referredTypes: Set<string> = new Set<string>()
         let result = `
@@ -16,14 +19,19 @@ export class TypeTemplates {
                             /**
                               *  @see ${doclinkRoot}-${def.name}
                               */
-                            export type ${def.name} = ${extend} {
+                            export type ${def.name} = {
                             ${def.properties.map((propDef) => {
                                     referredTypes.add(propDef.type)
                                     const optional = (propDef.isOptional ? "?" : "")
                                     const isList = propDef.isList ? "[]" : ""
-                                    return `${propDef.name}${optional} : ${propDef.type}${isList}`
+                                    const isDiscriminator = schema.isTagProperty(propDef.name)
+                                    if (isDiscriminator) {
+                                        return `${propDef.name} : "${def.name}"`
+                                    } else {
+                                        return `${propDef.name}${optional} : ${propDef.type}${isList}`
+                                    }
                                 }).join(",\n")
-                            }
+                        }
                             }
                             `
                 } else if (isPrimitiveDefinition(def) && !schema.isUnionDiscriminator(def)){ //schdef.isTag) {
@@ -33,7 +41,7 @@ export class TypeTemplates {
                 } else if (isPrimitiveDefinition(def) && schema.isUnionDiscriminator(def)) {
                     const keyTypes = schema.definitions()
                         .filter(alldef => isObjectDefinition(alldef) && (alldef.properties.find(p => p.type === def.name)))
-                    return `export type ${def.name} = ${keyTypes.map(key => `"${key.name}"`).join((" | "))}`
+                    return `export type ${def.name} = ${keyTypes.map(key => `${key.name}`).join((" | "))}`
                 }
             }).join("\n")}
             `

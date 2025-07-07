@@ -2,15 +2,15 @@ import { JsonContext } from "@lionweb/json-utils"
 import { PrimitiveDef, PropertyDef, PropertyDefinition, DefinitionSchema, ValidationResult } from "@lionweb/validation"
 import { MAY_BE_NULL, NOT_NULL, ProtocolMessageProperty } from "./SharedDefinitions.js"
 
-const CommandKindProperty: PropertyDefinition = PropertyDef({
+const CommandTypeProperty: PropertyDefinition = PropertyDef({
     name: "messageKind",
-    type: "CommandKind",
+    type: "CommandType",
     mayBeNull: NOT_NULL,
     validate: emptyValidation,
 })
 const CommandIdProperty: PropertyDefinition = PropertyDef({ name: "commandId", type: "JS_string" })
 
-const ICommandProperties = [CommandKindProperty, CommandIdProperty, ProtocolMessageProperty]
+const CommonCommandProperties = [CommandTypeProperty, CommandIdProperty, ProtocolMessageProperty]
 
 /**
  * No-op validation function used as default value.
@@ -25,8 +25,8 @@ function emptyValidation<T>(object: T, result: ValidationResult, ctx: JsonContex
 export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
     [
         {
-            unionType: "ICommand",
-            unionDiscriminator: "CommandKind",
+            unionType: "CommandType",
+            unionDiscriminator: "CommandType",
             unionProperty: "messageKind",
         },
     ],
@@ -34,34 +34,34 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
         {
             name: "CommandResponse",
             properties: [
-                ...ICommandProperties
+                ...CommonCommandProperties
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "AddPartition",
             properties: [
                 PropertyDef({ name: "newPartition", type: "LionWebJsonDeltaChunk" }),
-                ...ICommandProperties
+                ...CommonCommandProperties
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "DeletePartition",
             properties: [
                 PropertyDef({ name: "deletedPartition", type: "LionWebId" }),
-                ...ICommandProperties
+                ...CommonCommandProperties
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "ChangeClassifier",
             properties: [
                 PropertyDef({ name: "node", type: "LionWebId" }),
                 PropertyDef({ name: "newClassifier", type: "LionWebJsonMetaPointer" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "AddProperty",
@@ -69,18 +69,18 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "node", type: "LionWebId" }),
                 PropertyDef({ name: "property", type: "LionWebJsonMetaPointer" }),
                 PropertyDef({ name: "newValue", type: "JS_string" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "DeleteProperty",
             properties: [
                 PropertyDef({ name: "node", type: "LionWebId" }),
                 PropertyDef({ name: "property", type: "LionWebJsonMetaPointer" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "ChangeProperty",
@@ -88,9 +88,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "node", type: "LionWebId" }),
                 PropertyDef({ name: "property", type: "LionWebJsonMetaPointer" }),
                 PropertyDef({ name: "newValue", type: "JS_string" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "AddChild",
@@ -99,9 +99,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newChild", type: "LionWebJsonDeltaChunk" }),
                 PropertyDef({ name: "containment", type: "LionWebJsonMetaPointer" }),
                 PropertyDef({ name: "index", type: "JS_number" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "DeleteChild",
@@ -110,9 +110,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "containment", type: "LionWebJsonMetaPointer" }),
                 PropertyDef({ name: "index", type: "JS_number" }),
                 PropertyDef({ name: "deletedChild", type: "LionWebId" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "ReplaceChild",
@@ -122,9 +122,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "containment", type: "LionWebJsonMetaPointer" }),
                 PropertyDef({ name: "index", type: "JS_number" }),
                 PropertyDef({ name: "replacedChild", type: "LionWebId" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "MoveChildFromOtherContainment",
@@ -133,9 +133,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "movedChild", type: "LionWebId" }),
                 PropertyDef({ name: "newContainment", type: "LionWebJsonMetaPointer" }),
                 PropertyDef({ name: "newIndex", type: "JS_number" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "MoveChildFromOtherContainmentInSameParent",
@@ -143,18 +143,18 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newContainment", type: "LionWebJsonMetaPointer" }),
                 PropertyDef({ name: "movedChild", type: "LionWebId" }),
                 PropertyDef({ name: "newIndex", type: "JS_number" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "MoveChildInSameContainment",
             properties: [
                 PropertyDef({ name: "movedChild", type: "LionWebId" }),
                 PropertyDef({ name: "newIndex", type: "JS_number" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "MoveAndReplaceChildFromOtherContainment",
@@ -164,9 +164,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newIndex", type: "JS_number" }),
                 PropertyDef({ name: "movedChild", type: "LionWebId" }),
                 PropertyDef({ name: "replacedChild", type: "LionWebId" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "MoveAndReplaceChildFromOtherContainmentInSameParent",
@@ -175,9 +175,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newIndex", type: "JS_number" }),
                 PropertyDef({ name: "movedChild", type: "LionWebId" }),
                 PropertyDef({ name: "replacedChild", type: "LionWebId" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "MoveAndReplaceChildInSameContainment",
@@ -185,9 +185,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newIndex", type: "JS_number" }),
                 PropertyDef({ name: "movedChild", type: "LionWebId" }),
                 PropertyDef({ name: "replacedChild", type: "LionWebId" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "AddAnnotation",
@@ -195,9 +195,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newAnnotation", type: "LionWebJsonDeltaChunk" }),
                 PropertyDef({ name: "parent", type: "LionWebId" }),
                 PropertyDef({ name: "index", type: "JS_number" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "DeleteAnnotation",
@@ -205,9 +205,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "parent", type: "LionWebId" }), 
                 PropertyDef({ name: "index", type: "JS_number" }),
                 PropertyDef({ name: "deletedAnnotation", type: "LionWebId" }),
-                ...ICommandProperties
+                ...CommonCommandProperties
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "ReplaceAnnotation",
@@ -216,9 +216,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newAnnotation", type: "LionWebJsonDeltaChunk" }),
                 PropertyDef({ name: "index", type: "JS_number" }),
                 PropertyDef({ name: "replacedAnnotation", type: "LionWebId" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "MoveAnnotationFromOtherParent",
@@ -226,18 +226,18 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newParent", type: "LionWebId" }),
                 PropertyDef({ name: "newIndex", type: "JS_number" }),
                 PropertyDef({ name: "movedAnnotation", type: "LionWebId" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "MoveAnnotationInSameParent",
             properties: [
                 PropertyDef({ name: "newIndex", type: "JS_number" }),
                 PropertyDef({ name: "movedAnnotation", type: "LionWebId" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "MoveAndReplaceAnnotationFromOtherParent",
@@ -246,9 +246,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newIndex", type: "JS_number" }),
                 PropertyDef({ name: "movedAnnotation", type: "LionWebId" }),
                 PropertyDef({ name: "replacedAnnotation", type: "LionWebId" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "MoveAndReplaceAnnotationInSameParent",
@@ -256,9 +256,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newIndex", type: "JS_number" }),
                 PropertyDef({ name: "movedAnnotation", type: "LionWebId" }),
                 PropertyDef({ name: "replacedAnnotation", type: "LionWebId" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "AddReference",
@@ -268,9 +268,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "index", type: "JS_number" }),
                 PropertyDef({ name: "newTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "newResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "DeleteReference",
@@ -280,9 +280,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "index", type: "JS_number" }),
                 PropertyDef({ name: "deletedTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "deletedResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "ChangeReference",
@@ -294,9 +294,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "oldTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "oldResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "MoveEntryFromOtherReference",
@@ -309,9 +309,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newIndex", type: "JS_number" }),
                 PropertyDef({ name: "movedTarget", type: "LionWebId", isOptional: MAY_BE_NULL }),
                 PropertyDef({ name: "movedResolveInfo", type: "JS_string", isOptional: MAY_BE_NULL }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "MoveEntryFromOtherReferenceInSameParent",
@@ -323,9 +323,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newIndex", type: "JS_number" }),
                 PropertyDef({ name: "movedTarget", type: "LionWebId", isOptional: MAY_BE_NULL }),
                 PropertyDef({ name: "movedResolveInfo", type: "JS_string", isOptional: MAY_BE_NULL }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "MoveEntryInSameReference",
@@ -336,9 +336,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newIndex", type: "JS_number" }),
                 PropertyDef({ name: "movedTarget", type: "LionWebId", isOptional: MAY_BE_NULL }),
                 PropertyDef({ name: "movedResolveInfo", type: "JS_string", isOptional: MAY_BE_NULL }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "MoveAndReplaceEntryFromOtherReference",
@@ -353,9 +353,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "movedResolveInfo", type: "JS_string", isOptional: MAY_BE_NULL }),
                 PropertyDef({ name: "replacedTarget", type: "LionWebId", isOptional: MAY_BE_NULL }),
                 PropertyDef({ name: "replacedResolveInfo", type: "JS_string", isOptional: MAY_BE_NULL }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "MoveAndReplaceEntryFromOtherReferenceInSameParent",
@@ -369,9 +369,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "movedResolveInfo", type: "JS_string", isOptional: MAY_BE_NULL }),
                 PropertyDef({ name: "replacedTarget", type: "LionWebId", isOptional: MAY_BE_NULL }),
                 PropertyDef({ name: "replacedResolveInfo", type: "JS_string", isOptional: MAY_BE_NULL }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "MoveAndReplaceEntryInSameReference",
@@ -384,9 +384,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "movedResolveInfo", type: "JS_string", isOptional: MAY_BE_NULL }),
                 PropertyDef({ name: "replacedTarget", type: "LionWebId", isOptional: MAY_BE_NULL }),
                 PropertyDef({ name: "replacedResolveInfo", type: "JS_string", isOptional: MAY_BE_NULL }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "AddReferenceResolveInfo",
@@ -396,9 +396,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "index", type: "JS_number" }),
                 PropertyDef({ name: "target", type: "LionWebId" }),
                 PropertyDef({ name: "newResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "DeleteReferenceResolveInfo",
@@ -408,9 +408,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "index", type: "JS_number" }),
                 PropertyDef({ name: "deletedResolveInfo", type: "JS_string" }),
                 PropertyDef({ name: "target", type: "LionWebId" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "ChangeReferenceResolveInfo",
@@ -421,9 +421,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newResolveInfo", type: "JS_string" }),
                 PropertyDef({ name: "oldResolveInfo", type: "JS_string" }),
                 PropertyDef({ name: "target", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "AddReferenceTarget",
@@ -433,9 +433,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "index", type: "JS_number" }),
                 PropertyDef({ name: "resolveInfo", type: "JS_string" }),
                 PropertyDef({ name: "newTarget", type: "LionWebId" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "DeleteReferenceTarget",
@@ -445,9 +445,9 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "index", type: "JS_number" }),
                 PropertyDef({ name: "resolveInfo", type: "JS_string" }),
                 PropertyDef({ name: "deletedTarget", type: "LionWebId" }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
+            taggedUnionType: "CommandType",
         },
         {
             name: "ChangeReferenceTarget",
@@ -458,20 +458,19 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "resolveInfo", type: "JS_string" }),
                 PropertyDef({ name: "newTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "oldTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
-                ...ICommandProperties,
+                ...CommonCommandProperties,
             ],
-            taggedUnionType: "ICommand",
-        },
-        {
-            name: "ICommand",
-            properties: [...ICommandProperties],
+            taggedUnionType: "CommandType",
         },
         {
             name: "CompositeCommand",
-            properties: [PropertyDef({ name: "parts", type: "ICommand", isList: true }), ...ICommandProperties],
-            taggedUnionType: "ICommand",
+            properties: [
+                PropertyDef({ name: "parts", type: "CommandType", isList: true }),
+                ...CommonCommandProperties
+            ],
+            taggedUnionType: "CommandType",
         },
-        PrimitiveDef({ name: "CommandKind", primitiveType: "string" }),
+        PrimitiveDef({ name: "CommandType", primitiveType: "string" }),
         // ["string", PrimitiveDef({ primitiveType: "string" })],
     ],
 )

@@ -1,313 +1,313 @@
 import { LionWebId, LionWebJsonMetaPointer } from "@lionweb/json";
-import { ProtocolMessage, LionWebJsonDeltaChunk, JS_number, JS_string } from "./SharedTypes.js"
+import { ProtocolMessage, LionWebJsonDeltaChunk, JS_string, JS_number } from "./SharedTypes.js"
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-CommandResponse
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-CommandResponse
  */
-export type CommandResponse = ICommand & {
-    messageKind: CommandKind;
+export type CommandResponse = {
+    messageKind: "CommandResponse";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-AddPartition
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-AddPartition
  */
-export type AddPartition = ICommand & {
+export type AddPartition = {
     newPartition: LionWebJsonDeltaChunk;
-    messageKind: CommandKind;
+    messageKind: "AddPartition";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-DeletePartition
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-DeletePartition
  */
-export type DeletePartition = ICommand & {
+export type DeletePartition = {
     deletedPartition: LionWebId;
-    messageKind: CommandKind;
+    messageKind: "DeletePartition";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-ChangeClassifier
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-ChangeClassifier
  */
-export type ChangeClassifier = ICommand & {
+export type ChangeClassifier = {
     node: LionWebId;
     newClassifier: LionWebJsonMetaPointer;
-    messageKind: CommandKind;
+    messageKind: "ChangeClassifier";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-AddProperty
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-AddProperty
  */
-export type AddProperty = ICommand & {
+export type AddProperty = {
     node: LionWebId;
     property: LionWebJsonMetaPointer;
     newValue: JS_string;
-    messageKind: CommandKind;
+    messageKind: "AddProperty";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-DeleteProperty
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-DeleteProperty
  */
-export type DeleteProperty = ICommand & {
+export type DeleteProperty = {
     node: LionWebId;
     property: LionWebJsonMetaPointer;
-    messageKind: CommandKind;
+    messageKind: "DeleteProperty";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-ChangeProperty
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-ChangeProperty
  */
-export type ChangeProperty = ICommand & {
+export type ChangeProperty = {
     node: LionWebId;
     property: LionWebJsonMetaPointer;
     newValue: JS_string;
-    messageKind: CommandKind;
+    messageKind: "ChangeProperty";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-AddChild
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-AddChild
  */
-export type AddChild = ICommand & {
+export type AddChild = {
     parent: LionWebId;
     newChild: LionWebJsonDeltaChunk;
     containment: LionWebJsonMetaPointer;
     index: JS_number;
-    messageKind: CommandKind;
+    messageKind: "AddChild";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-DeleteChild
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-DeleteChild
  */
-export type DeleteChild = ICommand & {
+export type DeleteChild = {
     parent: LionWebId;
     containment: LionWebJsonMetaPointer;
     index: JS_number;
     deletedChild: LionWebId;
-    messageKind: CommandKind;
+    messageKind: "DeleteChild";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-ReplaceChild
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-ReplaceChild
  */
-export type ReplaceChild = ICommand & {
+export type ReplaceChild = {
     parent: LionWebId;
     newChild: LionWebJsonDeltaChunk;
     containment: LionWebJsonMetaPointer;
     index: JS_number;
     replacedChild: LionWebId;
-    messageKind: CommandKind;
+    messageKind: "ReplaceChild";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-MoveChildFromOtherContainment
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveChildFromOtherContainment
  */
-export type MoveChildFromOtherContainment = ICommand & {
+export type MoveChildFromOtherContainment = {
     newParent: LionWebId;
     movedChild: LionWebId;
     newContainment: LionWebJsonMetaPointer;
     newIndex: JS_number;
-    messageKind: CommandKind;
+    messageKind: "MoveChildFromOtherContainment";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-MoveChildFromOtherContainmentInSameParent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveChildFromOtherContainmentInSameParent
  */
-export type MoveChildFromOtherContainmentInSameParent = ICommand & {
+export type MoveChildFromOtherContainmentInSameParent = {
     newContainment: LionWebJsonMetaPointer;
     movedChild: LionWebId;
     newIndex: JS_number;
-    messageKind: CommandKind;
+    messageKind: "MoveChildFromOtherContainmentInSameParent";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-MoveChildInSameContainment
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveChildInSameContainment
  */
-export type MoveChildInSameContainment = ICommand & {
+export type MoveChildInSameContainment = {
     movedChild: LionWebId;
     newIndex: JS_number;
-    messageKind: CommandKind;
+    messageKind: "MoveChildInSameContainment";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-MoveAndReplaceChildFromOtherContainment
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAndReplaceChildFromOtherContainment
  */
-export type MoveAndReplaceChildFromOtherContainment = ICommand & {
+export type MoveAndReplaceChildFromOtherContainment = {
     newParent: LionWebId;
     newContainment: LionWebJsonMetaPointer;
     newIndex: JS_number;
     movedChild: LionWebId;
     replacedChild: LionWebId;
-    messageKind: CommandKind;
+    messageKind: "MoveAndReplaceChildFromOtherContainment";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-MoveAndReplaceChildFromOtherContainmentInSameParent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAndReplaceChildFromOtherContainmentInSameParent
  */
-export type MoveAndReplaceChildFromOtherContainmentInSameParent = ICommand & {
+export type MoveAndReplaceChildFromOtherContainmentInSameParent = {
     newContainment: LionWebJsonMetaPointer;
     newIndex: JS_number;
     movedChild: LionWebId;
     replacedChild: LionWebId;
-    messageKind: CommandKind;
+    messageKind: "MoveAndReplaceChildFromOtherContainmentInSameParent";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-MoveAndReplaceChildInSameContainment
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAndReplaceChildInSameContainment
  */
-export type MoveAndReplaceChildInSameContainment = ICommand & {
+export type MoveAndReplaceChildInSameContainment = {
     newIndex: JS_number;
     movedChild: LionWebId;
     replacedChild: LionWebId;
-    messageKind: CommandKind;
+    messageKind: "MoveAndReplaceChildInSameContainment";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-AddAnnotation
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-AddAnnotation
  */
-export type AddAnnotation = ICommand & {
+export type AddAnnotation = {
     newAnnotation: LionWebJsonDeltaChunk;
     parent: LionWebId;
     index: JS_number;
-    messageKind: CommandKind;
+    messageKind: "AddAnnotation";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-DeleteAnnotation
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-DeleteAnnotation
  */
-export type DeleteAnnotation = ICommand & {
+export type DeleteAnnotation = {
     parent: LionWebId;
     index: JS_number;
     deletedAnnotation: LionWebId;
-    messageKind: CommandKind;
+    messageKind: "DeleteAnnotation";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-ReplaceAnnotation
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-ReplaceAnnotation
  */
-export type ReplaceAnnotation = ICommand & {
+export type ReplaceAnnotation = {
     parent: LionWebId;
     newAnnotation: LionWebJsonDeltaChunk;
     index: JS_number;
     replacedAnnotation: LionWebId;
-    messageKind: CommandKind;
+    messageKind: "ReplaceAnnotation";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-MoveAnnotationFromOtherParent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAnnotationFromOtherParent
  */
-export type MoveAnnotationFromOtherParent = ICommand & {
+export type MoveAnnotationFromOtherParent = {
     newParent: LionWebId;
     newIndex: JS_number;
     movedAnnotation: LionWebId;
-    messageKind: CommandKind;
+    messageKind: "MoveAnnotationFromOtherParent";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-MoveAnnotationInSameParent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAnnotationInSameParent
  */
-export type MoveAnnotationInSameParent = ICommand & {
+export type MoveAnnotationInSameParent = {
     newIndex: JS_number;
     movedAnnotation: LionWebId;
-    messageKind: CommandKind;
+    messageKind: "MoveAnnotationInSameParent";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-MoveAndReplaceAnnotationFromOtherParent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAndReplaceAnnotationFromOtherParent
  */
-export type MoveAndReplaceAnnotationFromOtherParent = ICommand & {
+export type MoveAndReplaceAnnotationFromOtherParent = {
     newParent: LionWebId;
     newIndex: JS_number;
     movedAnnotation: LionWebId;
     replacedAnnotation: LionWebId;
-    messageKind: CommandKind;
+    messageKind: "MoveAndReplaceAnnotationFromOtherParent";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-MoveAndReplaceAnnotationInSameParent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAndReplaceAnnotationInSameParent
  */
-export type MoveAndReplaceAnnotationInSameParent = ICommand & {
+export type MoveAndReplaceAnnotationInSameParent = {
     newIndex: JS_number;
     movedAnnotation: LionWebId;
     replacedAnnotation: LionWebId;
-    messageKind: CommandKind;
+    messageKind: "MoveAndReplaceAnnotationInSameParent";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-AddReference
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-AddReference
  */
-export type AddReference = ICommand & {
+export type AddReference = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
     newTarget: LionWebId;
     newResolveInfo: JS_string;
-    messageKind: CommandKind;
+    messageKind: "AddReference";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-DeleteReference
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-DeleteReference
  */
-export type DeleteReference = ICommand & {
+export type DeleteReference = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
     deletedTarget: LionWebId;
     deletedResolveInfo: JS_string;
-    messageKind: CommandKind;
+    messageKind: "DeleteReference";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-ChangeReference
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-ChangeReference
  */
-export type ChangeReference = ICommand & {
+export type ChangeReference = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
@@ -315,15 +315,15 @@ export type ChangeReference = ICommand & {
     newResolveInfo: JS_string;
     oldTarget: LionWebId;
     oldResolveInfo: JS_string;
-    messageKind: CommandKind;
+    messageKind: "ChangeReference";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-MoveEntryFromOtherReference
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveEntryFromOtherReference
  */
-export type MoveEntryFromOtherReference = ICommand & {
+export type MoveEntryFromOtherReference = {
     oldParent: LionWebId;
     oldReference: LionWebJsonMetaPointer;
     oldIndex: JS_number;
@@ -332,15 +332,15 @@ export type MoveEntryFromOtherReference = ICommand & {
     newIndex: JS_number;
     movedTarget?: LionWebId;
     movedResolveInfo?: JS_string;
-    messageKind: CommandKind;
+    messageKind: "MoveEntryFromOtherReference";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-MoveEntryFromOtherReferenceInSameParent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveEntryFromOtherReferenceInSameParent
  */
-export type MoveEntryFromOtherReferenceInSameParent = ICommand & {
+export type MoveEntryFromOtherReferenceInSameParent = {
     parent: LionWebId;
     oldReference: LionWebJsonMetaPointer;
     oldIndex: JS_number;
@@ -348,30 +348,30 @@ export type MoveEntryFromOtherReferenceInSameParent = ICommand & {
     newIndex: JS_number;
     movedTarget?: LionWebId;
     movedResolveInfo?: JS_string;
-    messageKind: CommandKind;
+    messageKind: "MoveEntryFromOtherReferenceInSameParent";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-MoveEntryInSameReference
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveEntryInSameReference
  */
-export type MoveEntryInSameReference = ICommand & {
+export type MoveEntryInSameReference = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     oldIndex: JS_number;
     newIndex: JS_number;
     movedTarget?: LionWebId;
     movedResolveInfo?: JS_string;
-    messageKind: CommandKind;
+    messageKind: "MoveEntryInSameReference";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-MoveAndReplaceEntryFromOtherReference
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAndReplaceEntryFromOtherReference
  */
-export type MoveAndReplaceEntryFromOtherReference = ICommand & {
+export type MoveAndReplaceEntryFromOtherReference = {
     oldParent: LionWebId;
     oldReference: LionWebJsonMetaPointer;
     oldIndex: JS_number;
@@ -382,15 +382,15 @@ export type MoveAndReplaceEntryFromOtherReference = ICommand & {
     movedResolveInfo?: JS_string;
     replacedTarget?: LionWebId;
     replacedResolveInfo?: JS_string;
-    messageKind: CommandKind;
+    messageKind: "MoveAndReplaceEntryFromOtherReference";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-MoveAndReplaceEntryFromOtherReferenceInSameParent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAndReplaceEntryFromOtherReferenceInSameParent
  */
-export type MoveAndReplaceEntryFromOtherReferenceInSameParent = ICommand & {
+export type MoveAndReplaceEntryFromOtherReferenceInSameParent = {
     parent: LionWebId;
     oldReference: LionWebJsonMetaPointer;
     oldIndex: JS_number;
@@ -400,15 +400,15 @@ export type MoveAndReplaceEntryFromOtherReferenceInSameParent = ICommand & {
     movedResolveInfo?: JS_string;
     replacedTarget?: LionWebId;
     replacedResolveInfo?: JS_string;
-    messageKind: CommandKind;
+    messageKind: "MoveAndReplaceEntryFromOtherReferenceInSameParent";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-MoveAndReplaceEntryInSameReference
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAndReplaceEntryInSameReference
  */
-export type MoveAndReplaceEntryInSameReference = ICommand & {
+export type MoveAndReplaceEntryInSameReference = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     oldIndex: JS_number;
@@ -417,154 +417,144 @@ export type MoveAndReplaceEntryInSameReference = ICommand & {
     movedResolveInfo?: JS_string;
     replacedTarget?: LionWebId;
     replacedResolveInfo?: JS_string;
-    messageKind: CommandKind;
+    messageKind: "MoveAndReplaceEntryInSameReference";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-AddReferenceResolveInfo
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-AddReferenceResolveInfo
  */
-export type AddReferenceResolveInfo = ICommand & {
+export type AddReferenceResolveInfo = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
     target: LionWebId;
     newResolveInfo: JS_string;
-    messageKind: CommandKind;
+    messageKind: "AddReferenceResolveInfo";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-DeleteReferenceResolveInfo
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-DeleteReferenceResolveInfo
  */
-export type DeleteReferenceResolveInfo = ICommand & {
+export type DeleteReferenceResolveInfo = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
     deletedResolveInfo: JS_string;
     target: LionWebId;
-    messageKind: CommandKind;
+    messageKind: "DeleteReferenceResolveInfo";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-ChangeReferenceResolveInfo
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-ChangeReferenceResolveInfo
  */
-export type ChangeReferenceResolveInfo = ICommand & {
+export type ChangeReferenceResolveInfo = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
     newResolveInfo: JS_string;
     oldResolveInfo: JS_string;
     target: LionWebId;
-    messageKind: CommandKind;
+    messageKind: "ChangeReferenceResolveInfo";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-AddReferenceTarget
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-AddReferenceTarget
  */
-export type AddReferenceTarget = ICommand & {
+export type AddReferenceTarget = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
     resolveInfo: JS_string;
     newTarget: LionWebId;
-    messageKind: CommandKind;
+    messageKind: "AddReferenceTarget";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-DeleteReferenceTarget
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-DeleteReferenceTarget
  */
-export type DeleteReferenceTarget = ICommand & {
+export type DeleteReferenceTarget = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
     resolveInfo: JS_string;
     deletedTarget: LionWebId;
-    messageKind: CommandKind;
+    messageKind: "DeleteReferenceTarget";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-ChangeReferenceTarget
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-ChangeReferenceTarget
  */
-export type ChangeReferenceTarget = ICommand & {
+export type ChangeReferenceTarget = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
     resolveInfo: JS_string;
     newTarget: LionWebId;
     oldTarget: LionWebId;
-    messageKind: CommandKind;
+    messageKind: "ChangeReferenceTarget";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-ICommand
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-CompositeCommand
  */
-export type ICommand = {
-    messageKind: CommandKind;
+export type CompositeCommand = {
+    parts: CommandType[];
+    messageKind: "CompositeCommand";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
-/**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/commands.adoc#cmd-CompositeCommand
- */
-export type CompositeCommand = ICommand & {
-    parts: ICommand[];
-    messageKind: CommandKind;
-    commandId: JS_string;
-    protocolMessages?: ProtocolMessage[];
-};
-
-export type CommandKind =
-    | "CommandResponse"
-    | "AddPartition"
-    | "DeletePartition"
-    | "ChangeClassifier"
-    | "AddProperty"
-    | "DeleteProperty"
-    | "ChangeProperty"
-    | "AddChild"
-    | "DeleteChild"
-    | "ReplaceChild"
-    | "MoveChildFromOtherContainment"
-    | "MoveChildFromOtherContainmentInSameParent"
-    | "MoveChildInSameContainment"
-    | "MoveAndReplaceChildFromOtherContainment"
-    | "MoveAndReplaceChildFromOtherContainmentInSameParent"
-    | "MoveAndReplaceChildInSameContainment"
-    | "AddAnnotation"
-    | "DeleteAnnotation"
-    | "ReplaceAnnotation"
-    | "MoveAnnotationFromOtherParent"
-    | "MoveAnnotationInSameParent"
-    | "MoveAndReplaceAnnotationFromOtherParent"
-    | "MoveAndReplaceAnnotationInSameParent"
-    | "AddReference"
-    | "DeleteReference"
-    | "ChangeReference"
-    | "MoveEntryFromOtherReference"
-    | "MoveEntryFromOtherReferenceInSameParent"
-    | "MoveEntryInSameReference"
-    | "MoveAndReplaceEntryFromOtherReference"
-    | "MoveAndReplaceEntryFromOtherReferenceInSameParent"
-    | "MoveAndReplaceEntryInSameReference"
-    | "AddReferenceResolveInfo"
-    | "DeleteReferenceResolveInfo"
-    | "ChangeReferenceResolveInfo"
-    | "AddReferenceTarget"
-    | "DeleteReferenceTarget"
-    | "ChangeReferenceTarget"
-    | "ICommand"
-    | "CompositeCommand";
+export type CommandType =
+    | CommandResponse
+    | AddPartition
+    | DeletePartition
+    | ChangeClassifier
+    | AddProperty
+    | DeleteProperty
+    | ChangeProperty
+    | AddChild
+    | DeleteChild
+    | ReplaceChild
+    | MoveChildFromOtherContainment
+    | MoveChildFromOtherContainmentInSameParent
+    | MoveChildInSameContainment
+    | MoveAndReplaceChildFromOtherContainment
+    | MoveAndReplaceChildFromOtherContainmentInSameParent
+    | MoveAndReplaceChildInSameContainment
+    | AddAnnotation
+    | DeleteAnnotation
+    | ReplaceAnnotation
+    | MoveAnnotationFromOtherParent
+    | MoveAnnotationInSameParent
+    | MoveAndReplaceAnnotationFromOtherParent
+    | MoveAndReplaceAnnotationInSameParent
+    | AddReference
+    | DeleteReference
+    | ChangeReference
+    | MoveEntryFromOtherReference
+    | MoveEntryFromOtherReferenceInSameParent
+    | MoveEntryInSameReference
+    | MoveAndReplaceEntryFromOtherReference
+    | MoveAndReplaceEntryFromOtherReferenceInSameParent
+    | MoveAndReplaceEntryInSameReference
+    | AddReferenceResolveInfo
+    | DeleteReferenceResolveInfo
+    | ChangeReferenceResolveInfo
+    | AddReferenceTarget
+    | DeleteReferenceTarget
+    | ChangeReferenceTarget
+    | CompositeCommand;

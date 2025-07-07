@@ -1,8 +1,8 @@
 import { LionWebId, LionWebJsonMetaPointer } from "@lionweb/json";
-import { ProtocolMessage, LionWebJsonDeltaChunk, JS_string, JS_number } from "./SharedTypes.js"
+import { ProtocolMessage, LionWebJsonDeltaChunk, JS_number, JS_string } from "./SharedTypes.js"
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-CommandSource
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-CommandSource
  */
 export type CommandSource = {
     participationId: ParticipationId;
@@ -16,130 +16,130 @@ export type CommandId = string;
 export type ParticipationId = string;
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ClassifierChanged
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ClassifierChanged
  */
-export type ClassifierChanged = IEvent & {
+export type ClassifierChanged = {
     node: LionWebId;
     oldClassifier: LionWebJsonMetaPointer;
     newClassifier: LionWebJsonMetaPointer;
-    messageKind: EventKind;
+    messageKind: "ClassifierChanged";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-PartitionAdded
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-PartitionAdded
  */
-export type PartitionAdded = IEvent & {
+export type PartitionAdded = {
     newPartition: LionWebJsonDeltaChunk;
-    messageKind: EventKind;
+    messageKind: "PartitionAdded";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-PartitionDeleted
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-PartitionDeleted
  */
-export type PartitionDeleted = IEvent & {
+export type PartitionDeleted = {
     deletedPartition: LionWebId;
     deletedDescendants: LionWebId[];
-    messageKind: EventKind;
+    messageKind: "PartitionDeleted";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-PropertyAdded
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-PropertyAdded
  */
-export type PropertyAdded = IEvent & {
+export type PropertyAdded = {
     node: LionWebId;
     property: LionWebJsonMetaPointer;
     newValue: JS_string;
-    messageKind: EventKind;
+    messageKind: "PropertyAdded";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-PropertyDeleted
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-PropertyDeleted
  */
-export type PropertyDeleted = IEvent & {
+export type PropertyDeleted = {
     node: LionWebId;
     property: LionWebJsonMetaPointer;
     oldValue: JS_string;
-    messageKind: EventKind;
+    messageKind: "PropertyDeleted";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-PropertyChanged
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-PropertyChanged
  */
-export type PropertyChanged = IEvent & {
+export type PropertyChanged = {
     node: LionWebId;
     property: LionWebJsonMetaPointer;
     newValue: JS_string;
     oldValue: JS_string;
-    messageKind: EventKind;
+    messageKind: "PropertyChanged";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ChildAdded
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildAdded
  */
-export type ChildAdded = IEvent & {
+export type ChildAdded = {
     parent: LionWebId;
     newChild: LionWebJsonDeltaChunk;
     containment: LionWebJsonMetaPointer;
     index: JS_number;
-    messageKind: EventKind;
+    messageKind: "ChildAdded";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ChildDeleted
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildDeleted
  */
-export type ChildDeleted = IEvent & {
+export type ChildDeleted = {
     parent: LionWebId;
     deletedChild: LionWebId;
     deletedDescendants: LionWebId[];
     containment: LionWebJsonMetaPointer;
     index: JS_number;
-    messageKind: EventKind;
+    messageKind: "ChildDeleted";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ChildReplaced
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildReplaced
  */
-export type ChildReplaced = IEvent & {
+export type ChildReplaced = {
     parent: LionWebId;
     newChild: LionWebJsonDeltaChunk;
     replacedChild: LionWebId;
     replacedDescendants: LionWebId[];
     containment: LionWebJsonMetaPointer;
     index: JS_number;
-    messageKind: EventKind;
+    messageKind: "ChildReplaced";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ChildMovedFromOtherContainment
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildMovedFromOtherContainment
  */
-export type ChildMovedFromOtherContainment = IEvent & {
+export type ChildMovedFromOtherContainment = {
     newParent: LionWebId;
     newContainment: LionWebJsonMetaPointer;
     newIndex: JS_number;
@@ -147,47 +147,47 @@ export type ChildMovedFromOtherContainment = IEvent & {
     oldParent: LionWebId;
     oldContainment: LionWebJsonMetaPointer;
     oldIndex: JS_number;
-    messageKind: EventKind;
+    messageKind: "ChildMovedFromOtherContainment";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ChildMovedFromOtherContainmentInSameParent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildMovedFromOtherContainmentInSameParent
  */
-export type ChildMovedFromOtherContainmentInSameParent = IEvent & {
+export type ChildMovedFromOtherContainmentInSameParent = {
     parent: LionWebId;
     newContainment: LionWebJsonMetaPointer;
     newIndex: JS_number;
     movedChild: LionWebId;
     oldContainment: LionWebJsonMetaPointer;
     oldIndex: JS_number;
-    messageKind: EventKind;
+    messageKind: "ChildMovedFromOtherContainmentInSameParent";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ChildMovedInSameContainment
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildMovedInSameContainment
  */
-export type ChildMovedInSameContainment = IEvent & {
+export type ChildMovedInSameContainment = {
     parent: LionWebId;
     containment: LionWebJsonMetaPointer;
     newIndex: JS_number;
     movedChild: LionWebId;
     oldIndex: JS_number;
-    messageKind: EventKind;
+    messageKind: "ChildMovedInSameContainment";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ChildMovedAndReplacedFromOtherContainment
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildMovedAndReplacedFromOtherContainment
  */
-export type ChildMovedAndReplacedFromOtherContainment = IEvent & {
+export type ChildMovedAndReplacedFromOtherContainment = {
     newParent: LionWebId;
     newContainment: LionWebJsonMetaPointer;
     newIndex: JS_number;
@@ -197,16 +197,16 @@ export type ChildMovedAndReplacedFromOtherContainment = IEvent & {
     oldIndex: JS_number;
     replacedChild: LionWebId;
     replacedDescendants: LionWebId[];
-    messageKind: EventKind;
+    messageKind: "ChildMovedAndReplacedFromOtherContainment";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ChildMovedAndReplacedFromOtherContainmentInSameParent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildMovedAndReplacedFromOtherContainmentInSameParent
  */
-export type ChildMovedAndReplacedFromOtherContainmentInSameParent = IEvent & {
+export type ChildMovedAndReplacedFromOtherContainmentInSameParent = {
     parent: LionWebId;
     newContainment: LionWebJsonMetaPointer;
     newIndex: JS_number;
@@ -215,16 +215,16 @@ export type ChildMovedAndReplacedFromOtherContainmentInSameParent = IEvent & {
     oldIndex: JS_number;
     replacedChild: LionWebId;
     replacedDescendants: LionWebId[];
-    messageKind: EventKind;
+    messageKind: "ChildMovedAndReplacedFromOtherContainmentInSameParent";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ChildMovedAndReplacedInSameContainment
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildMovedAndReplacedInSameContainment
  */
-export type ChildMovedAndReplacedInSameContainment = IEvent & {
+export type ChildMovedAndReplacedInSameContainment = {
     parent: LionWebId;
     containment: LionWebJsonMetaPointer;
     newIndex: JS_number;
@@ -232,87 +232,87 @@ export type ChildMovedAndReplacedInSameContainment = IEvent & {
     oldIndex: JS_number;
     replacedChild: LionWebId;
     replacedDescendants: LionWebId[];
-    messageKind: EventKind;
+    messageKind: "ChildMovedAndReplacedInSameContainment";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-AnnotationAdded
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-AnnotationAdded
  */
-export type AnnotationAdded = IEvent & {
+export type AnnotationAdded = {
     parent: LionWebId;
     newAnnotation: LionWebJsonDeltaChunk;
     index: JS_number;
-    messageKind: EventKind;
+    messageKind: "AnnotationAdded";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-AnnotationDeleted
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-AnnotationDeleted
  */
-export type AnnotationDeleted = IEvent & {
+export type AnnotationDeleted = {
     parent: LionWebId;
     index: JS_number;
     deletedAnnotation: LionWebId;
     deletedDescendants: LionWebId[];
-    messageKind: EventKind;
+    messageKind: "AnnotationDeleted";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-AnnotationReplaced
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-AnnotationReplaced
  */
-export type AnnotationReplaced = IEvent & {
+export type AnnotationReplaced = {
     parent: LionWebId;
     newAnnotation: LionWebJsonDeltaChunk;
     replacedAnnotation: LionWebId;
     replacedDescendants: LionWebId[];
     index: JS_number;
-    messageKind: EventKind;
+    messageKind: "AnnotationReplaced";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-AnnotationMovedFromOtherParent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-AnnotationMovedFromOtherParent
  */
-export type AnnotationMovedFromOtherParent = IEvent & {
+export type AnnotationMovedFromOtherParent = {
     newParent: LionWebId;
     newIndex: JS_number;
     movedAnnotation: LionWebId;
     oldParent: LionWebId;
     oldIndex: JS_number;
-    messageKind: EventKind;
+    messageKind: "AnnotationMovedFromOtherParent";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-AnnotationMovedInSameParent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-AnnotationMovedInSameParent
  */
-export type AnnotationMovedInSameParent = IEvent & {
+export type AnnotationMovedInSameParent = {
     parent: LionWebId;
     oldIndex: JS_number;
     newIndex: JS_number;
     movedAnnotation: LionWebId;
-    messageKind: EventKind;
+    messageKind: "AnnotationMovedInSameParent";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-AnnotationMovedAndReplacedFromOtherParent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-AnnotationMovedAndReplacedFromOtherParent
  */
-export type AnnotationMovedAndReplacedFromOtherParent = IEvent & {
+export type AnnotationMovedAndReplacedFromOtherParent = {
     newParent: LionWebId;
     newIndex: JS_number;
     movedAnnotation: LionWebId;
@@ -320,62 +320,62 @@ export type AnnotationMovedAndReplacedFromOtherParent = IEvent & {
     replacedDescendants: LionWebId[];
     oldParent: LionWebId;
     oldIndex: JS_number;
-    messageKind: EventKind;
+    messageKind: "AnnotationMovedAndReplacedFromOtherParent";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-AnnotationMovedAndReplacedInSameParent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-AnnotationMovedAndReplacedInSameParent
  */
-export type AnnotationMovedAndReplacedInSameParent = IEvent & {
+export type AnnotationMovedAndReplacedInSameParent = {
     parent: LionWebId;
     newIndex: JS_number;
     oldIndex: JS_number;
     movedAnnotation: LionWebId;
     replacedAnnotation: LionWebId;
     replacedDescendants: LionWebId[];
-    messageKind: EventKind;
+    messageKind: "AnnotationMovedAndReplacedInSameParent";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ReferenceAdded
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceAdded
  */
-export type ReferenceAdded = IEvent & {
+export type ReferenceAdded = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
     newTarget: LionWebId;
     newResolveInfo: JS_string;
-    messageKind: EventKind;
+    messageKind: "ReferenceAdded";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ReferenceDeleted
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceDeleted
  */
-export type ReferenceDeleted = IEvent & {
+export type ReferenceDeleted = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
     deletedTarget: LionWebId;
     deletedResolveInfo: JS_string;
-    messageKind: EventKind;
+    messageKind: "ReferenceDeleted";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ReferenceChanged
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceChanged
  */
-export type ReferenceChanged = IEvent & {
+export type ReferenceChanged = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
@@ -383,16 +383,16 @@ export type ReferenceChanged = IEvent & {
     newResolveInfo: JS_string;
     oldTarget: LionWebId;
     oldResolveInfo: JS_string;
-    messageKind: EventKind;
+    messageKind: "ReferenceChanged";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-EntryMovedFromOtherReference
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-EntryMovedFromOtherReference
  */
-export type EntryMovedFromOtherReference = IEvent & {
+export type EntryMovedFromOtherReference = {
     newParent: LionWebId;
     newReference: LionWebJsonMetaPointer;
     newIndex: JS_number;
@@ -401,16 +401,16 @@ export type EntryMovedFromOtherReference = IEvent & {
     oldIndex: JS_number;
     target: LionWebId;
     resolveInfo: JS_string;
-    messageKind: EventKind;
+    messageKind: "EntryMovedFromOtherReference";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-EntryMovedFromOtherReferenceInSameParent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-EntryMovedFromOtherReferenceInSameParent
  */
-export type EntryMovedFromOtherReferenceInSameParent = IEvent & {
+export type EntryMovedFromOtherReferenceInSameParent = {
     parent: LionWebId;
     newReference: LionWebJsonMetaPointer;
     newIndex: JS_number;
@@ -418,32 +418,32 @@ export type EntryMovedFromOtherReferenceInSameParent = IEvent & {
     oldIndex: JS_number;
     target: LionWebId;
     resolveInfo: JS_string;
-    messageKind: EventKind;
+    messageKind: "EntryMovedFromOtherReferenceInSameParent";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-EntryMovedInSameReference
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-EntryMovedInSameReference
  */
-export type EntryMovedInSameReference = IEvent & {
+export type EntryMovedInSameReference = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     newIndex: JS_number;
     oldIndex: JS_number;
     target: LionWebId;
     resolveInfo: JS_string;
-    messageKind: EventKind;
+    messageKind: "EntryMovedInSameReference";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-EntryMovedAndReplacedFromOtherReference
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-EntryMovedAndReplacedFromOtherReference
  */
-export type EntryMovedAndReplacedFromOtherReference = IEvent & {
+export type EntryMovedAndReplacedFromOtherReference = {
     newParent: LionWebId;
     newReference: LionWebJsonMetaPointer;
     newIndex: JS_number;
@@ -454,16 +454,16 @@ export type EntryMovedAndReplacedFromOtherReference = IEvent & {
     movedResolveInfo: JS_string;
     replacedTarget: LionWebId;
     replacedResolveInfo: JS_string;
-    messageKind: EventKind;
+    messageKind: "EntryMovedAndReplacedFromOtherReference";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-EntryMovedAndReplacedFromOtherReferenceInSameParent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-EntryMovedAndReplacedFromOtherReferenceInSameParent
  */
-export type EntryMovedAndReplacedFromOtherReferenceInSameParent = IEvent & {
+export type EntryMovedAndReplacedFromOtherReferenceInSameParent = {
     parent: LionWebId;
     newReference: LionWebJsonMetaPointer;
     newIndex: JS_number;
@@ -473,16 +473,16 @@ export type EntryMovedAndReplacedFromOtherReferenceInSameParent = IEvent & {
     movedResolveInfo: JS_string;
     replacedTarget: LionWebId;
     replacedResolveInfo: JS_string;
-    messageKind: EventKind;
+    messageKind: "EntryMovedAndReplacedFromOtherReferenceInSameParent";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-EntryMovedAndReplacedInSameReference
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-EntryMovedAndReplacedInSameReference
  */
-export type EntryMovedAndReplacedInSameReference = IEvent & {
+export type EntryMovedAndReplacedInSameReference = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     newIndex: JS_number;
@@ -491,143 +491,173 @@ export type EntryMovedAndReplacedInSameReference = IEvent & {
     oldIndex: JS_number;
     replacedTarget: LionWebId;
     replacedResolveInfo: JS_string;
-    messageKind: EventKind;
+    messageKind: "EntryMovedAndReplacedInSameReference";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ReferenceResolveInfoAdded
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceResolveInfoAdded
  */
-export type ReferenceResolveInfoAdded = IEvent & {
+export type ReferenceResolveInfoAdded = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
     target: LionWebId;
     newResolveInfo: JS_string;
-    messageKind: EventKind;
+    messageKind: "ReferenceResolveInfoAdded";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ReferenceResolveInfoDeleted
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceResolveInfoDeleted
  */
-export type ReferenceResolveInfoDeleted = IEvent & {
+export type ReferenceResolveInfoDeleted = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
     target: LionWebId;
     deletedResolveInfo: JS_string;
-    messageKind: EventKind;
+    messageKind: "ReferenceResolveInfoDeleted";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ReferenceResolveInfoChanged
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceResolveInfoChanged
  */
-export type ReferenceResolveInfoChanged = IEvent & {
+export type ReferenceResolveInfoChanged = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
     target: LionWebId;
     newResolveInfo: JS_string;
     replacedResolveInfo: JS_string;
-    messageKind: EventKind;
+    messageKind: "ReferenceResolveInfoChanged";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ReferenceTargetAdded
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceTargetAdded
  */
-export type ReferenceTargetAdded = IEvent & {
+export type ReferenceTargetAdded = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
     newTarget: LionWebId;
     resolveInfo: JS_string;
-    messageKind: EventKind;
+    messageKind: "ReferenceTargetAdded";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ReferenceTargetDeleted
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceTargetDeleted
  */
-export type ReferenceTargetDeleted = IEvent & {
+export type ReferenceTargetDeleted = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
     deletedTarget: LionWebId;
     resolveInfo: JS_string;
-    messageKind: EventKind;
+    messageKind: "ReferenceTargetDeleted";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-ReferenceTargetChanged
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceTargetChanged
  */
-export type ReferenceTargetChanged = IEvent & {
+export type ReferenceTargetChanged = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
     newTarget: LionWebId;
     replacedTarget: LionWebId;
     resolveInfo: JS_string;
-    messageKind: EventKind;
+    messageKind: "ReferenceTargetChanged";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-IEvent
- */
-export type IEvent = {
-    messageKind: EventKind;
-    originCommands: CommandSource[];
-    sequenceNumber: SequenceNumber;
-    protocolMessages?: ProtocolMessage[];
-};
-
-/**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-CompositeEvent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-CompositeEvent
  */
 export type CompositeEvent = {
-    parts: IEvent[];
-    messageKind: EventKind;
+    parts: EventType[];
+    messageKind: "CompositeEvent";
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-Error
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-Error
  */
-export type Error = IEvent & {
+export type Error = {
     errorCode: JS_string;
     message: JS_string;
-    messageKind: EventKind;
+    messageKind: "Error";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-NoOpEvent
+ *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-NoOpEvent
  */
 export type NoOpEvent = {
-    messageKind: EventKind;
+    messageKind: "NoOpEvent";
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 
-export type EventKind = string;
+export type EventType =
+    | ClassifierChanged
+    | PartitionAdded
+    | PartitionDeleted
+    | PropertyAdded
+    | PropertyDeleted
+    | PropertyChanged
+    | ChildAdded
+    | ChildDeleted
+    | ChildReplaced
+    | ChildMovedFromOtherContainment
+    | ChildMovedFromOtherContainmentInSameParent
+    | ChildMovedInSameContainment
+    | ChildMovedAndReplacedFromOtherContainment
+    | ChildMovedAndReplacedFromOtherContainmentInSameParent
+    | ChildMovedAndReplacedInSameContainment
+    | AnnotationAdded
+    | AnnotationDeleted
+    | AnnotationReplaced
+    | AnnotationMovedFromOtherParent
+    | AnnotationMovedInSameParent
+    | AnnotationMovedAndReplacedFromOtherParent
+    | AnnotationMovedAndReplacedInSameParent
+    | ReferenceAdded
+    | ReferenceDeleted
+    | ReferenceChanged
+    | EntryMovedFromOtherReference
+    | EntryMovedFromOtherReferenceInSameParent
+    | EntryMovedInSameReference
+    | EntryMovedAndReplacedFromOtherReference
+    | EntryMovedAndReplacedFromOtherReferenceInSameParent
+    | EntryMovedAndReplacedInSameReference
+    | ReferenceResolveInfoAdded
+    | ReferenceResolveInfoDeleted
+    | ReferenceResolveInfoChanged
+    | ReferenceTargetAdded
+    | ReferenceTargetDeleted
+    | ReferenceTargetChanged
+    | CompositeEvent
+    | Error
+    | NoOpEvent;

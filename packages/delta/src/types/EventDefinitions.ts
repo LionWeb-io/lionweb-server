@@ -2,11 +2,11 @@ import { JsonContext } from "@lionweb/json-utils"
 import { PrimitiveDef, PropertyDef, PropertyDefinition, DefinitionSchema, ValidationResult } from "@lionweb/validation"
 import { MAY_BE_NULL, ProtocolMessageProperty } from "./SharedDefinitions.js"
 
-const EventKindProperty: PropertyDefinition = PropertyDef({ name: "messageKind", type: "EventKind" })
+const EventTypeProperty: PropertyDefinition = PropertyDef({ name: "messageKind", type: "EventType" })
 const CommandOriginProperty: PropertyDefinition = PropertyDef({ name: "originCommands", type: "CommandSource", isList: true })
 const SequenceNumberProperty: PropertyDefinition = PropertyDef({ name: "sequenceNumber", type: "SequenceNumber" })
 
-const ICommonEventProperties = [EventKindProperty, CommandOriginProperty, SequenceNumberProperty, ProtocolMessageProperty]
+const CommonEventProperties = [EventTypeProperty, CommandOriginProperty, SequenceNumberProperty, ProtocolMessageProperty]
 
 /**
  * No-op validation function used as default value.
@@ -21,8 +21,8 @@ function emptyValidation<T>(object: T, result: ValidationResult, ctx: JsonContex
 export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
     [
         {
-            unionType: "IEvent",
-            unionDiscriminator: "CommandKind",
+            unionType: "EventType",
+            unionDiscriminator: "EventType",
             unionProperty: "messageKind",
         },
     ],
@@ -45,18 +45,18 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "node", type: "LionWebId" }),
                 PropertyDef({ name: "oldClassifier", type: "LionWebJsonMetaPointer" }),
                 PropertyDef({ name: "newClassifier", type: "LionWebJsonMetaPointer" }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "PartitionAdded",
             properties: [
                 // TODO Check type
                 PropertyDef({ name: "newPartition", type: "LionWebJsonDeltaChunk" }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "PartitionDeleted",
@@ -64,9 +64,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 // TODO Check type
                 PropertyDef({ name: "deletedPartition", type: "LionWebId" }),
                 PropertyDef({ name: "deletedDescendants", type: "LionWebId", isList: true }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "PropertyAdded",
@@ -74,9 +74,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "node", type: "LionWebId" }),
                 PropertyDef({ name: "property", type: "LionWebJsonMetaPointer" }),
                 PropertyDef({ name: "newValue", type: "JS_string" }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "PropertyDeleted",
@@ -84,9 +84,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "node", type: "LionWebId" }),
                 PropertyDef({ name: "property", type: "LionWebJsonMetaPointer" }),
                 PropertyDef({ name: "oldValue", type: "JS_string" }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "PropertyChanged",
@@ -95,9 +95,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "property", type: "LionWebJsonMetaPointer" }),
                 PropertyDef({ name: "newValue", type: "JS_string" }),
                 PropertyDef({ name: "oldValue", type: "JS_string" }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ChildAdded",
@@ -106,9 +106,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newChild", type: "LionWebJsonDeltaChunk" }),
                 PropertyDef({ name: "containment", type: "LionWebJsonMetaPointer" }),
                 PropertyDef({ name: "index", type: "JS_number" }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ChildDeleted",
@@ -118,9 +118,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "deletedDescendants", type: "LionWebId", isList: true }),
                 PropertyDef({ name: "containment", type: "LionWebJsonMetaPointer" }),
                 PropertyDef({ name: "index", type: "JS_number" }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ChildReplaced",
@@ -131,9 +131,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "replacedDescendants", type: "LionWebId", isList: true }),
                 PropertyDef({ name: "containment", type: "LionWebJsonMetaPointer" }),
                 PropertyDef({ name: "index", type: "JS_number" }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ChildMovedFromOtherContainment",
@@ -145,9 +145,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "oldParent", type: "LionWebId" }),
                 PropertyDef({ name: "oldContainment", type: "LionWebJsonMetaPointer" }),
                 PropertyDef({ name: "oldIndex", type: "JS_number" }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ChildMovedFromOtherContainmentInSameParent",
@@ -158,9 +158,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "movedChild", type: "LionWebId" }),
                 PropertyDef({ name: "oldContainment", type: "LionWebJsonMetaPointer" }),
                 PropertyDef({ name: "oldIndex", type: "JS_number" }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ChildMovedInSameContainment",
@@ -170,9 +170,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newIndex", type: "JS_number" }),
                 PropertyDef({ name: "movedChild", type: "LionWebId" }),
                 PropertyDef({ name: "oldIndex", type: "JS_number" }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ChildMovedAndReplacedFromOtherContainment",
@@ -186,9 +186,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "oldIndex", type: "JS_number" }),
                 PropertyDef({ name: "replacedChild", type: "LionWebId" }),
                 PropertyDef({ name: "replacedDescendants", type: "LionWebId", isList: true }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ChildMovedAndReplacedFromOtherContainmentInSameParent",
@@ -201,9 +201,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "oldIndex", type: "JS_number" }),
                 PropertyDef({ name: "replacedChild", type: "LionWebId" }),
                 PropertyDef({ name: "replacedDescendants", type: "LionWebId", isList: true }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ChildMovedAndReplacedInSameContainment",
@@ -215,9 +215,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "oldIndex", type: "JS_number" }),
                 PropertyDef({ name: "replacedChild", type: "LionWebId" }),
                 PropertyDef({ name: "replacedDescendants", type: "LionWebId", isList: true }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "AnnotationAdded",
@@ -225,9 +225,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "parent", type: "LionWebId" }),
                 PropertyDef({ name: "newAnnotation", type: "LionWebJsonDeltaChunk" }),
                 PropertyDef({ name: "index", type: "JS_number" }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "AnnotationDeleted",
@@ -236,9 +236,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "index", type: "JS_number" }),
                 PropertyDef({ name: "deletedAnnotation", type: "LionWebId" }),
                 PropertyDef({ name: "deletedDescendants", type: "LionWebId", isList: true }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "AnnotationReplaced",
@@ -248,9 +248,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "replacedAnnotation", type: "LionWebId" }),
                 PropertyDef({ name: "replacedDescendants", type: "LionWebId", isList: true }),
                 PropertyDef({ name: "index", type: "JS_number" }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "AnnotationMovedFromOtherParent",
@@ -260,9 +260,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "movedAnnotation", type: "LionWebId" }),
                 PropertyDef({ name: "oldParent", type: "LionWebId" }),
                 PropertyDef({ name: "oldIndex", type: "JS_number" }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "AnnotationMovedInSameParent",
@@ -271,9 +271,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "oldIndex", type: "JS_number" }),
                 PropertyDef({ name: "newIndex", type: "JS_number" }),
                 PropertyDef({ name: "movedAnnotation", type: "LionWebId" }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "AnnotationMovedAndReplacedFromOtherParent",
@@ -285,9 +285,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "replacedDescendants", type: "LionWebId", isList: true }),
                 PropertyDef({ name: "oldParent", type: "LionWebId" }),
                 PropertyDef({ name: "oldIndex", type: "JS_number" }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "AnnotationMovedAndReplacedInSameParent",
@@ -298,9 +298,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "movedAnnotation", type: "LionWebId" }),
                 PropertyDef({ name: "replacedAnnotation", type: "LionWebId" }),
                 PropertyDef({ name: "replacedDescendants", type: "LionWebId", isList: true }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ReferenceAdded",
@@ -310,9 +310,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "index", type: "JS_number" }),
                 PropertyDef({ name: "newTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "newResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ReferenceDeleted",
@@ -322,9 +322,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "index", type: "JS_number" }),
                 PropertyDef({ name: "deletedTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "deletedResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ReferenceChanged",
@@ -336,9 +336,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "oldTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "oldResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "EntryMovedFromOtherReference",
@@ -351,9 +351,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "oldIndex", type: "JS_number" }),
                 PropertyDef({ name: "target", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "resolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "EntryMovedFromOtherReferenceInSameParent",
@@ -365,9 +365,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "oldIndex", type: "JS_number" }),
                 PropertyDef({ name: "target", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "resolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "EntryMovedInSameReference",
@@ -378,9 +378,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "oldIndex", type: "JS_number" }),
                 PropertyDef({ name: "target", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "resolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "EntryMovedAndReplacedFromOtherReference",
@@ -395,9 +395,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "movedResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "replacedTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "replacedResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "EntryMovedAndReplacedFromOtherReferenceInSameParent",
@@ -411,9 +411,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "movedResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "replacedTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "replacedResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "EntryMovedAndReplacedInSameReference",
@@ -426,9 +426,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "oldIndex", type: "JS_number" }),
                 PropertyDef({ name: "replacedTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "replacedResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ReferenceResolveInfoAdded",
@@ -438,9 +438,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "index", type: "JS_number" }),
                 PropertyDef({ name: "target", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "newResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ReferenceResolveInfoDeleted",
@@ -450,9 +450,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "index", type: "JS_number" }),
                 PropertyDef({ name: "target", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "deletedResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ReferenceResolveInfoChanged",
@@ -463,9 +463,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "target", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "newResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "replacedResolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ReferenceTargetAdded",
@@ -475,9 +475,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "index", type: "JS_number" }),
                 PropertyDef({ name: "newTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "resolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ReferenceTargetDeleted",
@@ -487,9 +487,9 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "index", type: "JS_number" }),
                 PropertyDef({ name: "deletedTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "resolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         {
             name: "ReferenceTargetChanged",
@@ -500,19 +500,15 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
                 PropertyDef({ name: "newTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "replacedTarget", type: "LionWebId", mayBeNull: MAY_BE_NULL }),
                 PropertyDef({ name: "resolveInfo", type: "JS_string", mayBeNull: MAY_BE_NULL }),
-                ...ICommonEventProperties,
+                ...CommonEventProperties,
             ],
-            taggedUnionType: "IEvent",
-        },
-        {
-            name: "IEvent",
-            properties: [...ICommonEventProperties],
+            taggedUnionType: "EventType",
         },
         {
             name: "CompositeEvent",
             properties: [
-                PropertyDef({ name: "parts", type: "IEvent", isList: true }),
-                EventKindProperty,
+                PropertyDef({ name: "parts", type: "EventType", isList: true }),
+                EventTypeProperty,
                 ProtocolMessageProperty
             ],
         },
@@ -521,15 +517,15 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
             properties: [
                 PropertyDef({ name: "errorCode", type: "JS_string" }), 
                 PropertyDef({ name: "message", type: "JS_string" }),
-                ...ICommonEventProperties
+                ...CommonEventProperties
             ],
-            taggedUnionType: "IEvent",
+            taggedUnionType: "EventType",
         },
         { name: "NoOpEvent", properties: [
-            ...ICommonEventProperties
+            ...CommonEventProperties
             ]
         },
-        PrimitiveDef({ name: "EventKind", primitiveType: "string" }),
+        PrimitiveDef({ name: "EventType", primitiveType: "string" }),
         // ["string", PrimitiveDef({ primitiveType: "string" })],
     ],
 )
