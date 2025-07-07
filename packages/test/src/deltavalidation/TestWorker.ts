@@ -1,4 +1,4 @@
-import { DeltaValidation } from "@lionweb/repository-delta"
+import { DeltaValidator } from "@lionweb/repository-delta"
 import { ValidationResult } from "@lionweb/validation"
 import { assert } from "chai"
 import fs from "fs"
@@ -6,7 +6,7 @@ import { DirectoryWorker } from "./DirectoryWalker.js"
 import { describe, test, expect, beforeEach } from "vitest";
 
 export class TestWorker implements DirectoryWorker {
-    validator =  new DeltaValidation(new ValidationResult())
+    validator =  new DeltaValidator(new ValidationResult())
 
     visitDir(dir: string): void {
     }
@@ -15,7 +15,7 @@ export class TestWorker implements DirectoryWorker {
         test("Validating " + file, async () => {
             const message = JSON.parse(fs.readFileSync(file).toString());
             this.validator.validationResult.reset()
-            this.validator.validateCommand(message)
+            this.validator.validateDelta(message)
             this.validator.validationResult.issues.forEach(issue => {
                 console.log(`Issue ${issue.issueType}: ${issue.errorMsg()}`)
             })

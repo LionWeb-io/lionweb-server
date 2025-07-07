@@ -1,5 +1,4 @@
 import sm from "source-map-support"
-
 sm.install()
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -13,9 +12,11 @@ socket.onmessage = (ev) => {
 socket.onclose = (ev) => {
     console.log("close socket", ev.reason)
 }
-await delay(5000)
-socket.send( `{ "hello": "world", "time": { "day": 1, "year": "2005" } }`)     
-await delay(5000)
+await delay(2000)
+socket.send( `{ "messageKind": "CommandResponse", "commandId": "ID" }`)
+socket.send( `{ "messageKind": "ChangeProperty", "commandId": "ID" }`)
+await delay(2000)
+// socket.close(1000, "bored ... leaving")
 
 
 

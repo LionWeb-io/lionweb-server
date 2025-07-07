@@ -21,7 +21,7 @@ function emptyValidation<T>(object: T, result: ValidationResult, ctx: JsonContex
 export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
     [
         {
-            unionType: "EventType",
+            unionType: "Event",
             unionDiscriminator: "EventType",
             unionProperty: "messageKind",
         },
@@ -521,9 +521,12 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
             ],
             taggedUnionType: "EventType",
         },
-        { name: "NoOpEvent", properties: [
-            ...CommonEventProperties
-            ]
+        { 
+            name: "NoOpEvent",
+            properties: [
+                ...CommonEventProperties
+            ],
+            taggedUnionType: "EventType",
         },
         PrimitiveDef({ name: "EventType", primitiveType: "string" }),
         // ["string", PrimitiveDef({ primitiveType: "string" })],

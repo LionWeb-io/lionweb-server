@@ -25,7 +25,7 @@ function emptyValidation<T>(object: T, result: ValidationResult, ctx: JsonContex
 export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
     [
         {
-            unionType: "CommandType",
+            unionType: "Command",
             unionDiscriminator: "CommandType",
             unionProperty: "messageKind",
         },

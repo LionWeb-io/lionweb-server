@@ -1,9 +1,10 @@
 import { registerHistoryApi } from "@lionweb/repository-history"
+import { CommandProcessor } from "@lionweb/repository-shared/dist/delta/CommandProcessor.js"
 import express, { Express, NextFunction, Response, Request } from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
 import pgPromise from "pg-promise"
-import { WebSocketServer } from "ws"
+import { RawData, WebSocketServer } from "ws"
 import { postgresConnectionWithDatabase, pgp, postgresConnectionWithoutDatabase, postgresPool } from "./DbConnection.js"
 import {
     DbConnection,
@@ -25,7 +26,7 @@ import {
     registerAdditionalApi
 } from "@lionweb/repository-additionalapi"
 import { registerLanguagesApi } from "@lionweb/repository-languages"
-import { HttpClientErrors } from "@lionweb/repository-shared"
+import { CommandType, HttpClientErrors } from "@lionweb/repository-shared"
 import { pinoHttp } from "pino-http"
 import * as http from "node:http"
 
@@ -230,13 +231,14 @@ async function startServer() {
     const wsServer = new WebSocketServer({server: httpServer})
     wsServer.on('connection', (socket, request) => {
         // @ts-ignore
-        console.log(`Client connected ${socket["sec-websocket-key"]} +  ${JSON.stringify(socket, null, 4)} +`);
-
-        socket.on('message', (message) => {
-            console.log(`Received: ${message}`);
-            // const m = JSON.parse(message.toString())
-            // console.log(JSON.stringify(m, null, 4))
-            socket.send(`Server sends: ${message}`);
+        console.log(`Client connected ${socket["sec-websocket-key"]} +  ${socket.url} +`);
+        
+        const processor = new CommandProcessor()
+        
+        socket.on('message', (message: RawData) => {
+            console.log(`Received: ${message.toString()}`);
+            processor.process(JSON.parse(message.toString()) as unknown as CommandType)
+            // socket.send(`Server sends: ${message}`);
         });
 
         socket.on('close', () => {

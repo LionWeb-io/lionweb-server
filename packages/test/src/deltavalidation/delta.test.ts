@@ -1,5 +1,5 @@
 
-import { DeltaValidation } from "@lionweb/repository-delta"
+import { DeltaValidator } from "@lionweb/repository-delta"
 import { ValidationResult } from "@lionweb/validation"
 import fs from "node:fs"
 import { assert } from "chai"
@@ -14,7 +14,7 @@ const addPropertyTests = JSON.parse(addPropertyJson)
 // console.log(JSON.stringify(addPropertyTests, null, 2))
 // console.log("=======")
 
-const validator = new DeltaValidation(new ValidationResult())
+const validator = new DeltaValidator(new ValidationResult())
 
 addPropertyTests.tests.forEach((propTest: unknown, index: number) => {
     describe(`Repository tests addProperty[${index}]`, () => {
@@ -33,7 +33,7 @@ addPropertyTests.tests.forEach((propTest: unknown, index: number) => {
 
             // @ts-expect-error TS2339
             const command = propTest.command
-            validator.validateCommand(command)
+            validator.validateDelta(command)
             validator.validationResult.issues.forEach(issue => {
                 console.log(`Issue ${issue.issueType}: ${issue.errorMsg()}`)
             })

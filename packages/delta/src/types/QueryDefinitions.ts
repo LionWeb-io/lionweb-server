@@ -23,8 +23,8 @@ const IQueryProperties = [QueryKindProperty, queryIdProperty, ProtocolMessagePro
 export const DeltaQuerySchema: DefinitionSchema = new DefinitionSchema(
     [
         {
-            unionType: "",
-            unionDiscriminator: "QueryKind",
+            unionType: "Query",
+            unionDiscriminator: "QueryType",
             unionProperty: "messageKind"
         }    
     ],

@@ -1,10 +1,10 @@
 import { LionWebId, LionWebJsonMetaPointer } from "@lionweb/json";
-import { ProtocolMessage, LionWebJsonDeltaChunk, JS_string, JS_number } from "./SharedTypes.js"
+import { ProtocolMessage, LionWebJsonDeltaChunk, JS_number, JS_string } from "./SharedTypes.js"
 
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-CommandResponse
  */
-export type CommandResponse = {
+export type CommandResponseCommand = {
     messageKind: "CommandResponse";
     commandId: JS_string;
     protocolMessages?: ProtocolMessage[];
@@ -13,7 +13,7 @@ export type CommandResponse = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-AddPartition
  */
-export type AddPartition = {
+export type AddPartitionCommand = {
     newPartition: LionWebJsonDeltaChunk;
     messageKind: "AddPartition";
     commandId: JS_string;
@@ -23,7 +23,7 @@ export type AddPartition = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-DeletePartition
  */
-export type DeletePartition = {
+export type DeletePartitionCommand = {
     deletedPartition: LionWebId;
     messageKind: "DeletePartition";
     commandId: JS_string;
@@ -33,7 +33,7 @@ export type DeletePartition = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-ChangeClassifier
  */
-export type ChangeClassifier = {
+export type ChangeClassifierCommand = {
     node: LionWebId;
     newClassifier: LionWebJsonMetaPointer;
     messageKind: "ChangeClassifier";
@@ -44,7 +44,7 @@ export type ChangeClassifier = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-AddProperty
  */
-export type AddProperty = {
+export type AddPropertyCommand = {
     node: LionWebId;
     property: LionWebJsonMetaPointer;
     newValue: JS_string;
@@ -56,7 +56,7 @@ export type AddProperty = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-DeleteProperty
  */
-export type DeleteProperty = {
+export type DeletePropertyCommand = {
     node: LionWebId;
     property: LionWebJsonMetaPointer;
     messageKind: "DeleteProperty";
@@ -67,7 +67,7 @@ export type DeleteProperty = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-ChangeProperty
  */
-export type ChangeProperty = {
+export type ChangePropertyCommand = {
     node: LionWebId;
     property: LionWebJsonMetaPointer;
     newValue: JS_string;
@@ -79,7 +79,7 @@ export type ChangeProperty = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-AddChild
  */
-export type AddChild = {
+export type AddChildCommand = {
     parent: LionWebId;
     newChild: LionWebJsonDeltaChunk;
     containment: LionWebJsonMetaPointer;
@@ -92,7 +92,7 @@ export type AddChild = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-DeleteChild
  */
-export type DeleteChild = {
+export type DeleteChildCommand = {
     parent: LionWebId;
     containment: LionWebJsonMetaPointer;
     index: JS_number;
@@ -105,7 +105,7 @@ export type DeleteChild = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-ReplaceChild
  */
-export type ReplaceChild = {
+export type ReplaceChildCommand = {
     parent: LionWebId;
     newChild: LionWebJsonDeltaChunk;
     containment: LionWebJsonMetaPointer;
@@ -119,7 +119,7 @@ export type ReplaceChild = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveChildFromOtherContainment
  */
-export type MoveChildFromOtherContainment = {
+export type MoveChildFromOtherContainmentCommand = {
     newParent: LionWebId;
     movedChild: LionWebId;
     newContainment: LionWebJsonMetaPointer;
@@ -132,7 +132,7 @@ export type MoveChildFromOtherContainment = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveChildFromOtherContainmentInSameParent
  */
-export type MoveChildFromOtherContainmentInSameParent = {
+export type MoveChildFromOtherContainmentInSameParentCommand = {
     newContainment: LionWebJsonMetaPointer;
     movedChild: LionWebId;
     newIndex: JS_number;
@@ -144,7 +144,7 @@ export type MoveChildFromOtherContainmentInSameParent = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveChildInSameContainment
  */
-export type MoveChildInSameContainment = {
+export type MoveChildInSameContainmentCommand = {
     movedChild: LionWebId;
     newIndex: JS_number;
     messageKind: "MoveChildInSameContainment";
@@ -155,7 +155,7 @@ export type MoveChildInSameContainment = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAndReplaceChildFromOtherContainment
  */
-export type MoveAndReplaceChildFromOtherContainment = {
+export type MoveAndReplaceChildFromOtherContainmentCommand = {
     newParent: LionWebId;
     newContainment: LionWebJsonMetaPointer;
     newIndex: JS_number;
@@ -169,7 +169,7 @@ export type MoveAndReplaceChildFromOtherContainment = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAndReplaceChildFromOtherContainmentInSameParent
  */
-export type MoveAndReplaceChildFromOtherContainmentInSameParent = {
+export type MoveAndReplaceChildFromOtherContainmentInSameParentCommand = {
     newContainment: LionWebJsonMetaPointer;
     newIndex: JS_number;
     movedChild: LionWebId;
@@ -182,7 +182,7 @@ export type MoveAndReplaceChildFromOtherContainmentInSameParent = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAndReplaceChildInSameContainment
  */
-export type MoveAndReplaceChildInSameContainment = {
+export type MoveAndReplaceChildInSameContainmentCommand = {
     newIndex: JS_number;
     movedChild: LionWebId;
     replacedChild: LionWebId;
@@ -194,7 +194,7 @@ export type MoveAndReplaceChildInSameContainment = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-AddAnnotation
  */
-export type AddAnnotation = {
+export type AddAnnotationCommand = {
     newAnnotation: LionWebJsonDeltaChunk;
     parent: LionWebId;
     index: JS_number;
@@ -206,7 +206,7 @@ export type AddAnnotation = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-DeleteAnnotation
  */
-export type DeleteAnnotation = {
+export type DeleteAnnotationCommand = {
     parent: LionWebId;
     index: JS_number;
     deletedAnnotation: LionWebId;
@@ -218,7 +218,7 @@ export type DeleteAnnotation = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-ReplaceAnnotation
  */
-export type ReplaceAnnotation = {
+export type ReplaceAnnotationCommand = {
     parent: LionWebId;
     newAnnotation: LionWebJsonDeltaChunk;
     index: JS_number;
@@ -231,7 +231,7 @@ export type ReplaceAnnotation = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAnnotationFromOtherParent
  */
-export type MoveAnnotationFromOtherParent = {
+export type MoveAnnotationFromOtherParentCommand = {
     newParent: LionWebId;
     newIndex: JS_number;
     movedAnnotation: LionWebId;
@@ -243,7 +243,7 @@ export type MoveAnnotationFromOtherParent = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAnnotationInSameParent
  */
-export type MoveAnnotationInSameParent = {
+export type MoveAnnotationInSameParentCommand = {
     newIndex: JS_number;
     movedAnnotation: LionWebId;
     messageKind: "MoveAnnotationInSameParent";
@@ -254,7 +254,7 @@ export type MoveAnnotationInSameParent = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAndReplaceAnnotationFromOtherParent
  */
-export type MoveAndReplaceAnnotationFromOtherParent = {
+export type MoveAndReplaceAnnotationFromOtherParentCommand = {
     newParent: LionWebId;
     newIndex: JS_number;
     movedAnnotation: LionWebId;
@@ -267,7 +267,7 @@ export type MoveAndReplaceAnnotationFromOtherParent = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAndReplaceAnnotationInSameParent
  */
-export type MoveAndReplaceAnnotationInSameParent = {
+export type MoveAndReplaceAnnotationInSameParentCommand = {
     newIndex: JS_number;
     movedAnnotation: LionWebId;
     replacedAnnotation: LionWebId;
@@ -279,7 +279,7 @@ export type MoveAndReplaceAnnotationInSameParent = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-AddReference
  */
-export type AddReference = {
+export type AddReferenceCommand = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
@@ -293,7 +293,7 @@ export type AddReference = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-DeleteReference
  */
-export type DeleteReference = {
+export type DeleteReferenceCommand = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
@@ -307,7 +307,7 @@ export type DeleteReference = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-ChangeReference
  */
-export type ChangeReference = {
+export type ChangeReferenceCommand = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
@@ -323,7 +323,7 @@ export type ChangeReference = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveEntryFromOtherReference
  */
-export type MoveEntryFromOtherReference = {
+export type MoveEntryFromOtherReferenceCommand = {
     oldParent: LionWebId;
     oldReference: LionWebJsonMetaPointer;
     oldIndex: JS_number;
@@ -340,7 +340,7 @@ export type MoveEntryFromOtherReference = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveEntryFromOtherReferenceInSameParent
  */
-export type MoveEntryFromOtherReferenceInSameParent = {
+export type MoveEntryFromOtherReferenceInSameParentCommand = {
     parent: LionWebId;
     oldReference: LionWebJsonMetaPointer;
     oldIndex: JS_number;
@@ -356,7 +356,7 @@ export type MoveEntryFromOtherReferenceInSameParent = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveEntryInSameReference
  */
-export type MoveEntryInSameReference = {
+export type MoveEntryInSameReferenceCommand = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     oldIndex: JS_number;
@@ -371,7 +371,7 @@ export type MoveEntryInSameReference = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAndReplaceEntryFromOtherReference
  */
-export type MoveAndReplaceEntryFromOtherReference = {
+export type MoveAndReplaceEntryFromOtherReferenceCommand = {
     oldParent: LionWebId;
     oldReference: LionWebJsonMetaPointer;
     oldIndex: JS_number;
@@ -390,7 +390,7 @@ export type MoveAndReplaceEntryFromOtherReference = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAndReplaceEntryFromOtherReferenceInSameParent
  */
-export type MoveAndReplaceEntryFromOtherReferenceInSameParent = {
+export type MoveAndReplaceEntryFromOtherReferenceInSameParentCommand = {
     parent: LionWebId;
     oldReference: LionWebJsonMetaPointer;
     oldIndex: JS_number;
@@ -408,7 +408,7 @@ export type MoveAndReplaceEntryFromOtherReferenceInSameParent = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-MoveAndReplaceEntryInSameReference
  */
-export type MoveAndReplaceEntryInSameReference = {
+export type MoveAndReplaceEntryInSameReferenceCommand = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     oldIndex: JS_number;
@@ -425,7 +425,7 @@ export type MoveAndReplaceEntryInSameReference = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-AddReferenceResolveInfo
  */
-export type AddReferenceResolveInfo = {
+export type AddReferenceResolveInfoCommand = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
@@ -439,7 +439,7 @@ export type AddReferenceResolveInfo = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-DeleteReferenceResolveInfo
  */
-export type DeleteReferenceResolveInfo = {
+export type DeleteReferenceResolveInfoCommand = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
@@ -453,7 +453,7 @@ export type DeleteReferenceResolveInfo = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-ChangeReferenceResolveInfo
  */
-export type ChangeReferenceResolveInfo = {
+export type ChangeReferenceResolveInfoCommand = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
@@ -468,7 +468,7 @@ export type ChangeReferenceResolveInfo = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-AddReferenceTarget
  */
-export type AddReferenceTarget = {
+export type AddReferenceTargetCommand = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
@@ -482,7 +482,7 @@ export type AddReferenceTarget = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-DeleteReferenceTarget
  */
-export type DeleteReferenceTarget = {
+export type DeleteReferenceTargetCommand = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
@@ -496,7 +496,7 @@ export type DeleteReferenceTarget = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-ChangeReferenceTarget
  */
-export type ChangeReferenceTarget = {
+export type ChangeReferenceTargetCommand = {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: JS_number;
@@ -511,7 +511,7 @@ export type ChangeReferenceTarget = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/commands.adoc#cmd-CompositeCommand
  */
-export type CompositeCommand = {
+export type CompositeCommandCommand = {
     parts: CommandType[];
     messageKind: "CompositeCommand";
     commandId: JS_string;
@@ -519,42 +519,42 @@ export type CompositeCommand = {
 };
 
 export type CommandType =
-    | CommandResponse
-    | AddPartition
-    | DeletePartition
-    | ChangeClassifier
-    | AddProperty
-    | DeleteProperty
-    | ChangeProperty
-    | AddChild
-    | DeleteChild
-    | ReplaceChild
-    | MoveChildFromOtherContainment
-    | MoveChildFromOtherContainmentInSameParent
-    | MoveChildInSameContainment
-    | MoveAndReplaceChildFromOtherContainment
-    | MoveAndReplaceChildFromOtherContainmentInSameParent
-    | MoveAndReplaceChildInSameContainment
-    | AddAnnotation
-    | DeleteAnnotation
-    | ReplaceAnnotation
-    | MoveAnnotationFromOtherParent
-    | MoveAnnotationInSameParent
-    | MoveAndReplaceAnnotationFromOtherParent
-    | MoveAndReplaceAnnotationInSameParent
-    | AddReference
-    | DeleteReference
-    | ChangeReference
-    | MoveEntryFromOtherReference
-    | MoveEntryFromOtherReferenceInSameParent
-    | MoveEntryInSameReference
-    | MoveAndReplaceEntryFromOtherReference
-    | MoveAndReplaceEntryFromOtherReferenceInSameParent
-    | MoveAndReplaceEntryInSameReference
-    | AddReferenceResolveInfo
-    | DeleteReferenceResolveInfo
-    | ChangeReferenceResolveInfo
-    | AddReferenceTarget
-    | DeleteReferenceTarget
-    | ChangeReferenceTarget
-    | CompositeCommand;
+    | CommandResponseCommand
+    | AddPartitionCommand
+    | DeletePartitionCommand
+    | ChangeClassifierCommand
+    | AddPropertyCommand
+    | DeletePropertyCommand
+    | ChangePropertyCommand
+    | AddChildCommand
+    | DeleteChildCommand
+    | ReplaceChildCommand
+    | MoveChildFromOtherContainmentCommand
+    | MoveChildFromOtherContainmentInSameParentCommand
+    | MoveChildInSameContainmentCommand
+    | MoveAndReplaceChildFromOtherContainmentCommand
+    | MoveAndReplaceChildFromOtherContainmentInSameParentCommand
+    | MoveAndReplaceChildInSameContainmentCommand
+    | AddAnnotationCommand
+    | DeleteAnnotationCommand
+    | ReplaceAnnotationCommand
+    | MoveAnnotationFromOtherParentCommand
+    | MoveAnnotationInSameParentCommand
+    | MoveAndReplaceAnnotationFromOtherParentCommand
+    | MoveAndReplaceAnnotationInSameParentCommand
+    | AddReferenceCommand
+    | DeleteReferenceCommand
+    | ChangeReferenceCommand
+    | MoveEntryFromOtherReferenceCommand
+    | MoveEntryFromOtherReferenceInSameParentCommand
+    | MoveEntryInSameReferenceCommand
+    | MoveAndReplaceEntryFromOtherReferenceCommand
+    | MoveAndReplaceEntryFromOtherReferenceInSameParentCommand
+    | MoveAndReplaceEntryInSameReferenceCommand
+    | AddReferenceResolveInfoCommand
+    | DeleteReferenceResolveInfoCommand
+    | ChangeReferenceResolveInfoCommand
+    | AddReferenceTargetCommand
+    | DeleteReferenceTargetCommand
+    | ChangeReferenceTargetCommand
+    | CompositeCommandCommand;

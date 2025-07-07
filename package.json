@@ -52,6 +52,7 @@
     "./packages/server",
     "./packages/delta",
     "./packages/client",
+    "./packages/deltaclient",
     "./packages/test",
     "./scripts",
     "."
