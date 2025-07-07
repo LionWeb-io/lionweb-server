@@ -1,4 +1,4 @@
-import { HttpClientErrors } from "@lionweb/repository-shared"
+import { HttpClientErrors } from "@lionweb/server-shared"
 import { LionWebJsonChunk } from "@lionweb/json"
 import { ClientResponse, RepositoryClient } from "./RepositoryClient.js"
 import {
@@ -8,7 +8,7 @@ import {
     ListPartitionsResponse,
     RetrieveResponse,
     StoreResponse
-} from "@lionweb/repository-shared"
+} from "@lionweb/server-shared"
 
 // Re-export for usage convenience
 export type { LionWebJsonChunk } from "@lionweb/json"

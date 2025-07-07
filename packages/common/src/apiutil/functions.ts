@@ -1,4 +1,4 @@
-import { HttpServerErrors, isLionWebVersion, LionWebVersionType, LionWebVersionValues, ResponseMessage } from "@lionweb/repository-shared"
+import { HttpServerErrors, isLionWebVersion, LionWebVersionType, LionWebVersionValues, ResponseMessage } from "@lionweb/server-shared"
 import { requestLogger } from "./logging.js"
 import { Job, requestQueue } from "./RequestQueue.js"
 import { collectUsedLanguages } from "./UsedLanguages.js"

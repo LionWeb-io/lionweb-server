@@ -6,8 +6,8 @@ import {
     REFERENCES_TABLE,
     TableHelpers,
     UnknownObjectType
-} from "@lionweb/repository-common"
-import { MetaPointersTracker } from "@lionweb/repository-dbadmin"
+} from "@lionweb/server-common"
+import { MetaPointersTracker } from "@lionweb/server-dbadmin"
 import { LionWebJsonMetaPointer } from "@lionweb/json"
 import {
     AnnotationAdded,

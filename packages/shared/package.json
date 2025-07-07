@@ -1,5 +1,5 @@
 {
-  "name": "@lionweb/repository-shared",
+  "name": "@lionweb/server-shared",
   "version": "0.3.0",
   "private": false,
   "description": "Shared code between client and server",
@@ -10,10 +10,10 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/LionWeb-io/lionweb-repository.git"
+    "url": "https://github.com/LionWeb-io/lionweb-server.git"
   },
   "bugs": {
-    "url": "https://github.com/LionWeb-io/lionweb-repository/issues"
+    "url": "https://github.com/LionWeb-io/lionweb-server/issues"
   },
   "scripts": {
     "clean": "rm -rf node_modules/ && rm -rf dist/",

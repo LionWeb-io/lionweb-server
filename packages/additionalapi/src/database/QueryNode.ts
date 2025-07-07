@@ -1,7 +1,7 @@
-import {CONTAINMENTS_TABLE, NODES_TABLE} from "@lionweb/repository-common";
+import {CONTAINMENTS_TABLE, NODES_TABLE} from "@lionweb/server-common";
 import {AttachPoint} from "./AdditionalQueries.js";
 import {FBAttachPoint} from "../io/lionweb/serialization/flatbuffers/index.js";
-import {MetaPointersTracker} from "@lionweb/repository-dbadmin";
+import {MetaPointersTracker} from "@lionweb/server-dbadmin";
 import {forFBMetapointer} from "./ImportLogic.js";
 
 function sqlArrayFromNodeIdArray(strings: string[]): string {

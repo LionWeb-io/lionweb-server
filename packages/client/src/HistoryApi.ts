@@ -1,4 +1,4 @@
-import { RetrieveResponse, ListPartitionsResponse } from "@lionweb/repository-shared"
+import { RetrieveResponse, ListPartitionsResponse } from "@lionweb/server-shared"
 import { ClientResponse, RepositoryClient } from "./RepositoryClient.js"
 
 /**

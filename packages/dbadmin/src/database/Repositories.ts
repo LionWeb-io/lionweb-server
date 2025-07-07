@@ -7,7 +7,7 @@ import {
     RepositoryData,
     RepositoryInfo,
     requestLogger
-} from "@lionweb/repository-common"
+} from "@lionweb/server-common"
 import { GenericIssue, ValidationResult } from "@lionweb/validation"
 import { LionWebJsonChunk } from "@lionweb/json"
 import { JsonContext } from "@lionweb/json-utils"

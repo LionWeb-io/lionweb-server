@@ -1,4 +1,4 @@
-import { LionwebResponse, LionWebVersionType, ListRepositoriesResponse } from "@lionweb/repository-shared"
+import { LionwebResponse, LionWebVersionType, ListRepositoriesResponse } from "@lionweb/server-shared"
 import { ClientResponse, RepositoryClient } from "./RepositoryClient.js"
 
 export class DbAdminApi {

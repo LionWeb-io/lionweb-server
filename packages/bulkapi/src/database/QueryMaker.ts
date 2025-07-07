@@ -9,13 +9,13 @@ import {
     NODES_TABLE_HISTORY,
     RepositoryData,
     dbLogger
-} from "@lionweb/repository-common"
+} from "@lionweb/server-common"
 import { ReferenceChange } from "@lionweb/json-diff"
 import { LionWebJsonNode, LionWebJsonReferenceTarget } from "@lionweb/json"
 import { BulkApiContext } from "../main.js"
 import { DbChanges } from "./DbChanges.js"
 import { sqlArrayFromNodeIdArray } from "./QueryNode.js"
-import { MetaPointersTracker } from "@lionweb/repository-dbadmin"
+import { MetaPointersTracker } from "@lionweb/server-dbadmin"
 
 /**
  * Class that builds SQL queries.

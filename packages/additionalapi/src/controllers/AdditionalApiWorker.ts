@@ -1,4 +1,4 @@
-import { RepositoryData, requestLogger } from "@lionweb/repository-common";
+import { RepositoryData, requestLogger } from "@lionweb/server-common";
 import { AdditionalApiContext } from "../main.js";
 import {BulkImport} from "../database/index.js";
 import {FBBulkImport} from "../io/lionweb/serialization/flatbuffers/index.js";

@@ -12,11 +12,11 @@ import {
     ListPartitionsResponse,
     ResponseMessage,
     StoreResponse
-} from "@lionweb/repository-shared"
-import { lionwebResponse } from "@lionweb/repository-common"
-import { getIntegerParam, isParameterError, LionWebTask, requestLogger, traceLogger } from "@lionweb/repository-common"
-import { getRepositoryData, validateLionWebVersion } from "@lionweb/repository-dbadmin"
-import { getLanguageRegistry } from "@lionweb/repository-languages"
+} from "@lionweb/server-shared"
+import { lionwebResponse } from "@lionweb/server-common"
+import { getIntegerParam, isParameterError, LionWebTask, requestLogger, traceLogger } from "@lionweb/server-common"
+import { getRepositoryData, validateLionWebVersion } from "@lionweb/server-dbadmin"
+import { getLanguageRegistry } from "@lionweb/server-languages"
 import { LionWebValidator } from "@lionweb/validation"
 import { LionWebJsonChunk } from "@lionweb/json"
 import { Request, Response } from "express"

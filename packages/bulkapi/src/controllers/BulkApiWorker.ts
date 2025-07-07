@@ -8,7 +8,7 @@ import {
     ResponseMessage,
     RetrieveResponse,
     StoreResponse
-} from "@lionweb/repository-shared"
+} from "@lionweb/server-shared"
 import {
     createId,
     EMPTY_CHUNKS,
@@ -18,7 +18,7 @@ import {
     RepositoryData,
     requestLogger,
     traceLogger
-} from "@lionweb/repository-common"
+} from "@lionweb/server-common"
 import { LionWebJsonChunk } from "@lionweb/json"
 import { currentRepoVersionQuery, versionResultToResponse } from "../database/index.js"
 import { retrieveWith } from "../database/RetrieveInOneQuery.js"
