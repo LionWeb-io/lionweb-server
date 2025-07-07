@@ -5,10 +5,10 @@ export const MAY_BE_NULL = true
 export const NOT_NULL = false
 
 export const ProtocolMessageProperty: PropertyDefinition = PropertyDef({
-    name: "protocolMessage",
+    name: "protocolMessages",
     type: "ProtocolMessage",
     mayBeNull: MAY_BE_NULL,
-    // isList: true,
+    isList: true,
     isOptional: true
 })
 
@@ -45,7 +45,8 @@ export const DeltaSharedSchema: DefinitionSchema = new DefinitionSchema([], [
             PropertyDef({ name: "value", type: "JS_string" })
         ]
     },
-    PrimitiveDef({ name: "numberString", primitiveType: "string" }),
+    // JavaScript primitive types
+    PrimitiveDef({ name: "JS_number", primitiveType: "number" }),
     PrimitiveDef({ name: "JS_string", primitiveType: "string" })
 ])
 

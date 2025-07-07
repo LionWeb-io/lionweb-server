@@ -1,11 +1,13 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist",
+    "rootDir": "./src",
+    "outDir": "./dist",
     "resolveJsonModule": true,
     /* Enable importing .json files */
     "sourceRoot": "./src",
 //    "strict": true
+    "declarationMap": true,
+    "sourceMap": true
   }
 }

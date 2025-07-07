@@ -87,9 +87,9 @@
           "version": "22"
         },
         "newValue": "hello",
-        "protocolMessage": {
+        "protocolMessages": [{
           "kind": "Info"
-        }
+        }]
       }
     },
     {
@@ -103,13 +103,15 @@
           "version": "22"
         },
         "newValue": "hello",
-        "protocolMessage": {
+        "commandId": "1",
+        "protocolMessages": [{
           "kind": "Info",
           "message": "23",
-          "data": {
-            "a": 12
-          }
-        }
+          "data": [{
+            "key": "12",
+            "value": "12"
+          }]
+        }]
       }
     }
   ]

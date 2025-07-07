@@ -20,7 +20,9 @@
     "alive": "echo I am alive",
     "lint": "eslint src",
     "manualtest": "node dist/test/ManualTests.js",
-    "setup": "npx degit https://github.com/LionWeb-io/lionweb-integration-testing/testchanges/data/ data",
+    "setup": "npm run install-bulk-data && npm run install-delta-data",
+    "install-bulk-data": "npx degit https://github.com/LionWeb-io/lionweb-integration-testing/testchanges/data/ data",
+    "install-delta-data": "npx degit https://github.com/LionWeb-io/lionweb-integration-testing/delta/ delta",
     "test": "mocha ./dist/test/tests.js ./dist/test/inspectionTests.js ./dist/test/tests-issue19.js ./dist/test/history-test.js ./dist/test/sequentialize-requests-test.js"
   },
   "devDependencies": {
@@ -32,8 +34,9 @@
     "degit": "2.8.4",
     "eslint": "8.56.0",
     "chai": "4.3.10",
-    "mocha": "11.0.1",
-    "typescript": "5.2.2"
+    "typescript": "5.2.2",
+    "vitest": "3.2.4",
+    "@vitest/ui": "3.2.4"
   },
   "dependencies": {
     "@lionweb/validation": "0.7.0-beta.1",

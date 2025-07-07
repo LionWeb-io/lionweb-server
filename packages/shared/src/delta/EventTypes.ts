@@ -1,5 +1,5 @@
 import { LionWebId, LionWebJsonMetaPointer } from "@lionweb/json";
-import { ProtocolMessage, LionWebJsonDeltaChunk, numberString, JS_string } from "./SharedTypes.js"
+import { ProtocolMessage, LionWebJsonDeltaChunk, JS_string, JS_number } from "./SharedTypes.js"
 
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-CommandSource
@@ -9,7 +9,7 @@ export type CommandSource = {
     commandId: CommandId;
 };
 
-export type SequenceNumber = string;
+export type SequenceNumber = number;
 
 export type CommandId = string;
 
@@ -25,7 +25,7 @@ export type ClassifierChanged = IEvent & {
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -36,18 +36,19 @@ export type PartitionAdded = IEvent & {
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/niko/delta-api-spec/delta/events.adoc#evnt-PartitionDeleted
  */
 export type PartitionDeleted = IEvent & {
-    deletedPartition: LionWebJsonDeltaChunk;
+    deletedPartition: LionWebId;
+    deletedDescendants: LionWebId[];
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -60,7 +61,7 @@ export type PropertyAdded = IEvent & {
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -73,7 +74,7 @@ export type PropertyDeleted = IEvent & {
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -87,7 +88,7 @@ export type PropertyChanged = IEvent & {
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -97,11 +98,11 @@ export type ChildAdded = IEvent & {
     parent: LionWebId;
     newChild: LionWebJsonDeltaChunk;
     containment: LionWebJsonMetaPointer;
-    index: numberString;
+    index: JS_number;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -109,13 +110,14 @@ export type ChildAdded = IEvent & {
  */
 export type ChildDeleted = IEvent & {
     parent: LionWebId;
-    deletedChild: LionWebJsonDeltaChunk;
+    deletedChild: LionWebId;
+    deletedDescendants: LionWebId[];
     containment: LionWebJsonMetaPointer;
-    index: numberString;
+    index: JS_number;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -124,13 +126,14 @@ export type ChildDeleted = IEvent & {
 export type ChildReplaced = IEvent & {
     parent: LionWebId;
     newChild: LionWebJsonDeltaChunk;
-    replacedChild: LionWebJsonDeltaChunk;
+    replacedChild: LionWebId;
+    replacedDescendants: LionWebId[];
     containment: LionWebJsonMetaPointer;
-    index: numberString;
+    index: JS_number;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -139,15 +142,15 @@ export type ChildReplaced = IEvent & {
 export type ChildMovedFromOtherContainment = IEvent & {
     newParent: LionWebId;
     newContainment: LionWebJsonMetaPointer;
-    newIndex: numberString;
+    newIndex: JS_number;
     movedChild: LionWebId;
     oldParent: LionWebId;
     oldContainment: LionWebJsonMetaPointer;
-    oldIndex: numberString;
+    oldIndex: JS_number;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -156,14 +159,14 @@ export type ChildMovedFromOtherContainment = IEvent & {
 export type ChildMovedFromOtherContainmentInSameParent = IEvent & {
     parent: LionWebId;
     newContainment: LionWebJsonMetaPointer;
-    newIndex: numberString;
+    newIndex: JS_number;
     movedChild: LionWebId;
     oldContainment: LionWebJsonMetaPointer;
-    oldIndex: numberString;
+    oldIndex: JS_number;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -172,13 +175,13 @@ export type ChildMovedFromOtherContainmentInSameParent = IEvent & {
 export type ChildMovedInSameContainment = IEvent & {
     parent: LionWebId;
     containment: LionWebJsonMetaPointer;
-    newIndex: numberString;
+    newIndex: JS_number;
     movedChild: LionWebId;
-    oldIndex: numberString;
+    oldIndex: JS_number;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -187,16 +190,17 @@ export type ChildMovedInSameContainment = IEvent & {
 export type ChildMovedAndReplacedFromOtherContainment = IEvent & {
     newParent: LionWebId;
     newContainment: LionWebJsonMetaPointer;
-    newIndex: numberString;
+    newIndex: JS_number;
     movedChild: LionWebId;
     oldParent: LionWebId;
     oldContainment: LionWebJsonMetaPointer;
-    oldIndex: numberString;
-    replacedChild: LionWebJsonDeltaChunk;
+    oldIndex: JS_number;
+    replacedChild: LionWebId;
+    replacedDescendants: LionWebId[];
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -205,15 +209,16 @@ export type ChildMovedAndReplacedFromOtherContainment = IEvent & {
 export type ChildMovedAndReplacedFromOtherContainmentInSameParent = IEvent & {
     parent: LionWebId;
     newContainment: LionWebJsonMetaPointer;
-    newIndex: numberString;
+    newIndex: JS_number;
     movedChild: LionWebId;
     oldContainment: LionWebJsonMetaPointer;
-    oldIndex: numberString;
-    replacedChild: LionWebJsonDeltaChunk;
+    oldIndex: JS_number;
+    replacedChild: LionWebId;
+    replacedDescendants: LionWebId[];
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -222,14 +227,15 @@ export type ChildMovedAndReplacedFromOtherContainmentInSameParent = IEvent & {
 export type ChildMovedAndReplacedInSameContainment = IEvent & {
     parent: LionWebId;
     containment: LionWebJsonMetaPointer;
-    newIndex: numberString;
+    newIndex: JS_number;
     movedChild: LionWebId;
-    oldIndex: numberString;
-    replacedChild: LionWebJsonDeltaChunk;
+    oldIndex: JS_number;
+    replacedChild: LionWebId;
+    replacedDescendants: LionWebId[];
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -238,11 +244,11 @@ export type ChildMovedAndReplacedInSameContainment = IEvent & {
 export type AnnotationAdded = IEvent & {
     parent: LionWebId;
     newAnnotation: LionWebJsonDeltaChunk;
-    index: numberString;
+    index: JS_number;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -250,12 +256,13 @@ export type AnnotationAdded = IEvent & {
  */
 export type AnnotationDeleted = IEvent & {
     parent: LionWebId;
-    index: numberString;
-    deletedAnnotation: LionWebJsonDeltaChunk;
+    index: JS_number;
+    deletedAnnotation: LionWebId;
+    deletedDescendants: LionWebId[];
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -264,12 +271,13 @@ export type AnnotationDeleted = IEvent & {
 export type AnnotationReplaced = IEvent & {
     parent: LionWebId;
     newAnnotation: LionWebJsonDeltaChunk;
-    replacedAnnotation: LionWebJsonDeltaChunk;
-    index: numberString;
+    replacedAnnotation: LionWebId;
+    replacedDescendants: LionWebId[];
+    index: JS_number;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -277,14 +285,14 @@ export type AnnotationReplaced = IEvent & {
  */
 export type AnnotationMovedFromOtherParent = IEvent & {
     newParent: LionWebId;
-    newIndex: numberString;
+    newIndex: JS_number;
     movedAnnotation: LionWebId;
     oldParent: LionWebId;
-    oldIndex: numberString;
+    oldIndex: JS_number;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -292,13 +300,13 @@ export type AnnotationMovedFromOtherParent = IEvent & {
  */
 export type AnnotationMovedInSameParent = IEvent & {
     parent: LionWebId;
-    oldIndex: numberString;
-    newIndex: numberString;
+    oldIndex: JS_number;
+    newIndex: JS_number;
     movedAnnotation: LionWebId;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -306,15 +314,16 @@ export type AnnotationMovedInSameParent = IEvent & {
  */
 export type AnnotationMovedAndReplacedFromOtherParent = IEvent & {
     newParent: LionWebId;
-    newIndex: numberString;
+    newIndex: JS_number;
     movedAnnotation: LionWebId;
-    replacedAnnotation: LionWebJsonDeltaChunk;
+    replacedAnnotation: LionWebId;
+    replacedDescendants: LionWebId[];
     oldParent: LionWebId;
-    oldIndex: numberString;
+    oldIndex: JS_number;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -322,14 +331,15 @@ export type AnnotationMovedAndReplacedFromOtherParent = IEvent & {
  */
 export type AnnotationMovedAndReplacedInSameParent = IEvent & {
     parent: LionWebId;
-    newIndex: numberString;
-    oldIndex: numberString;
+    newIndex: JS_number;
+    oldIndex: JS_number;
     movedAnnotation: LionWebId;
-    replacedAnnotation: LionWebJsonDeltaChunk;
+    replacedAnnotation: LionWebId;
+    replacedDescendants: LionWebId[];
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -338,13 +348,13 @@ export type AnnotationMovedAndReplacedInSameParent = IEvent & {
 export type ReferenceAdded = IEvent & {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
-    index: numberString;
+    index: JS_number;
     newTarget: LionWebId;
     newResolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -353,13 +363,13 @@ export type ReferenceAdded = IEvent & {
 export type ReferenceDeleted = IEvent & {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
-    index: numberString;
+    index: JS_number;
     deletedTarget: LionWebId;
     deletedResolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -368,15 +378,15 @@ export type ReferenceDeleted = IEvent & {
 export type ReferenceChanged = IEvent & {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
-    index: numberString;
+    index: JS_number;
     newTarget: LionWebId;
     newResolveInfo: JS_string;
-    replacedTarget: LionWebId;
-    replacedResolveInfo: JS_string;
+    oldTarget: LionWebId;
+    oldResolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -385,16 +395,16 @@ export type ReferenceChanged = IEvent & {
 export type EntryMovedFromOtherReference = IEvent & {
     newParent: LionWebId;
     newReference: LionWebJsonMetaPointer;
-    newIndex: numberString;
+    newIndex: JS_number;
     oldParent: LionWebId;
     oldReference: LionWebJsonMetaPointer;
-    oldIndex: numberString;
+    oldIndex: JS_number;
     target: LionWebId;
     resolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -403,15 +413,15 @@ export type EntryMovedFromOtherReference = IEvent & {
 export type EntryMovedFromOtherReferenceInSameParent = IEvent & {
     parent: LionWebId;
     newReference: LionWebJsonMetaPointer;
-    newIndex: numberString;
+    newIndex: JS_number;
     oldReference: LionWebJsonMetaPointer;
-    oldIndex: numberString;
+    oldIndex: JS_number;
     target: LionWebId;
     resolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -420,14 +430,14 @@ export type EntryMovedFromOtherReferenceInSameParent = IEvent & {
 export type EntryMovedInSameReference = IEvent & {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
-    newIndex: numberString;
-    oldIndex: numberString;
+    newIndex: JS_number;
+    oldIndex: JS_number;
     target: LionWebId;
     resolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -436,10 +446,10 @@ export type EntryMovedInSameReference = IEvent & {
 export type EntryMovedAndReplacedFromOtherReference = IEvent & {
     newParent: LionWebId;
     newReference: LionWebJsonMetaPointer;
-    newIndex: numberString;
+    newIndex: JS_number;
     oldParent: LionWebId;
     oldReference: LionWebJsonMetaPointer;
-    oldIndex: numberString;
+    oldIndex: JS_number;
     movedTarget: LionWebId;
     movedResolveInfo: JS_string;
     replacedTarget: LionWebId;
@@ -447,7 +457,7 @@ export type EntryMovedAndReplacedFromOtherReference = IEvent & {
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -456,9 +466,9 @@ export type EntryMovedAndReplacedFromOtherReference = IEvent & {
 export type EntryMovedAndReplacedFromOtherReferenceInSameParent = IEvent & {
     parent: LionWebId;
     newReference: LionWebJsonMetaPointer;
-    newIndex: numberString;
+    newIndex: JS_number;
     oldReference: LionWebJsonMetaPointer;
-    oldIndex: numberString;
+    oldIndex: JS_number;
     movedTarget: LionWebId;
     movedResolveInfo: JS_string;
     replacedTarget: LionWebId;
@@ -466,7 +476,7 @@ export type EntryMovedAndReplacedFromOtherReferenceInSameParent = IEvent & {
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -475,16 +485,16 @@ export type EntryMovedAndReplacedFromOtherReferenceInSameParent = IEvent & {
 export type EntryMovedAndReplacedInSameReference = IEvent & {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
-    newIndex: numberString;
+    newIndex: JS_number;
     movedTarget: LionWebId;
     movedResolveInfo: JS_string;
-    oldIndex: numberString;
+    oldIndex: JS_number;
     replacedTarget: LionWebId;
     replacedResolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -493,13 +503,13 @@ export type EntryMovedAndReplacedInSameReference = IEvent & {
 export type ReferenceResolveInfoAdded = IEvent & {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
-    index: numberString;
+    index: JS_number;
     target: LionWebId;
     newResolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -508,13 +518,13 @@ export type ReferenceResolveInfoAdded = IEvent & {
 export type ReferenceResolveInfoDeleted = IEvent & {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
-    index: numberString;
+    index: JS_number;
     target: LionWebId;
     deletedResolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -523,14 +533,14 @@ export type ReferenceResolveInfoDeleted = IEvent & {
 export type ReferenceResolveInfoChanged = IEvent & {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
-    index: numberString;
+    index: JS_number;
     target: LionWebId;
     newResolveInfo: JS_string;
     replacedResolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -539,13 +549,13 @@ export type ReferenceResolveInfoChanged = IEvent & {
 export type ReferenceTargetAdded = IEvent & {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
-    index: numberString;
+    index: JS_number;
     newTarget: LionWebId;
     resolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -554,13 +564,13 @@ export type ReferenceTargetAdded = IEvent & {
 export type ReferenceTargetDeleted = IEvent & {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
-    index: numberString;
+    index: JS_number;
     deletedTarget: LionWebId;
     resolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -569,14 +579,14 @@ export type ReferenceTargetDeleted = IEvent & {
 export type ReferenceTargetChanged = IEvent & {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
-    index: numberString;
+    index: JS_number;
     newTarget: LionWebId;
     replacedTarget: LionWebId;
     resolveInfo: JS_string;
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -586,7 +596,7 @@ export type IEvent = {
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -595,7 +605,7 @@ export type IEvent = {
 export type CompositeEvent = {
     parts: IEvent[];
     messageKind: EventKind;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -607,7 +617,7 @@ export type Error = IEvent & {
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 /**
@@ -617,7 +627,7 @@ export type NoOpEvent = {
     messageKind: EventKind;
     originCommands: CommandSource[];
     sequenceNumber: SequenceNumber;
-    protocolMessage?: ProtocolMessage;
+    protocolMessages?: ProtocolMessage[];
 };
 
 export type EventKind = string;

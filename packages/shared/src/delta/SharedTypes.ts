@@ -24,6 +24,6 @@ export type KeyValuePair = {
     value: JS_string;
 };
 
-export type numberString = string;
+export type JS_number = number;
 
 export type JS_string = string;

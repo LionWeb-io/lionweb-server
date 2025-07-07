@@ -17,7 +17,6 @@
   "scripts": {
     "clean": "rm -rf node_modules/ && rm -rf dist/",
     "build": "tsc",
-    "generate": "node ./dist/GenerateTypes.js",
     "alive": "echo I am alive",
     "lint": "eslint src"
   },

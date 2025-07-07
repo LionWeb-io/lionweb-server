@@ -3,15 +3,16 @@ import { ValidationResult } from "@lionweb/validation"
 import { assert } from "chai"
 import fs from "fs"
 import { DirectoryWorker } from "./DirectoryWalker.js"
+import { describe, test, expect, beforeEach } from "vitest";
 
-export class TestWalker implements DirectoryWorker {
+export class TestWorker implements DirectoryWorker {
     validator =  new DeltaValidation(new ValidationResult())
 
     visitDir(dir: string): void {
     }
 
     visitFile(file: string): void {
-        it("Validating " + file, async () => {
+        test("Validating " + file, async () => {
             const message = JSON.parse(fs.readFileSync(file).toString());
             this.validator.validationResult.reset()
             this.validator.validateCommand(message)
