@@ -21,13 +21,6 @@ function emptyValidation<T>(object: T, result: ValidationResult, ctx: JsonContex
 export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
     [
         {
-            unionType: "Event",
-            unionDiscriminator: "EventType",
-            unionProperty: "messageKind",
-        },
-    ],
-    [
-        {
             name: "CommandSource",
             properties: [
                 PropertyDef({ name: "participationId", type: "ParticipationId" }),
@@ -531,6 +524,11 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
         PrimitiveDef({ name: "EventType", primitiveType: "string" }),
         // ["string", PrimitiveDef({ primitiveType: "string" })],
     ],
+    {
+        unionType: "Event",
+        unionDiscriminator: "EventType",
+        unionProperty: "messageKind",
+    }
 )
 
 // Add any Map or Set to another

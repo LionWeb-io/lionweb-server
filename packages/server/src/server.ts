@@ -1,5 +1,6 @@
+import { processDelta } from "@lionweb/delta-server"
 import { registerHistoryApi } from "@lionweb/repository-history"
-import { CommandProcessor } from "@lionweb/repository-shared/dist/delta/CommandProcessor.js"
+import { CommandType } from "@lionweb/server-delta-shared"
 import express, { Express, NextFunction, Response, Request } from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
@@ -26,7 +27,7 @@ import {
     registerAdditionalApi
 } from "@lionweb/repository-additionalapi"
 import { registerLanguagesApi } from "@lionweb/repository-languages"
-import { CommandType, HttpClientErrors } from "@lionweb/repository-shared"
+import { HttpClientErrors } from "@lionweb/repository-shared"
 import { pinoHttp } from "pino-http"
 import * as http from "node:http"
 
@@ -233,11 +234,9 @@ async function startServer() {
         // @ts-ignore
         console.log(`Client connected ${socket["sec-websocket-key"]} +  ${socket.url} +`);
         
-        const processor = new CommandProcessor()
-        
         socket.on('message', (message: RawData) => {
             console.log(`Received: ${message.toString()}`);
-            processor.process(JSON.parse(message.toString()) as unknown as CommandType)
+            processDelta(JSON.parse(message.toString()) as unknown as CommandType)
             // socket.send(`Server sends: ${message}`);
         });
 

@@ -25,13 +25,6 @@ function emptyValidation<T>(object: T, result: ValidationResult, ctx: JsonContex
 export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
     [
         {
-            unionType: "Command",
-            unionDiscriminator: "CommandType",
-            unionProperty: "messageKind",
-        },
-    ],
-    [
-        {
             name: "CommandResponse",
             properties: [
                 ...CommonCommandProperties
@@ -473,6 +466,11 @@ export const DeltaCommandSchema: DefinitionSchema = new DefinitionSchema(
         PrimitiveDef({ name: "CommandType", primitiveType: "string" }),
         // ["string", PrimitiveDef({ primitiveType: "string" })],
     ],
+    {
+        unionType: "Command",
+        unionDiscriminator: "CommandType",
+        unionProperty: "messageKind",
+    }
 )
 
 // Add any Map or Set to another

@@ -5,7 +5,6 @@
     "outDir": "dist",
     "resolveJsonModule": true,
     /* Enable importing .json files */
-    "sourceRoot": "./src",
-    "strict": true
+    "sourceRoot": "./src"
   }
 }

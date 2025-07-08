@@ -7,11 +7,17 @@ import { DeltaSharedSchema } from "./SharedDefinitions.js"
 
 export type UnknownObjectType = { [key: string]: unknown }
 
-const AllMessageDefinitions = DefinitionSchema.join(DeltaCommandSchema, DeltaSharedSchema, LionWebSchema, DeltaEventSchema, DeltaQuerySchema)
+const alldefinitionSchema = new DefinitionSchema([
+    ...DeltaCommandSchema.definitions(),
+    ...DeltaSharedSchema.definitions(),
+    ...DeltaQuerySchema.definitions(),
+    ...DeltaEventSchema.definitions(),
+    ...LionWebSchema.definitions()])
+
 
 export class DeltaValidator extends SyntaxValidator {
     constructor(validationResult: ValidationResult) {
-        super(validationResult, AllMessageDefinitions)
+        super(validationResult, alldefinitionSchema)
     }
 
     validateDelta(object: UnknownObjectType) {

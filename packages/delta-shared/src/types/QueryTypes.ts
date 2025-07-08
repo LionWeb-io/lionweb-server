@@ -9,7 +9,7 @@ export type SubscribeToChangingPartitionsRequest = {
     creation: primitiveBoolean;
     deletion: primitiveBoolean;
     partitions: primitiveBoolean;
-    messageKind: QueryKind;
+    messageKind: QueryType;
     queryId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
@@ -18,7 +18,7 @@ export type SubscribeToChangingPartitionsRequest = {
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-SubscribeToChangingPartitionsResponse
  */
 export type SubscribeToChangingPartitionsResponse = {
-    messageKind: QueryKind;
+    messageKind: QueryType;
     queryId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
@@ -28,7 +28,7 @@ export type SubscribeToChangingPartitionsResponse = {
  */
 export type SubscribeToPartitionContentsRequest = {
     partition: LionWebId;
-    messageKind: QueryKind;
+    messageKind: QueryType;
     queryId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
@@ -38,7 +38,7 @@ export type SubscribeToPartitionContentsRequest = {
  */
 export type SubscribeToPartitionContentsResponse = {
     contents: LionWebJsonDeltaChunk;
-    messageKind: QueryKind;
+    messageKind: QueryType;
     queryId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
@@ -48,7 +48,7 @@ export type SubscribeToPartitionContentsResponse = {
  */
 export type UnsubscribeFromPartitionContentsRequest = {
     partition: LionWebId;
-    messageKind: QueryKind;
+    messageKind: QueryType;
     queryId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
@@ -57,7 +57,7 @@ export type UnsubscribeFromPartitionContentsRequest = {
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-UnsubscribeFromPartitionContentsResponse
  */
 export type UnsubscribeFromPartitionContentsResponse = {
-    messageKind: QueryKind;
+    messageKind: QueryType;
     queryId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
@@ -67,7 +67,7 @@ export type UnsubscribeFromPartitionContentsResponse = {
  */
 export type SignOnRequest = {
     deltaProtocolVersion: JS_string;
-    messageKind: QueryKind;
+    messageKind: QueryType;
     queryId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
@@ -77,7 +77,7 @@ export type SignOnRequest = {
  */
 export type SignOnResponse = {
     participationId: ParticipationId;
-    messageKind: QueryKind;
+    messageKind: QueryType;
     queryId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
@@ -86,7 +86,7 @@ export type SignOnResponse = {
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-SignOffRequest
  */
 export type SignOffRequest = {
-    messageKind: QueryKind;
+    messageKind: QueryType;
     queryId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
@@ -95,7 +95,7 @@ export type SignOffRequest = {
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-SignOffResponse
  */
 export type SignOffResponse = {
-    messageKind: QueryKind;
+    messageKind: QueryType;
     queryId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
@@ -104,7 +104,7 @@ export type SignOffResponse = {
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-ListPartitionsRequest
  */
 export type ListPartitionsRequest = {
-    messageKind: QueryKind;
+    messageKind: QueryType;
     queryId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
@@ -112,9 +112,9 @@ export type ListPartitionsRequest = {
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/introduction.adoc#-ListPartitionsResponse
  */
-export type ListPartitionsResponseDelta = {
+export type ListPartitionsQueryResponse = {
     partitions: LionWebJsonDeltaChunk;
-    messageKind: QueryKind;
+    messageKind: QueryType;
     queryId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
@@ -124,7 +124,7 @@ export type ListPartitionsResponseDelta = {
  */
 export type GetAvailableIdsRequest = {
     count: primitiveNumber;
-    messageKind: QueryKind;
+    messageKind: QueryType;
     queryId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
@@ -134,7 +134,7 @@ export type GetAvailableIdsRequest = {
  */
 export type GetAvailableIdsResponse = {
     ids: LionWebId[];
-    messageKind: QueryKind;
+    messageKind: QueryType;
     queryId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
@@ -145,7 +145,7 @@ export type GetAvailableIdsResponse = {
 export type ReconnectRequest = {
     participationId: JS_string;
     lastReceivedSequenceNumber: JS_number;
-    messageKind: QueryKind;
+    messageKind: QueryType;
     queryId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
@@ -155,12 +155,23 @@ export type ReconnectRequest = {
  */
 export type ReconnectResponse = {
     lastSentSequenceNumber: JS_number;
-    messageKind: QueryKind;
+    messageKind: QueryType;
     queryId: JS_string;
     protocolMessages?: ProtocolMessage[];
 };
 
-export type QueryKind = string;
+export type QueryRequestType = 
+    ReconnectRequest
+    | ListPartitionsRequest
+    | ReconnectRequest
+    | GetAvailableIdsRequest
+    | SignOffRequest
+    | SignOnRequest
+    | UnsubscribeFromPartitionContentsRequest
+    | SubscribeToPartitionContentsRequest
+    | SubscribeToChangingPartitionsRequest
+
+export type QueryType = string;
 
 export type primitiveBoolean = boolean;
 

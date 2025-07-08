@@ -23,7 +23,7 @@ export const ProtocolMessageProperty: PropertyDefinition = PropertyDef({
 function emptyValidation<T>(object: T, result: ValidationResult, ctx: JsonContext, pdef?: PropertyDefinition): void {
 }
 
-export const DeltaSharedSchema: DefinitionSchema = new DefinitionSchema([], [
+export const DeltaSharedSchema: DefinitionSchema = new DefinitionSchema([
     {
         name: "LionWebJsonDeltaChunk",
         properties: [

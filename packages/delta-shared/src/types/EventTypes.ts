@@ -1,5 +1,5 @@
 import { LionWebId, LionWebJsonMetaPointer } from "@lionweb/json";
-import { ProtocolMessage, LionWebJsonDeltaChunk, JS_number, JS_string } from "./SharedTypes.js"
+import { ProtocolMessage, LionWebJsonDeltaChunk, JS_string, JS_number } from "./SharedTypes.js"
 
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-CommandSource
