@@ -10,6 +10,27 @@ export class ProcessorTemplate {
         this.typePostFix = typePostFix
     }
     
+    mapTemplate(): string {
+        const dis = this.schema.unionDefinition.unionDiscriminator
+        const messagesForType = this.messageForTag(this.schema.unionDefinition)
+        return `
+            const processingFunctions: Map<string, (msg: ${dis}) => void> = new Map<string, (msg: ${dis}) => void>()
+            ${messagesForType.map(msg => `
+                // @ts-expect-error TS2345
+                processingFunctions.set("${msg.name}", ${msg.name}Function)`
+            ).join("\n")}
+            
+            ${messagesForType.map(msg => this.functionTemplate(msg)).join("\n")}
+        `
+    }
+    
+    functionTemplate(def: Definition): string {
+        return `
+            export function ${def.name}Function(msg: ${this.tsType(def.name)}): void {
+                console.log("Called ${def.name}Function " + msg.${this.schema.unionDefinition.unionProperty})
+            }
+        `
+    }
     classTemplate(): string {
         return `export class ${this.typePostFix}Processor {
             ${this.switchTemplate()}
@@ -18,22 +39,20 @@ export class ProcessorTemplate {
     }
     
     switchTemplate(): string {
-        return this.schema.unionDefinitions.map(tu => {
-            const dis = tu.unionType
-            const messagesForType = this.messageForTag(tu)
+            const dis = this.schema.unionDefinition.unionDiscriminator
+            const messagesForType = this.messageForTag(this.schema.unionDefinition)
             return `
                 process(message: ${dis}): void {
-                    switch (message.${tu.unionProperty}) {
+                    switch (message.${this.schema.unionDefinition.unionProperty}) {
                         ${messagesForType.map(msg =>
                         `case "${msg.name}" : {
-                                 this.process${this.tsType(msg.name)}(message)
-                                 break;
-                             }
+                             this.process${this.tsType(msg.name)}(message)
+                             break;
+                         }
                         `).join("\n")}
                     }
                 }
             `
-        }).join("\n")
     }
 
     tsType(type: string): string {
@@ -43,19 +62,19 @@ export class ProcessorTemplate {
 
 
     processorTemplate(): string {
-        return this.schema.unionDefinitions.map(tu => {
-            const dis = tu.unionType
-            const messagesForType = this.messageForTag(tu)
+            const dis = this.schema.unionDefinition.unionDiscriminator
+            const messagesForType = this.messageForTag(this.schema.unionDefinition)
             return `
                 ${messagesForType.map(msg => 
                     `process${this.tsType(msg.name)}(message: ${this.tsType(msg.name)}) {
                         console.log("Processing message ${msg.name}")    
                     }`).join("\n")}
-                `}).join("\n")
+                `
     }
     
     private messageForTag(type: TaggedUnionDefinition): Definition[] {
-        return this.schema.definitions().filter(def => isObjectDefinition(def) && def.taggedUnionType === type.unionType)
+        console.log(`type ${type.unionDiscriminator}`)
+        return this.schema.definitions().filter(def => isObjectDefinition(def) && def.taggedUnionType === type.unionDiscriminator)
 
     }
 }

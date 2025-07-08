@@ -50,9 +50,11 @@
     "./packages/history",
     "./packages/additionalapi",
     "./packages/server",
-    "./packages/delta",
     "./packages/client",
-    "./packages/deltaclient",
+    "./packages/delta",
+    "./packages/delta-client",
+    "./packages/delta-shared",
+    "./packages/delta-server",
     "./packages/test",
     "./scripts",
     "."

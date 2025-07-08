@@ -109,7 +109,7 @@ export class TypeTemplates {
                 synchronizedPrettier.format(typescriptFile, {
                     parser: "typescript",
                     plugins: [],
-                    printWidth: 140,
+                    printWidth: 160,
                     tabWidth: 4,
                 })
             );
