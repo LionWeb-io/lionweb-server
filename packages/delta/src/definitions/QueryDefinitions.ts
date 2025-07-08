@@ -9,7 +9,7 @@ import { ProtocolMessageProperty } from "./SharedDefinitions.js"
  * @param ctx    The JsonContext, to be used for issue location.
  * @param pdef   The property definitions
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// @tslint-disable-next-line @typescript-eslint/no-unused-vars
 function emptyValidation<T>(object: T, result: ValidationResult, ctx: JsonContext, pdef?: PropertyDefinition): void {}
 
 const QueryKindProperty: PropertyDefinition = PropertyDef({

@@ -34,7 +34,7 @@ import {
     PartitionDeletedEvent,
     PropertyAddedEvent,
     PropertyChangedEvent,
-    PropertyDeletedEvent, ReconnectResponse,
+    PropertyDeletedEvent, QueryResponseType, ReconnectResponse,
     ReferenceAddedEvent,
     ReferenceChangedEvent,
     ReferenceDeletedEvent,
@@ -43,7 +43,7 @@ import {
     ReferenceResolveInfoDeletedEvent,
     ReferenceTargetAddedEvent, ReferenceTargetChangedEvent,
     ReferenceTargetDeletedEvent, SignOffResponse, SignOnResponse
-} from "@lionweb/server-delta-shared";
+} from "@lionweb/server-delta-shared"
 import { ValidationResult } from "@lionweb/validation"
 import {
     AnnotationAddedFunction,
@@ -84,7 +84,7 @@ import {
     SignOnResponseFunction
 } from "./queryresponses/index.js"
 
-const processingFunctions: Map<string, (msg: EventType) => void> = new Map<string, (msg: EventType) => void>();
+const processingFunctions: Map<string, (msg: EventType | QueryResponseType) => void> = new Map<string, (msg: EventType| QueryResponseType) => void>();
 
 processingFunctions.set("ClassifierChanged", ClassifierChangedFunction);
 processingFunctions.set("PartitionAdded", PartitionAddedFunction);

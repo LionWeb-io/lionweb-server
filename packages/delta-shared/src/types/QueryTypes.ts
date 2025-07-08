@@ -160,7 +160,7 @@ export type ReconnectResponse = {
     protocolMessages?: ProtocolMessage[];
 };
 
-export type QueryRequestType = 
+export type QueryRequestType =
     ReconnectRequest
     | ListPartitionsRequest
     | ReconnectRequest
@@ -170,6 +170,17 @@ export type QueryRequestType =
     | UnsubscribeFromPartitionContentsRequest
     | SubscribeToPartitionContentsRequest
     | SubscribeToChangingPartitionsRequest
+
+export type QueryResponseType =
+    ReconnectResponse
+    | ListPartitionsQueryResponse
+    | ReconnectResponse
+    | GetAvailableIdsResponse
+    | SignOffResponse
+    | SignOnResponse
+    | UnsubscribeFromPartitionContentsResponse
+    | SubscribeToPartitionContentsResponse
+    | SubscribeToChangingPartitionsResponse
 
 export type QueryType = string;
 
