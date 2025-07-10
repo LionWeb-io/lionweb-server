@@ -1,6 +1,6 @@
-import { processDelta } from "@lionweb/delta-server"
+import { CommandProcessor, DeltaProcessor, QueryRequestProcessor } from "@lionweb/delta-server"
 import { registerHistoryApi } from "@lionweb/server-history"
-import { CommandType } from "@lionweb/server-delta-shared"
+import { CommandType, PartitionAddedEvent } from "@lionweb/server-delta-shared"
 import express, { Express, NextFunction, Response, Request } from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
@@ -229,15 +229,30 @@ async function startServer() {
         }
     })
     
+    const deltaProcessor = new DeltaProcessor(new CommandProcessor(), new QueryRequestProcessor())
+    
     const wsServer = new WebSocketServer({server: httpServer})
     wsServer.on('connection', (socket, request) => {
         // @ts-ignore
-        console.log(`Client connected ${socket["sec-websocket-key"]} +  ${socket.url} +`);
+        console.log(`Client connected`);
         
         socket.on('message', (message: RawData) => {
             console.log(`Received: ${message.toString()}`);
-            processDelta(JSON.parse(message.toString()) as unknown as CommandType)
-            // socket.send(`Server sends: ${message}`);
+            deltaProcessor.processDelta(JSON.parse(message.toString()) as unknown as CommandType)
+            const addpartitionresponse: PartitionAddedEvent = {
+                messageKind: "PartitionAdded",
+                newPartition: {
+                    nodes: []
+                },
+                sequenceNumber: 1,
+                originCommands: [
+                    {
+                        commandId: "cmdid",
+                        participationId: "pid"
+                    }
+                ]
+            }
+            socket.send(JSON.stringify(addpartitionresponse));
         });
 
         socket.on('close', () => {

@@ -1,5 +1,5 @@
 {
-  "name": "@lionweb/repository-delta",
+  "name": "@lionweb/server-delta",
   "version": "0.3.0",
   "private": false,
   "main": "dist/index.js",
@@ -34,10 +34,10 @@
     "typescript": "5.2.2"
   },
   "dependencies": {
-    "@lionweb/repository-shared": "0.3.0",
-    "@lionweb/repository-common": "0.3.0",
-    "@lionweb/repository-dbadmin": "0.3.0",
-    "@lionweb/repository-bulkapi": "0.3.0",
+    "@lionweb/server-shared": "0.3.0",
+    "@lionweb/server-common": "0.3.0",
+    "@lionweb/server-dbadmin": "0.3.0",
+    "@lionweb/server-bulkapi": "0.3.0",
     "@lionweb/json": "0.7.0-beta.1",
     "@lionweb/json-utils": "0.7.0-beta.1",
     "@lionweb/validation": "0.7.0-beta.1",

@@ -12,7 +12,7 @@ describe("Repository tests", () => {
     const t = new RepositoryClient("TestClient", "default")
     t.loggingOn = true
 
-    beforeEach("a", async function () {
+    beforeEach(async function () {
         const createResponse = await t.dbAdmin.createDatabase()
         if (createResponse.status !== HttpSuccessCodes.Ok) {
             console.log("Cannot create database: " + JSON.stringify(createResponse.body))

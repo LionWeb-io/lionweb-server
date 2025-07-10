@@ -1,162 +1,99 @@
-// @ts-nocheck
+import { DeltaValidator } from "@lionweb/server-delta"
 import {
-    SubscribeToChangingPartitionsResponseFunction,
-    SubscribeToPartitionContentsResponseFunction,
-    UnsubscribeFromPartitionContentsResponseFunction
-} from "@lionweb/delta-server"
-import { DeltaValidator } from "@lionweb/repository-delta"
-import {
-    AnnotationAddedEvent,
-    AnnotationDeletedEvent,
-    AnnotationMovedAndReplacedFromOtherParentEvent,
-    AnnotationMovedAndReplacedInSameParentEvent,
-    AnnotationMovedFromOtherParentEvent,
-    AnnotationMovedInSameParentEvent,
-    AnnotationReplacedEvent,
-    ChildAddedEvent,
-    ChildDeletedEvent,
-    ChildMovedAndReplacedFromOtherContainmentEvent,
-    ChildMovedAndReplacedFromOtherContainmentInSameParentEvent,
-    ChildMovedAndReplacedInSameContainmentEvent,
-    ChildMovedFromOtherContainmentEvent,
-    ChildMovedFromOtherContainmentInSameParentEvent,
-    ChildMovedInSameContainmentEvent,
-    ChildReplacedEvent,
-    ClassifierChangedEvent,
-    EntryMovedAndReplacedFromOtherReferenceEvent,
-    EntryMovedAndReplacedFromOtherReferenceInSameParentEvent,
-    EntryMovedAndReplacedInSameReferenceEvent,
-    EntryMovedFromOtherReferenceEvent,
-    EntryMovedFromOtherReferenceInSameParentEvent,
-    EntryMovedInSameReferenceEvent, ErrorEvent,
-    EventType, GetAvailableIdsResponse, ListPartitionsQueryResponse, NoOpEventEvent,
-    PartitionAddedEvent,
-    PartitionDeletedEvent,
-    PropertyAddedEvent,
-    PropertyChangedEvent,
-    PropertyDeletedEvent, QueryResponseType, ReconnectResponse,
-    ReferenceAddedEvent,
-    ReferenceChangedEvent,
-    ReferenceDeletedEvent,
-    ReferenceResolveInfoAddedEvent,
-    ReferenceResolveInfoChangedEvent,
-    ReferenceResolveInfoDeletedEvent,
-    ReferenceTargetAddedEvent, ReferenceTargetChangedEvent,
-    ReferenceTargetDeletedEvent, SignOffResponse, SignOnResponse
+    EventType,
+    QueryResponseType
 } from "@lionweb/server-delta-shared"
 import { ValidationResult } from "@lionweb/validation"
-import {
-    AnnotationAddedFunction,
-    AnnotationDeletedFunction,
-    AnnotationMovedAndReplacedFromOtherParentFunction,
-    AnnotationMovedAndReplacedInSameParentFunction,
-    AnnotationMovedFromOtherParentFunction,
-    AnnotationMovedInSameParentFunction,
-    AnnotationReplacedFunction,
-    ChildAddedFunction,
-    ChildDeletedFunction,
-    ChildMovedAndReplacedFromOtherContainmentFunction,
-    ChildMovedAndReplacedFromOtherContainmentInSameParentFunction,
-    ChildMovedAndReplacedInSameContainmentFunction,
-    ChildMovedFromOtherContainmentFunction,
-    ChildMovedFromOtherContainmentInSameParentFunction,
-    ChildMovedInSameContainmentFunction,
-    ChildReplacedFunction,
-    ClassifierChangedFunction,
-    EntryMovedAndReplacedFromOtherReferenceFunction, EntryMovedAndReplacedFromOtherReferenceInSameParentFunction, EntryMovedAndReplacedInSameReferenceFunction,
-    EntryMovedFromOtherReferenceFunction,
-    EntryMovedFromOtherReferenceInSameParentFunction,
-    EntryMovedInSameReferenceFunction, ErrorFunction, NoOpEventFunction,
-    PartitionAddedFunction,
-    PartitionDeletedFunction,
-    PropertyAddedFunction,
-    PropertyChangedFunction, PropertyDeletedFunction,
-    ReferenceAddedFunction,
-    ReferenceChangedFunction,
-    ReferenceDeletedFunction, ReferenceResolveInfoAddedFunction, ReferenceResolveInfoChangedFunction, ReferenceResolveInfoDeletedFunction,
-    ReferenceTargetAddedFunction, ReferenceTargetChangedFunction, ReferenceTargetDeletedFunction
-} from "./events/EventProcessors.js"
-import {
-    GetAvailableIdsResponseFunction,
-    ListPartitionsResponseFunction,
-    ReconnectResponseFunction,
-    SignOffResponseFunction,
-    SignOnResponseFunction
-} from "./queryresponses/index.js"
+import { IEventProcessor } from "./events/IEventProcessor.js"
+import { IQueryResponseProcessor } from "./queryresponses/index.js"
 
-const processingFunctions: Map<string, (msg: EventType | QueryResponseType) => void> = new Map<string, (msg: EventType| QueryResponseType) => void>();
+type MessageFromServer = EventType | QueryResponseType
+type ProcessingFunction = (msg: MessageFromServer) => void;
 
-processingFunctions.set("ClassifierChanged", ClassifierChangedFunction);
-processingFunctions.set("PartitionAdded", PartitionAddedFunction);
-processingFunctions.set("PartitionDeleted", PartitionDeletedFunction);
-processingFunctions.set("PropertyAdded", PropertyAddedFunction);
-processingFunctions.set("PropertyDeleted", PropertyDeletedFunction);
-processingFunctions.set("PropertyChanged", PropertyChangedFunction);
-processingFunctions.set("ChildAdded", ChildAddedFunction);
-processingFunctions.set("ChildDeleted", ChildDeletedFunction);
-processingFunctions.set("ChildReplaced", ChildReplacedFunction);
-processingFunctions.set("ChildMovedFromOtherContainment", ChildMovedFromOtherContainmentFunction);
-processingFunctions.set("ChildMovedFromOtherContainmentInSameParent", ChildMovedFromOtherContainmentInSameParentFunction);
-processingFunctions.set("ChildMovedInSameContainment", ChildMovedInSameContainmentFunction);
-processingFunctions.set("ChildMovedAndReplacedFromOtherContainment", ChildMovedAndReplacedFromOtherContainmentFunction);
-processingFunctions.set("ChildMovedAndReplacedFromOtherContainmentInSameParent", ChildMovedAndReplacedFromOtherContainmentInSameParentFunction);
-processingFunctions.set("ChildMovedAndReplacedInSameContainment", ChildMovedAndReplacedInSameContainmentFunction);
-processingFunctions.set("AnnotationAdded", AnnotationAddedFunction);
-processingFunctions.set("AnnotationDeleted", AnnotationDeletedFunction);
-processingFunctions.set("AnnotationReplaced", AnnotationReplacedFunction);
-processingFunctions.set("AnnotationMovedFromOtherParent", AnnotationMovedFromOtherParentFunction);
-processingFunctions.set("AnnotationMovedInSameParent", AnnotationMovedInSameParentFunction);
-processingFunctions.set("AnnotationMovedAndReplacedFromOtherParent", AnnotationMovedAndReplacedFromOtherParentFunction);
-processingFunctions.set("AnnotationMovedAndReplacedInSameParent", AnnotationMovedAndReplacedInSameParentFunction);
-processingFunctions.set("ReferenceAdded", ReferenceAddedFunction);
-processingFunctions.set("ReferenceDeleted", ReferenceDeletedFunction);
-processingFunctions.set("ReferenceChanged", ReferenceChangedFunction);
-processingFunctions.set("EntryMovedFromOtherReference", EntryMovedFromOtherReferenceFunction);
-processingFunctions.set("EntryMovedFromOtherReferenceInSameParent", EntryMovedFromOtherReferenceInSameParentFunction);
-processingFunctions.set("EntryMovedInSameReference", EntryMovedInSameReferenceFunction);
-processingFunctions.set("EntryMovedAndReplacedFromOtherReference", EntryMovedAndReplacedFromOtherReferenceFunction);
-processingFunctions.set("EntryMovedAndReplacedFromOtherReferenceInSameParent", EntryMovedAndReplacedFromOtherReferenceInSameParentFunction);
-processingFunctions.set("EntryMovedAndReplacedInSameReference", EntryMovedAndReplacedInSameReferenceFunction);
-processingFunctions.set("ReferenceResolveInfoAdded", ReferenceResolveInfoAddedFunction);
-processingFunctions.set("ReferenceResolveInfoDeleted", ReferenceResolveInfoDeletedFunction);
-processingFunctions.set("ReferenceResolveInfoChanged", ReferenceResolveInfoChangedFunction);
-processingFunctions.set("ReferenceTargetAdded", ReferenceTargetAddedFunction);
-processingFunctions.set("ReferenceTargetDeleted", ReferenceTargetDeletedFunction);
-processingFunctions.set("ReferenceTargetChanged", ReferenceTargetChangedFunction);
-processingFunctions.set("Error", ErrorFunction);
-processingFunctions.set("NoOpEvent", NoOpEventFunction);
+export class LionWebDeltaClientProcessor {
 
-processingFunctions.set("SubscribeToChangingPartitionsResponse", SubscribeToChangingPartitionsResponseFunction);
-processingFunctions.set("SubscribeToPartitionContentsResponse", SubscribeToPartitionContentsResponseFunction);
-processingFunctions.set("UnsubscribeFromPartitionContentsResponse", UnsubscribeFromPartitionContentsResponseFunction);
-processingFunctions.set("SignOnResponse", SignOnResponseFunction);
-processingFunctions.set("SignOffResponse", SignOffResponseFunction);
-processingFunctions.set("ListPartitionsResponse", ListPartitionsResponseFunction);
-processingFunctions.set("GetAvailableIdsResponse", GetAvailableIdsResponseFunction);
-processingFunctions.set("ReconnectResponse", ReconnectResponseFunction);
+    processingFunctions: Map<string, ProcessingFunction> = new Map<string, ProcessingFunction>();
+    deltaValidator = new DeltaValidator(new ValidationResult())
 
-const deltaValidator = new DeltaValidator(new ValidationResult())
-export function processDelta(delta: EventType): void {
-    const type = delta.messageKind
-    if (typeof type !== "string") {
-        console.error(`processDelta: messageKind is not a string but a ${typeof type}`)
-        return
+    constructor(queries: IQueryResponseProcessor, events: IEventProcessor) {
+        this.initialize(queries, events)
     }
-    const func = processingFunctions.get(type)
-    if (func === undefined) {
-        console.error(`processDelta: messageKind is not a string but a ${typeof type}`)
-        return
+
+    processDelta(delta: EventType): void {
+        const type = delta.messageKind
+        if (typeof type !== "string") {
+            console.error(`processDelta: messageKind is not a string but a ${typeof type}`)
+            return
+        }
+        const func = this.processingFunctions.get(type)
+        if (func === undefined) {
+            console.error(`processDelta: messageKind is not a string but a ${typeof type}`)
+            return
+        }
+        // Now validate the JSON message
+        this.deltaValidator.validationResult.reset()
+        this.deltaValidator.validate(delta, type)
+        if (this.deltaValidator.validationResult.hasErrors()) {
+            console.error(`Valoidation errors:`)
+            this.deltaValidator.validationResult.issues.forEach(issue => {
+                console.error(issue.errorMsg())
+            })
+            return
+        }
+        // Finally ok
+        func(delta)
     }
-    // Now validate the JSON message
-    deltaValidator.validationResult.reset()
-    deltaValidator.validate(delta, type)
-    if (deltaValidator.validationResult.hasErrors()) {
-        console.error(`Valoidation errors:`)
-        deltaValidator.validationResult.issues.forEach(issue => {
-            console.error(issue.errorMsg())
-        })
-        return
+
+    initialize(queries: IQueryResponseProcessor, events: IEventProcessor) {
+        this.processingFunctions.set("ClassifierChanged", events.ClassifierChangedFunction as ProcessingFunction);
+        this.processingFunctions.set("PartitionAdded", events.PartitionAddedFunction as ProcessingFunction);
+        this.processingFunctions.set("PartitionDeleted", events.PartitionDeletedFunction as ProcessingFunction);
+        this.processingFunctions.set("PropertyAdded", events.PropertyAddedFunction as ProcessingFunction);
+        this.processingFunctions.set("PropertyDeleted", events.PropertyDeletedFunction as ProcessingFunction);
+        this.processingFunctions.set("PropertyChanged", events.PropertyChangedFunction as ProcessingFunction);
+        this.processingFunctions.set("ChildAdded", events.ChildAddedFunction as ProcessingFunction);
+        this.processingFunctions.set("ChildDeleted", events.ChildDeletedFunction as ProcessingFunction);
+        this.processingFunctions.set("ChildReplaced", events.ChildReplacedFunction as ProcessingFunction);
+        this.processingFunctions.set("ChildMovedFromOtherContainment", events.ChildMovedFromOtherContainmentFunction as ProcessingFunction);
+        this.processingFunctions.set("ChildMovedFromOtherContainmentInSameParent", events.ChildMovedFromOtherContainmentInSameParentFunction as ProcessingFunction);
+        this.processingFunctions.set("ChildMovedInSameContainment", events.ChildMovedInSameContainmentFunction as ProcessingFunction);
+        this.processingFunctions.set("ChildMovedAndReplacedFromOtherContainment", events.ChildMovedAndReplacedFromOtherContainmentFunction as ProcessingFunction);
+        this.processingFunctions.set("ChildMovedAndReplacedFromOtherContainmentInSameParent", events.ChildMovedAndReplacedFromOtherContainmentInSameParentFunction as ProcessingFunction);
+        this.processingFunctions.set("ChildMovedAndReplacedInSameContainment", events.ChildMovedAndReplacedInSameContainmentFunction as ProcessingFunction);
+        this.processingFunctions.set("AnnotationAdded", events.AnnotationAddedFunction as ProcessingFunction);
+        this.processingFunctions.set("AnnotationDeleted", events.AnnotationDeletedFunction as ProcessingFunction);
+        this.processingFunctions.set("AnnotationReplaced", events.AnnotationReplacedFunction as ProcessingFunction);
+        this.processingFunctions.set("AnnotationMovedFromOtherParent", events.AnnotationMovedFromOtherParentFunction as ProcessingFunction);
+        this.processingFunctions.set("AnnotationMovedInSameParent", events.AnnotationMovedInSameParentFunction as ProcessingFunction);
+        this.processingFunctions.set("AnnotationMovedAndReplacedFromOtherParent", events.AnnotationMovedAndReplacedFromOtherParentFunction as ProcessingFunction);
+        this.processingFunctions.set("AnnotationMovedAndReplacedInSameParent", events.AnnotationMovedAndReplacedInSameParentFunction as ProcessingFunction);
+        this.processingFunctions.set("ReferenceAdded", events.ReferenceAddedFunction as ProcessingFunction);
+        this.processingFunctions.set("ReferenceDeleted", events.ReferenceDeletedFunction as ProcessingFunction);
+        this.processingFunctions.set("ReferenceChanged", events.ReferenceChangedFunction as ProcessingFunction);
+        this.processingFunctions.set("EntryMovedFromOtherReference", events.EntryMovedFromOtherReferenceFunction as ProcessingFunction);
+        this.processingFunctions.set("EntryMovedFromOtherReferenceInSameParent", events.EntryMovedFromOtherReferenceInSameParentFunction as ProcessingFunction);
+        this.processingFunctions.set("EntryMovedInSameReference", events.EntryMovedInSameReferenceFunction as ProcessingFunction);
+        this.processingFunctions.set("EntryMovedAndReplacedFromOtherReference", events.EntryMovedAndReplacedFromOtherReferenceFunction as ProcessingFunction);
+        this.processingFunctions.set("EntryMovedAndReplacedFromOtherReferenceInSameParent", events.EntryMovedAndReplacedFromOtherReferenceInSameParentFunction as ProcessingFunction);
+        this.processingFunctions.set("EntryMovedAndReplacedInSameReference", events.EntryMovedAndReplacedInSameReferenceFunction as ProcessingFunction);
+        this.processingFunctions.set("ReferenceResolveInfoAdded", events.ReferenceResolveInfoAddedFunction as ProcessingFunction);
+        this.processingFunctions.set("ReferenceResolveInfoDeleted", events.ReferenceResolveInfoDeletedFunction as ProcessingFunction);
+        this.processingFunctions.set("ReferenceResolveInfoChanged", events.ReferenceResolveInfoChangedFunction as ProcessingFunction);
+        this.processingFunctions.set("ReferenceTargetAdded", events.ReferenceTargetAddedFunction as ProcessingFunction);
+        this.processingFunctions.set("ReferenceTargetDeleted", events.ReferenceTargetDeletedFunction as ProcessingFunction);
+        this.processingFunctions.set("ReferenceTargetChanged", events.ReferenceTargetChangedFunction as ProcessingFunction);
+        this.processingFunctions.set("Error", events.ErrorFunction as ProcessingFunction);
+        this.processingFunctions.set("NoOpEvent", events.NoOpEventFunction as ProcessingFunction);
+
+        this.processingFunctions.set("SubscribeToChangingPartitionsResponse", queries.SubscribeToChangingPartitionsResponseFunction as ProcessingFunction);
+        this.processingFunctions.set("SubscribeToPartitionContentsResponse", queries.SubscribeToPartitionContentsResponseFunction as ProcessingFunction);
+        this.processingFunctions.set("UnsubscribeFromPartitionContentsResponse", queries.UnsubscribeFromPartitionContentsResponseFunction as ProcessingFunction);
+        this.processingFunctions.set("SignOnResponse", queries.SignOnResponseFunction as ProcessingFunction);
+        this.processingFunctions.set("SignOffResponse", queries.SignOffResponseFunction as ProcessingFunction);
+        this.processingFunctions.set("ListPartitionsResponse", queries.ListPartitionsResponseFunction as ProcessingFunction);
+        this.processingFunctions.set("GetAvailableIdsResponse", queries.GetAvailableIdsResponseFunction as ProcessingFunction);
+        this.processingFunctions.set("ReconnectResponse", queries.ReconnectResponseFunction as ProcessingFunction);
     }
-    // Finally ok
-    func(delta)
+
+ 
 }

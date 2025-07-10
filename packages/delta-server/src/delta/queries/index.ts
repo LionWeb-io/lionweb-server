@@ -1,1 +1,2 @@
-export * from "./QueryProcessor.js"
+export * from "./IQueryRequestProcessor.js"
+export * from "./QueryRequestProcessor.js"

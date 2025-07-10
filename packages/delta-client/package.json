@@ -30,7 +30,7 @@
   "dependencies": {
     "@lionweb/json": "0.7.0-beta.1",
     "@lionweb/validation": "0.7.0-beta.1",
-    "@lionweb/repository-shared": "0.3.0"
+    "@lionweb/server-shared": "0.3.0"
   },
   "devDependencies": {
     "prettier": "3.1.0",

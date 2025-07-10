@@ -1,5 +1,5 @@
 
-import { DeltaValidator } from "@lionweb/repository-delta"
+import { DeltaValidator } from "@lionweb/server-delta"
 import { ValidationResult } from "@lionweb/validation"
 import fs from "node:fs"
 import { assert } from "chai"

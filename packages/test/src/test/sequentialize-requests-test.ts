@@ -12,7 +12,7 @@ describe("Transaction isolation tests", () => {
     const t = new RepositoryClient("TestClient", "isolation")
     t.loggingOn = true
 
-    beforeEach("a", async function () {
+    beforeEach(async function () {
         await t.dbAdmin.deleteRepository("isolation")
         await t.dbAdmin.createRepository("isolation", true, "2023.1")
         await t.bulk.createPartitions(readModel("./data/Disk_A_partition.json") as LionWebJsonChunk)

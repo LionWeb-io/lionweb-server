@@ -1,5 +1,5 @@
 {
-  "name": "@lionweb/repository-scripts",
+  "name": "@lionweb/server-scripts",
   "version": "0.3.0",
   "private": true,
   "main": "dist/index.js",
@@ -36,9 +36,9 @@
     "typescript": "5.2.2"
   },
   "dependencies": {
-    "@lionweb/repository-common": "0.3.0",
-    "@lionweb/repository-delta": "0.3.0",
-    "@lionweb/repository-bulkapi": "0.3.0",
+    "@lionweb/server-common": "0.3.0",
+    "@lionweb/server-delta": "0.3.0",
+    "@lionweb/server-bulkapi": "0.3.0",
     "@lionweb/json": "0.7.0-beta.1",
     "@lionweb/json-utils": "0.7.0-beta.1",
     "@lionweb/validation": "0.7.0-beta.1",

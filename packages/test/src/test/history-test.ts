@@ -22,7 +22,7 @@ describe("Repository tests", () => {
     let initialPartition: LionWebJsonChunk
     let baseFullChunk: LionWebJsonChunk
 
-    before("create database", async function () {
+    beforeAll(async function () {
         const createResponse = await client.dbAdmin.createDatabase()
         if (createResponse.status !== HttpSuccessCodes.Ok) {
             console.log("Cannot create database: " + JSON.stringify(createResponse.body))

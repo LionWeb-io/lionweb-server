@@ -1,1 +1,2 @@
-export * from "./EventProcessors.js"
+export * from "./IEventProcessor.js"
+export * from "./DefaultEventProcessor.js"

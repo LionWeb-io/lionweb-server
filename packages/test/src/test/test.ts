@@ -25,7 +25,7 @@ collection.forEach(withoutHistory => {
         let baseFullChunkVersion: number = 0
         let initError: string = ""
 
-        before("create database", async function () {
+        beforeAll(async function () {
             const initResponse = await client.dbAdmin.createDatabase()
             if (initResponse.status !== HttpSuccessCodes.Ok) {
                 console.log("Cannot create database: " + JSON.stringify(initResponse.body))
@@ -34,7 +34,7 @@ collection.forEach(withoutHistory => {
             }
         })
 
-        beforeEach("a", async function () {
+        beforeEach(async function () {
             client.repository = repository
             initError = ""
             initialPartition = readModel(DATA + "Disk_A_partition.json") as LionWebJsonChunk
@@ -69,7 +69,7 @@ collection.forEach(withoutHistory => {
             console.log("repositories: " + JSON.stringify(repositories.body.repositories))
         })
 
-        afterEach("a", async function () {
+        afterEach(async function () {
             await client.dbAdmin.deleteRepository(repository)
         })
 

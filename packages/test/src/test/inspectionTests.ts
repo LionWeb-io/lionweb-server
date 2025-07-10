@@ -15,7 +15,7 @@ describe("Repository tests for inspection APIs", () => {
     client.loggingOn = true
     let jsonModel: LionWebJsonChunk
 
-    before("create database", async function () {
+    beforeAll(async function () {
         const initResponse = await client.dbAdmin.createDatabase()
         if (initResponse.status !== HttpSuccessCodes.Ok) {
             console.log("Cannot create database: " + JSON.stringify(initResponse.body))
@@ -24,7 +24,7 @@ describe("Repository tests for inspection APIs", () => {
         }
     })
 
-    beforeEach("a", async function () {
+    beforeEach(async function () {
         await client.dbAdmin.deleteRepository("default")
         const initResponse = await client.dbAdmin.createRepository("default", true, "2023.1")
         if (initResponse.status !== HttpSuccessCodes.Ok) {
