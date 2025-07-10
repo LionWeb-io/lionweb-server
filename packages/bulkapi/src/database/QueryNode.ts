@@ -1,5 +1,5 @@
-import { ResponseMessage } from "@lionweb/repository-shared"
-import { CONTAINMENTS_TABLE, METAPOINTERS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "@lionweb/repository-common"
+import { ResponseMessage } from "@lionweb/server-shared"
+import { CONTAINMENTS_TABLE, METAPOINTERS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "@lionweb/server-common"
 
 export function sqlArrayFromNodeIdArray(strings: string[]): string {
     return `(${strings.map(id => `'${id}'`).join(", ")})`

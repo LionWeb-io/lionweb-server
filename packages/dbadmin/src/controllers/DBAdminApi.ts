@@ -10,14 +10,14 @@ import {
     RepositoryData,
     requestLogger,
     SCHEMA_PREFIX
-} from "@lionweb/repository-common"
+} from "@lionweb/server-common"
 import {
     HttpClientErrors,
     HttpSuccessCodes,
     ListPartitionsResponse,
     ListRepositoriesResponse
-} from "@lionweb/repository-shared"
-import { lionwebResponse } from "@lionweb/repository-common"
+} from "@lionweb/server-shared"
+import { lionwebResponse } from "@lionweb/server-common"
 import e, { Request, Response } from "express"
 import { getRepositoryData, repositoryStore } from "../database/index.js"
 import { DbAdminApiContext } from "../main.js"

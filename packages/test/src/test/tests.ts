@@ -1,5 +1,5 @@
-import { HttpClientErrors, HttpSuccessCodes, RetrieveResponse } from "@lionweb/repository-shared"
-import { getVersionFromResponse, RepositoryClient } from "@lionweb/repository-client"
+import { HttpClientErrors, HttpSuccessCodes, RetrieveResponse } from "@lionweb/server-shared"
+import { getVersionFromResponse, RepositoryClient } from "@lionweb/server-client"
 import { LionWebJsonChunk } from "@lionweb/json"
 import { LanguageChange, LionWebJsonDiff } from "@lionweb/json-diff"
 import { readModel } from "./utils.js"

@@ -1,8 +1,8 @@
 {
-  "name": "@lionweb/repository-dbadmin",
+  "name": "@lionweb/server-dbadmin",
   "version": "0.3.0",
   "private": false,
-  "description": "DB Admin routes for the lionweb repository",
+  "description": "DB Admin routes for the lionweb server",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "typings": "dist/index.d.ts",
@@ -10,10 +10,10 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/LionWeb-io/lionweb-repository.git"
+    "url": "https://github.com/LionWeb-io/lionweb-server.git"
   },
   "bugs": {
-    "url": "https://github.com/LionWeb-io/lionweb-repository/issues"
+    "url": "https://github.com/LionWeb-io/lionweb-server/issues"
   },
   "scripts": {
     "clean": "rm -rf node_modules/ && rm -rf dist/",
@@ -21,7 +21,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@lionweb/repository-common": "0.3.0",
+    "@lionweb/server-common": "0.3.0",
     "@lionweb/validation": "0.7.0-beta.1",
     "@lionweb/json": "0.7.0-beta.1",
     "@lionweb/json-utils": "0.7.0-beta.1",

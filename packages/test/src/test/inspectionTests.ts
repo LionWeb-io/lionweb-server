@@ -1,5 +1,5 @@
-import { HttpSuccessCodes } from "@lionweb/repository-shared"
-import { RepositoryClient } from "@lionweb/repository-client"
+import { HttpSuccessCodes } from "@lionweb/server-shared"
+import { RepositoryClient } from "@lionweb/server-client"
 import { LionWebJsonChunk } from "@lionweb/json"
 import { readModel } from "./utils.js"
 

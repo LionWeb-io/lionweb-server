@@ -1,7 +1,7 @@
 import { Express } from "express"
 import pgPromise from "pg-promise"
 import pg from "pg-promise/typescript/pg-subset.js"
-import { runWithTry, DbConnection, requestLogger } from "@lionweb/repository-common"
+import { runWithTry, DbConnection, requestLogger } from "@lionweb/server-common"
 import { DBAdminApi, DBAdminApiImpl } from "./controllers/DBAdminApi.js"
 import { DBAdminApiWorker } from "./database/DBAdminApiWorker.js"
 import { repositoryStore } from "./database/index.js"

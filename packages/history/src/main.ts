@@ -1,7 +1,7 @@
 import { Express } from "express"
 import pgPromise from "pg-promise"
 import pg from "pg-promise/typescript/pg-subset.js"
-import { DbConnection, requestLogger, runWithTry } from "@lionweb/repository-common"
+import { DbConnection, requestLogger, runWithTry } from "@lionweb/server-common"
 import { HistoryApiWorker } from "./controllers/HistoryApiWorker.js"
 import { HistoryApi, HistoryApiImpl } from "./controllers/index.js"
 import { HistoryQueries } from "./database/index.js"

@@ -1,4 +1,4 @@
-import { LionWebVersionType } from "@lionweb/repository-shared"
+import { LionWebVersionType } from "@lionweb/server-shared"
 import fs from "node:fs"
 import { LevelWithSilent } from "pino"
 import { expressLogger, verbosity } from "./logging.js"

@@ -1,5 +1,5 @@
-import { nodesToChunk, QueryReturnType, RepositoryData, traceLogger, LionWebTask, EMPTY_CHUNKS } from "@lionweb/repository-common"
-import { HttpSuccessCodes, ListPartitionsResponse, RetrieveResponse } from "@lionweb/repository-shared"
+import { nodesToChunk, QueryReturnType, RepositoryData, traceLogger, LionWebTask, EMPTY_CHUNKS } from "@lionweb/server-common"
+import { HttpSuccessCodes, ListPartitionsResponse, RetrieveResponse } from "@lionweb/server-shared"
 import { HistoryContext } from "../main.js"
 
 /**

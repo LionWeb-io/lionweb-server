@@ -1,8 +1,8 @@
 {
-  "name": "@lionweb/repository-common",
+  "name": "@lionweb/server-common",
   "version": "0.3.0",
   "private": false,
-  "description": "Common code for the lionweb repository",
+  "description": "Common code for the lionweb server",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "typings": "dist/index.d.ts",
@@ -10,10 +10,10 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/LionWeb-io/lionweb-repository.git"
+    "url": "https://github.com/LionWeb-io/lionweb-server.git"
   },
   "bugs": {
-    "url": "https://github.com/LionWeb-io/lionweb-repository/issues"
+    "url": "https://github.com/LionWeb-io/lionweb-server/issues"
   },
   "scripts": {
     "clean": "rm -rf node_modules/ && rm -rf dist/",
@@ -30,9 +30,9 @@
     "json-stream-stringify": "^3.1.4",
     "pg": "8.11.3",
     "pg-promise": "11.7.8",
-    "pino": "^9.2.0",
-    "pino-http": "^10.1.0",
-    "pino-pretty": "^11.2.1",
+    "pino": "9.6.0",
+    "pino-http": "10.1.0",
+    "pino-pretty": "11.2.1",
     "source-map-support": "0.5.21",
     "uuid": "9.0.1"
   }

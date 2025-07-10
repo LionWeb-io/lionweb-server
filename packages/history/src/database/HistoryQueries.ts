@@ -1,5 +1,5 @@
-import { ListPartitionsResponse, HttpSuccessCodes, HttpClientErrors } from "@lionweb/repository-shared"
-import { asError, QueryReturnType, nodesToChunk, RepositoryData, dbLogger, requestLogger, LionWebTask } from "@lionweb/repository-common"
+import { ListPartitionsResponse, HttpSuccessCodes, HttpClientErrors } from "@lionweb/server-shared"
+import { asError, QueryReturnType, nodesToChunk, RepositoryData, dbLogger, requestLogger, LionWebTask } from "@lionweb/server-common"
 import { LionWebJsonNode } from "@lionweb/json"
 import { HistoryContext } from "../main.js"
 import { makeQueryNodeTreeForIdList, QueryNodeForIdList } from "./QueryNodeHistory.js"

@@ -1,4 +1,4 @@
-import { HttpClientErrors, LionwebResponse } from "@lionweb/repository-shared"
+import { HttpClientErrors, LionwebResponse } from "@lionweb/server-shared"
 import { AdditionalApi } from "./AdditionalApi.js"
 import { BulkApi } from "./BulkApi.js"
 import { DbAdminApi } from "./DbAdminApi.js"

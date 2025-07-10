@@ -5,7 +5,7 @@ import {
         REFERENCES_TABLE, REFERENCES_TABLE_HISTORY,
         RESERVED_IDS_TABLE, METAPOINTERS_TABLE, REPO_VERSIONS,
         CURRENT_DATA, CURRENT_DATA_REPO_VERSION_KEY, CURRENT_DATA_REPO_CLIENT_ID_KEY
-} from "@lionweb/repository-common";
+} from "@lionweb/server-common";
 
 export function dropSchema(schemaName: string): string {
         return `DROP SCHEMA IF EXISTS "${schemaName}" CASCADE;`

@@ -1,5 +1,5 @@
 {
-  "name": "@lionweb/repository-test",
+  "name": "@lionweb/server-test",
   "version": "0.3.0",
   "private": true,
   "main": "src/server.ts",
@@ -9,10 +9,10 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/LionWeb-io/lionweb-repository.git"
+    "url": "https://github.com/LionWeb-io/lionweb-server.git"
   },
   "bugs": {
-    "url": "https://github.com/LionWeb-io/lionweb-repository/issues"
+    "url": "https://github.com/LionWeb-io/lionweb-server/issues"
   },
   "scripts": {
     "clean": "rm -rf node_modules/ && rm -rf dist/ && rm -rf data/",

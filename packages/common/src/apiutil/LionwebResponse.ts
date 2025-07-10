@@ -1,4 +1,4 @@
-import { LionwebResponse } from "@lionweb/repository-shared"
+import { LionwebResponse } from "@lionweb/server-shared"
 import {Response} from "express";
 import {JsonStreamStringify} from "json-stream-stringify";
 
