@@ -74,6 +74,7 @@ export const DeltaQuerySchema: DefinitionSchema = new DefinitionSchema(
             name: "SignOnRequest",
             properties: [
                 PropertyDef({ name: "deltaProtocolVersion", type: "JS_string" }),
+                PropertyDef({ name: "clientId", type: "JS_string" }),
                 ...IQueryProperties
             ],
             taggedUnionType: "QueryType"
