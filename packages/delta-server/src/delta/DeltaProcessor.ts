@@ -3,9 +3,9 @@ import { CommandType, QueryRequestType } from "@lionweb/server-delta-shared"
 import { ValidationResult } from "@lionweb/validation"
 import { ICommandProcessor } from "./commands/ICommandProcessor.js"
 import { IQueryRequestProcessor } from "./queries/IQueryRequestProcessor.js"
-
+import WebSocket from 'ws';
 type MessageFromClient = CommandType | QueryRequestType
-type MessageFunction =  (msg: MessageFromClient) => void
+type MessageFunction =  (socket: WebSocket, msg: MessageFromClient) => void
     
 export class DeltaProcessor {
     processingFunctions: Map<string, MessageFunction> = new Map<string, MessageFunction>()
@@ -70,7 +70,7 @@ export class DeltaProcessor {
         this.processingFunctions.set("ReconnectRequest", queries.ReconnectRequestFunction as MessageFunction)
     }
 
-    processDelta(delta: CommandType | QueryRequestType): void {
+    processDelta(socket: WebSocket, delta: CommandType | QueryRequestType): void {
         const type = delta.messageKind
         if (typeof type !== "string") {
             console.error(`processDelta: messageKind is not a string but a ${typeof type}`)
@@ -92,6 +92,6 @@ export class DeltaProcessor {
             return
         }
         // Finally ok
-        func(delta)
+        func(socket, delta)
     }
 }

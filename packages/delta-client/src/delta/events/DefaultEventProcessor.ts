@@ -1,4 +1,4 @@
-// @ts-nocheck
+import WebSocket from 'ws';
 import {
     AnnotationAddedEvent,
     AnnotationDeletedEvent,
@@ -43,159 +43,159 @@ import {
 import { IEventProcessor } from "./IEventProcessor.js"
 
 export class DefaultEventProcessor implements IEventProcessor {
-    ClassifierChangedFunction(msg: ClassifierChangedEvent): void {
+    ClassifierChangedFunction(socket: WebSocket, msg: ClassifierChangedEvent): void {
         console.log("Called ClassifierChangedFunction " + msg.messageKind)
     }
 
-    PartitionAddedFunction(msg: PartitionAddedEvent): void {
+    PartitionAddedFunction(socket: WebSocket, msg: PartitionAddedEvent): void {
         console.log("Called PartitionAddedFunction " + msg.messageKind)
     }
 
-    PartitionDeletedFunction(msg: PartitionDeletedEvent): void {
+    PartitionDeletedFunction(socket: WebSocket, msg: PartitionDeletedEvent): void {
         console.log("Called PartitionDeletedFunction " + msg.messageKind)
     }
 
-    PropertyAddedFunction(msg: PropertyAddedEvent): void {
+    PropertyAddedFunction(socket: WebSocket, msg: PropertyAddedEvent): void {
         console.log("Called PropertyAddedFunction " + msg.messageKind)
     }
 
-    PropertyDeletedFunction(msg: PropertyDeletedEvent): void {
+    PropertyDeletedFunction(socket: WebSocket, msg: PropertyDeletedEvent): void {
         console.log("Called PropertyDeletedFunction " + msg.messageKind)
     }
 
-    PropertyChangedFunction(msg: PropertyChangedEvent): void {
+    PropertyChangedFunction(socket: WebSocket, msg: PropertyChangedEvent): void {
         console.log("Called PropertyChangedFunction " + msg.messageKind)
     }
 
-    ChildAddedFunction(msg: ChildAddedEvent): void {
+    ChildAddedFunction(socket: WebSocket, msg: ChildAddedEvent): void {
         console.log("Called ChildAddedFunction " + msg.messageKind)
     }
 
-    ChildDeletedFunction(msg: ChildDeletedEvent): void {
+    ChildDeletedFunction(socket: WebSocket, msg: ChildDeletedEvent): void {
         console.log("Called ChildDeletedFunction " + msg.messageKind)
     }
 
-    ChildReplacedFunction(msg: ChildReplacedEvent): void {
+    ChildReplacedFunction(socket: WebSocket, msg: ChildReplacedEvent): void {
         console.log("Called ChildReplacedFunction " + msg.messageKind)
     }
 
-    ChildMovedFromOtherContainmentFunction(msg: ChildMovedFromOtherContainmentEvent): void {
+    ChildMovedFromOtherContainmentFunction(socket: WebSocket, msg: ChildMovedFromOtherContainmentEvent): void {
         console.log("Called ChildMovedFromOtherContainmentFunction " + msg.messageKind)
     }
 
-    ChildMovedFromOtherContainmentInSameParentFunction(msg: ChildMovedFromOtherContainmentInSameParentEvent): void {
+    ChildMovedFromOtherContainmentInSameParentFunction(socket: WebSocket, msg: ChildMovedFromOtherContainmentInSameParentEvent): void {
         console.log("Called ChildMovedFromOtherContainmentInSameParentFunction " + msg.messageKind)
     }
 
-    ChildMovedInSameContainmentFunction(msg: ChildMovedInSameContainmentEvent): void {
+    ChildMovedInSameContainmentFunction(socket: WebSocket, msg: ChildMovedInSameContainmentEvent): void {
         console.log("Called ChildMovedInSameContainmentFunction " + msg.messageKind)
     }
 
-    ChildMovedAndReplacedFromOtherContainmentFunction(msg: ChildMovedAndReplacedFromOtherContainmentEvent): void {
+    ChildMovedAndReplacedFromOtherContainmentFunction(socket: WebSocket, msg: ChildMovedAndReplacedFromOtherContainmentEvent): void {
         console.log("Called ChildMovedAndReplacedFromOtherContainmentFunction " + msg.messageKind)
     }
 
-    ChildMovedAndReplacedFromOtherContainmentInSameParentFunction(msg: ChildMovedAndReplacedFromOtherContainmentInSameParentEvent): void {
+    ChildMovedAndReplacedFromOtherContainmentInSameParentFunction(socket: WebSocket, msg: ChildMovedAndReplacedFromOtherContainmentInSameParentEvent): void {
         console.log("Called ChildMovedAndReplacedFromOtherContainmentInSameParentFunction " + msg.messageKind)
     }
 
-    ChildMovedAndReplacedInSameContainmentFunction(msg: ChildMovedAndReplacedInSameContainmentEvent): void {
+    ChildMovedAndReplacedInSameContainmentFunction(socket: WebSocket, msg: ChildMovedAndReplacedInSameContainmentEvent): void {
         console.log("Called ChildMovedAndReplacedInSameContainmentFunction " + msg.messageKind)
     }
 
-    AnnotationAddedFunction(msg: AnnotationAddedEvent): void {
+    AnnotationAddedFunction(socket: WebSocket, msg: AnnotationAddedEvent): void {
         console.log("Called AnnotationAddedFunction " + msg.messageKind)
     }
 
-    AnnotationDeletedFunction(msg: AnnotationDeletedEvent): void {
+    AnnotationDeletedFunction(socket: WebSocket, msg: AnnotationDeletedEvent): void {
         console.log("Called AnnotationDeletedFunction " + msg.messageKind)
     }
 
-    AnnotationReplacedFunction(msg: AnnotationReplacedEvent): void {
+    AnnotationReplacedFunction(socket: WebSocket, msg: AnnotationReplacedEvent): void {
         console.log("Called AnnotationReplacedFunction " + msg.messageKind)
     }
 
-    AnnotationMovedFromOtherParentFunction(msg: AnnotationMovedFromOtherParentEvent): void {
+    AnnotationMovedFromOtherParentFunction(socket: WebSocket, msg: AnnotationMovedFromOtherParentEvent): void {
         console.log("Called AnnotationMovedFromOtherParentFunction " + msg.messageKind)
     }
 
-    AnnotationMovedInSameParentFunction(msg: AnnotationMovedInSameParentEvent): void {
+    AnnotationMovedInSameParentFunction(socket: WebSocket, msg: AnnotationMovedInSameParentEvent): void {
         console.log("Called AnnotationMovedInSameParentFunction " + msg.messageKind)
     }
 
-    AnnotationMovedAndReplacedFromOtherParentFunction(msg: AnnotationMovedAndReplacedFromOtherParentEvent): void {
+    AnnotationMovedAndReplacedFromOtherParentFunction(socket: WebSocket, msg: AnnotationMovedAndReplacedFromOtherParentEvent): void {
         console.log("Called AnnotationMovedAndReplacedFromOtherParentFunction " + msg.messageKind)
     }
 
-    AnnotationMovedAndReplacedInSameParentFunction(msg: AnnotationMovedAndReplacedInSameParentEvent): void {
+    AnnotationMovedAndReplacedInSameParentFunction(socket: WebSocket, msg: AnnotationMovedAndReplacedInSameParentEvent): void {
         console.log("Called AnnotationMovedAndReplacedInSameParentFunction " + msg.messageKind)
     }
 
-    ReferenceAddedFunction(msg: ReferenceAddedEvent): void {
+    ReferenceAddedFunction(socket: WebSocket, msg: ReferenceAddedEvent): void {
         console.log("Called ReferenceAddedFunction " + msg.messageKind)
     }
 
-    ReferenceDeletedFunction(msg: ReferenceDeletedEvent): void {
+    ReferenceDeletedFunction(socket: WebSocket, msg: ReferenceDeletedEvent): void {
         console.log("Called ReferenceDeletedFunction " + msg.messageKind)
     }
 
-    ReferenceChangedFunction(msg: ReferenceChangedEvent): void {
+    ReferenceChangedFunction(socket: WebSocket, msg: ReferenceChangedEvent): void {
         console.log("Called ReferenceChangedFunction " + msg.messageKind)
     }
 
-    EntryMovedFromOtherReferenceFunction(msg: EntryMovedFromOtherReferenceEvent): void {
+    EntryMovedFromOtherReferenceFunction(socket: WebSocket, msg: EntryMovedFromOtherReferenceEvent): void {
         console.log("Called EntryMovedFromOtherReferenceFunction " + msg.messageKind)
     }
 
-    EntryMovedFromOtherReferenceInSameParentFunction(msg: EntryMovedFromOtherReferenceInSameParentEvent): void {
+    EntryMovedFromOtherReferenceInSameParentFunction(socket: WebSocket, msg: EntryMovedFromOtherReferenceInSameParentEvent): void {
         console.log("Called EntryMovedFromOtherReferenceInSameParentFunction " + msg.messageKind)
     }
 
-    EntryMovedInSameReferenceFunction(msg: EntryMovedInSameReferenceEvent): void {
+    EntryMovedInSameReferenceFunction(socket: WebSocket, msg: EntryMovedInSameReferenceEvent): void {
         console.log("Called EntryMovedInSameReferenceFunction " + msg.messageKind)
     }
 
-    EntryMovedAndReplacedFromOtherReferenceFunction(msg: EntryMovedAndReplacedFromOtherReferenceEvent): void {
+    EntryMovedAndReplacedFromOtherReferenceFunction(socket: WebSocket, msg: EntryMovedAndReplacedFromOtherReferenceEvent): void {
         console.log("Called EntryMovedAndReplacedFromOtherReferenceFunction " + msg.messageKind)
     }
 
-    EntryMovedAndReplacedFromOtherReferenceInSameParentFunction(msg: EntryMovedAndReplacedFromOtherReferenceInSameParentEvent): void {
+    EntryMovedAndReplacedFromOtherReferenceInSameParentFunction(socket: WebSocket, msg: EntryMovedAndReplacedFromOtherReferenceInSameParentEvent): void {
         console.log("Called EntryMovedAndReplacedFromOtherReferenceInSameParentFunction " + msg.messageKind)
     }
 
-    EntryMovedAndReplacedInSameReferenceFunction(msg: EntryMovedAndReplacedInSameReferenceEvent): void {
+    EntryMovedAndReplacedInSameReferenceFunction(socket: WebSocket, msg: EntryMovedAndReplacedInSameReferenceEvent): void {
         console.log("Called EntryMovedAndReplacedInSameReferenceFunction " + msg.messageKind)
     }
 
-    ReferenceResolveInfoAddedFunction(msg: ReferenceResolveInfoAddedEvent): void {
+    ReferenceResolveInfoAddedFunction(socket: WebSocket, msg: ReferenceResolveInfoAddedEvent): void {
         console.log("Called ReferenceResolveInfoAddedFunction " + msg.messageKind)
     }
 
-    ReferenceResolveInfoDeletedFunction(msg: ReferenceResolveInfoDeletedEvent): void {
+    ReferenceResolveInfoDeletedFunction(socket: WebSocket, msg: ReferenceResolveInfoDeletedEvent): void {
         console.log("Called ReferenceResolveInfoDeletedFunction " + msg.messageKind)
     }
 
-    ReferenceResolveInfoChangedFunction(msg: ReferenceResolveInfoChangedEvent): void {
+    ReferenceResolveInfoChangedFunction(socket: WebSocket, msg: ReferenceResolveInfoChangedEvent): void {
         console.log("Called ReferenceResolveInfoChangedFunction " + msg.messageKind)
     }
 
-    ReferenceTargetAddedFunction(msg: ReferenceTargetAddedEvent): void {
+    ReferenceTargetAddedFunction(socket: WebSocket, msg: ReferenceTargetAddedEvent): void {
         console.log("Called ReferenceTargetAddedFunction " + msg.messageKind)
     }
 
-    ReferenceTargetDeletedFunction(msg: ReferenceTargetDeletedEvent): void {
+    ReferenceTargetDeletedFunction(socket: WebSocket, msg: ReferenceTargetDeletedEvent): void {
         console.log("Called ReferenceTargetDeletedFunction " + msg.messageKind)
     }
 
-    ReferenceTargetChangedFunction(msg: ReferenceTargetChangedEvent): void {
+    ReferenceTargetChangedFunction(socket: WebSocket, msg: ReferenceTargetChangedEvent): void {
         console.log("Called ReferenceTargetChangedFunction " + msg.messageKind)
     }
 
-    ErrorFunction(msg: ErrorEvent): void {
+    ErrorFunction(socket: WebSocket, msg: ErrorEvent): void {
         console.log("Called ErrorFunction " + msg.messageKind)
     }
 
-    NoOpEventFunction(msg: NoOpEventEvent): void {
+    NoOpEventFunction(socket: WebSocket, msg: NoOpEventEvent): void {
         console.log("Called NoOpEventFunction " + msg.messageKind)
     }
 }

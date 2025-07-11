@@ -8,21 +8,22 @@ import {
     SubscribeToPartitionContentsRequest,
     UnsubscribeFromPartitionContentsRequest
 } from "@lionweb/server-delta-shared"
+import WebSocket from 'ws';
 
 export interface IQueryRequestProcessor {
-    SubscribeToChangingPartitionsRequestFunction(msg: SubscribeToChangingPartitionsRequest): void
+    SubscribeToChangingPartitionsRequestFunction(socket: WebSocket, msg: SubscribeToChangingPartitionsRequest): void
 
-    SubscribeToPartitionContentsRequestFunction(msg: SubscribeToPartitionContentsRequest): void
+    SubscribeToPartitionContentsRequestFunction(socket: WebSocket, msg: SubscribeToPartitionContentsRequest): void
 
-    UnsubscribeFromPartitionContentsRequestFunction(msg: UnsubscribeFromPartitionContentsRequest): void
+    UnsubscribeFromPartitionContentsRequestFunction(socket: WebSocket, msg: UnsubscribeFromPartitionContentsRequest): void
 
-    SignOnRequestFunction(msg: SignOnRequest): void
+    SignOnRequestFunction(socket: WebSocket, msg: SignOnRequest): void
 
-    SignOffRequestFunction(msg: SignOffRequest): void
+    SignOffRequestFunction(socket: WebSocket, msg: SignOffRequest): void
 
-    ListPartitionsRequestFunction(msg: ListPartitionsRequest): void
+    ListPartitionsRequestFunction(socket: WebSocket, msg: ListPartitionsRequest): void
 
-    GetAvailableIdsRequestFunction(msg: GetAvailableIdsRequest): void
+    GetAvailableIdsRequestFunction(socket: WebSocket, msg: GetAvailableIdsRequest): void
 
-    ReconnectRequestFunction(msg: ReconnectRequest): void
+    ReconnectRequestFunction(socket: WebSocket, msg: ReconnectRequest): void
 }

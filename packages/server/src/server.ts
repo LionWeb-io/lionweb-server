@@ -5,7 +5,8 @@ import express, { Express, NextFunction, Response, Request } from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
 import pgPromise from "pg-promise"
-import { RawData, WebSocketServer } from "ws"
+import { WebSocketServer, RawData } from "ws"
+// import { RawData, WebSocketServer } from "ws"
 import { postgresConnectionWithDatabase, pgp, postgresConnectionWithoutDatabase, postgresPool } from "./DbConnection.js"
 import {
     DbConnection,
@@ -238,7 +239,7 @@ async function startServer() {
         
         socket.on('message', (message: RawData) => {
             console.log(`Received: ${message.toString()}`);
-            deltaProcessor.processDelta(JSON.parse(message.toString()) as unknown as CommandType)
+            deltaProcessor.processDelta(socket, JSON.parse(message.toString()) as unknown as CommandType)
             const addpartitionresponse: PartitionAddedEvent = {
                 messageKind: "PartitionAdded",
                 newPartition: {

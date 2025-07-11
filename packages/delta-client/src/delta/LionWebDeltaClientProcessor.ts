@@ -1,3 +1,4 @@
+import WebSocket from 'ws';
 import { DeltaValidator } from "@lionweb/server-delta"
 import {
     EventType,
@@ -8,7 +9,7 @@ import { IEventProcessor } from "./events/IEventProcessor.js"
 import { IQueryResponseProcessor } from "./queryresponses/index.js"
 
 type MessageFromServer = EventType | QueryResponseType
-type ProcessingFunction = (msg: MessageFromServer) => void;
+type ProcessingFunction = (socket: WebSocket, msg: MessageFromServer) => void;
 
 export class LionWebDeltaClientProcessor {
 
@@ -19,7 +20,7 @@ export class LionWebDeltaClientProcessor {
         this.initialize(queries, events)
     }
 
-    processDelta(delta: EventType): void {
+    processDelta(socket: WebSocket, delta: EventType): void {
         const type = delta.messageKind
         if (typeof type !== "string") {
             console.error(`processDelta: messageKind is not a string but a ${typeof type}`)
@@ -41,7 +42,7 @@ export class LionWebDeltaClientProcessor {
             return
         }
         // Finally ok
-        func(delta)
+        func(socket, delta)
     }
 
     initialize(queries: IQueryResponseProcessor, events: IEventProcessor) {

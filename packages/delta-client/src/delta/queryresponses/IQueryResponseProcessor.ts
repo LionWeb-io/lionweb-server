@@ -1,3 +1,4 @@
+import WebSocket from 'ws';
 import {
     GetAvailableIdsResponse,
     ListPartitionsQueryResponse,
@@ -10,19 +11,19 @@ import {
 } from "@lionweb/server-delta-shared"
 
 export interface IQueryResponseProcessor {
-    SubscribeToChangingPartitionsResponseFunction(msg: SubscribeToChangingPartitionsResponse): void
+    SubscribeToChangingPartitionsResponseFunction(socket: WebSocket, msg: SubscribeToChangingPartitionsResponse): void
 
-    SubscribeToPartitionContentsResponseFunction(msg: SubscribeToPartitionContentsResponse): void
+    SubscribeToPartitionContentsResponseFunction(socket: WebSocket, msg: SubscribeToPartitionContentsResponse): void
 
-    UnsubscribeFromPartitionContentsResponseFunction(msg: UnsubscribeFromPartitionContentsResponse): void
+    UnsubscribeFromPartitionContentsResponseFunction(socket: WebSocket, msg: UnsubscribeFromPartitionContentsResponse): void
 
-    SignOnResponseFunction(msg: SignOnResponse): void
+    SignOnResponseFunction(socket: WebSocket, msg: SignOnResponse): void
 
-    SignOffResponseFunction(msg: SignOffResponse): void
+    SignOffResponseFunction(socket: WebSocket, msg: SignOffResponse): void
 
-    ListPartitionsResponseFunction(msg: ListPartitionsQueryResponse): void
+    ListPartitionsResponseFunction(socket: WebSocket, msg: ListPartitionsQueryResponse): void
 
-    GetAvailableIdsResponseFunction(msg: GetAvailableIdsResponse): void
+    GetAvailableIdsResponseFunction(socket: WebSocket, msg: GetAvailableIdsResponse): void
 
-    ReconnectResponseFunction(msg: ReconnectResponse): void
+    ReconnectResponseFunction(socket: WebSocket, msg: ReconnectResponse): void
 }

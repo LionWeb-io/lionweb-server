@@ -1,4 +1,4 @@
-// @ts-nocheck
+import WebSocket from 'ws';
 import {
     GetAvailableIdsResponse,
     ListPartitionsQueryResponse,
@@ -9,38 +9,38 @@ import {
     SubscribeToPartitionContentsResponse,
     UnsubscribeFromPartitionContentsResponse
 } from "@lionweb/server-delta-shared"
-import { IQueryResponseProcessor } from "./IQueryProcessors.js"
+import { IQueryResponseProcessor } from "./IQueryResponseProcessor.js"
 
 export class QueryResponseProcessor implements IQueryResponseProcessor {
-    SubscribeToChangingPartitionsResponseFunction(msg: SubscribeToChangingPartitionsResponse): void {
+    SubscribeToChangingPartitionsResponseFunction(socket: WebSocket, msg: SubscribeToChangingPartitionsResponse): void {
         console.log("Called SubscribeToChangingPartitionsResponseFunction " + msg.messageKind)
     }
 
-    SubscribeToPartitionContentsResponseFunction(msg: SubscribeToPartitionContentsResponse): void {
+    SubscribeToPartitionContentsResponseFunction(socket: WebSocket, msg: SubscribeToPartitionContentsResponse): void {
         console.log("Called SubscribeToPartitionContentsResponseFunction " + msg.messageKind)
     }
 
-    UnsubscribeFromPartitionContentsResponseFunction(msg: UnsubscribeFromPartitionContentsResponse): void {
+    UnsubscribeFromPartitionContentsResponseFunction(socket: WebSocket, msg: UnsubscribeFromPartitionContentsResponse): void {
         console.log("Called UnsubscribeFromPartitionContentsResponseFunction " + msg.messageKind)
     }
 
-    SignOnResponseFunction(msg: SignOnResponse): void {
+    SignOnResponseFunction(socket: WebSocket, msg: SignOnResponse): void {
         console.log("Called SignOnResponseFunction " + msg.messageKind)
     }
 
-    SignOffResponseFunction(msg: SignOffResponse): void {
+    SignOffResponseFunction(socket: WebSocket, msg: SignOffResponse): void {
         console.log("Called SignOffResponseFunction " + msg.messageKind)
     }
 
-    ListPartitionsResponseFunction(msg: ListPartitionsQueryResponse): void {
+    ListPartitionsResponseFunction(socket: WebSocket, msg: ListPartitionsQueryResponse): void {
         console.log("Called ListPartitionsResponseFunction " + msg.messageKind)
     }
 
-    GetAvailableIdsResponseFunction(msg: GetAvailableIdsResponse): void {
+    GetAvailableIdsResponseFunction(socket: WebSocket, msg: GetAvailableIdsResponse): void {
         console.log("Called GetAvailableIdsResponseFunction " + msg.messageKind)
     }
 
-    ReconnectResponseFunction(msg: ReconnectResponse): void {
+    ReconnectResponseFunction(socket: WebSocket, msg: ReconnectResponse): void {
         console.log("Called ReconnectResponseFunction " + msg.messageKind)
     }
 }

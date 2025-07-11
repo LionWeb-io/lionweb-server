@@ -1,3 +1,4 @@
+import WebSocket from 'ws';
 import {
     AnnotationAddedEvent,
     AnnotationDeletedEvent,
@@ -41,81 +42,81 @@ import {
 } from "@lionweb/server-delta-shared"
 
 export interface IEventProcessor {
-    ClassifierChangedFunction(msg: ClassifierChangedEvent): void
+    ClassifierChangedFunction(socket: WebSocket, msg: ClassifierChangedEvent): void
 
-    PartitionAddedFunction(msg: PartitionAddedEvent): void
+    PartitionAddedFunction(socket: WebSocket, msg: PartitionAddedEvent): void
 
-    PartitionDeletedFunction(msg: PartitionDeletedEvent): void
+    PartitionDeletedFunction(socket: WebSocket, msg: PartitionDeletedEvent): void
 
-    PropertyAddedFunction(msg: PropertyAddedEvent): void
+    PropertyAddedFunction(socket: WebSocket, msg: PropertyAddedEvent): void
 
-    PropertyDeletedFunction(msg: PropertyDeletedEvent): void
+    PropertyDeletedFunction(socket: WebSocket, msg: PropertyDeletedEvent): void
 
-    PropertyChangedFunction(msg: PropertyChangedEvent): void
+    PropertyChangedFunction(socket: WebSocket, msg: PropertyChangedEvent): void
 
-    ChildAddedFunction(msg: ChildAddedEvent): void
+    ChildAddedFunction(socket: WebSocket, msg: ChildAddedEvent): void
 
-    ChildDeletedFunction(msg: ChildDeletedEvent): void
+    ChildDeletedFunction(socket: WebSocket, msg: ChildDeletedEvent): void
 
-    ChildReplacedFunction(msg: ChildReplacedEvent): void
+    ChildReplacedFunction(socket: WebSocket, msg: ChildReplacedEvent): void
 
-    ChildMovedFromOtherContainmentFunction(msg: ChildMovedFromOtherContainmentEvent): void
+    ChildMovedFromOtherContainmentFunction(socket: WebSocket, msg: ChildMovedFromOtherContainmentEvent): void
 
-    ChildMovedFromOtherContainmentInSameParentFunction(msg: ChildMovedFromOtherContainmentInSameParentEvent): void
+    ChildMovedFromOtherContainmentInSameParentFunction(socket: WebSocket, msg: ChildMovedFromOtherContainmentInSameParentEvent): void
 
-    ChildMovedInSameContainmentFunction(msg: ChildMovedInSameContainmentEvent): void
+    ChildMovedInSameContainmentFunction(socket: WebSocket, msg: ChildMovedInSameContainmentEvent): void
 
-    ChildMovedAndReplacedFromOtherContainmentFunction(msg: ChildMovedAndReplacedFromOtherContainmentEvent): void
+    ChildMovedAndReplacedFromOtherContainmentFunction(socket: WebSocket, msg: ChildMovedAndReplacedFromOtherContainmentEvent): void
 
-    ChildMovedAndReplacedFromOtherContainmentInSameParentFunction(msg: ChildMovedAndReplacedFromOtherContainmentInSameParentEvent): void
+    ChildMovedAndReplacedFromOtherContainmentInSameParentFunction(socket: WebSocket, msg: ChildMovedAndReplacedFromOtherContainmentInSameParentEvent): void
 
-    ChildMovedAndReplacedInSameContainmentFunction(msg: ChildMovedAndReplacedInSameContainmentEvent): void
+    ChildMovedAndReplacedInSameContainmentFunction(socket: WebSocket, msg: ChildMovedAndReplacedInSameContainmentEvent): void
 
-    AnnotationAddedFunction(msg: AnnotationAddedEvent): void
+    AnnotationAddedFunction(socket: WebSocket, msg: AnnotationAddedEvent): void
 
-    AnnotationDeletedFunction(msg: AnnotationDeletedEvent): void
+    AnnotationDeletedFunction(socket: WebSocket, msg: AnnotationDeletedEvent): void
 
-    AnnotationReplacedFunction(msg: AnnotationReplacedEvent): void
+    AnnotationReplacedFunction(socket: WebSocket, msg: AnnotationReplacedEvent): void
 
-    AnnotationMovedFromOtherParentFunction(msg: AnnotationMovedFromOtherParentEvent): void
+    AnnotationMovedFromOtherParentFunction(socket: WebSocket, msg: AnnotationMovedFromOtherParentEvent): void
 
-    AnnotationMovedInSameParentFunction(msg: AnnotationMovedInSameParentEvent): void
+    AnnotationMovedInSameParentFunction(socket: WebSocket, msg: AnnotationMovedInSameParentEvent): void
 
-    AnnotationMovedAndReplacedFromOtherParentFunction(msg: AnnotationMovedAndReplacedFromOtherParentEvent): void
+    AnnotationMovedAndReplacedFromOtherParentFunction(socket: WebSocket, msg: AnnotationMovedAndReplacedFromOtherParentEvent): void
 
-    AnnotationMovedAndReplacedInSameParentFunction(msg: AnnotationMovedAndReplacedInSameParentEvent): void
+    AnnotationMovedAndReplacedInSameParentFunction(socket: WebSocket, msg: AnnotationMovedAndReplacedInSameParentEvent): void
 
-    ReferenceAddedFunction(msg: ReferenceAddedEvent): void
+    ReferenceAddedFunction(socket: WebSocket, msg: ReferenceAddedEvent): void
 
-    ReferenceDeletedFunction(msg: ReferenceDeletedEvent): void
+    ReferenceDeletedFunction(socket: WebSocket, msg: ReferenceDeletedEvent): void
 
-    ReferenceChangedFunction(msg: ReferenceChangedEvent): void
+    ReferenceChangedFunction(socket: WebSocket, msg: ReferenceChangedEvent): void
 
-    EntryMovedFromOtherReferenceFunction(msg: EntryMovedFromOtherReferenceEvent): void
+    EntryMovedFromOtherReferenceFunction(socket: WebSocket, msg: EntryMovedFromOtherReferenceEvent): void
 
-    EntryMovedFromOtherReferenceInSameParentFunction(msg: EntryMovedFromOtherReferenceInSameParentEvent): void
+    EntryMovedFromOtherReferenceInSameParentFunction(socket: WebSocket, msg: EntryMovedFromOtherReferenceInSameParentEvent): void
 
-    EntryMovedInSameReferenceFunction(msg: EntryMovedInSameReferenceEvent): void
+    EntryMovedInSameReferenceFunction(socket: WebSocket, msg: EntryMovedInSameReferenceEvent): void
 
-    EntryMovedAndReplacedFromOtherReferenceFunction(msg: EntryMovedAndReplacedFromOtherReferenceEvent): void
+    EntryMovedAndReplacedFromOtherReferenceFunction(socket: WebSocket, msg: EntryMovedAndReplacedFromOtherReferenceEvent): void
 
-    EntryMovedAndReplacedFromOtherReferenceInSameParentFunction(msg: EntryMovedAndReplacedFromOtherReferenceInSameParentEvent): void
+    EntryMovedAndReplacedFromOtherReferenceInSameParentFunction(socket: WebSocket, msg: EntryMovedAndReplacedFromOtherReferenceInSameParentEvent): void
 
-    EntryMovedAndReplacedInSameReferenceFunction(msg: EntryMovedAndReplacedInSameReferenceEvent): void
+    EntryMovedAndReplacedInSameReferenceFunction(socket: WebSocket, msg: EntryMovedAndReplacedInSameReferenceEvent): void
 
-    ReferenceResolveInfoAddedFunction(msg: ReferenceResolveInfoAddedEvent): void
+    ReferenceResolveInfoAddedFunction(socket: WebSocket, msg: ReferenceResolveInfoAddedEvent): void
 
-    ReferenceResolveInfoDeletedFunction(msg: ReferenceResolveInfoDeletedEvent): void
+    ReferenceResolveInfoDeletedFunction(socket: WebSocket, msg: ReferenceResolveInfoDeletedEvent): void
 
-    ReferenceResolveInfoChangedFunction(msg: ReferenceResolveInfoChangedEvent): void
+    ReferenceResolveInfoChangedFunction(socket: WebSocket, msg: ReferenceResolveInfoChangedEvent): void
 
-    ReferenceTargetAddedFunction(msg: ReferenceTargetAddedEvent): void
+    ReferenceTargetAddedFunction(socket: WebSocket, msg: ReferenceTargetAddedEvent): void
 
-    ReferenceTargetDeletedFunction(msg: ReferenceTargetDeletedEvent): void
+    ReferenceTargetDeletedFunction(socket: WebSocket, msg: ReferenceTargetDeletedEvent): void
 
-    ReferenceTargetChangedFunction(msg: ReferenceTargetChangedEvent): void
+    ReferenceTargetChangedFunction(socket: WebSocket, msg: ReferenceTargetChangedEvent): void
 
-    ErrorFunction(msg: ErrorEvent): void
+    ErrorFunction(socket: WebSocket, msg: ErrorEvent): void
 
-    NoOpEventFunction(msg: NoOpEventEvent): void
+    NoOpEventFunction(socket: WebSocket, msg: NoOpEventEvent): void
 }

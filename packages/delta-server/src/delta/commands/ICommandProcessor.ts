@@ -39,83 +39,84 @@ import {
     ReplaceAnnotationCommand,
     ReplaceChildCommand
 } from "@lionweb/server-delta-shared"
+import WebSocket from 'ws';
 
 export interface ICommandProcessor {
-    CommandResponseFunction(msg: CommandResponseCommand): void
+    CommandResponseFunction(socket: WebSocket, msg: CommandResponseCommand): void
 
-    AddPartitionFunction(msg: AddPartitionCommand): void
+    AddPartitionFunction(socket: WebSocket, msg: AddPartitionCommand): void
 
-    DeletePartitionFunction(msg: DeletePartitionCommand): void
+    DeletePartitionFunction(socket: WebSocket, msg: DeletePartitionCommand): void
 
-    ChangeClassifierFunction(msg: ChangeClassifierCommand): void
+    ChangeClassifierFunction(socket: WebSocket, msg: ChangeClassifierCommand): void
 
-    AddPropertyFunction(msg: AddPropertyCommand): void
+    AddPropertyFunction(socket: WebSocket, msg: AddPropertyCommand): void
 
-    DeletePropertyFunction(msg: DeletePropertyCommand): void
+    DeletePropertyFunction(socket: WebSocket, msg: DeletePropertyCommand): void
 
-    ChangePropertyFunction(msg: ChangePropertyCommand): void
+    ChangePropertyFunction(socket: WebSocket, msg: ChangePropertyCommand): void
 
-    AddChildFunction(msg: AddChildCommand): void
+    AddChildFunction(socket: WebSocket, msg: AddChildCommand): void
 
-    DeleteChildFunction(msg: DeleteChildCommand): void
+    DeleteChildFunction(socket: WebSocket, msg: DeleteChildCommand): void
 
-    ReplaceChildFunction(msg: ReplaceChildCommand): void
+    ReplaceChildFunction(socket: WebSocket, msg: ReplaceChildCommand): void
 
-    MoveChildFromOtherContainmentFunction(msg: MoveChildFromOtherContainmentCommand): void
+    MoveChildFromOtherContainmentFunction(socket: WebSocket, msg: MoveChildFromOtherContainmentCommand): void
 
-    MoveChildFromOtherContainmentInSameParentFunction(msg: MoveChildFromOtherContainmentInSameParentCommand): void
+    MoveChildFromOtherContainmentInSameParentFunction(socket: WebSocket, msg: MoveChildFromOtherContainmentInSameParentCommand): void
 
-    MoveChildInSameContainmentFunction(msg: MoveChildInSameContainmentCommand): void
+    MoveChildInSameContainmentFunction(socket: WebSocket, msg: MoveChildInSameContainmentCommand): void
 
-    MoveAndReplaceChildFromOtherContainmentFunction(msg: MoveAndReplaceChildFromOtherContainmentCommand): void
+    MoveAndReplaceChildFromOtherContainmentFunction(socket: WebSocket, msg: MoveAndReplaceChildFromOtherContainmentCommand): void
 
-    MoveAndReplaceChildFromOtherContainmentInSameParentFunction(msg: MoveAndReplaceChildFromOtherContainmentInSameParentCommand): void
+    MoveAndReplaceChildFromOtherContainmentInSameParentFunction(socket: WebSocket, msg: MoveAndReplaceChildFromOtherContainmentInSameParentCommand): void
 
-    MoveAndReplaceChildInSameContainmentFunction(msg: MoveAndReplaceChildInSameContainmentCommand): void
+    MoveAndReplaceChildInSameContainmentFunction(socket: WebSocket, msg: MoveAndReplaceChildInSameContainmentCommand): void
 
-    AddAnnotationFunction(msg: AddAnnotationCommand): void
+    AddAnnotationFunction(socket: WebSocket, msg: AddAnnotationCommand): void
 
-    DeleteAnnotationFunction(msg: DeleteAnnotationCommand): void
+    DeleteAnnotationFunction(socket: WebSocket, msg: DeleteAnnotationCommand): void
 
-    ReplaceAnnotationFunction(msg: ReplaceAnnotationCommand): void
+    ReplaceAnnotationFunction(socket: WebSocket, msg: ReplaceAnnotationCommand): void
 
-    MoveAnnotationFromOtherParentFunction(msg: MoveAnnotationFromOtherParentCommand): void
+    MoveAnnotationFromOtherParentFunction(socket: WebSocket, msg: MoveAnnotationFromOtherParentCommand): void
 
-    MoveAnnotationInSameParentFunction(msg: MoveAnnotationInSameParentCommand): void
+    MoveAnnotationInSameParentFunction(socket: WebSocket, msg: MoveAnnotationInSameParentCommand): void
 
-    MoveAndReplaceAnnotationFromOtherParentFunction(msg: MoveAndReplaceAnnotationFromOtherParentCommand): void
+    MoveAndReplaceAnnotationFromOtherParentFunction(socket: WebSocket, msg: MoveAndReplaceAnnotationFromOtherParentCommand): void
 
-    MoveAndReplaceAnnotationInSameParentFunction(msg: MoveAndReplaceAnnotationInSameParentCommand): void
+    MoveAndReplaceAnnotationInSameParentFunction(socket: WebSocket, msg: MoveAndReplaceAnnotationInSameParentCommand): void
 
-    AddReferenceFunction(msg: AddReferenceCommand): void
+    AddReferenceFunction(socket: WebSocket, msg: AddReferenceCommand): void
 
-    DeleteReferenceFunction(msg: DeleteReferenceCommand): void
+    DeleteReferenceFunction(socket: WebSocket, msg: DeleteReferenceCommand): void
 
-    ChangeReferenceFunction(msg: ChangeReferenceCommand): void
+    ChangeReferenceFunction(socket: WebSocket, msg: ChangeReferenceCommand): void
 
-    MoveEntryFromOtherReferenceFunction(msg: MoveEntryFromOtherReferenceCommand): void
+    MoveEntryFromOtherReferenceFunction(socket: WebSocket, msg: MoveEntryFromOtherReferenceCommand): void
 
-    MoveEntryFromOtherReferenceInSameParentFunction(msg: MoveEntryFromOtherReferenceInSameParentCommand): void
+    MoveEntryFromOtherReferenceInSameParentFunction(socket: WebSocket, msg: MoveEntryFromOtherReferenceInSameParentCommand): void
 
-    MoveEntryInSameReferenceFunction(msg: MoveEntryInSameReferenceCommand): void
+    MoveEntryInSameReferenceFunction(socket: WebSocket, msg: MoveEntryInSameReferenceCommand): void
 
-    MoveAndReplaceEntryFromOtherReferenceFunction(msg: MoveAndReplaceEntryFromOtherReferenceCommand): void
+    MoveAndReplaceEntryFromOtherReferenceFunction(socket: WebSocket, msg: MoveAndReplaceEntryFromOtherReferenceCommand): void
 
-    MoveAndReplaceEntryFromOtherReferenceInSameParentFunction(msg: MoveAndReplaceEntryFromOtherReferenceInSameParentCommand): void
+    MoveAndReplaceEntryFromOtherReferenceInSameParentFunction(socket: WebSocket, msg: MoveAndReplaceEntryFromOtherReferenceInSameParentCommand): void
 
-    MoveAndReplaceEntryInSameReferenceFunction(msg: MoveAndReplaceEntryInSameReferenceCommand): void
+    MoveAndReplaceEntryInSameReferenceFunction(socket: WebSocket, msg: MoveAndReplaceEntryInSameReferenceCommand): void
 
-    AddReferenceResolveInfoFunction(msg: AddReferenceResolveInfoCommand): void
+    AddReferenceResolveInfoFunction(socket: WebSocket, msg: AddReferenceResolveInfoCommand): void
 
-    DeleteReferenceResolveInfoFunction(msg: DeleteReferenceResolveInfoCommand): void
+    DeleteReferenceResolveInfoFunction(socket: WebSocket, msg: DeleteReferenceResolveInfoCommand): void
 
-    ChangeReferenceResolveInfoFunction(msg: ChangeReferenceResolveInfoCommand): void
+    ChangeReferenceResolveInfoFunction(socket: WebSocket, msg: ChangeReferenceResolveInfoCommand): void
 
-    AddReferenceTargetFunction(msg: AddReferenceTargetCommand): void
+    AddReferenceTargetFunction(socket: WebSocket, msg: AddReferenceTargetCommand): void
 
-    DeleteReferenceTargetFunction(msg: DeleteReferenceTargetCommand): void
+    DeleteReferenceTargetFunction(socket: WebSocket, msg: DeleteReferenceTargetCommand): void
 
-    ChangeReferenceTargetFunction(msg: ChangeReferenceTargetCommand): void
+    ChangeReferenceTargetFunction(socket: WebSocket, msg: ChangeReferenceTargetCommand): void
 
-    CompositeCommandFunction(msg: CompositeCommandCommand): void
+    CompositeCommandFunction(socket: WebSocket, msg: CompositeCommandCommand): void
 }
