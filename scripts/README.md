@@ -23,3 +23,5 @@ The script then
 - Pushes this commit
 
 On the CI this results in the tag being added to the repository and a docker image to be published on github.  
+
+# Test
