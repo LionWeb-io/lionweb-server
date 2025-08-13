@@ -12,7 +12,7 @@ import { FBBulkImport } from "../io/lionweb/serialization/flatbuffers/index.js"
 
 export const JSON_CONTENT_TYPE = "application/json"
 export const PROTOBUF_CONTENT_TYPE = "application/protobuf"
-export const FLATBUFFERS_CONTENT_TYPE = "application/flatbuffers"
+export const FLATBUFFERS_CONTENT_TYPE = "application/x-flatbuffers"
 
 export interface AdditionalApi {
     getNodeTree(request: Request, response: Response): void
@@ -121,7 +121,8 @@ export class AdditionalApiImpl implements AdditionalApi {
                 data: []
             })
         } else {
-            throw new Error("Content-type not recognized")
+            const contentType = request.headers["content-type"];
+            throw new Error(`Content-type not recognized. Content-type: ${contentType}`)
         }
     }
 

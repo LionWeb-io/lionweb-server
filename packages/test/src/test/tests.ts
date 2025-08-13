@@ -505,12 +505,33 @@ collection.forEach(withoutHistory => {
         })
 
         describe("Bulk import", () => {
-            it("recreate partitions through bulk import, no compression, JSON", async () => {
+            it("bulk import, no compression, JSON", async () => {
                 assert(initError === "", initError)
 
                 const bulkImport : BulkImport = {
                     attachPoints: [],
-                    nodes: initialPartition.nodes
+                    nodes: [{
+                        id: "bi-id1",
+                        classifier: {
+                            language: "bi-language",
+                            version: "v1.1",
+                            key: "bi-language-key",
+                        },
+                        properties: [
+                            {
+                                property: {
+                                    language: "bi-language",
+                                    version: "v1.1",
+                                    key: "bi-p1",
+                                },
+                                value: "qwerty"
+                            }
+                        ],
+                        containments: [],
+                        references: [],
+                        annotations: [],
+                        parent: null,
+                    }]
                 };
 
                 const bulkImportResult = await client.additional.bulkImport(bulkImport, TransferFormat.JSON, false);
@@ -520,12 +541,69 @@ collection.forEach(withoutHistory => {
                     return
                 }
                 // Now retrieve the partition again.
-                const model = structuredClone(baseFullChunk)
-                model.nodes = model.nodes.filter(node => node.parent === null)
                 const partitions = await client.bulk.listPartitions()
                 console.log("Retrieve partitions Result: " + JSON.stringify(partitions))
                 const diff = new LionWebJsonDiff()
-                diff.diffLwChunk(model, partitions.body.chunk)
+                const expectedModel : LionWebJsonChunk = {
+                    serializationFormatVersion: "2024.1",
+                    languages: [{
+                        key: "bi-language-key",
+                        version: "v1.1",
+                    }],
+                    nodes: bulkImport.nodes
+                };
+                diff.diffLwChunk(expectedModel, partitions.body.chunk)
+                deepEqual(diff.diffResult.changes, [])
+            })
+
+            it("recreate partitions through bulk import, no compression, Flatbuffers", async () => {
+                assert(initError === "", initError)
+
+                const bulkImport : BulkImport = {
+                    attachPoints: [],
+                    nodes: [{
+                        id: "bi-id2",
+                        classifier: {
+                            language: "bi-language",
+                            version: "v1.1",
+                            key: "bi-language-key",
+                        },
+                        properties: [
+                            {
+                                property: {
+                                    language: "bi-language",
+                                    version: "v1.1",
+                                    key: "bi-p1",
+                                },
+                                value: "qwerty"
+                            }
+                        ],
+                        containments: [],
+                        references: [],
+                        annotations: [],
+                        parent: null,
+                    }]
+                };
+
+                const bulkImportResult = await client.additional.bulkImport(bulkImport, TransferFormat.FLATBUFFERS, false);
+                if (bulkImportResult.status !== HttpSuccessCodes.Ok) {
+                    console.error("Cannot recreate partition: " + JSON.stringify(bulkImportResult.body))
+                    initError = JSON.stringify(bulkImportResult.body)
+                    return
+                }
+                // Now retrieve the partition again.
+                const partitions = await client.bulk.listPartitions()
+                console.log("Retrieve partitions Result: " + JSON.stringify(partitions))
+                const diff = new LionWebJsonDiff()
+                const expectedModel : LionWebJsonChunk = {
+                    serializationFormatVersion: "2024.1",
+                    languages: [{
+                        key: "bi-language-key",
+                        version: "v1.1",
+                    }],
+                    nodes: bulkImport.nodes
+                };
+                diff.diffLwChunk(expectedModel, partitions.body.chunk)
                 deepEqual(diff.diffResult.changes, [])
             })
         })
