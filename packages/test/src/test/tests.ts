@@ -1,12 +1,14 @@
 import { HttpClientErrors, HttpSuccessCodes, RetrieveResponse } from "@lionweb/server-shared"
-import { getVersionFromResponse, RepositoryClient } from "@lionweb/server-client"
+import { getVersionFromResponse, RepositoryClient, TransferFormat } from "@lionweb/server-client"
 import { LionWebJsonChunk } from "@lionweb/json"
 import { LanguageChange, LionWebJsonDiff } from "@lionweb/json-diff"
 import { readModel } from "./utils.js"
 
 import { assert } from "chai"
-const { deepEqual, equal } = assert
 import sm from "source-map-support"
+import { BulkImport } from "@lionweb/server-additionalapi"
+
+const { deepEqual, equal } = assert
 
 sm.install()
 const DATA: string = "./data/"
@@ -499,6 +501,24 @@ collection.forEach(withoutHistory => {
                     correct.body.success === true,
                     "correct LionWeb version should be accepted: " + correct.body.messages.map(m => m.message)
                 )
+            })
+        })
+
+        describe("Bulk import", () => {
+            it("bulk import, no compression, JSON", async () => {
+                assert(initError === "", initError)
+
+                const bulkImport : BulkImport = {};
+
+                const result = await client.additional.bulkImport(bulkImport, TransferFormat.JSON, false);
+                if (result.status !== HttpSuccessCodes.Ok) {
+                    console.error("Cannot perform bulk import: " + JSON.stringify(result.body))
+                    initError = JSON.stringify(result.body)
+                    return
+                }
+                const partitions = await client.bulk.listPartitions()
+                console.log("Retrieve partitions Result: " + JSON.stringify(partitions))
+                // TODO: check the result is what we expected
             })
         })
 
