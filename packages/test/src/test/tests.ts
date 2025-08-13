@@ -536,7 +536,7 @@ collection.forEach(withoutHistory => {
 
                 const bulkImportResult = await client.additional.bulkImport(bulkImport, TransferFormat.JSON, false);
                 if (bulkImportResult.status !== HttpSuccessCodes.Ok) {
-                    console.error("Cannot recreate partition: " + JSON.stringify(bulkImportResult.body))
+                    console.error("Cannot create partition using bulk import: " + JSON.stringify(bulkImportResult.body))
                     initError = JSON.stringify(bulkImportResult.body)
                     return
                 }
@@ -589,7 +589,7 @@ collection.forEach(withoutHistory => {
 
                 const bulkImportResult = await client.additional.bulkImport(bulkImport, TransferFormat.FLATBUFFERS, false);
                 if (bulkImportResult.status !== HttpSuccessCodes.Ok) {
-                    console.error("Cannot recreate partition: " + JSON.stringify(bulkImportResult.body))
+                    console.error("Cannot create partition using bulk import: " + JSON.stringify(bulkImportResult.body))
                     initError = JSON.stringify(bulkImportResult.body)
                     return
                 }
