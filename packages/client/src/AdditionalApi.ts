@@ -7,7 +7,7 @@ import {
     FBContainment, FBMetaPointer,
     FBNode,
     FBProperty, FBReference, FBReferenceValue
-} from "@lionweb/repository-additionalapi";
+} from "@lionweb/server-additionalapi";
 import { Builder as FBBuilder } from 'flatbuffers';
 import {LionWebJsonMetaPointer} from "@lionweb/json";
 
