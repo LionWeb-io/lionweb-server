@@ -554,9 +554,11 @@ collection.forEach(withoutHistory => {
                 };
                 diff.diffLwChunk(expectedModel, partitions.body.chunk)
                 deepEqual(diff.diffResult.changes, [])
+
+                await client.bulk.deletePartitions(["bi-id1"]);
             })
 
-            it("recreate partitions through bulk import, no compression, Flatbuffers", async () => {
+            it("bulk import, no compression, Flatbuffers", async () => {
                 assert(initError === "", initError)
 
                 const bulkImport : BulkImport = {
@@ -605,6 +607,8 @@ collection.forEach(withoutHistory => {
                 };
                 diff.diffLwChunk(expectedModel, partitions.body.chunk)
                 deepEqual(diff.diffResult.changes, [])
+
+                await client.bulk.deletePartitions(["bi-id2"]);
             })
         })
 
