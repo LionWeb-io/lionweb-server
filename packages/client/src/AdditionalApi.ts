@@ -3,7 +3,7 @@ import { ClientResponse, RepositoryClient } from "./RepositoryClient.js"
 import {
     BulkImport,
     FBAttachPoint,
-    FBBulkImport, FBChunk,
+    FBBulkImport,
     FBContainment, FBMetaPointer,
     FBNode,
     FBProperty, FBReference, FBReferenceValue
