@@ -65,7 +65,7 @@ export class AdditionalApi {
                 });
             }
         } else {
-            throw new Error("Not yet supported")
+            throw new Error(`Transfer Format ${transferFormat} is not yet supported`)
         }
     }
 }
