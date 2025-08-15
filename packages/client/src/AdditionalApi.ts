@@ -63,8 +63,8 @@ export class AdditionalApi {
                 return await this.client.postWithTimeout("additional/bulkImport", {
                     body: flatbufferBytes,
                     params: "",
-                    headers
-                });
+                    headers,
+                }, false);
             }
         } else {
             throw new Error(`Transfer Format ${transferFormat} is not yet supported`)

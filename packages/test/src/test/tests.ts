@@ -506,7 +506,7 @@ collection.forEach(withoutHistory => {
 
         describe("Bulk import", () => {
             it("bulk import, no compression, JSON", async function() {
-                this.timeout(60_000);
+                this.timeout(15_000);
                 assert(initError === "", initError)
 
                 const myClient = new RepositoryClient("TestClientForBulkImport", "bulk-import-repo")
@@ -586,7 +586,7 @@ collection.forEach(withoutHistory => {
             })
 
             it("bulk import, no compression, Flatbuffers", async function() {
-                this.timeout(60_000);
+                this.timeout(15_000);
                 assert(initError === "", initError)
 
                 const myClient = new RepositoryClient("TestClientForBulkImport", "bulk-import-repo")
