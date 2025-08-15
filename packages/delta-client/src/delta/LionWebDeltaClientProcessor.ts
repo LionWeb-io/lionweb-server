@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { DeltaValidator } from "@lionweb/server-delta"
+import { DeltaValidator } from "@lionweb/server-delta-definitions"
 import {
     EventType,
     QueryResponseType

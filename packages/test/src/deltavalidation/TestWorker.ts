@@ -1,4 +1,4 @@
-import { DeltaValidator } from "@lionweb/server-delta"
+import { DeltaValidator } from "@lionweb/server-delta-definitions"
 import { ValidationResult } from "@lionweb/validation"
 import { assert } from "chai"
 import fs from "fs"

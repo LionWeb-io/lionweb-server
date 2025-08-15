@@ -51,7 +51,7 @@
     "./packages/additionalapi",
     "./packages/server",
     "./packages/client",
-    "./packages/delta",
+    "./packages/server-delta-definitions",
     "./packages/delta-client",
     "./packages/delta-shared",
     "./packages/delta-server",

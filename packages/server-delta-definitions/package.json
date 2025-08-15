@@ -1,5 +1,5 @@
 {
-  "name": "@lionweb/server-delta",
+  "name": "@lionweb/server-delta-definitions",
   "version": "0.3.0",
   "private": false,
   "main": "dist/index.js",

@@ -1,4 +1,4 @@
-import { DeltaValidator } from "@lionweb/server-delta"
+import { DeltaValidator } from "@lionweb/server-delta-definitions"
 import {
     CommandType,
     ErrorEvent,
