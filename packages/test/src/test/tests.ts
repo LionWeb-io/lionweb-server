@@ -560,8 +560,8 @@ collection.forEach(withoutHistory => {
                 if (bulkImportResult.status !== HttpSuccessCodes.Ok) {
                     const errMsg = "Cannot create partition using bulk import: " + JSON.stringify(bulkImportResult.body)
                     console.error(errMsg)
-                    initError = JSON.stringify(bulkImportResult.body)
-                    fail(initError)
+                    const err = JSON.stringify(bulkImportResult.body)
+                    fail(err)
                 }
                 // await sleep(3000);
                 // Now retrieve the partition again.
@@ -640,8 +640,8 @@ collection.forEach(withoutHistory => {
                 if (bulkImportResult.status !== HttpSuccessCodes.Ok) {
                     const errMsg = "Cannot create partition using bulk import: " + JSON.stringify(bulkImportResult.body)
                     console.error(errMsg)
-                    initError = JSON.stringify(bulkImportResult.body)
-                    fail(initError)
+                    const err = JSON.stringify(bulkImportResult.body)
+                    fail(err)
                 }
                 // await sleep(3000);
                 // Now retrieve the partition again.
