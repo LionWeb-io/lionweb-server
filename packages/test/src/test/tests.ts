@@ -5,9 +5,8 @@ import { LanguageChange, LionWebJsonDiff } from "@lionweb/json-diff"
 import { readModel } from "./utils.js"
 
 import { assert } from "chai"
-import sm from "source-map-support"
-
 const { deepEqual, equal } = assert
+import sm from "source-map-support"
 
 sm.install()
 const DATA: string = "./data/"

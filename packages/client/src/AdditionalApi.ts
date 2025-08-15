@@ -4,9 +4,12 @@ import {
     BulkImport,
     FBAttachPoint,
     FBBulkImport,
-    FBContainment, FBMetaPointer,
+    FBContainment,
+    FBMetaPointer,
     FBNode,
-    FBProperty, FBReference, FBReferenceValue
+    FBProperty,
+    FBReference,
+    FBReferenceValue
 } from "@lionweb/server-additionalapi";
 import { Builder as FBBuilder } from 'flatbuffers';
 import {LionWebJsonMetaPointer} from "@lionweb/json";
@@ -34,21 +37,9 @@ export class AdditionalApi {
     async bulkImport(bulkImport: BulkImport, transferFormat: TransferFormat, compress: boolean) : Promise<ClientResponse<LionwebResponse>> {
         this.client.log(`AdditionalApi.store transferFormat=${transferFormat}, compress=${compress}`)
         if (transferFormat == TransferFormat.JSON) {
-            let body;
-            let headers: Record<string, string> = {};
-
-            if (compress) {
-                body = await compressJSON(bulkImport);
-                headers = {
-                    "Content-Encoding": "gzip",
-                    'Content-Type': 'application/json',
-                };
-            } else {
-                body = JSON.stringify(bulkImport);
-                headers = {
-                    'Content-Type': 'application/json',
-                };
-            }
+            const { body, headers } = compress
+                ? { body: await compressJSON(bulkImport), headers: { "Content-Type": "application/json", "Content-Encoding": "gzip" } }
+                : { body: JSON.stringify(bulkImport),     headers: { "Content-Type": "application/json" } };
 
             return await this.client.postWithTimeout(`additional/bulkImport`, {
                 body,
