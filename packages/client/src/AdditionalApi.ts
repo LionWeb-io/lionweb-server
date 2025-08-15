@@ -32,13 +32,13 @@ export class AdditionalApi {
     async bulkImport(bulkImport: BulkImport, transferFormat: TransferFormat, compress: boolean) : Promise<ClientResponse<LionwebResponse>> {
         this.client.log(`AdditionalApi.store transferFormat=${transferFormat}, compress=${compress}`)
         if (transferFormat == TransferFormat.JSON) {
-            let body: BodyInit;
+            let body;
             let headers: Record<string, string> = {};
 
             if (compress) {
                 throw new Error("Not yet supported")
             } else {
-                body = JSON.stringify(bulkImport);
+                body = bulkImport;
                 headers = {
                     'Content-Type': 'application/json',
                 };
