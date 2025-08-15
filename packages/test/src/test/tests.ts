@@ -505,7 +505,8 @@ collection.forEach(withoutHistory => {
         })
 
         describe("Bulk import", () => {
-            it("bulk import, no compression, JSON", async () => {
+            it("bulk import, no compression, JSON", async function() {
+                this.timeout(60_000);
                 assert(initError === "", initError)
 
                 const myClient = new RepositoryClient("TestClientForBulkImport", "bulk-import-repo")
@@ -531,7 +532,25 @@ collection.forEach(withoutHistory => {
                             }
                         ],
                         containments: [],
-                        references: [],
+                        references: [
+                            {
+                                reference: {
+                                    language: "bi-language",
+                                    version: "v1.1",
+                                    key: "bi-r1",
+                                },
+                                targets: [
+                                    {
+                                        reference: 'id-a',
+                                        resolveInfo: 'resolveInfo-a'
+                                    },
+                                    {
+                                        reference: 'id-b',
+                                        resolveInfo: 'resolveInfo-b'
+                                    }
+                                ]
+                            }
+                        ],
                         annotations: [],
                         parent: null,
                     }]
@@ -544,6 +563,7 @@ collection.forEach(withoutHistory => {
                     initError = JSON.stringify(bulkImportResult.body)
                     fail(initError)
                 }
+                // await sleep(3000);
                 // Now retrieve the partition again.
                 const partitions = await myClient.bulk.retrieve(["bi-id1"])
                 console.log("Retrieve partitions during bulk import Result: " + JSON.stringify(partitions))
@@ -562,60 +582,88 @@ collection.forEach(withoutHistory => {
 
                 await myClient.bulk.deletePartitions(["bi-id1"]);
                 await myClient.dbAdmin.deleteRepository("bulk-import-repo")
+                console.log("REMOVE ME BULK IMPORT TEST COMPLETED")
             })
 
-            // it("bulk import, no compression, Flatbuffers", async () => {
-            //     assert(initError === "", initError)
-            //
-            //     const bulkImport : BulkImport = {
-            //         attachPoints: [],
-            //         nodes: [{
-            //             id: "bi-id2",
-            //             classifier: {
-            //                 language: "bi-language",
-            //                 version: "v1.1",
-            //                 key: "bi-language-key",
-            //             },
-            //             properties: [
-            //                 {
-            //                     property: {
-            //                         language: "bi-language",
-            //                         version: "v1.1",
-            //                         key: "bi-p1",
-            //                     },
-            //                     value: "qwerty"
-            //                 }
-            //             ],
-            //             containments: [],
-            //             references: [],
-            //             annotations: [],
-            //             parent: null,
-            //         }]
-            //     };
-            //
-            //     const bulkImportResult = await client.additional.bulkImport(bulkImport, TransferFormat.FLATBUFFERS, false);
-            //     if (bulkImportResult.status !== HttpSuccessCodes.Ok) {
-            //         console.error("Cannot create partition using bulk import: " + JSON.stringify(bulkImportResult.body))
-            //         initError = JSON.stringify(bulkImportResult.body)
-            //         return
-            //     }
-            //     // Now retrieve the partition again.
-            //     const partitions = await client.bulk.listPartitions()
-            //     console.log("Retrieve partitions Result: " + JSON.stringify(partitions))
-            //     const diff = new LionWebJsonDiff()
-            //     const expectedModel : LionWebJsonChunk = {
-            //         serializationFormatVersion: "2024.1",
-            //         languages: [{
-            //             key: "bi-language-key",
-            //             version: "v1.1",
-            //         }],
-            //         nodes: bulkImport.nodes
-            //     };
-            //     diff.diffLwChunk(expectedModel, partitions.body.chunk)
-            //     deepEqual(diff.diffResult.changes, [])
-            //
-            //     await client.bulk.deletePartitions(["bi-id2"]);
-            // })
+            it("bulk import, no compression, Flatbuffers", async function() {
+                this.timeout(60_000);
+                assert(initError === "", initError)
+
+                const myClient = new RepositoryClient("TestClientForBulkImport", "bulk-import-repo")
+                myClient.dbAdmin.createRepository("bulk-import-repo", false, "2024.1")
+
+                const bulkImport : BulkImport = {
+                    attachPoints: [],
+                    nodes: [{
+                        id: "bi-id1",
+                        classifier: {
+                            language: "bi-language",
+                            version: "v1.1",
+                            key: "bi-language-key",
+                        },
+                        properties: [
+                            {
+                                property: {
+                                    language: "bi-language",
+                                    version: "v1.1",
+                                    key: "bi-p1",
+                                },
+                                value: "qwerty"
+                            }
+                        ],
+                        containments: [],
+                        references: [
+                            {
+                                reference: {
+                                    language: "bi-language",
+                                    version: "v1.1",
+                                    key: "bi-r1",
+                                },
+                                targets: [
+                                    {
+                                        reference: 'id-a',
+                                        resolveInfo: 'resolveInfo-a'
+                                    },
+                                    {
+                                        reference: 'id-b',
+                                        resolveInfo: 'resolveInfo-b'
+                                    }
+                                ]
+                            }
+                        ],
+                        annotations: [],
+                        parent: null,
+                    }]
+                };
+
+                const bulkImportResult = await myClient.additional.bulkImport(bulkImport, TransferFormat.FLATBUFFERS, false);
+                if (bulkImportResult.status !== HttpSuccessCodes.Ok) {
+                    const errMsg = "Cannot create partition using bulk import: " + JSON.stringify(bulkImportResult.body)
+                    console.error(errMsg)
+                    initError = JSON.stringify(bulkImportResult.body)
+                    fail(initError)
+                }
+                // await sleep(3000);
+                // Now retrieve the partition again.
+                const partitions = await myClient.bulk.retrieve(["bi-id1"])
+                console.log("Retrieve partitions during bulk import Result: " + JSON.stringify(partitions))
+                const diff = new LionWebJsonDiff()
+                const expectedModel : LionWebJsonChunk = {
+                    serializationFormatVersion: "2024.1",
+                    languages: [{
+                        key: "bi-language",
+                        version: "v1.1",
+                    }],
+                    nodes: bulkImport.nodes
+                };
+                console.log("REMOVE ME BULK IMPORT WE GOT", partitions.body.chunk)
+                diff.diffLwChunk(expectedModel, partitions.body.chunk)
+                deepEqual(diff.diffResult.changes, [])
+
+                await myClient.bulk.deletePartitions(["bi-id1"]);
+                await myClient.dbAdmin.deleteRepository("bulk-import-repo")
+                console.log("REMOVE ME BULK IMPORT TEST COMPLETED")
+            })
         })
 
         async function testResult(originalJsonFile: string, changesFile: string) {
@@ -665,3 +713,7 @@ collection.forEach(withoutHistory => {
         }
     })
 })
+
+function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}

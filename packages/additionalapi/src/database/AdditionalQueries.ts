@@ -137,6 +137,8 @@ export class AdditionalQueries {
         })
 
         await populateFromBulkImport(metaPointersTracker, bulkImport, this.context.dbConnection)
+
+        console.log("REMOVE ME STORE NODES", JSON.stringify(bulkImport.nodes))
         await storeNodes(await pool.connect(), repositoryData, bulkImport, metaPointersTracker)
 
         // Attach the root of the new nodes to existing containers

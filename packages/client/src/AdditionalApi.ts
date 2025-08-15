@@ -44,6 +44,8 @@ export class AdditionalApi {
                 };
             }
 
+            console.log("REMOVE ME bulkImport body", JSON.stringify(body))
+
             return await this.client.postWithTimeout(`additional/bulkImport`, {
                 body,
                 params: "",
