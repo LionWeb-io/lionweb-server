@@ -1,14 +1,13 @@
 import { HttpClientErrors, HttpSuccessCodes, RetrieveResponse } from "@lionweb/server-shared"
-import { getVersionFromResponse, RepositoryClient, TransferFormat } from "@lionweb/server-client"
+import { getVersionFromResponse, RepositoryClient } from "@lionweb/server-client"
 import { LionWebJsonChunk } from "@lionweb/json"
 import { LanguageChange, LionWebJsonDiff } from "@lionweb/json-diff"
 import { readModel } from "./utils.js"
 
 import { assert } from "chai"
 import sm from "source-map-support"
-import { BulkImport } from "@lionweb/server-additionalapi"
 
-const { deepEqual, equal,fail } = assert
+const { deepEqual, equal } = assert
 
 sm.install()
 const DATA: string = "./data/"

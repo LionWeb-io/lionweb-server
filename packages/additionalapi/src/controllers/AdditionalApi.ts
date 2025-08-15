@@ -121,8 +121,7 @@ export class AdditionalApiImpl implements AdditionalApi {
                 data: []
             })
         } else {
-            const contentType = request.headers["content-type"];
-            throw new Error(`Content-type not recognized. Content-type: ${contentType}`)
+            throw new Error(`Content-type not recognized. Content-type: ${request.headers["content-type"]}`)
         }
     }
 

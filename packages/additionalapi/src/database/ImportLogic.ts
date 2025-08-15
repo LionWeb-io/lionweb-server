@@ -9,7 +9,7 @@ import { DbConnection, RepositoryData } from "@lionweb/server-common"
 import { BulkImportResultType } from "./AdditionalQueries.js"
 import { BulkImport } from "./AdditionalQueries.js"
 import { MetaPointersCollector, MetaPointersTracker } from "@lionweb/server-dbadmin"
-import { finished } from "stream/promises";
+import { finished } from "stream/promises"
 
 const SEPARATOR = "\t"
 
