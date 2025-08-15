@@ -45,9 +45,12 @@ describe("Client - Additional API tests", () => {
     })
 
     describe("Bulk import", () => {
-        const transferFormats : TransferFormat[] = [TransferFormat.JSON, TransferFormat.FLATBUFFERS];
-        transferFormats.forEach(format => {
-            it(`bulk import, no compression, ${format}`, async function () {
+        const combinations = [{format: TransferFormat.JSON, compression: false},
+            {format: TransferFormat.JSON, compression: true}, {format: TransferFormat.FLATBUFFERS, compression: false}]
+        combinations.forEach(combination => {
+            const format = combination.format;
+            const compression = combination.compression;
+            it(`bulk import, ${compression? 'with compression' : 'without compression'}, ${format}`, async function () {
                 this.timeout(15_000)
                 assert(initError === "", initError)
 
@@ -97,7 +100,7 @@ describe("Client - Additional API tests", () => {
                     ]
                 }
 
-                const bulkImportResult = await client.additional.bulkImport(bulkImport, format, false)
+                const bulkImportResult = await client.additional.bulkImport(bulkImport, format, compression)
                 if (bulkImportResult.status !== HttpSuccessCodes.Ok) {
                     const errMsg = "Cannot create partition using bulk import: " + JSON.stringify(bulkImportResult.body)
                     console.error(errMsg)

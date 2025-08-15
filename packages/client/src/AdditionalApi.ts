@@ -10,6 +10,8 @@ import {
 } from "@lionweb/server-additionalapi";
 import { Builder as FBBuilder } from 'flatbuffers';
 import {LionWebJsonMetaPointer} from "@lionweb/json";
+import { gzip as gzipCb } from "node:zlib";
+import { promisify } from "node:util";
 
 export enum TransferFormat {
     JSON= 'json',
@@ -36,9 +38,13 @@ export class AdditionalApi {
             let headers: Record<string, string> = {};
 
             if (compress) {
-                throw new Error("Not yet supported")
+                body = await compressJSON(bulkImport);
+                headers = {
+                    "Content-Encoding": "gzip",
+                    'Content-Type': 'application/json',
+                };
             } else {
-                body = bulkImport;
+                body = JSON.stringify(bulkImport);
                 headers = {
                     'Content-Type': 'application/json',
                 };
@@ -47,8 +53,8 @@ export class AdditionalApi {
             return await this.client.postWithTimeout(`additional/bulkImport`, {
                 body,
                 params: "",
-                headers
-            });
+                headers,
+            }, false);
         } else if (transferFormat == TransferFormat.FLATBUFFERS) {
             if (compress) {
                 throw new Error("Not yet supported")
@@ -70,30 +76,32 @@ export class AdditionalApi {
     }
 }
 
+const gzip = promisify(gzipCb);
+
+// Works in Node and browsers when lib.dom is in your TS config.
+const CS: typeof CompressionStream | undefined =
+    typeof CompressionStream !== "undefined" ? CompressionStream : undefined;
+
+const hasCompressionStream = !!CS;
+
 function isNode(): boolean {
     return typeof process !== "undefined" &&
         process.versions != null &&
         process.versions.node != null;
 }
 
-async function compressJSON(input: object): Promise<BodyInit> {
+export async function compressJSON(input: unknown): Promise<BodyInit> {
     const json = JSON.stringify(input);
 
-    if (isNode()) {
-        // Node.js: use CompressionStream (Node >= 18) + bridge
-        const stream = new CompressionStream("gzip");
-        const readableWebStream = new Blob([json]).stream().pipeThrough(stream);
-
-        // Convert to Node.js Readable
-        const nodeStream = require("stream").Readable.from(
-            readableWebStream as any  // only works in Node ≥18.17+
-        );
-        return nodeStream;
-    } else {
-        // Browser: just return the native web stream
-        const stream = new CompressionStream("gzip");
-        return new Blob([json]).stream().pipeThrough(stream);
+    // Browsers: stream with CompressionStream
+    if (!isNode() && hasCompressionStream) {
+        const cs = new CompressionStream("gzip");
+        return new Blob([json]).stream().pipeThrough(cs); // ReadableStream (OK in browsers)
     }
+
+    // Node (or old browsers): gzip to Buffer (BodyInit accepts Buffer/Uint8Array)
+    if (isNode()) return await gzip(json);
+    return json; // very old browsers
 }
 
 function offsetForMetaPointer(builder: FBBuilder, mp: LionWebJsonMetaPointer): number {
