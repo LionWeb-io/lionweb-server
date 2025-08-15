@@ -6,6 +6,10 @@ import { LionWebJsonDiff } from "@lionweb/json-diff"
 import { assert } from "chai"
 import sm from "source-map-support"
 import { BulkImport } from "@lionweb/server-additionalapi"
+import { PoolClient } from "pg"
+import { Duplex } from "stream"
+import { from as copyFrom } from "pg-copy-streams"
+import { finished } from "stream/promises"
 
 const { deepEqual, fail } = assert
 
@@ -42,6 +46,20 @@ describe("Client - Additional API tests", () => {
 
     afterEach("a", async function () {
         await client.dbAdmin.deleteRepository(repository)
+    })
+
+    describe("TS Tests", () => {
+        it('Verify what happens when throwing in async', async function () {
+            async function throwingFunction(): Promise<void> {
+                throw new Error("Throwing, to see what happens")
+            }
+            throwingFunction().then(()=>{
+                fail("This should not happen")
+            }).catch((err)=>{
+                console.log("This was expected", err)
+                deepEqual("Throwing, to see what happen", (err as Error).message)
+            })
+        })
     })
 
     describe("Bulk import", () => {
