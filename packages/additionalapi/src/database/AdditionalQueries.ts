@@ -137,7 +137,6 @@ export class AdditionalQueries {
         })
 
         await populateFromBulkImport(metaPointersTracker, bulkImport, this.context.dbConnection)
-
         await storeNodes(await pool.connect(), repositoryData, bulkImport, metaPointersTracker)
 
         // Attach the root of the new nodes to existing containers
