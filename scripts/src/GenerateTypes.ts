@@ -1,4 +1,4 @@
-import { DeltaCommandSchema, DeltaEventSchema, DeltaQuerySchema, DeltaSharedSchema } from "@lionweb/server-delta"
+import { DeltaCommandSchema, DeltaEventSchema, DeltaQuerySchema, DeltaSharedSchema } from "@lionweb/server-delta-definitions"
 import fs from "fs"
 import { ProcessorTemplate } from "./ProcessorTemplate.js"
 import { TypeTemplates } from "./TypeTemplates.js"

@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@lionweb/server-common": "0.3.0",
-    "@lionweb/server-delta": "0.3.0",
+    "@lionweb/server-delta-definitions": "0.3.0",
     "@lionweb/server-bulkapi": "0.3.0",
     "@lionweb/json": "0.7.0-beta.1",
     "@lionweb/json-utils": "0.7.0-beta.1",
