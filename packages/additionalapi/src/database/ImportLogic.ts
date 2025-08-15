@@ -50,17 +50,8 @@ function prepareInputStreamProperties(nodes: LionWebJsonNode[], metaPointersTrac
         })
     })
     read_stream_string.push(null)
-    //duplexToString(read_stream_string).then(res => console.log("REMOVE ME STREAM", res))
 
     return read_stream_string
-}
-
-async function duplexToString(duplex: Duplex, encoding: BufferEncoding = "utf8") {
-    const chunks: Buffer[] = [];
-    for await (const chunk of duplex) {
-        chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
-    }
-    return Buffer.concat(chunks).toString(encoding);
 }
 
 function prepareInputStreamReferences(nodes: LionWebJsonNode[], metaPointersTracker: MetaPointersTracker): Duplex {
