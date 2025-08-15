@@ -48,7 +48,7 @@ export class AdditionalApi {
             }, false);
         } else if (transferFormat == TransferFormat.FLATBUFFERS) {
             if (compress) {
-                throw new Error("Not yet supported")
+                throw new Error(`We do not yet support bulk import with ${transferFormat} and compression enabled`)
             } else {
                 const flatbufferBytes = encodeBulkImportToFlatBuffer(bulkImport);
                 const headers = {
@@ -62,7 +62,7 @@ export class AdditionalApi {
                 }, false);
             }
         } else {
-            throw new Error(`Transfer Format ${transferFormat} is not yet supported`)
+            throw new Error(`Transfer Format ${transferFormat} is not yet supported for the bulk import operation`)
         }
     }
 }
@@ -92,7 +92,9 @@ export async function compressJSON(input: unknown): Promise<BodyInit> {
 
     // Node (or old browsers): gzip to Buffer (BodyInit accepts Buffer/Uint8Array)
     if (isNode()) return await gzip(json);
-    return json; // very old browsers
+    // very old browsers
+
+    throw new Error("Compression not support: this seems to be an old browser")
 }
 
 function offsetForMetaPointer(builder: FBBuilder, mp: LionWebJsonMetaPointer): number {

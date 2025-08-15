@@ -116,6 +116,10 @@ export class RepositoryClient {
         return null
     }
 
+    /**
+     * @param stringify by default we stringify what we receive as input, however sometimes we want to disable
+     *                  this behavior because the body could be in binary format or already in JSON format
+     */
     async postWithTimeout(method: string, parameters: { body: unknown; params: string, headers? : Record<string, string>}, stringify: boolean = true): Promise<ClientResponse<LionwebResponse>> {
         const allParams = this.findParams(parameters.params)
         try {
