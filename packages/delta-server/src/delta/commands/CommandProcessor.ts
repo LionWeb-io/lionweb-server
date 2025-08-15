@@ -35,10 +35,11 @@ import {
     MoveChildInSameContainmentCommand,
     MoveEntryFromOtherReferenceCommand,
     MoveEntryFromOtherReferenceInSameParentCommand,
-    MoveEntryInSameReferenceCommand,
+    MoveEntryInSameReferenceCommand, PropertyAddedEvent, PropertyChangedEvent, PropertyDeletedEvent,
     ReplaceAnnotationCommand,
     ReplaceChildCommand
 } from "@lionweb/server-delta-shared"
+import { activeSockets } from "../DeltaClientAdmin.js";
 import { ICommandProcessor } from "./ICommandProcessor.js"
 import WebSocket from 'ws';
 
@@ -61,14 +62,59 @@ export class CommandProcessor implements ICommandProcessor {
 
     AddPropertyFunction(socket: WebSocket, msg: AddPropertyCommand): void {
         console.log("Called AddPropertyFunction " + msg.messageKind)
+        const pInfo = activeSockets.get(socket)
+        const event: PropertyAddedEvent = {
+            messageKind: "PropertyAdded",
+            newValue: msg.newValue,
+            node: msg.node,
+            originCommands: [{ commandId: msg.commandId, participationId: pInfo!.participationId} ],
+            property: msg.property,
+            sequenceNumber: 0, // dummy, will be changed for each participation before sending
+            protocolMessages: []
+        }
+        console.log(`Sending ${JSON.stringify(event)}`)
+        for(const pInfo of activeSockets.values()) {
+            event.sequenceNumber = pInfo.eventSequenceNumber++ 
+            pInfo.socket.send(JSON.stringify(event))
+        }
     }
 
     DeletePropertyFunction(socket: WebSocket, msg: DeletePropertyCommand): void {
         console.log("Called DeletePropertyFunction " + msg.messageKind)
-    }
+        const pInfo = activeSockets.get(socket)
+        const event: PropertyDeletedEvent = {
+            messageKind: "PropertyDeleted",
+            node: msg.node,
+            originCommands: [{ commandId: msg.commandId, participationId: pInfo!.participationId} ],
+            property: msg.property,
+            sequenceNumber: 0, // dummy, will be changed for each participation before sending
+            protocolMessages: [],
+            oldValue: "any dummy"
+        }
+        console.log(`Sending ${JSON.stringify(event)}`)
+        for(const pInfo of activeSockets.values()) {
+            event.sequenceNumber = pInfo.eventSequenceNumber++
+            pInfo.socket.send(JSON.stringify(event))
+        }    }
 
     ChangePropertyFunction(socket: WebSocket, msg: ChangePropertyCommand): void {
         console.log("Called ChangePropertyFunction " + msg.messageKind)
+        const pInfo = activeSockets.get(socket)
+        const event: PropertyChangedEvent = {
+            messageKind: "PropertyChanged",
+            newValue: msg.newValue,
+            node: msg.node,
+            originCommands: [{ commandId: msg.commandId, participationId: pInfo!.participationId} ],
+            property: msg.property,
+            sequenceNumber: 0, // dummy, will be changed for each participation before sending
+            protocolMessages: [],
+            oldValue: "any dummy"
+        }
+        console.log(`Sending ${JSON.stringify(event)}`)
+        for(const pInfo of activeSockets.values()) {
+            event.sequenceNumber = pInfo.eventSequenceNumber++
+            pInfo.socket.send(JSON.stringify(event))
+        }
     }
 
     AddChildFunction(socket: WebSocket, msg: AddChildCommand): void {

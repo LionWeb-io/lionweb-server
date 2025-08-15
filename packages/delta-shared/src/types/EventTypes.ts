@@ -1,4 +1,5 @@
 import { LionWebId, LionWebJsonMetaPointer } from "@lionweb/json";
+import { DeltaErrorCode } from "../DeltaErrors.js"
 import { ProtocolMessage, LionWebJsonDeltaChunk, JS_string, JS_number } from "./SharedTypes.js"
 
 /**
@@ -602,9 +603,9 @@ export type CompositeEventEvent = {
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-Error
  */
 export type ErrorEvent = {
-    errorCode: JS_string;
+    errorCode: DeltaErrorCode;
     message: JS_string;
-    messageKind: "Error";
+    messageKind: "ErrorEvent";
     originCommands: CommandSourceEvent[];
     sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];

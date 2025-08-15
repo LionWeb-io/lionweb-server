@@ -1,7 +1,9 @@
 import WebSocket from 'ws';
+import { activeSockets } from "../DeltaClientAdmin.js"
 import {
-    GetAvailableIdsRequest,
-    ListPartitionsRequest,
+    ErrorEvent,
+    GetAvailableIdsRequest, ListPartitionsQueryResponse,
+    ListPartitionsRequest, QueryRequestType,
     ReconnectRequest,
     SignOffRequest,
     SignOnRequest, SignOnResponse,
@@ -11,9 +13,14 @@ import {
 } from "@lionweb/server-delta-shared"
 import { IQueryRequestProcessor } from "./IQueryRequestProcessor.js"
 
+export type ParticipationStatus = "connected" | "signedOn" | "signedOff" | "disconnected"
 export type ParticipationInfo = {
     socket: WebSocket,
-    participationId: string
+    participationId: string,
+    deltaProtocolVersion: string,
+    clientId: string,
+    eventSequenceNumber: number,
+    participationStatus: ParticipationStatus 
 }
 export class QueryRequestProcessor implements IQueryRequestProcessor {
     currentParticipationId: number = 1
@@ -31,14 +38,16 @@ export class QueryRequestProcessor implements IQueryRequestProcessor {
         console.log("Called UnsubscribeFromPartitionContentsRequestFunction " + msg.messageKind)
     }
 
-    SignOnRequestFunction(socket: WebSocket, msg: SignOnRequest): void {
+    SignOnRequestFunction = (socket: WebSocket, msg: SignOnRequest): void => {
         console.log("Called SignOnRequestFunction " + msg.messageKind)
         const response: SignOnResponse = {
             messageKind: "SignOnResponse",
             participationId: `pid-${this.currentParticipationId++}`,
-            queryId: msg.queryId
+            queryId: msg.queryId,
+            protocolMessages: [ { data: [], kind: "Info", message: "SignOnRequest received"}]
         }
-        this.activeSockets.set(socket, { socket: socket, participationId: response.participationId})
+        const pInfo = activeSockets.get(socket)
+        pInfo!.participationStatus = "signedOn"
         socket.send(JSON.stringify(response))
     }
 
@@ -48,6 +57,12 @@ export class QueryRequestProcessor implements IQueryRequestProcessor {
 
     ListPartitionsRequestFunction(socket: WebSocket, msg: ListPartitionsRequest): void {
         console.log("Called ListPartitionsRequestFunction " + msg.messageKind)
+        const response: ListPartitionsQueryResponse = {
+            messageKind: "ListPartitions",
+            partitions: {  nodes: [] },
+            queryId: msg.queryId
+        }
+        socket.send(JSON.stringify(response))
     }
 
     GetAvailableIdsRequestFunction(socket: WebSocket, msg: GetAvailableIdsRequest): void {
@@ -58,3 +73,5 @@ export class QueryRequestProcessor implements IQueryRequestProcessor {
         console.log("Called ReconnectRequestFunction " + msg.messageKind)
     }
 }
+
+

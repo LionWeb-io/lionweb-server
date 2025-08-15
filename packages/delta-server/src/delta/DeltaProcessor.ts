@@ -1,12 +1,31 @@
 import { DeltaValidator } from "@lionweb/server-delta"
-import { CommandType, QueryRequestType } from "@lionweb/server-delta-shared"
+import {
+    CommandType,
+    ErrorEvent,
+    GetAvailableIdsRequest,
+    ListPartitionsRequest,
+    QueryRequestType,
+    ReconnectRequest,
+    SignOffRequest, SignOnRequest, SubscribeToChangingPartitionsRequest, SubscribeToPartitionContentsRequest, UnsubscribeFromPartitionContentsRequest
+} from "@lionweb/server-delta-shared"
 import { ValidationResult } from "@lionweb/validation"
 import { ICommandProcessor } from "./commands/ICommandProcessor.js"
+import { activeSockets } from "./DeltaClientAdmin.js"
+import { ParticipationInfo } from "./queries/index.js"
 import { IQueryRequestProcessor } from "./queries/IQueryRequestProcessor.js"
 import WebSocket from 'ws';
+
 type MessageFromClient = CommandType | QueryRequestType
 type MessageFunction =  (socket: WebSocket, msg: MessageFromClient) => void
-    
+
+export function isQueryRequestType(object: MessageFromClient): object is QueryRequestType {
+    const messageKind = object.messageKind
+    return [
+        "ReconnectRequest", "ListPartitionsRequest", "ReconnectRequest", "GetAvailableIdsRequest", "SignOffRequest",
+        "SignOnRequest", "UnsubscribeFromPartitionContentsRequest", "SubscribeToPartitionContentsRequest", "SubscribeToChangingPartitionsRequest"
+    ].includes(messageKind)
+}
+
 export class DeltaProcessor {
     processingFunctions: Map<string, MessageFunction> = new Map<string, MessageFunction>()
     deltaValidator = new DeltaValidator(new ValidationResult())
@@ -70,18 +89,21 @@ export class DeltaProcessor {
         this.processingFunctions.set("ReconnectRequest", queries.ReconnectRequestFunction as MessageFunction)
     }
 
-    processDelta(socket: WebSocket, delta: CommandType | QueryRequestType): void {
+    processDelta = (socket: WebSocket, delta: MessageFromClient): void => {
+        // first try to get the `messageKind`
+        console.log(`processDelta messageKind ${delta?.messageKind}`)
         const type = delta.messageKind
         if (typeof type !== "string") {
             console.error(`processDelta: messageKind is not a string but a ${typeof type}`)
             return
         }
+        //  Next, get the processing function for the `messageKind`
         const func = this.processingFunctions.get(type)
         if (func === undefined) {
             console.error(`processDelta: messageKind is not a string but a ${typeof type}`)
             return
         }
-        // Now validate the JSON message
+        // Now validate the full JSON message
         this.deltaValidator.validationResult.reset()
         this.deltaValidator.validate(delta, type)
         if (this.deltaValidator.validationResult.hasErrors()) {
@@ -91,7 +113,58 @@ export class DeltaProcessor {
             })
             return
         }
+        // Check participation status
+        const participationInfo = activeSockets.get(socket)
+        const errorEvent = this.validatePinfo(delta, participationInfo)
+        if (errorEvent !== undefined) {
+            console.log(`error event ${JSON.stringify(errorEvent)}`)
+            socket.send(JSON.stringify(errorEvent))
+            return
+        }
+
         // Finally ok
         func(socket, delta)
+    }
+
+    validatePinfo(msg: MessageFromClient, participationInfo: ParticipationInfo | undefined): ErrorEvent | undefined {
+        if (msg.messageKind === "SignOnRequest") {
+            return undefined
+        }
+        if (participationInfo === undefined) {
+            const response: ErrorEvent = {
+                errorCode: "invalidParticipation",
+                messageKind: "ErrorEvent",
+                message: "Cannot perform delta request because there is no participation",
+                sequenceNumber: 0,
+                originCommands: [{
+                    participationId: "none",
+                    commandId: "??" //msg.queryId
+                }]
+            }
+            return response
+        }
+        if (participationInfo.participationStatus !== "signedOn" && msg.messageKind !== "SignOnRequest") {
+            const response: ErrorEvent = {
+                errorCode: "invalidParticipation",
+                messageKind: "ErrorEvent",
+                message: "Cannot perform ListPartitions request because there is no participation",
+                sequenceNumber: participationInfo.eventSequenceNumber++,
+                originCommands: [{
+                    participationId: participationInfo.participationId,
+                    commandId: "??" // msg.queryId
+                }],
+                protocolMessages: [ {
+                    kind: "reason",
+                    message: "Participation status incorrect",
+                    data: [{
+                        key: "participationStatus",
+                        value: participationInfo.participationStatus
+                    }
+                    ]
+                }]
+            }
+            return response
+        }
+        return undefined
     }
 }

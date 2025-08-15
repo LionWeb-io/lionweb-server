@@ -1,4 +1,5 @@
 import { LionWebId, LionWebJsonNode } from "@lionweb/json"
+import { ParameterError } from "@lionweb/server-common"
 import { ParticipationId } from "./EventTypes.js"
 import { JS_number, JS_string, LionWebJsonDeltaChunk, ProtocolMessage } from "./SharedTypes.js"
 
@@ -67,6 +68,7 @@ export type UnsubscribeFromPartitionContentsResponse = {
  */
 export type SignOnRequest = {
     deltaProtocolVersion: JS_string;
+    clientId: JS_string;
     messageKind: QueryType;
     queryId: JS_string;
     protocolMessages?: ProtocolMessage[];

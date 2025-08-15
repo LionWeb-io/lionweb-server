@@ -1,4 +1,5 @@
 import { CommandProcessor, DeltaProcessor, QueryRequestProcessor } from "@lionweb/delta-server"
+import { activeSockets } from "@lionweb/delta-server";
 import { registerHistoryApi } from "@lionweb/server-history"
 import { CommandType, PartitionAddedEvent } from "@lionweb/server-delta-shared"
 import express, { Express, NextFunction, Response, Request } from "express"
@@ -6,7 +7,6 @@ import bodyParser from "body-parser"
 import cors from "cors"
 import pgPromise from "pg-promise"
 import { WebSocketServer, RawData } from "ws"
-// import { RawData, WebSocketServer } from "ws"
 import { postgresConnectionWithDatabase, pgp, postgresConnectionWithoutDatabase, postgresPool } from "./DbConnection.js"
 import {
     DbConnection,
@@ -236,24 +236,19 @@ async function startServer() {
     wsServer.on('connection', (socket, request) => {
         // @ts-ignore
         console.log(`Client connected`);
+        activeSockets.set(socket, {
+            clientId: "",
+            deltaProtocolVersion: "",
+            eventSequenceNumber: 0,
+            participationId: "pid-1",
+            participationStatus: "connected",
+            socket: socket
+        })
         
         socket.on('message', (message: RawData) => {
-            console.log(`Received: ${message.toString()}`);
+            console.log(`Server Received: ${message.toString()}`);
             deltaProcessor.processDelta(socket, JSON.parse(message.toString()) as unknown as CommandType)
-            const addpartitionresponse: PartitionAddedEvent = {
-                messageKind: "PartitionAdded",
-                newPartition: {
-                    nodes: []
-                },
-                sequenceNumber: 1,
-                originCommands: [
-                    {
-                        commandId: "cmdid",
-                        participationId: "pid"
-                    }
-                ]
-            }
-            socket.send(JSON.stringify(addpartitionresponse));
+            console.log(`Server Called Delta processor`);
         });
 
         socket.on('close', () => {
