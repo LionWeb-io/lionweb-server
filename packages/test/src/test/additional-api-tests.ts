@@ -6,12 +6,8 @@ import { LionWebJsonDiff } from "@lionweb/json-diff"
 import { assert } from "chai"
 import sm from "source-map-support"
 import { BulkImport } from "@lionweb/server-additionalapi"
-import { PoolClient } from "pg"
-import { Duplex } from "stream"
-import { from as copyFrom } from "pg-copy-streams"
-import { finished } from "stream/promises"
 
-const { deepEqual, fail } = assert
+const { deepEqual, fail, strictEqual } = assert
 
 sm.install()
 
@@ -53,11 +49,11 @@ describe("Client - Additional API tests", () => {
             async function throwingFunction(): Promise<void> {
                 throw new Error("Throwing, to see what happens")
             }
-            throwingFunction().then(()=>{
+            return throwingFunction().then(()=>{
                 fail("This should not happen")
             }).catch((err)=>{
                 console.log("This was expected", err)
-                deepEqual("Throwing, to see what happen", (err as Error).message)
+                strictEqual((err as Error).message, "Throwing, to see what happen");
             })
         })
     })
