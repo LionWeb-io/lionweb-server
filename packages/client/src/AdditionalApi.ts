@@ -10,11 +10,11 @@ import {
     FBProperty,
     FBReference,
     FBReferenceValue
-} from "@lionweb/server-additionalapi";
-import { Builder as FBBuilder } from 'flatbuffers';
-import {LionWebJsonMetaPointer} from "@lionweb/json";
-import { gzip as gzipCb } from "node:zlib";
-import { promisify } from "node:util";
+} from "@lionweb/server-additionalapi"
+import { Builder as FBBuilder } from 'flatbuffers'
+import {LionWebJsonMetaPointer} from "@lionweb/json"
+import { gzip as gzipCb } from "node:zlib"
+import { promisify } from "node:util"
 
 export enum TransferFormat {
     JSON= 'json',
