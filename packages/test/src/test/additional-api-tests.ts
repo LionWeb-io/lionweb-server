@@ -53,7 +53,7 @@ describe("Client - Additional API tests", () => {
                 fail("This should not happen")
             }).catch((err)=>{
                 console.log("This was expected", err)
-                strictEqual((err as Error).message, "Throwing, to see what happen");
+                strictEqual((err as Error).message, "Throwing, to see what happens");
             })
         })
     })
