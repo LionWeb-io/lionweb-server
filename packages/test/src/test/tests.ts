@@ -589,8 +589,10 @@ collection.forEach(withoutHistory => {
                 this.timeout(15_000);
                 assert(initError === "", initError)
 
-                const myClient = new RepositoryClient("TestClientForBulkImport", "bulk-import-repo")
-                myClient.dbAdmin.createRepository("bulk-import-repo", false, "2024.1")
+                const repoName = "bulk-import-repo2"
+
+                const myClient = new RepositoryClient("TestClientForBulkImport", repoName)
+                myClient.dbAdmin.createRepository(repoName, false, "2024.1")
 
                 const bulkImport : BulkImport = {
                     attachPoints: [],
@@ -661,7 +663,7 @@ collection.forEach(withoutHistory => {
                 deepEqual(diff.diffResult.changes, [])
 
                 await myClient.bulk.deletePartitions(["bi-id1"]);
-                await myClient.dbAdmin.deleteRepository("bulk-import-repo")
+                await myClient.dbAdmin.deleteRepository(repoName)
                 console.log("REMOVE ME BULK IMPORT TEST COMPLETED")
             })
         })
