@@ -545,7 +545,7 @@ collection.forEach(withoutHistory => {
                     fail(initError)
                 }
                 // Now retrieve the partition again.
-                const partitions = await myClient.bulk.listPartitions()
+                const partitions = await myClient.bulk.retrieve(["bi-id1"])
                 console.log("Retrieve partitions during bulk import Result: " + JSON.stringify(partitions))
                 const diff = new LionWebJsonDiff()
                 const expectedModel : LionWebJsonChunk = {
