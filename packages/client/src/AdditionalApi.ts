@@ -1,6 +1,5 @@
-import { LionwebResponse } from "@lionweb/server-shared"
-import { ClientResponse, RepositoryClient } from "./RepositoryClient.js"
 import {
+    BulkImport,
     FBAttachPoint,
     FBBulkImport,
     FBContainment,
@@ -9,8 +8,10 @@ import {
     FBProperty,
     FBReference,
     FBReferenceValue,
-    BulkImport } from "@lionweb/server-shared"
-import { Builder as FBBuilder } from 'flatbuffers'
+    LionwebResponse
+} from "@lionweb/server-shared"
+import { ClientResponse, RepositoryClient } from "./RepositoryClient.js"
+import { Builder as FBBuilder } from "flatbuffers"
 import { LionWebJsonMetaPointer } from "@lionweb/json"
 import { InputType, ZlibOptions } from "zlib"
 
@@ -104,19 +105,21 @@ async function getNodeGzip(): Promise<(buffer: InputType, options?: ZlibOptions)
 export async function compressJSON(input: unknown): Promise<BodyInit> {
     const json = JSON.stringify(input);
 
-    // Browsers: stream with CompressionStream
+    // Browsers: use CompressionStream
     if (!isNode() && hasCompressionStream) {
-        const cs = new CompressionStream("gzip");
-        return new Blob([json]).stream().pipeThrough(cs); // ReadableStream (OK in browsers)
+        const cs = new CompressionStream('gzip');
+        const compressedStream = new Blob([json]).stream().pipeThrough(cs);
+        // Collect into a Blob -> no actual streaming body for fetch
+        return await new Response(compressedStream).blob()
     }
 
-    // Node (or old browsers): gzip to Buffer (BodyInit accepts Buffer/Uint8Array)
+    // Node: gzip to Buffer (BodyInit accepts Buffer/Uint8Array)
     if (isNode()) {
         const gzip = await getNodeGzip();
         return await gzip(json);
     }
-    // very old browsers
 
+    // very old browsers
     throw new Error("Compression not support: this seems to be an old browser")
 }
 
