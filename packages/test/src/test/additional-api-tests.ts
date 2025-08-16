@@ -135,7 +135,7 @@ describe("Client - Additional API tests", () => {
                     nodes: bulkImport.nodes
                 }
                 diff.diffLwChunk(expectedModel, partitions.body.chunk)
-                deepEqual(diff.diffResult.changes, [])
+                !diff.diffResult.hasChanges()
 
                 await client.bulk.deletePartitions(["bi-id1"])
             })
