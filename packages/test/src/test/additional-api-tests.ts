@@ -12,7 +12,7 @@ const { deepEqual, fail, strictEqual } = assert
 sm.install()
 
 describe("Client - Additional API tests", () => {
-    const repository = "clientAdditionalAPIRepo";
+    const repository = "clientAdditionalAPIRepo"
     const client = new RepositoryClient("TestClient", repository)
     let initError: string = ""
 
@@ -45,26 +45,31 @@ describe("Client - Additional API tests", () => {
     })
 
     describe("TS Tests", () => {
-        it('Verify what happens when throwing in async', async function () {
+        it("Verify what happens when throwing in async", async function () {
             async function throwingFunction(): Promise<void> {
                 throw new Error("Throwing, to see what happens")
             }
-            return throwingFunction().then(()=>{
-                fail("This should not happen")
-            }).catch((err)=>{
-                console.log("This was expected", err)
-                strictEqual((err as Error).message, "Throwing, to see what happens");
-            })
+            return throwingFunction()
+                .then(() => {
+                    fail("This should not happen")
+                })
+                .catch(err => {
+                    console.log("This was expected", err)
+                    strictEqual((err as Error).message, "Throwing, to see what happens")
+                })
         })
     })
 
     describe("Bulk import", () => {
-        const combinations = [{format: TransferFormat.JSON, compression: false},
-            {format: TransferFormat.JSON, compression: true}, {format: TransferFormat.FLATBUFFERS, compression: false}]
+        const combinations = [
+            { format: TransferFormat.JSON, compression: false },
+            { format: TransferFormat.JSON, compression: true },
+            { format: TransferFormat.FLATBUFFERS, compression: false }
+        ]
         combinations.forEach(combination => {
-            const format = combination.format;
-            const compression = combination.compression;
-            it(`bulk import, ${compression? 'with compression' : 'without compression'}, ${format}`, async function () {
+            const format = combination.format
+            const compression = combination.compression
+            it(`bulk import, ${compression ? "with compression" : "without compression"}, ${format}`, async function () {
                 this.timeout(15_000)
                 assert(initError === "", initError)
 

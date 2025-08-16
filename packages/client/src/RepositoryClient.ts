@@ -33,7 +33,7 @@ export class RepositoryClient {
     private _DEFAULT_NODE_PORT = (typeof process !== "undefined" && process.env.NODE_PORT) || 3005
     private _DEFAULT_SERVER_IP = (typeof process !== "undefined" && process.env.REPO_IP) || "http://127.0.0.1"
     private _DEFAULT_SERVER_URL = `${this._DEFAULT_SERVER_IP}:${this._DEFAULT_NODE_PORT}/`
-    private _DEFAULT_TIMEOUT = typeof process !== "undefined" ? Number.parseInt(process.env.TIMEOUT) || 20000 : 20000;
+    private _DEFAULT_TIMEOUT = typeof process !== "undefined" ? Number.parseInt(process.env.TIMEOUT) || 20000 : 20000
 
     loggingOn = false
     logMessage(logMessage: string): string {
@@ -51,8 +51,8 @@ export class RepositoryClient {
      * The name of the repository used for all Api calls
      */
     repository: string | null = "default"
-    timeout: number = this._DEFAULT_TIMEOUT;
-    serverUrl : string = this._DEFAULT_SERVER_URL;
+    timeout: number = this._DEFAULT_TIMEOUT
+    serverUrl: string = this._DEFAULT_SERVER_URL
 
     // The different API's that the repository provides
     dbAdmin: DbAdminApi
@@ -120,7 +120,11 @@ export class RepositoryClient {
      * @param stringify by default we stringify what we receive as input, however sometimes we want to disable
      *                  this behavior because the body could be in binary format or already in JSON format
      */
-    async postWithTimeout(method: string, parameters: { body: unknown; params: string, headers? : Record<string, string>}, stringify: boolean = true): Promise<ClientResponse<LionwebResponse>> {
+    async postWithTimeout(
+        method: string,
+        parameters: { body: unknown; params: string; headers?: Record<string, string> },
+        stringify: boolean = true
+    ): Promise<ClientResponse<LionwebResponse>> {
         const allParams = this.findParams(parameters.params)
         try {
             const controller = new AbortController()
