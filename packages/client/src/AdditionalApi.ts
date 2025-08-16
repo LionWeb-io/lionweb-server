@@ -8,9 +8,8 @@ import {
     FBNode,
     FBProperty,
     FBReference,
-    FBReferenceValue
-} from "@lionweb/server-additionalapi"
-import { BulkImport } from "@lionweb/server-shared"
+    FBReferenceValue,
+    BulkImport } from "@lionweb/server-shared"
 import { Builder as FBBuilder } from 'flatbuffers'
 import { LionWebJsonMetaPointer } from "@lionweb/json"
 import { gzip as gzipCb } from "node:zlib"

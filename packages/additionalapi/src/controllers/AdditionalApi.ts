@@ -8,7 +8,7 @@ import { PBBulkImport, PBMetaPointer } from "../proto/index.js"
 import { BulkImport } from "@lionweb/server-shared"
 import { LionWebJsonMetaPointer } from "@lionweb/json"
 import { ByteBuffer } from "flatbuffers"
-import { FBBulkImport } from "../io/lionweb/serialization/flatbuffers/index.js"
+import { FBBulkImport } from "@lionweb/server-shared"
 
 export const JSON_CONTENT_TYPE = "application/json"
 export const PROTOBUF_CONTENT_TYPE = "application/protobuf"
