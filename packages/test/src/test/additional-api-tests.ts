@@ -5,7 +5,7 @@ import { LionWebJsonDiff } from "@lionweb/json-diff"
 
 import { assert } from "chai"
 import sm from "source-map-support"
-import { BulkImport } from "@lionweb/server-additionalapi"
+import { BulkImport } from "@lionweb/server-shared"
 
 const { deepEqual, fail, strictEqual } = assert
 

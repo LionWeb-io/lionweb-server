@@ -7,7 +7,7 @@ import { makeQueryToAttachNodeForFlatBuffers, makeQueryToCheckHowManyDoNotExist,
 import { HttpClientErrors, HttpSuccessCodes } from "@lionweb/server-shared"
 import { DbConnection, RepositoryData } from "@lionweb/server-common"
 import { BulkImportResultType } from "./AdditionalQueries.js"
-import { BulkImport } from "./AdditionalQueries.js"
+import { BulkImport } from "@lionweb/server-shared"
 import { MetaPointersCollector, MetaPointersTracker } from "@lionweb/server-dbadmin"
 import { finished } from "stream/promises"
 

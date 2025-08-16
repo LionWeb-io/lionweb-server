@@ -1,5 +1,5 @@
 import {CONTAINMENTS_TABLE, NODES_TABLE} from "@lionweb/server-common";
-import {AttachPoint} from "./AdditionalQueries.js";
+import { AttachPoint } from "@lionweb/server-shared"
 import {FBAttachPoint} from "../io/lionweb/serialization/flatbuffers/index.js";
 import {MetaPointersTracker} from "@lionweb/server-dbadmin";
 import {forFBMetapointer} from "./ImportLogic.js";

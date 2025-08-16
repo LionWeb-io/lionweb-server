@@ -1,7 +1,6 @@
 import { LionwebResponse } from "@lionweb/server-shared"
 import { ClientResponse, RepositoryClient } from "./RepositoryClient.js"
 import {
-    BulkImport,
     FBAttachPoint,
     FBBulkImport,
     FBContainment,
@@ -11,8 +10,9 @@ import {
     FBReference,
     FBReferenceValue
 } from "@lionweb/server-additionalapi"
+import { BulkImport } from "@lionweb/server-shared"
 import { Builder as FBBuilder } from 'flatbuffers'
-import {LionWebJsonMetaPointer} from "@lionweb/json"
+import { LionWebJsonMetaPointer } from "@lionweb/json"
 import { gzip as gzipCb } from "node:zlib"
 import { promisify } from "node:util"
 
