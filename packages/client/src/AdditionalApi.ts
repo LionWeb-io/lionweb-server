@@ -12,13 +12,12 @@ import {
     BulkImport } from "@lionweb/server-shared"
 import { Builder as FBBuilder } from 'flatbuffers'
 import { LionWebJsonMetaPointer } from "@lionweb/json"
-import { gzip as gzipCb } from "node:zlib"
-import { promisify } from "node:util"
+import { InputType, ZlibOptions } from "zlib"
 
 export enum TransferFormat {
-    JSON= 'json',
-    PROTOBUF = 'protobuf',
-    FLATBUFFERS = 'flatbuffers'
+    JSON = "json",
+    PROTOBUF = "protobuf",
+    FLATBUFFERS = "flatbuffers"
 }
 
 export class AdditionalApi {
@@ -33,32 +32,40 @@ export class AdditionalApi {
         return await this.client.postWithTimeout(`additional/getNodeTree`, { body: { ids: nodeIds }, params: "" })
     }
 
-    async bulkImport(bulkImport: BulkImport, transferFormat: TransferFormat, compress: boolean) : Promise<ClientResponse<LionwebResponse>> {
+    async bulkImport(bulkImport: BulkImport, transferFormat: TransferFormat, compress: boolean): Promise<ClientResponse<LionwebResponse>> {
         this.client.log(`AdditionalApi.store transferFormat=${transferFormat}, compress=${compress}`)
         if (transferFormat == TransferFormat.JSON) {
             const { body, headers } = compress
                 ? { body: await compressJSON(bulkImport), headers: { "Content-Type": "application/json", "Content-Encoding": "gzip" } }
-                : { body: JSON.stringify(bulkImport),     headers: { "Content-Type": "application/json" } };
+                : { body: JSON.stringify(bulkImport), headers: { "Content-Type": "application/json" } }
 
-            return await this.client.postWithTimeout(`additional/bulkImport`, {
-                body,
-                params: "",
-                headers,
-            }, false);
+            return await this.client.postWithTimeout(
+                `additional/bulkImport`,
+                {
+                    body,
+                    params: "",
+                    headers
+                },
+                false
+            )
         } else if (transferFormat == TransferFormat.FLATBUFFERS) {
             if (compress) {
                 throw new Error(`We do not yet support bulk import with ${transferFormat} and compression enabled`)
             } else {
-                const flatbufferBytes = encodeBulkImportToFlatBuffer(bulkImport);
+                const flatbufferBytes = encodeBulkImportToFlatBuffer(bulkImport)
                 const headers = {
                     "Content-Type": "application/x-flatbuffers"
-                };
+                }
 
-                return await this.client.postWithTimeout("additional/bulkImport", {
-                    body: flatbufferBytes,
-                    params: "",
-                    headers,
-                }, false);
+                return await this.client.postWithTimeout(
+                    "additional/bulkImport",
+                    {
+                        body: flatbufferBytes,
+                        params: "",
+                        headers
+                    },
+                    false
+                )
             }
         } else {
             throw new Error(`Transfer Format ${transferFormat} is not yet supported for the bulk import operation`)
@@ -66,18 +73,32 @@ export class AdditionalApi {
     }
 }
 
-const gzip = promisify(gzipCb);
-
 // Works in Node and browsers when lib.dom is in your TS config.
-const CS: typeof CompressionStream | undefined =
-    typeof CompressionStream !== "undefined" ? CompressionStream : undefined;
+const CS: typeof CompressionStream | undefined = typeof CompressionStream !== "undefined" ? CompressionStream : undefined
 
-const hasCompressionStream = !!CS;
+const hasCompressionStream = !!CS
 
 function isNode(): boolean {
-    return typeof process !== "undefined" &&
-        process.versions != null &&
-        process.versions.node != null;
+    return typeof process !== "undefined" && process.versions != null && process.versions.node != null
+}
+
+let nodeGzip: (buffer: InputType, options?: ZlibOptions) => Promise<Buffer> = null
+
+/**
+ * We want to lazily load this function only on Node, as it is now available on the browser.
+ */
+async function getNodeGzip(): Promise<(buffer: InputType, options?: ZlibOptions) => Promise<Buffer>> {
+    if (nodeGzip != null) {
+        return nodeGzip
+    }
+    if (isNode()) {
+        const { gzip: gzipCb } = await import('node:zlib');
+        const { promisify } = await import('node:util');
+        nodeGzip = promisify(gzipCb);
+        return nodeGzip
+    } else {
+        return null
+    }
 }
 
 export async function compressJSON(input: unknown): Promise<BodyInit> {
@@ -90,7 +111,10 @@ export async function compressJSON(input: unknown): Promise<BodyInit> {
     }
 
     // Node (or old browsers): gzip to Buffer (BodyInit accepts Buffer/Uint8Array)
-    if (isNode()) return await gzip(json);
+    if (isNode()) {
+        const gzip = await getNodeGzip();
+        return await gzip(json);
+    }
     // very old browsers
 
     throw new Error("Compression not support: this seems to be an old browser")
