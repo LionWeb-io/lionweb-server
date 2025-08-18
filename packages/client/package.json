@@ -28,7 +28,7 @@
     "republish-local": "npm run unpublish-local && npm run publish-local"
   },
   "dependencies": {
-    "@lionweb/json": "0.7.0-beta.9",
+    "@lionweb/json": "0.7.0-alpha.10",
     "@lionweb/server-shared": "0.3.0"
   },
   "devDependencies": {
