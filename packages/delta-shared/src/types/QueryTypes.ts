@@ -1,5 +1,4 @@
 import { LionWebId, LionWebJsonNode } from "@lionweb/json"
-import { ParameterError } from "@lionweb/server-common"
 import { ParticipationId } from "./EventTypes.js"
 import { JS_number, JS_string, LionWebJsonDeltaChunk, ProtocolMessage } from "./SharedTypes.js"
 

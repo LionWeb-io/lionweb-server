@@ -1,3 +1,5 @@
+import { requestLogger } from "./logging.js";
+
 /**
  * The RequestQueue keeps a queue of all requests done to the server and
  * executes them one by one in the order they are put into the queue (FIFO).
@@ -23,6 +25,7 @@ export class RequestQueue {
             try {
                 while (!this.baseQueue.isEmpty()) {
                     const job = this.baseQueue.peek()
+                    console.log("Starting job " + job.name)
                     await job.requestFunction()
                     // Dequeue only after the job has been done, so new calls to add(...)
                     // Will see that the queue is still being worked upon.

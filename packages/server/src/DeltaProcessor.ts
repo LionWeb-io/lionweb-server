@@ -1,7 +1,9 @@
+import { activeSockets, CommandProcessor, ICommandProcessor, IQueryRequestProcessor, ParticipationInfo, QueryRequestProcessor } from "@lionweb/delta-server";
+import { deltaLogger } from "@lionweb/server-common";
 import { DeltaValidator } from "@lionweb/server-delta-definitions"
 import {
     CommandType,
-    ErrorEvent,
+    ErrorEvent, EventType,
     GetAvailableIdsRequest,
     ListPartitionsRequest,
     QueryRequestType,
@@ -9,14 +11,10 @@ import {
     SignOffRequest, SignOnRequest, SubscribeToChangingPartitionsRequest, SubscribeToPartitionContentsRequest, UnsubscribeFromPartitionContentsRequest
 } from "@lionweb/server-delta-shared"
 import { ValidationResult } from "@lionweb/validation"
-import { ICommandProcessor } from "./commands/ICommandProcessor.js"
-import { activeSockets } from "./DeltaClientAdmin.js"
-import { ParticipationInfo } from "./queries/index.js"
-import { IQueryRequestProcessor } from "./queries/IQueryRequestProcessor.js"
 import WebSocket from 'ws';
 
 type MessageFromClient = CommandType | QueryRequestType
-type MessageFunction =  (socket: WebSocket, msg: MessageFromClient) => void
+type MessageFunction =  (socket: WebSocket, msg: MessageFromClient) => EventType
 
 export function isQueryRequestType(object: MessageFromClient): object is QueryRequestType {
     const messageKind = object.messageKind
@@ -26,7 +24,7 @@ export function isQueryRequestType(object: MessageFromClient): object is QueryRe
     ].includes(messageKind)
 }
 
-export class DeltaProcessor {
+class DeltaProcessor {
     processingFunctions: Map<string, MessageFunction> = new Map<string, MessageFunction>()
     deltaValidator = new DeltaValidator(new ValidationResult())
 
@@ -89,44 +87,72 @@ export class DeltaProcessor {
         this.processingFunctions.set("ReconnectRequest", queries.ReconnectRequestFunction as MessageFunction)
     }
 
-    processDelta = (socket: WebSocket, delta: MessageFromClient): void => {
+    processDelta = async (socket: WebSocket, delta: MessageFromClient): Promise<void> => {
         // first try to get the `messageKind`
-        console.log(`processDelta messageKind ${delta?.messageKind}`)
+        deltaLogger.info(`processDelta messageKind ${delta?.messageKind}`)
         const type = delta.messageKind
         if (typeof type !== "string") {
-            console.error(`processDelta: messageKind is not a string but a ${typeof type}`)
+            deltaLogger.error(`processDelta: messageKind is not a string but a ${typeof type}`)
             return
         }
         //  Next, get the processing function for the `messageKind`
         const func = this.processingFunctions.get(type)
         if (func === undefined) {
-            console.error(`processDelta: messageKind is not a string but a ${typeof type}`)
+            deltaLogger.error(`processDelta: messageKind is not a string but a ${typeof type}`)
+            const response: ErrorEvent = {
+                errorCode: "invalidParticipation",
+                messageKind: "ErrorEvent",
+                message: "Cannot perform delta request because there is no participation",
+                sequenceNumber: 0,
+                originCommands: [{
+                    participationId: "none",
+                    commandId: "??" //msg.queryId
+                }]
+            }
+            socket.send(JSON.stringify(response))
             return
         }
         // Now validate the full JSON message
         this.deltaValidator.validationResult.reset()
         this.deltaValidator.validate(delta, type)
         if (this.deltaValidator.validationResult.hasErrors()) {
-            console.error(`Validation errors:`)
+            deltaLogger.error(`Validation errors:`)
             this.deltaValidator.validationResult.issues.forEach(issue => {
-                console.error(issue.errorMsg())
+                deltaLogger.error(issue.errorMsg())
             })
+            const response: ErrorEvent = {
+                errorCode: "generic",
+                messageKind: "ErrorEvent",
+                message: "Validation errors",
+                sequenceNumber: 0,
+                originCommands: [{
+                    participationId: "none",
+                    commandId: "??" //msg.queryId
+                }]
+            }
+            socket.send(JSON.stringify(response))
             return
         }
         // Check participation status
         const participationInfo = activeSockets.get(socket)
         const errorEvent = this.validatePinfo(delta, participationInfo)
         if (errorEvent !== undefined) {
-            console.log(`error event ${JSON.stringify(errorEvent)}`)
+            deltaLogger.error(`error event ${JSON.stringify(errorEvent)}`)
             socket.send(JSON.stringify(errorEvent))
             return
         }
 
-        // Finally ok
-        func(socket, delta)
+        // Finally ok, process the delta and send the response
+        const response = func(socket, delta)
+        for (const pInfo of activeSockets.values()) {
+            response.sequenceNumber = pInfo.eventSequenceNumber++
+            deltaLogger.info(`Sending ${JSON.stringify(response)} to ${pInfo.clientId}`)
+            pInfo.socket.send(JSON.stringify(response))
+        }
+
     }
 
-    validatePinfo(msg: MessageFromClient, participationInfo: ParticipationInfo | undefined): ErrorEvent | undefined {
+    validatePinfo = (msg: MessageFromClient, participationInfo: ParticipationInfo | undefined): ErrorEvent | undefined => {
         if (msg.messageKind === "SignOnRequest") {
             return undefined
         }
@@ -147,7 +173,7 @@ export class DeltaProcessor {
             const response: ErrorEvent = {
                 errorCode: "invalidParticipation",
                 messageKind: "ErrorEvent",
-                message: "Cannot perform ListPartitions request because there is no participation",
+                message: `Cannot perform ListPartitions request because participationstatus is ${participationInfo.participationStatus}`,
                 sequenceNumber: participationInfo.eventSequenceNumber++,
                 originCommands: [{
                     participationId: participationInfo.participationId,
@@ -168,3 +194,5 @@ export class DeltaProcessor {
         return undefined
     }
 }
+
+export const deltaProcessor = new DeltaProcessor(new CommandProcessor(), new QueryRequestProcessor())

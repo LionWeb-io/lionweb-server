@@ -104,9 +104,11 @@ export function validateLionWebVersion(chunk: LionWebJsonChunk, repositoryData: 
         requestLogger.info(
             `SeralizationVersion ${chunk.serializationFormatVersion} is incorrect for repository ${repositoryData.repository.repository_name} with LionWeb version ${repositoryData.repository.lionweb_version}.`
         )
+    const ctx: JsonContext = new JsonContext(null, ["$"])
+
         validationResult.issues.push(
             new GenericIssue(
-                new JsonContext(null, ["$"]),
+                ctx,
                 `SeralizationVersion ${chunk.serializationFormatVersion} is incorrect for repository ${repositoryData.repository.repository_name} with LionWeb version ${repositoryData.repository.lionweb_version}.`
             )
         )

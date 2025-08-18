@@ -1,3 +1,4 @@
+import { deltaLogger } from "@lionweb/server-common";
 import {
     AddAnnotationCommand,
     AddChildCommand,
@@ -11,7 +12,7 @@ import {
     ChangeReferenceCommand,
     ChangeReferenceResolveInfoCommand,
     ChangeReferenceTargetCommand,
-    CommandResponseCommand,
+    CommandResponseCommand, CommandType,
     CompositeCommandCommand,
     DeleteAnnotationCommand,
     DeleteChildCommand,
@@ -19,7 +20,7 @@ import {
     DeletePropertyCommand,
     DeleteReferenceCommand,
     DeleteReferenceResolveInfoCommand,
-    DeleteReferenceTargetCommand,
+    DeleteReferenceTargetCommand, ErrorEvent, EventType,
     MoveAndReplaceAnnotationFromOtherParentCommand,
     MoveAndReplaceAnnotationInSameParentCommand,
     MoveAndReplaceChildFromOtherContainmentCommand,
@@ -35,7 +36,7 @@ import {
     MoveChildInSameContainmentCommand,
     MoveEntryFromOtherReferenceCommand,
     MoveEntryFromOtherReferenceInSameParentCommand,
-    MoveEntryInSameReferenceCommand, PropertyAddedEvent, PropertyChangedEvent, PropertyDeletedEvent,
+    MoveEntryInSameReferenceCommand, PartitionAddedEvent, PropertyAddedEvent, PropertyChangedEvent, PropertyDeletedEvent,
     ReplaceAnnotationCommand,
     ReplaceChildCommand
 } from "@lionweb/server-delta-shared"
@@ -44,24 +45,36 @@ import { ICommandProcessor } from "./ICommandProcessor.js"
 import WebSocket from 'ws';
 
 export class CommandProcessor implements ICommandProcessor {
-    CommandResponseFunction(socket: WebSocket, msg: CommandResponseCommand): void {
-        console.log("Called CommandResponseFunction " + msg.messageKind)
+    CommandResponseFunction(socket: WebSocket, msg: CommandResponseCommand): EventType {
+        deltaLogger.info("Called CommandResponseFunction " + msg.messageKind)
+        return this.errorEvent(msg)
     }
 
-    AddPartitionFunction(socket: WebSocket, msg: AddPartitionCommand): void {
-        console.log("Called AddPartitionFunction " + msg.messageKind)
+    AddPartitionFunction = (socket: WebSocket, msg: AddPartitionCommand): EventType => {
+        deltaLogger.info("Called AddPartitionFunction " + msg.messageKind)
+        const pInfo = activeSockets.get(socket)
+        const response: PartitionAddedEvent = {
+            messageKind: "PartitionAdded",
+            newPartition: { nodes: [] },
+            originCommands: [{ commandId: msg.commandId, participationId: pInfo!.participationId} ],
+            sequenceNumber: 0,
+            protocolMessages: []
+        }
+        return response
     }
 
-    DeletePartitionFunction(socket: WebSocket, msg: DeletePartitionCommand): void {
-        console.log("Called DeletePartitionFunction " + msg.messageKind)
+    DeletePartitionFunction = (socket: WebSocket, msg: DeletePartitionCommand): EventType => {
+        deltaLogger.info("Called DeletePartitionFunction " + msg.messageKind)
+        return this.errorEvent(msg)
     }
 
-    ChangeClassifierFunction(socket: WebSocket, msg: ChangeClassifierCommand): void {
-        console.log("Called ChangeClassifierFunction " + msg.messageKind)
+    ChangeClassifierFunction = (socket: WebSocket, msg: ChangeClassifierCommand): EventType => {
+        deltaLogger.info("Called ChangeClassifierFunction " + msg.messageKind)
+        return this.errorEvent(msg)
     }
 
-    AddPropertyFunction(socket: WebSocket, msg: AddPropertyCommand): void {
-        console.log("Called AddPropertyFunction " + msg.messageKind)
+    AddPropertyFunction = (socket: WebSocket, msg: AddPropertyCommand): PropertyAddedEvent | ErrorEvent => {
+        deltaLogger.info("Called AddPropertyFunction " + msg.messageKind)
         const pInfo = activeSockets.get(socket)
         const event: PropertyAddedEvent = {
             messageKind: "PropertyAdded",
@@ -72,15 +85,11 @@ export class CommandProcessor implements ICommandProcessor {
             sequenceNumber: 0, // dummy, will be changed for each participation before sending
             protocolMessages: []
         }
-        console.log(`Sending ${JSON.stringify(event)}`)
-        for(const pInfo of activeSockets.values()) {
-            event.sequenceNumber = pInfo.eventSequenceNumber++ 
-            pInfo.socket.send(JSON.stringify(event))
-        }
+        return event
     }
 
-    DeletePropertyFunction(socket: WebSocket, msg: DeletePropertyCommand): void {
-        console.log("Called DeletePropertyFunction " + msg.messageKind)
+    DeletePropertyFunction = (socket: WebSocket, msg: DeletePropertyCommand): EventType => {
+        deltaLogger.info("Called DeletePropertyFunction " + msg.messageKind)
         const pInfo = activeSockets.get(socket)
         const event: PropertyDeletedEvent = {
             messageKind: "PropertyDeleted",
@@ -91,14 +100,11 @@ export class CommandProcessor implements ICommandProcessor {
             protocolMessages: [],
             oldValue: "any dummy"
         }
-        console.log(`Sending ${JSON.stringify(event)}`)
-        for(const pInfo of activeSockets.values()) {
-            event.sequenceNumber = pInfo.eventSequenceNumber++
-            pInfo.socket.send(JSON.stringify(event))
-        }    }
+        return event
+    }
 
-    ChangePropertyFunction(socket: WebSocket, msg: ChangePropertyCommand): void {
-        console.log("Called ChangePropertyFunction " + msg.messageKind)
+    ChangePropertyFunction = (socket: WebSocket, msg: ChangePropertyCommand): EventType => {
+        deltaLogger.info("Called ChangePropertyFunction " + msg.messageKind)
         const pInfo = activeSockets.get(socket)
         const event: PropertyChangedEvent = {
             messageKind: "PropertyChanged",
@@ -110,138 +116,176 @@ export class CommandProcessor implements ICommandProcessor {
             protocolMessages: [],
             oldValue: "any dummy"
         }
-        console.log(`Sending ${JSON.stringify(event)}`)
-        for(const pInfo of activeSockets.values()) {
-            event.sequenceNumber = pInfo.eventSequenceNumber++
-            pInfo.socket.send(JSON.stringify(event))
+        return event;
+    }
+
+    AddChildFunction(socket: WebSocket, msg: AddChildCommand): EventType {
+        deltaLogger.info("Called AddChildFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    DeleteChildFunction(socket: WebSocket, msg: DeleteChildCommand): EventType {
+        deltaLogger.info("Called DeleteChildFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    ReplaceChildFunction(socket: WebSocket, msg: ReplaceChildCommand): EventType {
+        deltaLogger.info("Called ReplaceChildFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    MoveChildFromOtherContainmentFunction(socket: WebSocket, msg: MoveChildFromOtherContainmentCommand): EventType {
+        deltaLogger.info("Called MoveChildFromOtherContainmentFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    MoveChildFromOtherContainmentInSameParentFunction(socket: WebSocket, msg: MoveChildFromOtherContainmentInSameParentCommand): EventType {
+        deltaLogger.info("Called MoveChildFromOtherContainmentInSameParentFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    MoveChildInSameContainmentFunction(socket: WebSocket, msg: MoveChildInSameContainmentCommand): EventType {
+        deltaLogger.info("Called MoveChildInSameContainmentFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    MoveAndReplaceChildFromOtherContainmentFunction(socket: WebSocket, msg: MoveAndReplaceChildFromOtherContainmentCommand): EventType {
+        deltaLogger.info("Called MoveAndReplaceChildFromOtherContainmentFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    MoveAndReplaceChildFromOtherContainmentInSameParentFunction(socket: WebSocket, msg: MoveAndReplaceChildFromOtherContainmentInSameParentCommand): EventType {
+        deltaLogger.info("Called MoveAndReplaceChildFromOtherContainmentInSameParentFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    MoveAndReplaceChildInSameContainmentFunction(socket: WebSocket, msg: MoveAndReplaceChildInSameContainmentCommand): EventType {
+        deltaLogger.info("Called MoveAndReplaceChildInSameContainmentFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    AddAnnotationFunction(socket: WebSocket, msg: AddAnnotationCommand): EventType {
+        deltaLogger.info("Called AddAnnotationFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    DeleteAnnotationFunction(socket: WebSocket, msg: DeleteAnnotationCommand): EventType {
+        deltaLogger.info("Called DeleteAnnotationFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    ReplaceAnnotationFunction(socket: WebSocket, msg: ReplaceAnnotationCommand): EventType {
+        deltaLogger.info("Called ReplaceAnnotationFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    MoveAnnotationFromOtherParentFunction(socket: WebSocket, msg: MoveAnnotationFromOtherParentCommand): EventType {
+        deltaLogger.info("Called MoveAnnotationFromOtherParentFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    MoveAnnotationInSameParentFunction(socket: WebSocket, msg: MoveAnnotationInSameParentCommand): EventType {
+        deltaLogger.info("Called MoveAnnotationInSameParentFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    MoveAndReplaceAnnotationFromOtherParentFunction(socket: WebSocket, msg: MoveAndReplaceAnnotationFromOtherParentCommand): EventType {
+        deltaLogger.info("Called MoveAndReplaceAnnotationFromOtherParentFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    MoveAndReplaceAnnotationInSameParentFunction(socket: WebSocket, msg: MoveAndReplaceAnnotationInSameParentCommand): EventType {
+        deltaLogger.info("Called MoveAndReplaceAnnotationInSameParentFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    AddReferenceFunction(socket: WebSocket, msg: AddReferenceCommand): EventType {
+        deltaLogger.info("Called AddReferenceFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    DeleteReferenceFunction(socket: WebSocket, msg: DeleteReferenceCommand): EventType {
+        deltaLogger.info("Called DeleteReferenceFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    ChangeReferenceFunction(socket: WebSocket, msg: ChangeReferenceCommand): EventType {
+        deltaLogger.info("Called ChangeReferenceFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    MoveEntryFromOtherReferenceFunction(socket: WebSocket, msg: MoveEntryFromOtherReferenceCommand): EventType {
+        deltaLogger.info("Called MoveEntryFromOtherReferenceFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    MoveEntryFromOtherReferenceInSameParentFunction(socket: WebSocket, msg: MoveEntryFromOtherReferenceInSameParentCommand): EventType {
+        deltaLogger.info("Called MoveEntryFromOtherReferenceInSameParentFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    MoveEntryInSameReferenceFunction(socket: WebSocket, msg: MoveEntryInSameReferenceCommand): EventType {
+        deltaLogger.info("Called MoveEntryInSameReferenceFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    MoveAndReplaceEntryFromOtherReferenceFunction(socket: WebSocket, msg: MoveAndReplaceEntryFromOtherReferenceCommand): EventType {
+        deltaLogger.info("Called MoveAndReplaceEntryFromOtherReferenceFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    MoveAndReplaceEntryFromOtherReferenceInSameParentFunction(socket: WebSocket, msg: MoveAndReplaceEntryFromOtherReferenceInSameParentCommand): EventType {
+        deltaLogger.info("Called MoveAndReplaceEntryFromOtherReferenceInSameParentFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    MoveAndReplaceEntryInSameReferenceFunction(socket: WebSocket, msg: MoveAndReplaceEntryInSameReferenceCommand): EventType {
+        deltaLogger.info("Called MoveAndReplaceEntryInSameReferenceFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    AddReferenceResolveInfoFunction(socket: WebSocket, msg: AddReferenceResolveInfoCommand): EventType {
+        deltaLogger.info("Called AddReferenceResolveInfoFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    DeleteReferenceResolveInfoFunction(socket: WebSocket, msg: DeleteReferenceResolveInfoCommand): EventType {
+        deltaLogger.info("Called DeleteReferenceResolveInfoFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    ChangeReferenceResolveInfoFunction(socket: WebSocket, msg: ChangeReferenceResolveInfoCommand): EventType {
+        deltaLogger.info("Called ChangeReferenceResolveInfoFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    AddReferenceTargetFunction(socket: WebSocket, msg: AddReferenceTargetCommand): EventType {
+        deltaLogger.info("Called AddReferenceTargetFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    DeleteReferenceTargetFunction(socket: WebSocket, msg: DeleteReferenceTargetCommand): EventType {
+        deltaLogger.info("Called DeleteReferenceTargetFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    ChangeReferenceTargetFunction(socket: WebSocket, msg: ChangeReferenceTargetCommand): EventType {
+        deltaLogger.info("Called ChangeReferenceTargetFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+
+    CompositeCommandFunction(socket: WebSocket, msg: CompositeCommandCommand): EventType {
+        deltaLogger.info("Called CompositeCommandFunction " + msg.messageKind)
+        return this.errorEvent(msg)
+    }
+    
+    errorEvent = (msg: CommandType): ErrorEvent => (
+        {
+            message: `${msg.messageKind}: Not implemented yet`,
+            sequenceNumber: 0,
+            originCommands: [ { commandId: msg.commandId, participationId: "error"}],
+            errorCode: "generic",
+            messageKind: "ErrorEvent"
         }
-    }
-
-    AddChildFunction(socket: WebSocket, msg: AddChildCommand): void {
-        console.log("Called AddChildFunction " + msg.messageKind)
-    }
-
-    DeleteChildFunction(socket: WebSocket, msg: DeleteChildCommand): void {
-        console.log("Called DeleteChildFunction " + msg.messageKind)
-    }
-
-    ReplaceChildFunction(socket: WebSocket, msg: ReplaceChildCommand): void {
-        console.log("Called ReplaceChildFunction " + msg.messageKind)
-    }
-
-    MoveChildFromOtherContainmentFunction(socket: WebSocket, msg: MoveChildFromOtherContainmentCommand): void {
-        console.log("Called MoveChildFromOtherContainmentFunction " + msg.messageKind)
-    }
-
-    MoveChildFromOtherContainmentInSameParentFunction(socket: WebSocket, msg: MoveChildFromOtherContainmentInSameParentCommand): void {
-        console.log("Called MoveChildFromOtherContainmentInSameParentFunction " + msg.messageKind)
-    }
-
-    MoveChildInSameContainmentFunction(socket: WebSocket, msg: MoveChildInSameContainmentCommand): void {
-        console.log("Called MoveChildInSameContainmentFunction " + msg.messageKind)
-    }
-
-    MoveAndReplaceChildFromOtherContainmentFunction(socket: WebSocket, msg: MoveAndReplaceChildFromOtherContainmentCommand): void {
-        console.log("Called MoveAndReplaceChildFromOtherContainmentFunction " + msg.messageKind)
-    }
-
-    MoveAndReplaceChildFromOtherContainmentInSameParentFunction(socket: WebSocket, msg: MoveAndReplaceChildFromOtherContainmentInSameParentCommand): void {
-        console.log("Called MoveAndReplaceChildFromOtherContainmentInSameParentFunction " + msg.messageKind)
-    }
-
-    MoveAndReplaceChildInSameContainmentFunction(socket: WebSocket, msg: MoveAndReplaceChildInSameContainmentCommand): void {
-        console.log("Called MoveAndReplaceChildInSameContainmentFunction " + msg.messageKind)
-    }
-
-    AddAnnotationFunction(socket: WebSocket, msg: AddAnnotationCommand): void {
-        console.log("Called AddAnnotationFunction " + msg.messageKind)
-    }
-
-    DeleteAnnotationFunction(socket: WebSocket, msg: DeleteAnnotationCommand): void {
-        console.log("Called DeleteAnnotationFunction " + msg.messageKind)
-    }
-
-    ReplaceAnnotationFunction(socket: WebSocket, msg: ReplaceAnnotationCommand): void {
-        console.log("Called ReplaceAnnotationFunction " + msg.messageKind)
-    }
-
-    MoveAnnotationFromOtherParentFunction(socket: WebSocket, msg: MoveAnnotationFromOtherParentCommand): void {
-        console.log("Called MoveAnnotationFromOtherParentFunction " + msg.messageKind)
-    }
-
-    MoveAnnotationInSameParentFunction(socket: WebSocket, msg: MoveAnnotationInSameParentCommand): void {
-        console.log("Called MoveAnnotationInSameParentFunction " + msg.messageKind)
-    }
-
-    MoveAndReplaceAnnotationFromOtherParentFunction(socket: WebSocket, msg: MoveAndReplaceAnnotationFromOtherParentCommand): void {
-        console.log("Called MoveAndReplaceAnnotationFromOtherParentFunction " + msg.messageKind)
-    }
-
-    MoveAndReplaceAnnotationInSameParentFunction(socket: WebSocket, msg: MoveAndReplaceAnnotationInSameParentCommand): void {
-        console.log("Called MoveAndReplaceAnnotationInSameParentFunction " + msg.messageKind)
-    }
-
-    AddReferenceFunction(socket: WebSocket, msg: AddReferenceCommand): void {
-        console.log("Called AddReferenceFunction " + msg.messageKind)
-    }
-
-    DeleteReferenceFunction(socket: WebSocket, msg: DeleteReferenceCommand): void {
-        console.log("Called DeleteReferenceFunction " + msg.messageKind)
-    }
-
-    ChangeReferenceFunction(socket: WebSocket, msg: ChangeReferenceCommand): void {
-        console.log("Called ChangeReferenceFunction " + msg.messageKind)
-    }
-
-    MoveEntryFromOtherReferenceFunction(socket: WebSocket, msg: MoveEntryFromOtherReferenceCommand): void {
-        console.log("Called MoveEntryFromOtherReferenceFunction " + msg.messageKind)
-    }
-
-    MoveEntryFromOtherReferenceInSameParentFunction(socket: WebSocket, msg: MoveEntryFromOtherReferenceInSameParentCommand): void {
-        console.log("Called MoveEntryFromOtherReferenceInSameParentFunction " + msg.messageKind)
-    }
-
-    MoveEntryInSameReferenceFunction(socket: WebSocket, msg: MoveEntryInSameReferenceCommand): void {
-        console.log("Called MoveEntryInSameReferenceFunction " + msg.messageKind)
-    }
-
-    MoveAndReplaceEntryFromOtherReferenceFunction(socket: WebSocket, msg: MoveAndReplaceEntryFromOtherReferenceCommand): void {
-        console.log("Called MoveAndReplaceEntryFromOtherReferenceFunction " + msg.messageKind)
-    }
-
-    MoveAndReplaceEntryFromOtherReferenceInSameParentFunction(socket: WebSocket, msg: MoveAndReplaceEntryFromOtherReferenceInSameParentCommand): void {
-        console.log("Called MoveAndReplaceEntryFromOtherReferenceInSameParentFunction " + msg.messageKind)
-    }
-
-    MoveAndReplaceEntryInSameReferenceFunction(socket: WebSocket, msg: MoveAndReplaceEntryInSameReferenceCommand): void {
-        console.log("Called MoveAndReplaceEntryInSameReferenceFunction " + msg.messageKind)
-    }
-
-    AddReferenceResolveInfoFunction(socket: WebSocket, msg: AddReferenceResolveInfoCommand): void {
-        console.log("Called AddReferenceResolveInfoFunction " + msg.messageKind)
-    }
-
-    DeleteReferenceResolveInfoFunction(socket: WebSocket, msg: DeleteReferenceResolveInfoCommand): void {
-        console.log("Called DeleteReferenceResolveInfoFunction " + msg.messageKind)
-    }
-
-    ChangeReferenceResolveInfoFunction(socket: WebSocket, msg: ChangeReferenceResolveInfoCommand): void {
-        console.log("Called ChangeReferenceResolveInfoFunction " + msg.messageKind)
-    }
-
-    AddReferenceTargetFunction(socket: WebSocket, msg: AddReferenceTargetCommand): void {
-        console.log("Called AddReferenceTargetFunction " + msg.messageKind)
-    }
-
-    DeleteReferenceTargetFunction(socket: WebSocket, msg: DeleteReferenceTargetCommand): void {
-        console.log("Called DeleteReferenceTargetFunction " + msg.messageKind)
-    }
-
-    ChangeReferenceTargetFunction(socket: WebSocket, msg: ChangeReferenceTargetCommand): void {
-        console.log("Called ChangeReferenceTargetFunction " + msg.messageKind)
-    }
-
-    CompositeCommandFunction(socket: WebSocket, msg: CompositeCommandCommand): void {
-        console.log("Called CompositeCommandFunction " + msg.messageKind)
-    }
+    )
 }

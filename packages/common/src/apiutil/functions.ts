@@ -1,11 +1,13 @@
+import { CommandType, QueryRequestType } from "@lionweb/server-delta-shared";
 import { HttpServerErrors, isLionWebVersion, LionWebVersionType, LionWebVersionValues, ResponseMessage } from "@lionweb/server-shared"
-import { requestLogger } from "./logging.js"
+import { deltaLogger, requestLogger } from "./logging.js"
 import { Job, requestQueue } from "./RequestQueue.js"
 import { collectUsedLanguages } from "./UsedLanguages.js"
 import { LionWebJsonChunk, LionWebJsonNode } from "@lionweb/json"
-import { Request, Response } from "express"
+import { request, Request, response, Response } from "express"
 import { v4 as uuidv4 } from "uuid"
 import { lionwebResponse } from "./LionwebResponse.js"
+import WebSocket from 'ws';
 
 export type UnknownObjectType = { [key: string]: unknown }
 
@@ -234,6 +236,27 @@ export function runWithTry(func: (request: Request, response: Response) => void)
         requestQueue.add(new Job("request-" + myIndex, requestFunction))
     }
 }
+//
+// /**
+//  * Catch-all wrapper function to handle exceptions for any api call.
+//  * And put the request function in the request queue.
+//  * @param func
+//  */
+// export function runWithTryDelta(socket: WebSocket, delta: CommandType | QueryRequestType): void  {
+//     const func1 = async (): Promise<void> => {
+//         const myIndex = index++
+//         const deltaFunction = async (socket: WebSocket, delta: CommandType | QueryRequestType) => {
+//             try {
+//                 await func(socket, delta)
+//             } catch (e) {
+//                 const error = asError(e)
+//                 deltaLogger.error(`Exception ${myIndex} while serving delta for ${request.url}: ${error.message}`)
+//                 deltaLogger.error(error)
+//              }
+//         }
+//         requestQueue.add(new Job("delta-" + myIndex, func1))
+//     }
+// }
 
 /**
  * Get new node id

@@ -10,7 +10,7 @@
     ]
   },
   "logging": {
-    "request": "debug",
+    "request": "info",
     "trace": "silent",
     "database": "silent",
     "express": "silent"

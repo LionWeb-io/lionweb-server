@@ -596,6 +596,7 @@ export type ReferenceTargetChangedEvent = {
 export type CompositeEventEvent = {
     parts: EventType[];
     messageKind: "CompositeEvent";
+    sequenceNumber: SequenceNumber;
     protocolMessages?: ProtocolMessage[];
 };
 

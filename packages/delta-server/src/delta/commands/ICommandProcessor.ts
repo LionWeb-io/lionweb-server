@@ -19,7 +19,7 @@ import {
     DeletePropertyCommand,
     DeleteReferenceCommand,
     DeleteReferenceResolveInfoCommand,
-    DeleteReferenceTargetCommand,
+    DeleteReferenceTargetCommand, EventType,
     MoveAndReplaceAnnotationFromOtherParentCommand,
     MoveAndReplaceAnnotationInSameParentCommand,
     MoveAndReplaceChildFromOtherContainmentCommand,
@@ -42,81 +42,81 @@ import {
 import WebSocket from 'ws';
 
 export interface ICommandProcessor {
-    CommandResponseFunction(socket: WebSocket, msg: CommandResponseCommand): void
+    CommandResponseFunction(socket: WebSocket, msg: CommandResponseCommand): EventType
 
-    AddPartitionFunction(socket: WebSocket, msg: AddPartitionCommand): void
+    AddPartitionFunction(socket: WebSocket, msg: AddPartitionCommand): EventType
 
-    DeletePartitionFunction(socket: WebSocket, msg: DeletePartitionCommand): void
+    DeletePartitionFunction(socket: WebSocket, msg: DeletePartitionCommand): EventType
 
-    ChangeClassifierFunction(socket: WebSocket, msg: ChangeClassifierCommand): void
+    ChangeClassifierFunction(socket: WebSocket, msg: ChangeClassifierCommand): EventType
 
-    AddPropertyFunction(socket: WebSocket, msg: AddPropertyCommand): void
+    AddPropertyFunction(socket: WebSocket, msg: AddPropertyCommand): EventType
 
-    DeletePropertyFunction(socket: WebSocket, msg: DeletePropertyCommand): void
+    DeletePropertyFunction(socket: WebSocket, msg: DeletePropertyCommand): EventType
 
-    ChangePropertyFunction(socket: WebSocket, msg: ChangePropertyCommand): void
+    ChangePropertyFunction(socket: WebSocket, msg: ChangePropertyCommand): EventType
 
-    AddChildFunction(socket: WebSocket, msg: AddChildCommand): void
+    AddChildFunction(socket: WebSocket, msg: AddChildCommand): EventType
 
-    DeleteChildFunction(socket: WebSocket, msg: DeleteChildCommand): void
+    DeleteChildFunction(socket: WebSocket, msg: DeleteChildCommand): EventType
 
-    ReplaceChildFunction(socket: WebSocket, msg: ReplaceChildCommand): void
+    ReplaceChildFunction(socket: WebSocket, msg: ReplaceChildCommand): EventType
 
-    MoveChildFromOtherContainmentFunction(socket: WebSocket, msg: MoveChildFromOtherContainmentCommand): void
+    MoveChildFromOtherContainmentFunction(socket: WebSocket, msg: MoveChildFromOtherContainmentCommand): EventType
 
-    MoveChildFromOtherContainmentInSameParentFunction(socket: WebSocket, msg: MoveChildFromOtherContainmentInSameParentCommand): void
+    MoveChildFromOtherContainmentInSameParentFunction(socket: WebSocket, msg: MoveChildFromOtherContainmentInSameParentCommand): EventType
 
-    MoveChildInSameContainmentFunction(socket: WebSocket, msg: MoveChildInSameContainmentCommand): void
+    MoveChildInSameContainmentFunction(socket: WebSocket, msg: MoveChildInSameContainmentCommand): EventType
 
-    MoveAndReplaceChildFromOtherContainmentFunction(socket: WebSocket, msg: MoveAndReplaceChildFromOtherContainmentCommand): void
+    MoveAndReplaceChildFromOtherContainmentFunction(socket: WebSocket, msg: MoveAndReplaceChildFromOtherContainmentCommand): EventType
 
-    MoveAndReplaceChildFromOtherContainmentInSameParentFunction(socket: WebSocket, msg: MoveAndReplaceChildFromOtherContainmentInSameParentCommand): void
+    MoveAndReplaceChildFromOtherContainmentInSameParentFunction(socket: WebSocket, msg: MoveAndReplaceChildFromOtherContainmentInSameParentCommand): EventType
 
-    MoveAndReplaceChildInSameContainmentFunction(socket: WebSocket, msg: MoveAndReplaceChildInSameContainmentCommand): void
+    MoveAndReplaceChildInSameContainmentFunction(socket: WebSocket, msg: MoveAndReplaceChildInSameContainmentCommand): EventType
 
-    AddAnnotationFunction(socket: WebSocket, msg: AddAnnotationCommand): void
+    AddAnnotationFunction(socket: WebSocket, msg: AddAnnotationCommand): EventType
 
-    DeleteAnnotationFunction(socket: WebSocket, msg: DeleteAnnotationCommand): void
+    DeleteAnnotationFunction(socket: WebSocket, msg: DeleteAnnotationCommand): EventType
 
-    ReplaceAnnotationFunction(socket: WebSocket, msg: ReplaceAnnotationCommand): void
+    ReplaceAnnotationFunction(socket: WebSocket, msg: ReplaceAnnotationCommand): EventType
 
-    MoveAnnotationFromOtherParentFunction(socket: WebSocket, msg: MoveAnnotationFromOtherParentCommand): void
+    MoveAnnotationFromOtherParentFunction(socket: WebSocket, msg: MoveAnnotationFromOtherParentCommand): EventType
 
-    MoveAnnotationInSameParentFunction(socket: WebSocket, msg: MoveAnnotationInSameParentCommand): void
+    MoveAnnotationInSameParentFunction(socket: WebSocket, msg: MoveAnnotationInSameParentCommand): EventType
 
-    MoveAndReplaceAnnotationFromOtherParentFunction(socket: WebSocket, msg: MoveAndReplaceAnnotationFromOtherParentCommand): void
+    MoveAndReplaceAnnotationFromOtherParentFunction(socket: WebSocket, msg: MoveAndReplaceAnnotationFromOtherParentCommand): EventType
 
-    MoveAndReplaceAnnotationInSameParentFunction(socket: WebSocket, msg: MoveAndReplaceAnnotationInSameParentCommand): void
+    MoveAndReplaceAnnotationInSameParentFunction(socket: WebSocket, msg: MoveAndReplaceAnnotationInSameParentCommand): EventType
 
-    AddReferenceFunction(socket: WebSocket, msg: AddReferenceCommand): void
+    AddReferenceFunction(socket: WebSocket, msg: AddReferenceCommand): EventType
 
-    DeleteReferenceFunction(socket: WebSocket, msg: DeleteReferenceCommand): void
+    DeleteReferenceFunction(socket: WebSocket, msg: DeleteReferenceCommand): EventType
 
-    ChangeReferenceFunction(socket: WebSocket, msg: ChangeReferenceCommand): void
+    ChangeReferenceFunction(socket: WebSocket, msg: ChangeReferenceCommand): EventType
 
-    MoveEntryFromOtherReferenceFunction(socket: WebSocket, msg: MoveEntryFromOtherReferenceCommand): void
+    MoveEntryFromOtherReferenceFunction(socket: WebSocket, msg: MoveEntryFromOtherReferenceCommand): EventType
 
-    MoveEntryFromOtherReferenceInSameParentFunction(socket: WebSocket, msg: MoveEntryFromOtherReferenceInSameParentCommand): void
+    MoveEntryFromOtherReferenceInSameParentFunction(socket: WebSocket, msg: MoveEntryFromOtherReferenceInSameParentCommand): EventType
 
-    MoveEntryInSameReferenceFunction(socket: WebSocket, msg: MoveEntryInSameReferenceCommand): void
+    MoveEntryInSameReferenceFunction(socket: WebSocket, msg: MoveEntryInSameReferenceCommand): EventType
 
-    MoveAndReplaceEntryFromOtherReferenceFunction(socket: WebSocket, msg: MoveAndReplaceEntryFromOtherReferenceCommand): void
+    MoveAndReplaceEntryFromOtherReferenceFunction(socket: WebSocket, msg: MoveAndReplaceEntryFromOtherReferenceCommand): EventType
 
-    MoveAndReplaceEntryFromOtherReferenceInSameParentFunction(socket: WebSocket, msg: MoveAndReplaceEntryFromOtherReferenceInSameParentCommand): void
+    MoveAndReplaceEntryFromOtherReferenceInSameParentFunction(socket: WebSocket, msg: MoveAndReplaceEntryFromOtherReferenceInSameParentCommand): EventType
 
-    MoveAndReplaceEntryInSameReferenceFunction(socket: WebSocket, msg: MoveAndReplaceEntryInSameReferenceCommand): void
+    MoveAndReplaceEntryInSameReferenceFunction(socket: WebSocket, msg: MoveAndReplaceEntryInSameReferenceCommand): EventType
 
-    AddReferenceResolveInfoFunction(socket: WebSocket, msg: AddReferenceResolveInfoCommand): void
+    AddReferenceResolveInfoFunction(socket: WebSocket, msg: AddReferenceResolveInfoCommand): EventType
 
-    DeleteReferenceResolveInfoFunction(socket: WebSocket, msg: DeleteReferenceResolveInfoCommand): void
+    DeleteReferenceResolveInfoFunction(socket: WebSocket, msg: DeleteReferenceResolveInfoCommand): EventType
 
-    ChangeReferenceResolveInfoFunction(socket: WebSocket, msg: ChangeReferenceResolveInfoCommand): void
+    ChangeReferenceResolveInfoFunction(socket: WebSocket, msg: ChangeReferenceResolveInfoCommand): EventType
 
-    AddReferenceTargetFunction(socket: WebSocket, msg: AddReferenceTargetCommand): void
+    AddReferenceTargetFunction(socket: WebSocket, msg: AddReferenceTargetCommand): EventType
 
-    DeleteReferenceTargetFunction(socket: WebSocket, msg: DeleteReferenceTargetCommand): void
+    DeleteReferenceTargetFunction(socket: WebSocket, msg: DeleteReferenceTargetCommand): EventType
 
-    ChangeReferenceTargetFunction(socket: WebSocket, msg: ChangeReferenceTargetCommand): void
+    ChangeReferenceTargetFunction(socket: WebSocket, msg: ChangeReferenceTargetCommand): EventType
 
-    CompositeCommandFunction(socket: WebSocket, msg: CompositeCommandCommand): void
+    CompositeCommandFunction(socket: WebSocket, msg: CompositeCommandCommand): EventType
 }

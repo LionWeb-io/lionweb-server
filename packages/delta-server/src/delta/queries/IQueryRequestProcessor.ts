@@ -1,6 +1,7 @@
 import {
+    EventType,
     GetAvailableIdsRequest,
-    ListPartitionsRequest,
+    ListPartitionsRequest, QueryResponseType,
     ReconnectRequest,
     SignOffRequest,
     SignOnRequest,
@@ -11,19 +12,19 @@ import {
 import WebSocket from 'ws';
 
 export interface IQueryRequestProcessor {
-    SubscribeToChangingPartitionsRequestFunction(socket: WebSocket, msg: SubscribeToChangingPartitionsRequest): void
+    SubscribeToChangingPartitionsRequestFunction(socket: WebSocket, msg: SubscribeToChangingPartitionsRequest): EventType | QueryResponseType
 
-    SubscribeToPartitionContentsRequestFunction(socket: WebSocket, msg: SubscribeToPartitionContentsRequest): void
+    SubscribeToPartitionContentsRequestFunction(socket: WebSocket, msg: SubscribeToPartitionContentsRequest): EventType | QueryResponseType
 
-    UnsubscribeFromPartitionContentsRequestFunction(socket: WebSocket, msg: UnsubscribeFromPartitionContentsRequest): void
+    UnsubscribeFromPartitionContentsRequestFunction(socket: WebSocket, msg: UnsubscribeFromPartitionContentsRequest): EventType | QueryResponseType
 
-    SignOnRequestFunction(socket: WebSocket, msg: SignOnRequest): void
+    SignOnRequestFunction(socket: WebSocket, msg: SignOnRequest): EventType | QueryResponseType
 
-    SignOffRequestFunction(socket: WebSocket, msg: SignOffRequest): void
+    SignOffRequestFunction(socket: WebSocket, msg: SignOffRequest): EventType | QueryResponseType
 
-    ListPartitionsRequestFunction(socket: WebSocket, msg: ListPartitionsRequest): void
+    ListPartitionsRequestFunction(socket: WebSocket, msg: ListPartitionsRequest): EventType | QueryResponseType
 
-    GetAvailableIdsRequestFunction(socket: WebSocket, msg: GetAvailableIdsRequest): void
+    GetAvailableIdsRequestFunction(socket: WebSocket, msg: GetAvailableIdsRequest): EventType | QueryResponseType
 
-    ReconnectRequestFunction(socket: WebSocket, msg: ReconnectRequest): void
+    ReconnectRequestFunction(socket: WebSocket, msg: ReconnectRequest): EventType | QueryResponseType
 }

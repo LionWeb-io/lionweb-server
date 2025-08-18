@@ -501,8 +501,7 @@ export const DeltaEventSchema: DefinitionSchema = new DefinitionSchema(
             name: "CompositeEvent",
             properties: [
                 PropertyDef({ name: "parts", type: "EventType", isList: true }),
-                EventTypeProperty,
-                ProtocolMessageProperty
+                ...CommonEventProperties,
             ],
         },
         {

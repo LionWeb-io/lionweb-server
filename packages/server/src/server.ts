@@ -1,7 +1,8 @@
-import { CommandProcessor, DeltaProcessor, QueryRequestProcessor } from "@lionweb/delta-server"
+import { CommandProcessor, QueryRequestProcessor } from "@lionweb/delta-server"
 import { activeSockets } from "@lionweb/delta-server";
+import { requestQueue } from "@lionweb/server-common/dist/apiutil/RequestQueue.js";
 import { registerHistoryApi } from "@lionweb/server-history"
-import { CommandType, PartitionAddedEvent } from "@lionweb/server-delta-shared"
+import { CommandType, PartitionAddedEvent, QueryRequestType } from "@lionweb/server-delta-shared"
 import express, { Express, NextFunction, Response, Request } from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
@@ -16,7 +17,7 @@ import {
     requestLogger,
     SCHEMA_PREFIX,
     ServerConfig,
-    initializeCommons
+    initializeCommons, deltaLogger, runWithTry
 } from "@lionweb/server-common"
 import { registerDBAdmin, repositoryStore } from "@lionweb/server-dbadmin"
 import { registerInspection } from "@lionweb/server-inspection"
@@ -31,6 +32,8 @@ import { registerLanguagesApi } from "@lionweb/server-languages"
 import { HttpClientErrors } from "@lionweb/server-shared"
 import { pinoHttp } from "pino-http"
 import * as http from "node:http"
+import { deltaProcessor } from "./DeltaProcessor.js";
+import { runWithTryDelta } from "./RunTry.js";
 
 export const app: Express = express()
 
@@ -230,15 +233,14 @@ async function startServer() {
         }
     })
     
-    const deltaProcessor = new DeltaProcessor(new CommandProcessor(), new QueryRequestProcessor())
-    
     const wsServer = new WebSocketServer({server: httpServer})
     wsServer.on('connection', (socket, request) => {
         // @ts-ignore
-        console.log(`Client connected`);
+        deltaLogger.info(`Client connected`);
         activeSockets.set(socket, {
             clientId: "",
             deltaProtocolVersion: "",
+            repository: "",
             eventSequenceNumber: 0,
             participationId: "pid-1",
             participationStatus: "connected",
@@ -246,13 +248,14 @@ async function startServer() {
         })
         
         socket.on('message', (message: RawData) => {
-            console.log(`Server Received: ${message.toString()}`);
-            deltaProcessor.processDelta(socket, JSON.parse(message.toString()) as unknown as CommandType)
-            console.log(`Server Called Delta processor`);
+            deltaLogger.info(`Server Received: ${message.toString()}`);
+            const msg = JSON.parse(message.toString()) as unknown as (CommandType | QueryRequestType)
+            runWithTryDelta(socket, msg)
+            deltaLogger.info(`Server Called Delta processor`);
         });
 
         socket.on('close', () => {
-            console.log('Client disconnected');
+            deltaLogger.info('Client disconnected');
         });
     });
     

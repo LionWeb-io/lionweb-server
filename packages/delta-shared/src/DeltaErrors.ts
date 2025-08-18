@@ -6,7 +6,9 @@ export type DeltaErrorCode  =
     "indexNodeMismatch"     |
     "moveWithoutParent"     |
     "invalidMove"           |
-    "undefinedReferenceTarget"
+    "RepositoryMissing"     |
+    "undefinedReferenceTarget"  |
+    "generic"
     
     
     
