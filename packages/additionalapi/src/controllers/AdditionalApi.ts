@@ -5,14 +5,14 @@ import { HttpClientErrors, HttpSuccessCodes } from "@lionweb/server-shared"
 import { lionwebResponse } from "@lionweb/server-common"
 import { dbLogger, getIntegerParam, isParameterError } from "@lionweb/server-common"
 import { PBBulkImport, PBMetaPointer } from "../proto/index.js"
-import { BulkImport } from "../database/index.js"
+import { BulkImport } from "@lionweb/server-shared"
 import { LionWebJsonMetaPointer } from "@lionweb/json"
 import { ByteBuffer } from "flatbuffers"
-import { FBBulkImport } from "../io/lionweb/serialization/flatbuffers/index.js"
+import { FBBulkImport } from "@lionweb/server-shared"
 
 export const JSON_CONTENT_TYPE = "application/json"
 export const PROTOBUF_CONTENT_TYPE = "application/protobuf"
-export const FLATBUFFERS_CONTENT_TYPE = "application/flatbuffers"
+export const FLATBUFFERS_CONTENT_TYPE = "application/x-flatbuffers"
 
 export interface AdditionalApi {
     getNodeTree(request: Request, response: Response): void
@@ -121,7 +121,7 @@ export class AdditionalApiImpl implements AdditionalApi {
                 data: []
             })
         } else {
-            throw new Error("Content-type not recognized")
+            throw new Error(`Content-type not recognized. Content-type: ${request.headers["content-type"]}`)
         }
     }
 

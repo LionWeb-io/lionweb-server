@@ -8,9 +8,8 @@ import {
     makeQueryToCheckHowManyExist
 } from "./QueryNode.js"
 import { performImportFromFlatBuffers, populateFromBulkImport, storeNodes } from "./ImportLogic.js"
-import { LionWebJsonMetaPointer, LionWebJsonNode } from "@lionweb/json"
-import { FBBulkImport } from "../io/lionweb/serialization/flatbuffers/index.js"
 import { MetaPointersTracker } from "@lionweb/server-dbadmin"
+import { AttachPoint, BulkImport, FBBulkImport } from "@lionweb/server-shared"
 
 export type NodeTreeResultType = {
     id: string
@@ -22,17 +21,6 @@ export type BulkImportResultType = {
     status: number
     success: boolean
     description?: string
-}
-
-export type AttachPoint = {
-    container: string
-    containment: LionWebJsonMetaPointer
-    root: string
-}
-
-export type BulkImport = {
-    attachPoints: AttachPoint[]
-    nodes: LionWebJsonNode[]
 }
 
 /**

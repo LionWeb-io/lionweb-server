@@ -2,13 +2,13 @@ import { LionWebJsonNode } from "@lionweb/json"
 import { Duplex } from "stream"
 import { PoolClient } from "pg"
 import { from as copyFrom } from "pg-copy-streams"
-import { FBBulkImport, FBMetaPointer } from "../io/lionweb/serialization/flatbuffers/index.js"
 import { makeQueryToAttachNodeForFlatBuffers, makeQueryToCheckHowManyDoNotExist, makeQueryToCheckHowManyExist } from "./QueryNode.js"
-import { HttpClientErrors, HttpSuccessCodes } from "@lionweb/server-shared"
+import { HttpClientErrors, HttpSuccessCodes, FBBulkImport, FBMetaPointer } from "@lionweb/server-shared"
 import { DbConnection, RepositoryData } from "@lionweb/server-common"
 import { BulkImportResultType } from "./AdditionalQueries.js"
-import { BulkImport } from "./AdditionalQueries.js"
+import { BulkImport } from "@lionweb/server-shared"
 import { MetaPointersCollector, MetaPointersTracker } from "@lionweb/server-dbadmin"
+import { finished } from "stream/promises"
 
 const SEPARATOR = "\t"
 
@@ -49,6 +49,7 @@ function prepareInputStreamProperties(nodes: LionWebJsonNode[], metaPointersTrac
         })
     })
     read_stream_string.push(null)
+
     return read_stream_string
 }
 
@@ -204,27 +205,26 @@ function prepareInputStreamContainmentsFlatBuffers(bulkImport: FBBulkImport, met
 }
 
 async function pipeInputIntoQueryStream(client: PoolClient, query: string, inputStream: Duplex, opDesc: string): Promise<void> {
-    await new Promise<void>((resolve, reject) => {
-        try {
-            const queryStream = client.query(copyFrom(query))
+    const queryStream = client.query(copyFrom(query));
 
-            inputStream.on("error", (err: Error) => {
-                reject(`Input stream error on ${opDesc}: ${err}`)
-            })
+    // propagate src errors too
+    const srcErr = new Promise<never>((_, reject) =>
+        inputStream.once("error", (e) =>
+            reject(new Error(`Error on ${opDesc} (source): ${e instanceof Error ? e.message : String(e)}`))
+        )
+    );
 
-            queryStream.on("error", (err: Error) => {
-                reject(`Query stream error on ${opDesc}: ${err}`)
-            })
+    inputStream.pipe(queryStream);
 
-            inputStream.on("end", () => {
-                resolve()
-            })
-
-            inputStream.pipe(queryStream)
-        } catch (e) {
-            reject(`Error on ${opDesc}: ${e}`)
-        }
-    })
+    try {
+        // COPY FROM completes on the writable's 'finish'
+        await Promise.race([
+            finished(queryStream), // resolves on finish, rejects on error/close
+            srcErr,
+        ]);
+    } catch (e) {
+        throw new Error(`Error on ${opDesc}: ${e instanceof Error ? e.message : String(e)}`);
+    }
 }
 
 export async function storeNodes(

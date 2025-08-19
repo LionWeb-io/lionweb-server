@@ -30,10 +30,10 @@ export function getVersionFromResponse(response: ClientResponse<LionwebResponse>
  */
 export class RepositoryClient {
     // Server parameters
-    private _nodePort = (typeof process !== "undefined" && process.env.NODE_PORT) || 3005
-    private _SERVER_IP = (typeof process !== "undefined" && process.env.REPO_IP) || "http://127.0.0.1"
-    private _SERVER_URL = `${this._SERVER_IP}:${this._nodePort}/`
-    private TIMEOUT = typeof process !== "undefined" ? Number.parseInt(process.env.TIMEOUT) || 20000 : 20000;
+    private _DEFAULT_NODE_PORT = (typeof process !== "undefined" && process.env.NODE_PORT) || 3005
+    private _DEFAULT_SERVER_IP = (typeof process !== "undefined" && process.env.REPO_IP) || "http://127.0.0.1"
+    private _DEFAULT_SERVER_URL = `${this._DEFAULT_SERVER_IP}:${this._DEFAULT_NODE_PORT}/`
+    private _DEFAULT_TIMEOUT = typeof process !== "undefined" ? Number.parseInt(process.env.TIMEOUT) || 20000 : 20000
 
     loggingOn = false
     logMessage(logMessage: string): string {
@@ -49,9 +49,11 @@ export class RepositoryClient {
 
     /**
      * The name of the repository used for all Api calls
-     */        
+     */
     repository: string | null = "default"
-    
+    timeout: number = this._DEFAULT_TIMEOUT
+    serverUrl: string = this._DEFAULT_SERVER_URL
+
     // The different API's that the repository provides
     dbAdmin: DbAdminApi
     bulk: BulkApi
@@ -96,9 +98,9 @@ export class RepositoryClient {
         const params = this.findParams(parameters.params)
         try {
             const controller = new AbortController()
-            const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT)
-            this.log("getWithTimeout: " + `${this._SERVER_URL}${method}${params}`)
-            const promise = await fetch(`${this._SERVER_URL}${method}${params}`, {
+            const timeoutId = setTimeout(() => controller.abort(), this.timeout)
+            this.log("getWithTimeout: " + `${this.serverUrl}${method}${params}`)
+            const promise = await fetch(`${this.serverUrl}${method}${params}`, {
                 signal: controller.signal,
                 method: "get",
                 headers: {
@@ -114,19 +116,27 @@ export class RepositoryClient {
         return null
     }
 
-    async postWithTimeout(method: string, parameters: { body: unknown; params: string }): Promise<ClientResponse<LionwebResponse>> {
+    /**
+     * @param stringify by default we stringify what we receive as input, however sometimes we want to disable
+     *                  this behavior because the body could be in binary format or already in JSON format
+     */
+    async postWithTimeout(
+        method: string,
+        parameters: { body: unknown; params: string; headers?: Record<string, string> },
+        stringify: boolean = true
+    ): Promise<ClientResponse<LionwebResponse>> {
         const allParams = this.findParams(parameters.params)
         try {
             const controller = new AbortController()
-            const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT)
-            this.log("postWithTimeout: " + `${this._SERVER_URL}${method}${allParams}`)
-            const promise: Response = await fetch(`${this._SERVER_URL}${method}${allParams}`, {
+            const timeoutId = setTimeout(() => controller.abort(), this.timeout)
+            this.log("postWithTimeout: " + `${this.serverUrl}${method}${allParams}`)
+            const promise: Response = await fetch(`${this.serverUrl}${method}${allParams}`, {
                 signal: controller.signal,
                 method: "post",
-                headers: {
+                headers: parameters.headers || {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(parameters.body)
+                body: stringify ? JSON.stringify(parameters.body) : (parameters.body as BodyInit | null)
             })
             clearTimeout(timeoutId)
             const status = promise.status
@@ -148,11 +158,11 @@ export class RepositoryClient {
     private async putWithTimeout(method: string, data: unknown, params?: string) {
         params = this.findParams(params)
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT)
-        this.log("putWithTimeout: " + `${this._SERVER_URL}${method}${params}`)
+        const timeoutId = setTimeout(() => controller.abort(), this.timeout)
+        this.log("putWithTimeout: " + `${this.serverUrl}${method}${params}`)
         let response
         try {
-            response = await fetch(`${this._SERVER_URL}${method}${params}`, {
+            response = await fetch(`${this.serverUrl}${method}${params}`, {
                 signal: controller.signal,
                 method: "put",
                 headers: {
@@ -188,7 +198,7 @@ export class RepositoryClient {
     private handleError(e: Error, method: string = null): void {
         let errorMess: string = e.message
         if (e.message.includes("aborted")) {
-            errorMess = `Time out: no response from ${this._SERVER_URL}.`
+            errorMess = `Time out: no response from ${this.serverUrl}.`
             console.error(errorMess)
         }
         if (method == null) {
