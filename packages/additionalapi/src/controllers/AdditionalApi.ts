@@ -112,86 +112,106 @@ export class AdditionalApiImpl implements AdditionalApi {
     }
 
     private convertPBBulkImportToBulkImport(pbBulkImport: PBBulkImport): BulkImport {
-        const bulkImport: BulkImport = {
-            nodes: [],
-            attachPoints: []
+        const { internedStrings, internedLanguages, internedMetaPointers, attachPoints, nodes } = pbBulkImport
+
+        // Pre-compute all language mappings
+        const languagesArray = new Array(internedLanguages.length)
+        for (let i = 0; i < internedLanguages.length; i++) {
+            const pbLanguage = internedLanguages[i]
+            languagesArray[i] = {
+                key: internedStrings[pbLanguage.key],
+                version: internedStrings[pbLanguage.version]
+            }
         }
 
-        // In the ProtoBuf format we use a map of strings, to save space, given the node id and strings describing
-        // metapointers are always repeated
-        const stringsMap = new Map<number, string>()
-        pbBulkImport.internedStrings.forEach((string: string, index: number) => {
-            stringsMap.set(index, string)
-        })
-
-        const languagesMap = new Map<number, LionWebJsonUsedLanguage>()
-        pbBulkImport.internedLanguages.forEach((pbLanguage: PBLanguage, index: number) => {
-            const languageVersion: LionWebJsonUsedLanguage = {
-                key: stringsMap.get(pbLanguage.key),
-                version: stringsMap.get(pbLanguage.version)
-            }
-            languagesMap.set(index, languageVersion)
-        })
-
-        // We do the same also for metapointer, which are duplicated over and over
-        const metaPointersMap = new Map<number, LionWebJsonMetaPointer>()
-        pbBulkImport.internedMetaPointers.forEach((pbMetaPointer: PBMetaPointer, index: number) => {
-            const languageVersion : LionWebJsonUsedLanguage = languagesMap.get(pbMetaPointer.language);
-            const metaPointer: LionWebJsonMetaPointer = {
+        // Pre-compute all metapointer mappings using arrays instead of Map
+        const metaPointersArray = new Array(internedMetaPointers.length)
+        for (let i = 0; i < internedMetaPointers.length; i++) {
+            const pbMetaPointer = internedMetaPointers[i]
+            const languageVersion = languagesArray[pbMetaPointer.language]
+            metaPointersArray[i] = {
                 language: languageVersion.key,
                 version: languageVersion.version,
-                key: stringsMap.get(pbMetaPointer.key)
+                key: internedStrings[pbMetaPointer.key]
             }
-            metaPointersMap.set(index, metaPointer)
-        })
-
-        const findMetaPointer = (metaPointerIndex: number): LionWebJsonMetaPointer => {
-            const res = metaPointersMap.get(metaPointerIndex)
-            if (res == null) {
-                throw new Error(`Metapointer with index ${metaPointerIndex} not found. Metapointer index known: ${metaPointersMap.keys()}`)
-            }
-            return res
         }
 
-        pbBulkImport.attachPoints.forEach(pbAttachPoint => {
-            bulkImport.attachPoints.push({
-                container: stringsMap.get(pbAttachPoint.container),
-                containment: findMetaPointer(pbAttachPoint.metaPointerIndex),
-                root: stringsMap.get(pbAttachPoint.rootId)
-            })
-        })
+        // Convert attach points with pre-allocated array
+        const convertedAttachPoints = new Array(attachPoints.length)
+        for (let i = 0; i < attachPoints.length; i++) {
+            const pbAttachPoint = attachPoints[i]
+            convertedAttachPoints[i] = {
+                container: internedStrings[pbAttachPoint.container],
+                containment: metaPointersArray[pbAttachPoint.metaPointerIndex],
+                root: internedStrings[pbAttachPoint.rootId]
+            }
+        }
 
-        pbBulkImport.nodes.forEach(pbNode => {
-            bulkImport.nodes.push({
-                id: stringsMap.get(pbNode.id),
-                parent: stringsMap.get(pbNode.parent),
-                classifier: findMetaPointer(pbNode.classifier),
-                annotations: [],
-                properties: pbNode.properties.map(p => {
-                    return {
-                        property: findMetaPointer(p.metaPointer),
-                        value: stringsMap.get(p.value)
+        // Convert nodes with pre-allocated array
+        const convertedNodes = new Array(nodes.length)
+        for (let i = 0; i < nodes.length; i++) {
+            const pbNode = nodes[i]
+            const { properties, containments, references } = pbNode
+
+            // Pre-allocate nested arrays
+            const convertedProperties = new Array(properties.length)
+            const convertedContainments = new Array(containments.length)
+            const convertedReferences = new Array(references.length)
+
+            // Convert properties
+            for (let j = 0; j < properties.length; j++) {
+                const p = properties[j]
+                convertedProperties[j] = {
+                    property: metaPointersArray[p.metaPointer],
+                    value: internedStrings[p.value]
+                }
+            }
+
+            // Convert containments
+            for (let j = 0; j < containments.length; j++) {
+                const c = containments[j]
+                const convertedChildren = new Array(c.children.length)
+                for (let k = 0; k < c.children.length; k++) {
+                    convertedChildren[k] = internedStrings[c.children[k]]
+                }
+                convertedContainments[j] = {
+                    containment: metaPointersArray[c.metaPointer],
+                    children: convertedChildren
+                }
+            }
+
+            // Convert references
+            for (let j = 0; j < references.length; j++) {
+                const r = references[j]
+                const convertedTargets = new Array(r.values.length)
+                for (let k = 0; k < r.values.length; k++) {
+                    const rv = r.values[k]
+                    convertedTargets[k] = {
+                        reference: internedStrings[rv.referred],
+                        resolveInfo: internedStrings[rv.resolveInfo]
                     }
-                }),
-                containments: pbNode.containments.map(c => {
-                    return {
-                        containment: findMetaPointer(c.metaPointer),
-                        children: c.children.map(child => stringsMap.get(child))
-                    }
-                }),
-                references: pbNode.references.map(r => {
-                    return {
-                        reference: findMetaPointer(r.metaPointer),
-                        targets: r.values.map(rv => {
-                            return {
-                                reference: stringsMap.get(rv.referred),
-                                resolveInfo: stringsMap.get(rv.resolveInfo)
-                            }
-                        })
-                    }
-                })
-            })
-        })
-        return bulkImport
+                }
+                convertedReferences[j] = {
+                    reference: metaPointersArray[r.metaPointer],
+                    targets: convertedTargets
+                }
+            }
+
+            convertedNodes[i] = {
+                id: internedStrings[pbNode.id],
+                parent: internedStrings[pbNode.parent],
+                classifier: metaPointersArray[pbNode.classifier],
+                annotations: [], // Empty array as in original
+                properties: convertedProperties,
+                containments: convertedContainments,
+                references: convertedReferences
+            }
+        }
+
+        return {
+            nodes: convertedNodes,
+            attachPoints: convertedAttachPoints
+        }
     }
+
 }
