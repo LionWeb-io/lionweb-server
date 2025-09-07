@@ -100,33 +100,25 @@ function prepareInputStreamContainments(nodes: LionWebJsonNode[], metaPointersTr
     return read_stream_string
 }
 
+const escapeMap : { [key: string]: string } = { '\n': '\\n', '\r': '\\r', '\t': '\\t' }
+
 function prepareInputStreamNodesProtobuf(bulkImport: PBBulkImport, metaPointersTracker: MetaPointersTracker): Duplex {
     const read_stream_string = new Duplex()
+    const { nodes, internedMetaPointers, internedLanguages, internedStrings } = bulkImport
 
-    // Protobuf uses arrays instead of length() methods
-    for (let i = 0; i < bulkImport.nodes.length; i++) {
-        const node = bulkImport.nodes[i]
-        const classifierIndex = node.classifier
-        const classifier = bulkImport.internedMetaPointers[classifierIndex]
+    // Pre-compute metapointer strings to avoid repeated function calls
+    const metaPointerStrings = new Array(internedMetaPointers.length)
+    for (let i = 0; i < internedMetaPointers.length; i++) {
+        metaPointerStrings[i] = forPBMetapointer(metaPointersTracker, internedMetaPointers[i], internedLanguages, internedStrings).toString()
+    }
 
-        // Direct property access instead of method calls
-        read_stream_string.push(node.id)
-        read_stream_string.push(SEPARATOR)
-        read_stream_string.push(forPBMetapointer(metaPointersTracker, classifier, bulkImport.internedLanguages, bulkImport.internedStrings).toString())
-        read_stream_string.push(SEPARATOR)
-
-        // Protobuf annotations are already an array
+    for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i]
         const annotations = node.annotations || []
-        read_stream_string.push("{" + annotations.join(",") + "}")
-        read_stream_string.push(SEPARATOR)
 
-        // Check for parent property
-        if (node.parent == null || node.parent === undefined) {
-            read_stream_string.push("\\N")
-        } else {
-            read_stream_string.push(node.parent)
-        }
-        read_stream_string.push("\n")
+        // Build the entire line at once instead of multiple pushes
+        const line = `${internedStrings[node.id]}${SEPARATOR}${metaPointerStrings[node.classifier]}${SEPARATOR}{${annotations.join(",")}}${SEPARATOR}${node.parent == null ? "\\N" : internedStrings[node.parent]}\n`
+        read_stream_string.push(line)
     }
     read_stream_string.push(null)
     return read_stream_string
@@ -134,24 +126,29 @@ function prepareInputStreamNodesProtobuf(bulkImport: PBBulkImport, metaPointersT
 
 function prepareInputStreamPropertiesProtobuf(bulkImport: PBBulkImport, metaPointersTracker: MetaPointersTracker): Duplex {
     const read_stream_string = new Duplex()
-    for (let i = 0; i < bulkImport.nodes.length; i++) {
-        const node = bulkImport.nodes[i]
+    const { nodes, internedMetaPointers, internedLanguages, internedStrings } = bulkImport
+
+    // Pre-compute metapointer strings
+    const metaPointerStrings = new Array(internedMetaPointers.length)
+    for (let i = 0; i < internedMetaPointers.length; i++) {
+        metaPointerStrings[i] = forPBMetapointer(metaPointersTracker, internedMetaPointers[i], internedLanguages, internedStrings).toString()
+    }
+
+    // Pre-compile regex for better performance
+    const escapeRegex = /[\n\r\t]/g
+
+
+    for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i]
+        const nodeId = internedStrings[node.id]
+
         for (let j = 0; j < node.properties.length; j++) {
             const prop = node.properties[j]
-            const metaPointerIndex = prop.metaPointer
-            const metaPointer = bulkImport.internedMetaPointers[metaPointerIndex]
-            read_stream_string.push(forPBMetapointer(metaPointersTracker, metaPointer, bulkImport.internedLanguages, bulkImport.internedStrings).toString())
-            read_stream_string.push(SEPARATOR)
-            const valueIndex = prop.value
-            if (valueIndex == null || valueIndex === undefined) {
-                read_stream_string.push("\\N")
-            } else {
-                const value = bulkImport.internedStrings[valueIndex]
-                read_stream_string.push(value.replaceAll("\n", "\\n").replaceAll("\r", "\\r").replaceAll("\t", "\\t"))
-            }
-            read_stream_string.push(SEPARATOR)
-            read_stream_string.push(node.id)
-            read_stream_string.push("\n")
+            const value = prop.value == null ? "\\N" :
+                internedStrings[prop.value].replace(escapeRegex, match => escapeMap[match])
+
+            const line = `${metaPointerStrings[prop.metaPointer]}${SEPARATOR}${value}${SEPARATOR}${nodeId}\n`
+            read_stream_string.push(line)
         }
     }
     read_stream_string.push(null)
@@ -160,31 +157,35 @@ function prepareInputStreamPropertiesProtobuf(bulkImport: PBBulkImport, metaPoin
 
 function prepareInputStreamReferencesProtobuf(bulkImport: PBBulkImport, metaPointersTracker: MetaPointersTracker): Duplex {
     const read_stream_string = new Duplex()
-    for (let i = 0; i < bulkImport.nodes.length; i++) {
-        const node = bulkImport.nodes[i]
+    const { nodes, internedMetaPointers, internedLanguages, internedStrings } = bulkImport
+
+    // Pre-compute metapointer strings
+    const metaPointerStrings = new Array(internedMetaPointers.length)
+    for (let i = 0; i < internedMetaPointers.length; i++) {
+        metaPointerStrings[i] = forPBMetapointer(metaPointersTracker, internedMetaPointers[i], internedLanguages, internedStrings).toString()
+    }
+
+    for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i]
+        const nodeId = internedStrings[node.id]
+
         for (let j = 0; j < node.references.length; j++) {
             const ref = node.references[j]
-            const metaPointerIndex = ref.metaPointer
-            const metaPointer = bulkImport.internedMetaPointers[metaPointerIndex]
-            read_stream_string.push(forPBMetapointer(metaPointersTracker, metaPointer, bulkImport.internedLanguages, bulkImport.internedStrings).toString())
-            read_stream_string.push(SEPARATOR)
 
-            const parts: string[] = []
+            // Build JSON string more efficiently
+            let refValueStr = "{"
             for (let k = 0; k < ref.values.length; k++) {
+                if (k > 0) refValueStr += ","
                 const value = ref.values[k]
-                let refStr = "null"
-                const referred = value.referred
-                if (referred != null && referred !== undefined) {
-                    refStr = `\\\\"${referred}\\\\"`
-                }
-                parts[k] = `"{\\\\"reference\\\\": ${refStr}, \\\\"resolveInfo\\\\": \\\\"${value.resolveInfo || ''}\\\\"}"`
+                const refStr = (value.referred != null && value.referred !== undefined)
+                    ? `\\\\"${internedStrings[value.referred]}\\\\"`
+                    : "null"
+                refValueStr += `"{\\\\"reference\\\\": ${refStr}, \\\\"resolveInfo\\\\": \\\\"${internedStrings[value.resolveInfo] || ''}\\\\"}"`
             }
+            refValueStr += "}"
 
-            const refValueStr = "{" + parts.join(",") + "}"
-            read_stream_string.push(refValueStr)
-            read_stream_string.push(SEPARATOR)
-            read_stream_string.push(node.id)
-            read_stream_string.push("\n")
+            const line = `${metaPointerStrings[ref.metaPointer]}${SEPARATOR}${refValueStr}${SEPARATOR}${nodeId}\n`
+            read_stream_string.push(line)
         }
     }
     read_stream_string.push(null)
@@ -193,19 +194,32 @@ function prepareInputStreamReferencesProtobuf(bulkImport: PBBulkImport, metaPoin
 
 function prepareInputStreamContainmentsProtobuf(bulkImport: PBBulkImport, metaPointersTracker: MetaPointersTracker): Duplex {
     const read_stream_string = new Duplex()
-    for (let i = 0; i < bulkImport.nodes.length; i++) {
-        const node = bulkImport.nodes[i]
+    const { nodes, internedMetaPointers, internedLanguages, internedStrings } = bulkImport
+
+    // Pre-compute metapointer strings
+    const metaPointerStrings = new Array(internedMetaPointers.length)
+    for (let i = 0; i < internedMetaPointers.length; i++) {
+        metaPointerStrings[i] = forPBMetapointer(metaPointersTracker, internedMetaPointers[i], internedLanguages, internedStrings).toString()
+    }
+
+    for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i]
+        const nodeId = internedStrings[node.id]
+
         for (let j = 0; j < node.containments.length; j++) {
             const containment = node.containments[j]
-            const metaPointerIndex = containment.metaPointer
-            const metaPointer = bulkImport.internedMetaPointers[metaPointerIndex]
-            read_stream_string.push(forPBMetapointer(metaPointersTracker, metaPointer, bulkImport.internedLanguages, bulkImport.internedStrings).toString())
-            read_stream_string.push(SEPARATOR)
+
+            // Convert children indices to strings efficiently
             const children = containment.children || []
-            read_stream_string.push("{" + children.join(",") + "}")
-            read_stream_string.push(SEPARATOR)
-            read_stream_string.push(node.id)
-            read_stream_string.push("\n")
+            let childrenStr = "{"
+            for (let k = 0; k < children.length; k++) {
+                if (k > 0) childrenStr += ","
+                childrenStr += internedStrings[children[k]]
+            }
+            childrenStr += "}"
+
+            const line = `${metaPointerStrings[containment.metaPointer]}${SEPARATOR}${childrenStr}${SEPARATOR}${nodeId}\n`
+            read_stream_string.push(line)
         }
     }
     read_stream_string.push(null)
