@@ -26,17 +26,8 @@ export class AdditionalApiWorker {
      * @param bulkImport
      */
     bulkImport = async (repositoryData: RepositoryData, bulkImport: BulkImport)=> {
-
         requestLogger.info("AdditionalApiWorker.bulkImport")
         return await this.context.queries.bulkImport(repositoryData, bulkImport)
     }
-    /**
-     * This is a variant of bulkImport that operates directly on Protobuf data structures, instead of converting them
-     * to the "neutral" format and invoke bulkImport. This choice has been made for performance reasons.
-     */
-    bulkImportFromProtobuf = async (repositoryData: RepositoryData, bulkImport: PBBulkImport)=> {
 
-        requestLogger.info("AdditionalApiWorker.bulkImportFromProtobuf")
-        return await this.context.queries.bulkImportFromProtobuf(repositoryData, bulkImport)
-    }
 }

@@ -136,16 +136,4 @@ export class AdditionalQueries {
         return { status: HttpSuccessCodes.Ok, success: true }
     }
 
-    /**
-     * This is a variant of bulkImport that operates directly on Protobuf data structures, instead of converting them
-     * to the "neutral" format and invoke bulkImport. This choice has been made for performance reasons.
-     */
-    bulkImportFromProtobuf = async (repositoryData: RepositoryData, bulkImport: PBBulkImport): Promise<BulkImportResultType> => {
-        requestLogger.info(
-            `LionWebQueries.bulkImportFromProtobuf (nodes ${bulkImport.nodes.length}, attach points: ${bulkImport.attachPoints.length})`
-        )
-        const pool = this.context.pgPool
-
-        return await performImportFromProtobuf(await pool.connect(), this.context.dbConnection, bulkImport, repositoryData)
-    }
 }
