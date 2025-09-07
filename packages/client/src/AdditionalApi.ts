@@ -237,10 +237,11 @@ export function encodeBulkImportToProtobuf(bulkImport: BulkImport): Uint8Array {
         })
     })
 
-    // TODO add interned stuff
-
     // Create the protobuf message
     const pbBulkImport = PBBulkImport.create({
+        internedStrings: interningContext.strings,
+        internedMetaPointers: interningContext.metaPointers,
+        internedLanguages: interningContext.languages,
         attachPoints: attachPoints,
         nodes: nodes
     })
