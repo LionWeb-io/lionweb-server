@@ -6,5 +6,5 @@
     "resolveJsonModule": true,
     /* Enable importing .json files */
     "sourceRoot": "./src"
-  }
+  },
 }

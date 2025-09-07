@@ -2,6 +2,7 @@ import {CONTAINMENTS_TABLE, NODES_TABLE} from "@lionweb/server-common";
 import { AttachPoint } from "@lionweb/server-shared"
 import {MetaPointersTracker} from "@lionweb/server-dbadmin";
 import {forPBMetapointer} from "./ImportLogic.js";
+import { PBAttachPoint, PBLanguage, PBMetaPointer } from "../proto/index.js"
 
 function sqlArrayFromNodeIdArray(strings: string[]): string {
     return `(${strings.map(id => `'${id}'`).join(", ")})`
@@ -57,7 +58,7 @@ export const makeQueryToAttachNodeForProtobuf = (attachPoint: PBAttachPoint, met
                                                  internedLanguages: PBLanguage[], internedStrings: string[], internedMetaPointers: PBMetaPointer[]) : string => {
     const containment = internedMetaPointers[attachPoint.metaPointerIndex];
     const container = internedStrings[attachPoint.container];
-    const root = internedStrings[attachPoint.root];
+    const root = internedStrings[attachPoint.rootId];
     return `UPDATE ${CONTAINMENTS_TABLE} 
             SET "children"=array_append("children", '${root}')
             WHERE node_id = '${container}' AND containment = ${forPBMetapointer(metaPointersTracker, containment, internedLanguages, internedStrings)};`

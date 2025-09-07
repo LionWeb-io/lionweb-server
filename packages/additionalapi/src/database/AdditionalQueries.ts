@@ -10,6 +10,7 @@ import {
 import { performImportFromProtobuf, populateFromBulkImport, storeNodes } from "./ImportLogic.js"
 import { MetaPointersTracker } from "@lionweb/server-dbadmin"
 import { AttachPoint, BulkImport } from "@lionweb/server-shared"
+import { PBBulkImport } from "../proto/index.js"
 
 export type NodeTreeResultType = {
     id: string
@@ -141,7 +142,7 @@ export class AdditionalQueries {
      */
     bulkImportFromProtobuf = async (repositoryData: RepositoryData, bulkImport: PBBulkImport): Promise<BulkImportResultType> => {
         requestLogger.info(
-            `LionWebQueries.bulkImportFromProtobuf (nodes ${bulkImport.nodesLength()}, attach points: ${bulkImport.attachPointsLength()})`
+            `LionWebQueries.bulkImportFromProtobuf (nodes ${bulkImport.nodes.length}, attach points: ${bulkImport.attachPoints.length})`
         )
         const pool = this.context.pgPool
 
