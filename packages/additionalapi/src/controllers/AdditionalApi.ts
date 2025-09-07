@@ -4,9 +4,9 @@ import { AdditionalApiContext } from "../main.js"
 import { HttpClientErrors, HttpSuccessCodes } from "@lionweb/server-shared"
 import { lionwebResponse } from "@lionweb/server-common"
 import { dbLogger, getIntegerParam, isParameterError } from "@lionweb/server-common"
-import { PBBulkImport, PBMetaPointer } from "../proto/index.js"
+import { PBBulkImport, PBLanguage, PBMetaPointer } from "../proto/index.js"
 import { BulkImport } from "@lionweb/server-shared"
-import { LionWebJsonMetaPointer } from "@lionweb/json"
+import { LionWebJsonMetaPointer, LionWebJsonUsedLanguage } from "@lionweb/json"
 import { ByteBuffer } from "flatbuffers"
 import { FBBulkImport } from "@lionweb/server-shared"
 
@@ -134,16 +134,26 @@ export class AdditionalApiImpl implements AdditionalApi {
         // In the ProtoBuf format we use a map of strings, to save space, given the node id and strings describing
         // metapointers are always repeated
         const stringsMap = new Map<number, string>()
-        pbBulkImport.stringValues.forEach((string: string, index: number) => {
+        pbBulkImport.internedStrings.forEach((string: string, index: number) => {
             stringsMap.set(index, string)
+        })
+
+        const languagesMap = new Map<number, LionWebJsonUsedLanguage>()
+        pbBulkImport.internedLanguages.forEach((pbLanguage: PBLanguage, index: number) => {
+            const languageVersion: LionWebJsonUsedLanguage = {
+                key: stringsMap.get(pbLanguage.key),
+                version: stringsMap.get(pbLanguage.version)
+            }
+            languagesMap.set(index, languageVersion)
         })
 
         // We do the same also for metapointer, which are duplicated over and over
         const metaPointersMap = new Map<number, LionWebJsonMetaPointer>()
-        pbBulkImport.metaPointers.forEach((pbMetaPointer: PBMetaPointer, index: number) => {
+        pbBulkImport.internedMetaPointers.forEach((pbMetaPointer: PBMetaPointer, index: number) => {
+            const languageVersion : LionWebJsonUsedLanguage = languagesMap.get(pbMetaPointer.language);
             const metaPointer: LionWebJsonMetaPointer = {
-                language: stringsMap.get(pbMetaPointer.language),
-                version: stringsMap.get(pbMetaPointer.version),
+                language: languageVersion.key,
+                version: languageVersion.version,
                 key: stringsMap.get(pbMetaPointer.key)
             }
             metaPointersMap.set(index, metaPointer)
@@ -173,19 +183,19 @@ export class AdditionalApiImpl implements AdditionalApi {
                 annotations: [],
                 properties: pbNode.properties.map(p => {
                     return {
-                        property: findMetaPointer(p.metaPointerIndex),
+                        property: findMetaPointer(p.metaPointer),
                         value: stringsMap.get(p.value)
                     }
                 }),
                 containments: pbNode.containments.map(c => {
                     return {
-                        containment: findMetaPointer(c.metaPointerIndex),
+                        containment: findMetaPointer(c.metaPointer),
                         children: c.children.map(child => stringsMap.get(child))
                     }
                 }),
                 references: pbNode.references.map(r => {
                     return {
-                        reference: findMetaPointer(r.metaPointerIndex),
+                        reference: findMetaPointer(r.metaPointer),
                         targets: r.values.map(rv => {
                             return {
                                 reference: stringsMap.get(rv.referred),
