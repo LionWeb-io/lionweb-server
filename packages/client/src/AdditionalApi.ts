@@ -1,22 +1,20 @@
 import {
     BulkImport,
-    LionwebResponse
-} from "@lionweb/server-shared"
-import { ClientResponse, RepositoryClient } from "./RepositoryClient.js"
-import { LionWebJsonMetaPointer, LionWebJsonUsedLanguage } from "@lionweb/json"
-import { InputType, ZlibOptions } from "zlib"
-import {
+    LionwebResponse,
     PBAttachPoint,
     PBBulkImport,
     PBContainment,
     PBLanguage,
+    PBMetaPointer,
     PBNode,
     PBProperty,
     PBReference,
     PBReferenceValue,
     PROTOBUF_CONTENT_TYPE
-} from "@lionweb/server-additionalapi"
-import { PBMetaPointer } from "@lionweb/server-additionalapi"
+} from "@lionweb/server-shared"
+import { ClientResponse, RepositoryClient } from "./RepositoryClient.js"
+import { LionWebJsonMetaPointer, LionWebJsonUsedLanguage } from "@lionweb/json"
+import { InputType, ZlibOptions } from "zlib"
 
 export enum TransferFormat {
     JSON = "json",
@@ -179,63 +177,89 @@ class InterningContext {
 export function encodeBulkImportToProtobuf(bulkImport: BulkImport): Uint8Array {
     const containerByAttached: Record<string, string> = {}
     const interningContext = new InterningContext()
+    const { attachPoints: inputAttachPoints, nodes: inputNodes } = bulkImport
 
-    // Convert attach points
-    const attachPoints: PBAttachPoint[] = bulkImport.attachPoints.map(ap => {
+    // Pre-allocate arrays
+    const attachPoints = new Array<PBAttachPoint>(inputAttachPoints.length)
+    const nodes = new Array<PBNode>(inputNodes.length)
+
+    // Convert attach points with for loop
+    for (let attachPointIndex = 0; attachPointIndex < inputAttachPoints.length; attachPointIndex++) {
+        const ap = inputAttachPoints[attachPointIndex]
         containerByAttached[ap.root] = ap.container
-        
-        return PBAttachPoint.create({
+
+        attachPoints[attachPointIndex] = PBAttachPoint.create({
             container: interningContext.internString(ap.container),
             metaPointerIndex: interningContext.internMetaPointer(ap.containment),
             rootId: interningContext.internString(ap.root)
         })
-    })
+    }
 
-    // Convert nodes
-    const nodes: PBNode[] = bulkImport.nodes.map(node => {
+    // Convert nodes with for loops
+    for (let nodeIndex = 0; nodeIndex < inputNodes.length; nodeIndex++) {
+        const node = inputNodes[nodeIndex]
+        const { properties: inputProperties, containments: inputContainments, references: inputReferences, annotations: inputAnnotations } = node
+
         // Convert properties
-        const properties: PBProperty[] = node.properties.map(p => 
-            PBProperty.create({
+        const properties = new Array<PBProperty>(inputProperties.length)
+        for (let propertyIndex = 0; propertyIndex < inputProperties.length; propertyIndex++) {
+            const p = inputProperties[propertyIndex]
+            properties[propertyIndex] = PBProperty.create({
                 metaPointer: interningContext.internMetaPointer(p.property),
                 value: interningContext.internString(p.value)
             })
-        )
+        }
 
         // Convert containments
-        const containments: PBContainment[] = node.containments.map(c =>
-            PBContainment.create({
-                metaPointer:interningContext.internMetaPointer(c.containment),
-                children: c.children.map(child => interningContext.internString(child))
+        const containments = new Array<PBContainment>(inputContainments.length)
+        for (let containmentIndex = 0; containmentIndex < inputContainments.length; containmentIndex++) {
+            const c = inputContainments[containmentIndex]
+            const children = new Array<number>(c.children.length)
+            for (let k = 0; k < c.children.length; k++) {
+                children[k] = interningContext.internString(c.children[k])
+            }
+            containments[containmentIndex] = PBContainment.create({
+                metaPointer: interningContext.internMetaPointer(c.containment),
+                children: children
             })
-        )
+        }
 
         // Convert references
-        const references: PBReference[] = node.references.map(r => {
-            const values: PBReferenceValue[] = r.targets.map(entry =>
-                PBReferenceValue.create({
+        const references = new Array<PBReference>(inputReferences.length)
+        for (let referenceIndex = 0; referenceIndex < inputReferences.length; referenceIndex++) {
+            const r = inputReferences[referenceIndex]
+            const values = new Array<PBReferenceValue>(r.targets.length)
+            for (let targetIndex = 0; targetIndex < r.targets.length; targetIndex++) {
+                const entry = r.targets[targetIndex]
+                values[targetIndex] = PBReferenceValue.create({
                     resolveInfo: interningContext.internString(entry.resolveInfo),
                     referred: interningContext.internString(entry.reference)
                 })
-            )
-
-            return PBReference.create({
+            }
+            references[referenceIndex] = PBReference.create({
                 metaPointer: interningContext.internMetaPointer(r.reference),
                 values: values
             })
-        })
+        }
+
+        // Convert annotations
+        const annotations = new Array<number>(inputAnnotations.length)
+        for (let annotationIndex = 0; annotationIndex < inputAnnotations.length; annotationIndex++) {
+            annotations[annotationIndex] = interningContext.internString(inputAnnotations[annotationIndex])
+        }
 
         const parentId = node.parent ?? containerByAttached[node.id]
 
-        return PBNode.create({
+        nodes[nodeIndex] = PBNode.create({
             id: interningContext.internString(node.id),
             classifier: interningContext.internMetaPointer(node.classifier),
             properties: properties,
             containments: containments,
             references: references,
-            annotations: node.annotations.map(a => interningContext.internString(a)),
+            annotations: annotations,
             parent: interningContext.internString(parentId)
         })
-    })
+    }
 
     // Create the protobuf message
     const pbBulkImport = PBBulkImport.create({

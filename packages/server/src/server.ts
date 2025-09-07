@@ -19,11 +19,10 @@ import { registerInspection } from "@lionweb/server-inspection"
 import { registerBulkApi } from "@lionweb/server-bulkapi"
 import {
     JSON_CONTENT_TYPE,
-    PROTOBUF_CONTENT_TYPE,
     registerAdditionalApi
 } from "@lionweb/server-additionalapi"
 import { registerLanguagesApi } from "@lionweb/server-languages"
-import { HttpClientErrors } from "@lionweb/server-shared"
+import { HttpClientErrors, PROTOBUF_CONTENT_TYPE } from "@lionweb/server-shared"
 import { pinoHttp } from "pino-http"
 import * as http from "node:http"
 

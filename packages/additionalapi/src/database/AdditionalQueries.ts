@@ -7,10 +7,9 @@ import {
     makeQueryToCheckHowManyDoNotExist,
     makeQueryToCheckHowManyExist
 } from "./QueryNode.js"
-import { performImportFromProtobuf, populateFromBulkImport, storeNodes } from "./ImportLogic.js"
+import { populateFromBulkImport, storeNodes } from "./ImportLogic.js"
 import { MetaPointersTracker } from "@lionweb/server-dbadmin"
 import { AttachPoint, BulkImport } from "@lionweb/server-shared"
-import { PBBulkImport } from "../proto/index.js"
 
 export type NodeTreeResultType = {
     id: string
