@@ -1,15 +1,12 @@
 import { getRepositoryData } from "@lionweb/server-dbadmin"
 import { Request, Response } from "express"
 import { AdditionalApiContext } from "../main.js"
-import { HttpClientErrors, HttpSuccessCodes } from "@lionweb/server-shared"
+import { HttpClientErrors, HttpSuccessCodes, PROTOBUF_CONTENT_TYPE } from "@lionweb/server-shared"
 import { lionwebResponse } from "@lionweb/server-common"
 import { dbLogger, getIntegerParam, isParameterError } from "@lionweb/server-common"
-import { PBBulkImport, PBLanguage, PBMetaPointer } from "../proto/index.js"
-import { BulkImport } from "@lionweb/server-shared"
-import { LionWebJsonMetaPointer, LionWebJsonUsedLanguage } from "@lionweb/json"
+import { BulkImport, PBBulkImport } from "@lionweb/server-shared"
 
 export const JSON_CONTENT_TYPE = "application/json"
-export const PROTOBUF_CONTENT_TYPE = "application/protobuf"
 
 export interface AdditionalApi {
     getNodeTree(request: Request, response: Response): void

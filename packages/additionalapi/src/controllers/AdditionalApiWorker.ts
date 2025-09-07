@@ -1,7 +1,6 @@
 import { RepositoryData, requestLogger } from "@lionweb/server-common";
 import { AdditionalApiContext } from "../main.js";
 import { BulkImport } from "@lionweb/server-shared"
-import { PBBulkImport } from "../proto/index.js"
 
 /**
  * Implementations of the additional non-LionWeb methods.

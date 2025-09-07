@@ -1,8 +1,7 @@
 import {CONTAINMENTS_TABLE, NODES_TABLE} from "@lionweb/server-common";
-import { AttachPoint } from "@lionweb/server-shared"
+import { AttachPoint, PBAttachPoint, PBLanguage, PBMetaPointer } from "@lionweb/server-shared"
 import {MetaPointersTracker} from "@lionweb/server-dbadmin";
 import {forPBMetapointer} from "./ImportLogic.js";
-import { PBAttachPoint, PBLanguage, PBMetaPointer } from "../proto/index.js"
 
 function sqlArrayFromNodeIdArray(strings: string[]): string {
     return `(${strings.map(id => `'${id}'`).join(", ")})`
