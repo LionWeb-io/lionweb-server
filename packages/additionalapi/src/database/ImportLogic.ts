@@ -2,13 +2,14 @@ import { LionWebJsonNode } from "@lionweb/json"
 import { Duplex } from "stream"
 import { PoolClient } from "pg"
 import { from as copyFrom } from "pg-copy-streams"
-import { makeQueryToAttachNodeForFlatBuffers, makeQueryToCheckHowManyDoNotExist, makeQueryToCheckHowManyExist } from "./QueryNode.js"
-import { HttpClientErrors, HttpSuccessCodes, FBBulkImport, FBMetaPointer } from "@lionweb/server-shared"
 import { DbConnection, RepositoryData } from "@lionweb/server-common"
-import { BulkImportResultType } from "./AdditionalQueries.js"
-import { BulkImport } from "@lionweb/server-shared"
+import { BulkImport, HttpClientErrors, HttpSuccessCodes } from "@lionweb/server-shared"
+import { PBBulkImport } from "@lionweb/server-additionalapi"
 import { MetaPointersCollector, MetaPointersTracker } from "@lionweb/server-dbadmin"
 import { finished } from "stream/promises"
+import { BulkImportResultType } from "./AdditionalQueries.js"
+import { PBLanguage, PBMetaPointer } from "../proto/index.js"
+import { makeQueryToAttachNodeForProtobuf, makeQueryToCheckHowManyDoNotExist } from "./QueryNode.js"
 
 const SEPARATOR = "\t"
 
@@ -99,25 +100,31 @@ function prepareInputStreamContainments(nodes: LionWebJsonNode[], metaPointersTr
     return read_stream_string
 }
 
-function prepareInputStreamNodesFlatBuffers(bulkImport: FBBulkImport, metaPointersTracker: MetaPointersTracker): Duplex {
+function prepareInputStreamNodesProtobuf(bulkImport: PBBulkImport, metaPointersTracker: MetaPointersTracker): Duplex {
     const read_stream_string = new Duplex()
-    for (let i = 0; i < bulkImport.nodesLength(); i++) {
-        const node = bulkImport.nodes(i)
-        const classifier = node.classifier()
-        read_stream_string.push(node.id())
+
+    // Protobuf uses arrays instead of length() methods
+    for (let i = 0; i < bulkImport.nodes.length; i++) {
+        const node = bulkImport.nodes[i]
+        const classifierIndex = node.classifier
+        const classifier = bulkImport.internedMetaPointers[classifierIndex]
+
+        // Direct property access instead of method calls
+        read_stream_string.push(node.id)
         read_stream_string.push(SEPARATOR)
-        read_stream_string.push(forFBMetapointer(metaPointersTracker, classifier).toString())
+        read_stream_string.push(forPBMetapointer(metaPointersTracker, classifier, bulkImport.internedLanguages, bulkImport.internedStrings).toString())
         read_stream_string.push(SEPARATOR)
-        const annotations: string[] = new Array<string>(node.annotationsLength())
-        for (let k = 0; k < node.annotationsLength(); k++) {
-            annotations[k] = node.annotations(k)
-        }
+
+        // Protobuf annotations are already an array
+        const annotations = node.annotations || []
         read_stream_string.push("{" + annotations.join(",") + "}")
         read_stream_string.push(SEPARATOR)
-        if (node.parent() == null) {
+
+        // Check for parent property
+        if (node.parent == null || node.parent === undefined) {
             read_stream_string.push("\\N")
         } else {
-            read_stream_string.push(node.parent())
+            read_stream_string.push(node.parent)
         }
         read_stream_string.push("\n")
     }
@@ -125,23 +132,25 @@ function prepareInputStreamNodesFlatBuffers(bulkImport: FBBulkImport, metaPointe
     return read_stream_string
 }
 
-function prepareInputStreamPropertiesFlatBuffers(bulkImport: FBBulkImport, metaPointersTracker: MetaPointersTracker): Duplex {
+function prepareInputStreamPropertiesProtobuf(bulkImport: PBBulkImport, metaPointersTracker: MetaPointersTracker): Duplex {
     const read_stream_string = new Duplex()
-    for (let i = 0; i < bulkImport.nodesLength(); i++) {
-        const node = bulkImport.nodes(i)
-        for (let j = 0; j < node.propertiesLength(); j++) {
-            const prop = node.properties(j)
-            const metaPointer = prop.metaPointer()
-            read_stream_string.push(forFBMetapointer(metaPointersTracker, metaPointer).toString())
+    for (let i = 0; i < bulkImport.nodes.length; i++) {
+        const node = bulkImport.nodes[i]
+        for (let j = 0; j < node.properties.length; j++) {
+            const prop = node.properties[j]
+            const metaPointerIndex = prop.metaPointer
+            const metaPointer = bulkImport.internedMetaPointers[metaPointerIndex]
+            read_stream_string.push(forPBMetapointer(metaPointersTracker, metaPointer, bulkImport.internedLanguages, bulkImport.internedStrings).toString())
             read_stream_string.push(SEPARATOR)
-            const value = prop.value()
-            if (value == null) {
+            const valueIndex = prop.value
+            if (valueIndex == null || valueIndex === undefined) {
                 read_stream_string.push("\\N")
             } else {
+                const value = bulkImport.internedStrings[valueIndex]
                 read_stream_string.push(value.replaceAll("\n", "\\n").replaceAll("\r", "\\r").replaceAll("\t", "\\t"))
             }
             read_stream_string.push(SEPARATOR)
-            read_stream_string.push(node.id())
+            read_stream_string.push(node.id)
             read_stream_string.push("\n")
         }
     }
@@ -149,31 +158,32 @@ function prepareInputStreamPropertiesFlatBuffers(bulkImport: FBBulkImport, metaP
     return read_stream_string
 }
 
-function prepareInputStreamReferencesFlatBuffers(bulkImport: FBBulkImport, metaPointersTracker: MetaPointersTracker): Duplex {
+function prepareInputStreamReferencesProtobuf(bulkImport: PBBulkImport, metaPointersTracker: MetaPointersTracker): Duplex {
     const read_stream_string = new Duplex()
-    for (let i = 0; i < bulkImport.nodesLength(); i++) {
-        const node = bulkImport.nodes(i)
-        for (let j = 0; j < node.referencesLength(); j++) {
-            const ref = node.references(j)
-            const metaPointer = ref.metaPointer()
-            read_stream_string.push(forFBMetapointer(metaPointersTracker, metaPointer).toString())
+    for (let i = 0; i < bulkImport.nodes.length; i++) {
+        const node = bulkImport.nodes[i]
+        for (let j = 0; j < node.references.length; j++) {
+            const ref = node.references[j]
+            const metaPointerIndex = ref.metaPointer
+            const metaPointer = bulkImport.internedMetaPointers[metaPointerIndex]
+            read_stream_string.push(forPBMetapointer(metaPointersTracker, metaPointer, bulkImport.internedLanguages, bulkImport.internedStrings).toString())
             read_stream_string.push(SEPARATOR)
 
-            const parts: string[] = new Array<string>(ref.valuesLength())
-            for (let k = 0; k < ref.valuesLength(); k++) {
-                const value = ref.values(k)
+            const parts: string[] = []
+            for (let k = 0; k < ref.values.length; k++) {
+                const value = ref.values[k]
                 let refStr = "null"
-                const referred = value.referred()
-                if (referred != null) {
+                const referred = value.referred
+                if (referred != null && referred !== undefined) {
                     refStr = `\\\\"${referred}\\\\"`
                 }
-                parts[k] = `"{\\\\"reference\\\\": ${refStr}, \\\\"resolveInfo\\\\": \\\\"${value.resolveInfo()}\\\\"}"`
+                parts[k] = `"{\\\\"reference\\\\": ${refStr}, \\\\"resolveInfo\\\\": \\\\"${value.resolveInfo || ''}\\\\"}"`
             }
 
             const refValueStr = "{" + parts.join(",") + "}"
             read_stream_string.push(refValueStr)
             read_stream_string.push(SEPARATOR)
-            read_stream_string.push(node.id())
+            read_stream_string.push(node.id)
             read_stream_string.push("\n")
         }
     }
@@ -181,22 +191,20 @@ function prepareInputStreamReferencesFlatBuffers(bulkImport: FBBulkImport, metaP
     return read_stream_string
 }
 
-function prepareInputStreamContainmentsFlatBuffers(bulkImport: FBBulkImport, metaPointersTracker: MetaPointersTracker): Duplex {
+function prepareInputStreamContainmentsProtobuf(bulkImport: PBBulkImport, metaPointersTracker: MetaPointersTracker): Duplex {
     const read_stream_string = new Duplex()
-    for (let i = 0; i < bulkImport.nodesLength(); i++) {
-        const node = bulkImport.nodes(i)
-        for (let j = 0; j < node.containmentsLength(); j++) {
-            const containment = node.containments(j)
-            const metaPointer = containment.metaPointer()
-            read_stream_string.push(forFBMetapointer(metaPointersTracker, metaPointer).toString())
+    for (let i = 0; i < bulkImport.nodes.length; i++) {
+        const node = bulkImport.nodes[i]
+        for (let j = 0; j < node.containments.length; j++) {
+            const containment = node.containments[j]
+            const metaPointerIndex = containment.metaPointer
+            const metaPointer = bulkImport.internedMetaPointers[metaPointerIndex]
+            read_stream_string.push(forPBMetapointer(metaPointersTracker, metaPointer, bulkImport.internedLanguages, bulkImport.internedStrings).toString())
             read_stream_string.push(SEPARATOR)
-            const children: string[] = new Array<string>(containment.childrenLength())
-            for (let k = 0; k < containment.childrenLength(); k++) {
-                children[k] = containment.children(k)
-            }
+            const children = containment.children || []
             read_stream_string.push("{" + children.join(",") + "}")
             read_stream_string.push(SEPARATOR)
-            read_stream_string.push(node.id())
+            read_stream_string.push(node.id)
             read_stream_string.push("\n")
         }
     }
@@ -268,88 +276,91 @@ export async function storeNodes(
     }
 }
 
-async function storeNodesThroughFlatBuffers(
+async function storeNodesThroughProtobuf(
     client: PoolClient,
     repositoryData: RepositoryData,
     dbConnection: DbConnection,
-    bulkImport: FBBulkImport
+    bulkImport: PBBulkImport
 ): Promise<MetaPointersTracker> {
     // We obtain all the indexes for all the MetaPointers we need. We will then use such indexes in successive calls
     // to pipeInputIntoQueryStream, etc.
     const metaPointersTracker = new MetaPointersTracker(repositoryData)
-    await populateThroughFlatBuffers(metaPointersTracker, bulkImport, repositoryData, dbConnection)
+    await populateThroughProtobuf(metaPointersTracker, bulkImport, repositoryData, dbConnection)
 
     const repositoryName = repositoryData.repository.repository_name
     const schemaName = repositoryData.repository.schema_name
     await pipeInputIntoQueryStream(
         client,
         `COPY "${schemaName}".lionweb_nodes(id,classifier,annotations,parent) FROM STDIN`,
-        prepareInputStreamNodesFlatBuffers(bulkImport, metaPointersTracker),
+        prepareInputStreamNodesProtobuf(bulkImport, metaPointersTracker),
         "nodes insertion"
     )
     await pipeInputIntoQueryStream(
         client,
         `COPY "${schemaName}".lionweb_containments(containment,children,node_id) FROM STDIN`,
-        prepareInputStreamContainmentsFlatBuffers(bulkImport, metaPointersTracker),
+        prepareInputStreamContainmentsProtobuf(bulkImport, metaPointersTracker),
         "containments insertion"
     )
     await pipeInputIntoQueryStream(
         client,
         `COPY "${schemaName}".lionweb_references(reference,targets,node_id) FROM STDIN`,
-        prepareInputStreamReferencesFlatBuffers(bulkImport, metaPointersTracker),
+        prepareInputStreamReferencesProtobuf(bulkImport, metaPointersTracker),
         `references ${repositoryName}`
     )
     await pipeInputIntoQueryStream(
         client,
         `COPY "${schemaName}".lionweb_properties(property,value,node_id) FROM STDIN`,
-        prepareInputStreamPropertiesFlatBuffers(bulkImport, metaPointersTracker),
+        prepareInputStreamPropertiesProtobuf(bulkImport, metaPointersTracker),
         `properties ${repositoryName}`
     )
     return metaPointersTracker
 }
 
 /**
- * This is a variant of bulkImport that operates directly on Flatbuffers data structures, instead of converting them
+ * This is a variant of bulkImport that operates directly on Protobuf data structures, instead of converting them
  * to the "neutral" format and invoke bulkImport. This choice has been made for performance reasons.
  */
-export async function performImportFromFlatBuffers(
+export async function performImportFromProtobuf(
     client: PoolClient,
     dbConnection: DbConnection,
-    bulkImport: FBBulkImport,
+    bulkImport: PBBulkImport,
     repositoryData: RepositoryData
 ): Promise<BulkImportResultType> {
     try {
         // Check - We verify there are no duplicate IDs in the new nodes
         const newNodesSet = new Set<string>()
         const parentsSet: Set<string> = new Set<string>()
-        for (let i = 0; i < bulkImport.nodesLength(); i++) {
-            const fbNode = bulkImport.nodes(i)
-            const fbNodeID = fbNode.id()
-            if (newNodesSet.has(fbNodeID)) {
+        for (let i = 0; i < bulkImport.nodes.length; i++) {
+            const pbNode = bulkImport.nodes[i]
+            const pbNodeID = bulkImport.internedStrings[pbNode.id]
+            if (newNodesSet.has(pbNodeID)) {
                 return {
                     status: HttpClientErrors.BadRequest,
                     success: false,
-                    description: `Node with ID ${fbNodeID} is being inserted twice`
+                    description: `Node with ID ${pbNodeID} is being inserted twice`
                 }
             }
-            newNodesSet.add(fbNodeID)
-            parentsSet.add(fbNode.parent())
+            newNodesSet.add(pbNodeID)
+            const parent = bulkImport.internedStrings[pbNode.parent]
+            if (parent) {
+                parentsSet.add(parent)
+            }
         }
 
         // Check - We verify all the parent nodes are either other new nodes or the attach points containers
         // Check - verify the root of the attach points are among the new nodes
         const attachPointContainers: Set<string> = new Set<string>()
-        for (let i = 0; i < bulkImport.attachPointsLength(); i++) {
-            const fbAttachPoint = bulkImport.attachPoints(i)
-            const fbAttachPointRoot = fbAttachPoint.root()
-            if (!newNodesSet.has(fbAttachPointRoot)) {
+        for (let i = 0; i < bulkImport.attachPoints.length; i++) {
+            const pbAttachPoint = bulkImport.attachPoints[i]
+            const pbAttachPointRoot = bulkImport.internedStrings[pbAttachPoint.rootId]
+            if (!newNodesSet.has(pbAttachPointRoot)) {
                 return {
                     status: HttpClientErrors.BadRequest,
                     success: false,
-                    description: `Attach point root ${fbAttachPointRoot} does not appear among the new nodes`
+                    description: `Attach point root ${pbAttachPointRoot} does not appear among the new nodes`
                 }
             }
-            attachPointContainers.add(fbAttachPoint.container())
+            attachPointContainers.add(bulkImport.internedStrings[pbAttachPoint.container])
         }
         parentsSet.forEach(parent => {
             if (!newNodesSet.has(parent) && !attachPointContainers.has(parent)) {
@@ -363,7 +374,7 @@ export async function performImportFromFlatBuffers(
 
         // Check - verify all the given new nodes are effectively new
         const allNewNodesResult =
-            newNodesSet.size == 0 ? 0 : await dbConnection.query(repositoryData, makeQueryToCheckHowManyExist(newNodesSet))
+            newNodesSet.size == 0 ? 0 : await dbConnection.query(repositoryData, makeQueryToCheckHowManyDoNotExist(newNodesSet))
         if (allNewNodesResult > 0) {
             return {
                 status: HttpClientErrors.BadRequest,
@@ -386,12 +397,13 @@ export async function performImportFromFlatBuffers(
         }
 
         // Add all the new nodes
-        const metaPointersTracker = await storeNodesThroughFlatBuffers(client, repositoryData, dbConnection, bulkImport)
+        const metaPointersTracker = await storeNodesThroughProtobuf(client, repositoryData, dbConnection, bulkImport)
 
         // Attach the root of the new nodes to existing containers
-        for (let i = 0; i < bulkImport.attachPointsLength(); i++) {
-            const fbAttachPoint = bulkImport.attachPoints(i)
-            await dbConnection.query(repositoryData, makeQueryToAttachNodeForFlatBuffers(fbAttachPoint, metaPointersTracker))
+        for (let i = 0; i < bulkImport.attachPoints.length; i++) {
+            const pbAttachPoint = bulkImport.attachPoints[i]
+            await dbConnection.query(repositoryData, makeQueryToAttachNodeForProtobuf(pbAttachPoint, metaPointersTracker,
+                bulkImport.internedLanguages, bulkImport.internedStrings, bulkImport.internedMetaPointers))
         }
 
         return { status: HttpSuccessCodes.Ok, success: true }
@@ -400,51 +412,58 @@ export async function performImportFromFlatBuffers(
     }
 }
 
-async function populateThroughFlatBuffers(
+async function populateThroughProtobuf(
     metaPointersTracker: MetaPointersTracker,
-    bulkImport: FBBulkImport,
+    bulkImport: PBBulkImport,
     repositoryData: RepositoryData,
     dbConnection: DbConnection
 ): Promise<void> {
     await metaPointersTracker.populate((collector: MetaPointersCollector) => {
-        function considerAddingFBMetaPointer(metaPointer: FBMetaPointer) {
+        function considerAddingPBMetaPointer(metaPointer: PBMetaPointer) {
+            const languageVersion = bulkImport.internedLanguages[metaPointer.language]
             collector.considerAddingMetaPointer({
-                key: metaPointer.key(),
-                version: metaPointer.version(),
-                language: metaPointer.language()
+                key: bulkImport.internedStrings[metaPointer.key],
+                version: bulkImport.internedStrings[languageVersion.version],
+                language: bulkImport.internedStrings[languageVersion.key]
             })
         }
 
-        for (let i = 0; i < bulkImport.nodesLength(); i++) {
-            const fbNode = bulkImport.nodes(i)
-            const metaPointer = fbNode.classifier()
-            considerAddingFBMetaPointer(metaPointer)
-            for (let j = 0; j < fbNode.containmentsLength(); j++) {
-                const metaPointer = fbNode.containments(j).metaPointer()
-                considerAddingFBMetaPointer(metaPointer)
+        for (let i = 0; i < bulkImport.nodes.length; i++) {
+            const pbNode = bulkImport.nodes[i]
+            const metaPointerIndex = pbNode.classifier
+            const metaPointer = bulkImport.internedMetaPointers[metaPointerIndex]
+            considerAddingPBMetaPointer(metaPointer)
+            for (let j = 0; j < pbNode.containments.length; j++) {
+                const metaPointerIndex = pbNode.containments[j].metaPointer
+                const metaPointer = bulkImport.internedMetaPointers[metaPointerIndex]
+                considerAddingPBMetaPointer(metaPointer)
             }
-            for (let j = 0; j < fbNode.referencesLength(); j++) {
-                const metaPointer = fbNode.references(j).metaPointer()
-                considerAddingFBMetaPointer(metaPointer)
+            for (let j = 0; j < pbNode.references.length; j++) {
+                const metaPointerIndex = pbNode.references[j].metaPointer
+                const metaPointer = bulkImport.internedMetaPointers[metaPointerIndex]
+                considerAddingPBMetaPointer(metaPointer)
             }
-            for (let j = 0; j < fbNode.propertiesLength(); j++) {
-                const metaPointer = fbNode.properties(j).metaPointer()
-                considerAddingFBMetaPointer(metaPointer)
+            for (let j = 0; j < pbNode.properties.length; j++) {
+                const metaPointerIndex = pbNode.properties[j].metaPointer
+                const metaPointer = bulkImport.internedMetaPointers[metaPointerIndex]
+                considerAddingPBMetaPointer(metaPointer)
             }
         }
-        for (let i = 0; i < bulkImport.attachPointsLength(); i++) {
-            const attachPoint = bulkImport.attachPoints(i)
-            const metaPointer = attachPoint.containment()
-            considerAddingFBMetaPointer(metaPointer)
+        for (let i = 0; i < bulkImport.attachPoints.length; i++) {
+            const attachPoint = bulkImport.attachPoints[i]
+            const metaPointer = bulkImport.internedMetaPointers[attachPoint.metaPointerIndex]
+            considerAddingPBMetaPointer(metaPointer)
         }
     }, dbConnection)
 }
 
-export function forFBMetapointer(metaPointersTracker: MetaPointersTracker, metaPointer: FBMetaPointer): number {
+export function forPBMetapointer(metaPointersTracker: MetaPointersTracker, metaPointer: PBMetaPointer,
+                                 internedLanguages: PBLanguage[], internedStrings: string[]): number {
+    const language = internedLanguages[metaPointer.language]
     return metaPointersTracker.forMetaPointer({
-        key: metaPointer.key(),
-        language: metaPointer.language(),
-        version: metaPointer.version()
+        key: internedStrings[metaPointer.key],
+        language: internedStrings[language.key],
+        version: internedStrings[language.version]
     })
 }
 

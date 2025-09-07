@@ -37,25 +37,13 @@ Note that:
 ## Binary formats
 
 The operation can use a payload specified in JSON format or one two binary formats.
-The binary formats are both from Google: one is ProtoBuf, while the other one is FlatBuffers.
-Both have bindings for many languages and are efficient. However FlatBuffers has an edge, as it seems
-slightly faster. ProtoBuf on the other hand is more well-known.
+The binary format is ProtoBuf.
 
 For both formats we define schemas in their own DSL and then we generate code in Typescript to read
 binary messages based on those schemas.
 
 Resources:
-* [FlatBuffers](https://flatbuffers.dev/)
 * [ProtoBuf](https://protobuf.dev/)
-
-## How to generate FlatBuffers code
-
-From the root of this package run:
-
-```
-flatc --ts -o src src/flatbuffers/chunk.fbs
-flatc --ts -o src src/flatbuffers/bulkimport.fbs
-```
 
 ## How to generate ProtoBuf code
 

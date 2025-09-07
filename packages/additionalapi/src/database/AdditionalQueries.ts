@@ -7,9 +7,9 @@ import {
     makeQueryToCheckHowManyDoNotExist,
     makeQueryToCheckHowManyExist
 } from "./QueryNode.js"
-import { performImportFromFlatBuffers, populateFromBulkImport, storeNodes } from "./ImportLogic.js"
+import { performImportFromProtobuf, populateFromBulkImport, storeNodes } from "./ImportLogic.js"
 import { MetaPointersTracker } from "@lionweb/server-dbadmin"
-import { AttachPoint, BulkImport, FBBulkImport } from "@lionweb/server-shared"
+import { AttachPoint, BulkImport } from "@lionweb/server-shared"
 
 export type NodeTreeResultType = {
     id: string
@@ -136,15 +136,15 @@ export class AdditionalQueries {
     }
 
     /**
-     * This is a variant of bulkImport that operates directly on Flatbuffers data structures, instead of converting them
+     * This is a variant of bulkImport that operates directly on Protobuf data structures, instead of converting them
      * to the "neutral" format and invoke bulkImport. This choice has been made for performance reasons.
      */
-    bulkImportFromFlatBuffers = async (repositoryData: RepositoryData, bulkImport: FBBulkImport): Promise<BulkImportResultType> => {
+    bulkImportFromProtobuf = async (repositoryData: RepositoryData, bulkImport: PBBulkImport): Promise<BulkImportResultType> => {
         requestLogger.info(
-            `LionWebQueries.bulkImportFromFlatBuffers (nodes ${bulkImport.nodesLength()}, attach points: ${bulkImport.attachPointsLength()})`
+            `LionWebQueries.bulkImportFromProtobuf (nodes ${bulkImport.nodesLength()}, attach points: ${bulkImport.attachPointsLength()})`
         )
         const pool = this.context.pgPool
 
-        return await performImportFromFlatBuffers(await pool.connect(), this.context.dbConnection, bulkImport, repositoryData)
+        return await performImportFromProtobuf(await pool.connect(), this.context.dbConnection, bulkImport, repositoryData)
     }
 }

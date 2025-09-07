@@ -64,7 +64,7 @@ describe("Client - Additional API tests", () => {
         const combinations = [
             { format: TransferFormat.JSON, compression: false },
             { format: TransferFormat.JSON, compression: true },
-            { format: TransferFormat.FLATBUFFERS, compression: false }
+            { format: TransferFormat.PROTOBUF, compression: false }
         ]
         combinations.forEach(combination => {
             const format = combination.format

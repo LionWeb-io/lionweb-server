@@ -7,12 +7,9 @@ import { dbLogger, getIntegerParam, isParameterError } from "@lionweb/server-com
 import { PBBulkImport, PBLanguage, PBMetaPointer } from "../proto/index.js"
 import { BulkImport } from "@lionweb/server-shared"
 import { LionWebJsonMetaPointer, LionWebJsonUsedLanguage } from "@lionweb/json"
-import { ByteBuffer } from "flatbuffers"
-import { FBBulkImport } from "@lionweb/server-shared"
 
 export const JSON_CONTENT_TYPE = "application/json"
 export const PROTOBUF_CONTENT_TYPE = "application/protobuf"
-export const FLATBUFFERS_CONTENT_TYPE = "application/x-flatbuffers"
 
 export interface AdditionalApi {
     getNodeTree(request: Request, response: Response): void
@@ -25,8 +22,8 @@ export interface AdditionalApi {
      * a) ID of an existing node, b) containment where to attach the tree. The root of the tree will be appended
      * to that containment.
      *
-     * This operation can receive the body in JSON, protobuffer, and flatbuffers. For optimal performance,
-     * it is recommended to use flatbuffers.
+     * This operation can receive the body in JSON, and protobuf. For optimal performance,
+     * it is recommended to use protobuf.
      */
     bulkImport(request: Request, response: Response): void
 }
@@ -104,17 +101,6 @@ export class AdditionalApiImpl implements AdditionalApi {
                 repositoryData,
                 this.convertPBBulkImportToBulkImport(bulkImport)
             )
-            lionwebResponse(response, HttpSuccessCodes.Ok, {
-                success: result.success,
-                messages: [],
-                data: []
-            })
-        } else if (request.is(FLATBUFFERS_CONTENT_TYPE)) {
-            const data = new Uint8Array(request.body.buffer, request.body.byteOffset, request.body.byteLength)
-            const buf = new ByteBuffer(data)
-            const fbBulkImport = FBBulkImport.getRootAsFBBulkImport(buf)
-
-            const result = await this.context.additionalApiWorker.bulkImportFromFlatBuffers(repositoryData, fbBulkImport)
             lionwebResponse(response, HttpSuccessCodes.Ok, {
                 success: result.success,
                 messages: [],
