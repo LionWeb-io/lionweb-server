@@ -1,7 +1,7 @@
 import {CONTAINMENTS_TABLE, NODES_TABLE} from "@lionweb/server-common";
-import { AttachPoint, FBAttachPoint } from "@lionweb/server-shared"
+import { AttachPoint } from "@lionweb/server-shared"
 import {MetaPointersTracker} from "@lionweb/server-dbadmin";
-import {forFBMetapointer} from "./ImportLogic.js";
+import {forPBMetapointer} from "./ImportLogic.js";
 
 function sqlArrayFromNodeIdArray(strings: string[]): string {
     return `(${strings.map(id => `'${id}'`).join(", ")})`
@@ -53,9 +53,12 @@ export const makeQueryToAttachNode = (attachPoint: AttachPoint, metaPointersTrac
             WHERE node_id = '${attachPoint.container}' AND containment = '${metaPointersTracker.forMetaPointer(attachPoint.containment)}';`
 }
 
-export const makeQueryToAttachNodeForFlatBuffers = (attachPoint: FBAttachPoint, metaPointersTracker: MetaPointersTracker) : string => {
-    const containment = attachPoint.containment()
+export const makeQueryToAttachNodeForProtobuf = (attachPoint: PBAttachPoint, metaPointersTracker: MetaPointersTracker,
+                                                 internedLanguages: PBLanguage[], internedStrings: string[], internedMetaPointers: PBMetaPointer[]) : string => {
+    const containment = internedMetaPointers[attachPoint.metaPointerIndex];
+    const container = internedStrings[attachPoint.container];
+    const root = internedStrings[attachPoint.root];
     return `UPDATE ${CONTAINMENTS_TABLE} 
-            SET "children"=array_append("children", '${attachPoint.root()}')
-            WHERE node_id = '${attachPoint.container()}' AND containment = ${forFBMetapointer(metaPointersTracker, containment)};`
+            SET "children"=array_append("children", '${root}')
+            WHERE node_id = '${container}' AND containment = ${forPBMetapointer(metaPointersTracker, containment, internedLanguages, internedStrings)};`
 }

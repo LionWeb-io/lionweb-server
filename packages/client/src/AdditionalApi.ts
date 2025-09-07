@@ -1,24 +1,26 @@
 import {
     BulkImport,
-    FBAttachPoint,
-    FBBulkImport,
-    FBContainment,
-    FBMetaPointer,
-    FBNode,
-    FBProperty,
-    FBReference,
-    FBReferenceValue,
     LionwebResponse
 } from "@lionweb/server-shared"
 import { ClientResponse, RepositoryClient } from "./RepositoryClient.js"
-import { Builder as FBBuilder } from "flatbuffers"
-import { LionWebJsonMetaPointer } from "@lionweb/json"
+import { LionWebJsonMetaPointer, LionWebJsonUsedLanguage } from "@lionweb/json"
 import { InputType, ZlibOptions } from "zlib"
+import {
+    PBAttachPoint,
+    PBBulkImport,
+    PBContainment,
+    PBLanguage,
+    PBNode,
+    PBProperty,
+    PBReference,
+    PBReferenceValue,
+    PROTOBUF_CONTENT_TYPE
+} from "@lionweb/server-additionalapi"
+import { PBMetaPointer } from "@lionweb/server-additionalapi"
 
 export enum TransferFormat {
     JSON = "json",
-    PROTOBUF = "protobuf",
-    FLATBUFFERS = "flatbuffers"
+    PROTOBUF = "protobuf"
 }
 
 export class AdditionalApi {
@@ -49,19 +51,19 @@ export class AdditionalApi {
                 },
                 false
             )
-        } else if (transferFormat == TransferFormat.FLATBUFFERS) {
+        } else if (transferFormat == TransferFormat.PROTOBUF) {
             if (compress) {
                 throw new Error(`We do not yet support bulk import with ${transferFormat} and compression enabled`)
             } else {
-                const flatbufferBytes = encodeBulkImportToFlatBuffer(bulkImport)
+                const protobufBytes = encodeBulkImportToProtobuf(bulkImport)
                 const headers = {
-                    "Content-Type": "application/x-flatbuffers"
+                    "Content-Type": PROTOBUF_CONTENT_TYPE
                 }
 
                 return await this.client.postWithTimeout(
                     "additional/bulkImport",
                     {
-                        body: flatbufferBytes,
+                        body: protobufBytes,
                         params: "",
                         headers
                     },
@@ -123,104 +125,126 @@ export async function compressJSON(input: unknown): Promise<BodyInit> {
     throw new Error("Compression not support: this seems to be an old browser")
 }
 
-function offsetForMetaPointer(builder: FBBuilder, mp: LionWebJsonMetaPointer): number {
-    const languageOffset = builder.createString(mp.language)
-    const keyOffset = builder.createString(mp.key)
-    const versionOffset = builder.createString(mp.version)
-    return FBMetaPointer.createFBMetaPointer(builder, languageOffset, keyOffset, versionOffset)
+class InterningContext {
+    public strings: string[] = []
+    public languages: PBLanguage[] = []
+    public metaPointers: PBMetaPointer[] = []
+    private stringsIndexingMap: Map<string, number> = new Map<string, number>()
+    private languagesIndexingMap: Map<LionWebJsonUsedLanguage, number> = new Map<LionWebJsonUsedLanguage, number>()
+    private metaPointersIndexingMap: Map<LionWebJsonMetaPointer, number> = new Map<LionWebJsonMetaPointer, number>()
+
+    internLanguage(languageVersion: LionWebJsonUsedLanguage) : number {
+        if (!this.languagesIndexingMap.has(languageVersion)) {
+            const index = this.languages.length
+            this.languages.push({
+                key: this.internString(languageVersion.key),
+                version: this.internString(languageVersion.version)
+            } as PBLanguage)
+            return index
+        }
+        return this.languagesIndexingMap.get(languageVersion)
+    }
+
+    internMetaPointer(metaPointer: LionWebJsonMetaPointer) : number {
+        if (!this.metaPointersIndexingMap.has(metaPointer)) {
+            const index = this.metaPointers.length
+            this.metaPointers.push({
+                language: this.internLanguage({
+                    key: metaPointer.language,
+                    version: metaPointer.version
+                } as LionWebJsonMetaPointer),
+                key: this.internString(metaPointer.key)
+            } as PBMetaPointer)
+            return index
+        }
+        return this.metaPointersIndexingMap.get(metaPointer)
+    }
+
+    internString(string: string) : number | undefined {
+        if (string === undefined) {
+            return undefined
+        }
+        if (!this.stringsIndexingMap.has(string)) {
+            const index = this.strings.length
+            this.stringsIndexingMap.set(string, index)
+            this.strings.push(string)
+            return index
+        }
+        return this.stringsIndexingMap.get(string)
+    }
+
+
 }
 
-export function encodeBulkImportToFlatBuffer(bulkImport: BulkImport): Uint8Array {
-    const builder = new FBBuilder(1024)
+export function encodeBulkImportToProtobuf(bulkImport: BulkImport): Uint8Array {
     const containerByAttached: Record<string, string> = {}
+    const interningContext = new InterningContext()
 
-    const attachOffsets = bulkImport.attachPoints.map(ap => {
-        const containment = offsetForMetaPointer(builder, ap.containment)
-        const container = builder.createString(ap.container)
-        const root = builder.createString(ap.root)
-
+    // Convert attach points
+    const attachPoints: PBAttachPoint[] = bulkImport.attachPoints.map(ap => {
         containerByAttached[ap.root] = ap.container
-
-        FBAttachPoint.startFBAttachPoint(builder)
-        FBAttachPoint.addContainer(builder, container)
-        FBAttachPoint.addContainment(builder, containment)
-        FBAttachPoint.addRoot(builder, root)
-        return FBAttachPoint.endFBAttachPoint(builder)
+        
+        return PBAttachPoint.create({
+            container: interningContext.internString(ap.container),
+            metaPointerIndex: interningContext.internMetaPointer(ap.containment),
+            rootId: interningContext.internString(ap.root)
+        })
     })
 
-    const attachPointsVector = FBBulkImport.createAttachPointsVector(builder, attachOffsets)
-
-    const nodeOffsets = bulkImport.nodes.map(node => {
-        const propOffsets = node.properties.map(p => {
-            const mp = offsetForMetaPointer(builder, p.property)
-            const value = p.value ? builder.createString(p.value) : undefined
-
-            FBProperty.startFBProperty(builder)
-            FBProperty.addMetaPointer(builder, mp)
-            if (value !== undefined) FBProperty.addValue(builder, value)
-            return FBProperty.endFBProperty(builder)
-        })
-        const propsVector = FBNode.createPropertiesVector(builder, propOffsets)
-
-        const contOffsets = node.containments.map(c => {
-            const mp = offsetForMetaPointer(builder, c.containment)
-            const childrenOffsets = c.children.map(childID => builder.createString(childID))
-            const childrenVector = FBContainment.createChildrenVector(builder, childrenOffsets)
-
-            FBContainment.startFBContainment(builder)
-            FBContainment.addMetaPointer(builder, mp)
-            FBContainment.addChildren(builder, childrenVector)
-            return FBContainment.endFBContainment(builder)
-        })
-        const consVector = FBNode.createContainmentsVector(builder, contOffsets)
-
-        const refOffsets = node.references.map(r => {
-            const mp = offsetForMetaPointer(builder, r.reference)
-            const valueOffsets = r.targets.map(entry => {
-                const resolveInfo = entry.resolveInfo ? builder.createString(entry.resolveInfo) : undefined
-                const referred = entry.reference ? builder.createString(entry.reference) : undefined
-
-                FBReferenceValue.startFBReferenceValue(builder)
-                if (resolveInfo) FBReferenceValue.addResolveInfo(builder, resolveInfo)
-                if (referred) FBReferenceValue.addReferred(builder, referred)
-                return FBReferenceValue.endFBReferenceValue(builder)
+    // Convert nodes
+    const nodes: PBNode[] = bulkImport.nodes.map(node => {
+        // Convert properties
+        const properties: PBProperty[] = node.properties.map(p => 
+            PBProperty.create({
+                metaPointer: interningContext.internMetaPointer(p.property),
+                value: interningContext.internString(p.value)
             })
-            const valuesVector = FBReference.createValuesVector(builder, valueOffsets)
+        )
 
-            FBReference.startFBReference(builder)
-            FBReference.addMetaPointer(builder, mp)
-            FBReference.addValues(builder, valuesVector)
-            return FBReference.endFBReference(builder)
+        // Convert containments
+        const containments: PBContainment[] = node.containments.map(c =>
+            PBContainment.create({
+                metaPointer:interningContext.internMetaPointer(c.containment),
+                children: c.children.map(child => interningContext.internString(child))
+            })
+        )
+
+        // Convert references
+        const references: PBReference[] = node.references.map(r => {
+            const values: PBReferenceValue[] = r.targets.map(entry =>
+                PBReferenceValue.create({
+                    resolveInfo: interningContext.internString(entry.resolveInfo),
+                    referred: interningContext.internString(entry.reference)
+                })
+            )
+
+            return PBReference.create({
+                metaPointer: interningContext.internMetaPointer(r.reference),
+                values: values
+            })
         })
-        const refsVector = FBNode.createReferencesVector(builder, refOffsets)
-
-        const annotationOffsets = node.annotations.map(a => builder.createString(a))
-        const annsVector = FBNode.createAnnotationsVector(builder, annotationOffsets)
-
-        const id = builder.createString(node.id)
-        const classifier = offsetForMetaPointer(builder, node.classifier)
 
         const parentId = node.parent ?? containerByAttached[node.id]
-        const parentOffset = parentId ? builder.createString(parentId) : null
 
-        FBNode.startFBNode(builder)
-        FBNode.addId(builder, id)
-        FBNode.addClassifier(builder, classifier)
-        FBNode.addProperties(builder, propsVector)
-        FBNode.addContainments(builder, consVector)
-        FBNode.addReferences(builder, refsVector)
-        FBNode.addAnnotations(builder, annsVector)
-        if (parentOffset) FBNode.addParent(builder, parentOffset)
-        return FBNode.endFBNode(builder)
+        return PBNode.create({
+            id: interningContext.internString(node.id),
+            classifier: interningContext.internMetaPointer(node.classifier),
+            properties: properties,
+            containments: containments,
+            references: references,
+            annotations: node.annotations.map(a => interningContext.internString(a)),
+            parent: interningContext.internString(parentId)
+        })
     })
 
-    const nodesVector = FBBulkImport.createNodesVector(builder, nodeOffsets)
+    // TODO add interned stuff
 
-    FBBulkImport.startFBBulkImport(builder)
-    FBBulkImport.addAttachPoints(builder, attachPointsVector)
-    FBBulkImport.addNodes(builder, nodesVector)
-    const bulkImportOffset = FBBulkImport.endFBBulkImport(builder)
-    builder.finish(bulkImportOffset)
+    // Create the protobuf message
+    const pbBulkImport = PBBulkImport.create({
+        attachPoints: attachPoints,
+        nodes: nodes
+    })
 
-    return builder.asUint8Array()
+    // Encode to bytes
+    return PBBulkImport.encode(pbBulkImport).finish()
 }
