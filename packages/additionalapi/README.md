@@ -59,6 +59,8 @@ flatc --ts -o src src/flatbuffers/bulkimport.fbs
 
 ## How to generate ProtoBuf code
 
+You will need protoc installed (for example, on macOS you can install it with `brew install protobuf`).
+
 From the root of this package run:
 
 ```
