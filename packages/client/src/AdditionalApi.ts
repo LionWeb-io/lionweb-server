@@ -131,9 +131,14 @@ class InterningContext {
     private languagesIndexingMap: Map<LionWebJsonUsedLanguage, number> = new Map<LionWebJsonUsedLanguage, number>()
     private metaPointersIndexingMap: Map<LionWebJsonMetaPointer, number> = new Map<LionWebJsonMetaPointer, number>()
 
+    constructor() {
+        this.stringsIndexingMap.set(null, 0);
+        this.languagesIndexingMap.set(null, 0);
+    }
+
     internLanguage(languageVersion: LionWebJsonUsedLanguage) : number {
         if (!this.languagesIndexingMap.has(languageVersion)) {
-            const index = this.languages.length
+            const index = this.languages.length+1
             this.languages.push({
                 key: this.internString(languageVersion.key),
                 version: this.internString(languageVersion.version)
@@ -147,30 +152,29 @@ class InterningContext {
         if (!this.metaPointersIndexingMap.has(metaPointer)) {
             const index = this.metaPointers.length
             this.metaPointers.push({
-                language: this.internLanguage({
+                liLanguage: this.internLanguage({
                     key: metaPointer.language,
                     version: metaPointer.version
                 } as LionWebJsonMetaPointer),
-                key: this.internString(metaPointer.key)
+                siKey: this.internString(metaPointer.key)
             } as PBMetaPointer)
             return index
         }
         return this.metaPointersIndexingMap.get(metaPointer)
     }
 
-    internString(string: string) : number | undefined {
+    internString(string: string) : number {
         if (string === undefined) {
-            return undefined
+            return 0
         }
         if (!this.stringsIndexingMap.has(string)) {
-            const index = this.strings.length
+            const index = this.strings.length + 1
             this.stringsIndexingMap.set(string, index)
             this.strings.push(string)
             return index
         }
         return this.stringsIndexingMap.get(string)
     }
-
 
 }
 
@@ -189,9 +193,9 @@ export function encodeBulkImportToProtobuf(bulkImport: BulkImport): Uint8Array {
         containerByAttached[ap.root] = ap.container
 
         attachPoints[attachPointIndex] = PBAttachPoint.create({
-            container: interningContext.internString(ap.container),
-            metaPointerIndex: interningContext.internMetaPointer(ap.containment),
-            rootId: interningContext.internString(ap.root)
+            siContainer: interningContext.internString(ap.container),
+            mpiMetaPointer: interningContext.internMetaPointer(ap.containment),
+            siRoot: interningContext.internString(ap.root)
         })
     }
 
@@ -205,8 +209,8 @@ export function encodeBulkImportToProtobuf(bulkImport: BulkImport): Uint8Array {
         for (let propertyIndex = 0; propertyIndex < inputProperties.length; propertyIndex++) {
             const p = inputProperties[propertyIndex]
             properties[propertyIndex] = PBProperty.create({
-                metaPointer: interningContext.internMetaPointer(p.property),
-                value: interningContext.internString(p.value)
+                mpiMetaPointer: interningContext.internMetaPointer(p.property),
+                siValue: interningContext.internString(p.value)
             })
         }
 
@@ -219,8 +223,8 @@ export function encodeBulkImportToProtobuf(bulkImport: BulkImport): Uint8Array {
                 children[k] = interningContext.internString(c.children[k])
             }
             containments[containmentIndex] = PBContainment.create({
-                metaPointer: interningContext.internMetaPointer(c.containment),
-                children: children
+                mpiMetaPointer: interningContext.internMetaPointer(c.containment),
+                siChildren: children
             })
         }
 
@@ -232,12 +236,12 @@ export function encodeBulkImportToProtobuf(bulkImport: BulkImport): Uint8Array {
             for (let targetIndex = 0; targetIndex < r.targets.length; targetIndex++) {
                 const entry = r.targets[targetIndex]
                 values[targetIndex] = PBReferenceValue.create({
-                    resolveInfo: interningContext.internString(entry.resolveInfo),
-                    referred: interningContext.internString(entry.reference)
+                    siResolveInfo: interningContext.internString(entry.resolveInfo),
+                    siReferred: interningContext.internString(entry.reference)
                 })
             }
             references[referenceIndex] = PBReference.create({
-                metaPointer: interningContext.internMetaPointer(r.reference),
+                mpiMetaPointer: interningContext.internMetaPointer(r.reference),
                 values: values
             })
         }
@@ -251,13 +255,13 @@ export function encodeBulkImportToProtobuf(bulkImport: BulkImport): Uint8Array {
         const parentId = node.parent ?? containerByAttached[node.id]
 
         nodes[nodeIndex] = PBNode.create({
-            id: interningContext.internString(node.id),
-            classifier: interningContext.internMetaPointer(node.classifier),
+            siId: interningContext.internString(node.id),
+            mpiClassifier: interningContext.internMetaPointer(node.classifier),
             properties: properties,
             containments: containments,
             references: references,
-            annotations: annotations,
-            parent: interningContext.internString(parentId)
+            siAnnotations: annotations,
+            siParent: interningContext.internString(parentId)
         })
     }
 

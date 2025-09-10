@@ -112,10 +112,10 @@ function prepareInputStreamNodesProtobuf(bulkImport: PBBulkImport, metaPointersT
 
     for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
-        const annotations = node.annotations || []
+        const annotations = node.siAnnotations || []
 
         // Build the entire line at once instead of multiple pushes
-        const line = `${internedStrings[node.id]}${SEPARATOR}${metaPointerStrings[node.classifier]}${SEPARATOR}{${annotations.join(",")}}${SEPARATOR}${node.parent == null ? "\\N" : internedStrings[node.parent]}\n`
+        const line = `${internedStrings[node.siId]}${SEPARATOR}${metaPointerStrings[node.mpiClassifier]}${SEPARATOR}{${annotations.join(",")}}${SEPARATOR}${node.siParent == null ? "\\N" : internedStrings[node.siParent]}\n`
         read_stream_string.push(line)
     }
     read_stream_string.push(null)
@@ -138,14 +138,14 @@ function prepareInputStreamPropertiesProtobuf(bulkImport: PBBulkImport, metaPoin
 
     for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
-        const nodeId = internedStrings[node.id]
+        const nodeId = internedStrings[node.siId]
 
         for (let j = 0; j < node.properties.length; j++) {
             const prop = node.properties[j]
-            const value = prop.value == null ? "\\N" :
-                internedStrings[prop.value].replace(escapeRegex, match => escapeMap[match])
+            const value = prop.siValue == null ? "\\N" :
+                internedStrings[prop.siValue].replace(escapeRegex, match => escapeMap[match])
 
-            const line = `${metaPointerStrings[prop.metaPointer]}${SEPARATOR}${value}${SEPARATOR}${nodeId}\n`
+            const line = `${metaPointerStrings[prop.mpiMetaPointer]}${SEPARATOR}${value}${SEPARATOR}${nodeId}\n`
             read_stream_string.push(line)
         }
     }
@@ -165,7 +165,7 @@ function prepareInputStreamReferencesProtobuf(bulkImport: PBBulkImport, metaPoin
 
     for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
-        const nodeId = internedStrings[node.id]
+        const nodeId = internedStrings[node.siId]
 
         for (let j = 0; j < node.references.length; j++) {
             const ref = node.references[j]
@@ -175,14 +175,14 @@ function prepareInputStreamReferencesProtobuf(bulkImport: PBBulkImport, metaPoin
             for (let k = 0; k < ref.values.length; k++) {
                 if (k > 0) refValueStr += ","
                 const value = ref.values[k]
-                const refStr = (value.referred != null && value.referred !== undefined)
-                    ? `\\\\"${internedStrings[value.referred]}\\\\"`
+                const refStr = (value.siReferred != null && value.siReferred !== undefined)
+                    ? `\\\\"${internedStrings[value.siReferred]}\\\\"`
                     : "null"
-                refValueStr += `"{\\\\"reference\\\\": ${refStr}, \\\\"resolveInfo\\\\": \\\\"${internedStrings[value.resolveInfo] || ''}\\\\"}"`
+                refValueStr += `"{\\\\"reference\\\\": ${refStr}, \\\\"resolveInfo\\\\": \\\\"${internedStrings[value.siResolveInfo] || ''}\\\\"}"`
             }
             refValueStr += "}"
 
-            const line = `${metaPointerStrings[ref.metaPointer]}${SEPARATOR}${refValueStr}${SEPARATOR}${nodeId}\n`
+            const line = `${metaPointerStrings[ref.mpiMetaPointer]}${SEPARATOR}${refValueStr}${SEPARATOR}${nodeId}\n`
             read_stream_string.push(line)
         }
     }
@@ -202,13 +202,13 @@ function prepareInputStreamContainmentsProtobuf(bulkImport: PBBulkImport, metaPo
 
     for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
-        const nodeId = internedStrings[node.id]
+        const nodeId = internedStrings[node.siId]
 
         for (let j = 0; j < node.containments.length; j++) {
             const containment = node.containments[j]
 
             // Convert children indices to strings efficiently
-            const children = containment.children || []
+            const children = containment.siChildren || []
             let childrenStr = "{"
             for (let k = 0; k < children.length; k++) {
                 if (k > 0) childrenStr += ","
@@ -216,7 +216,7 @@ function prepareInputStreamContainmentsProtobuf(bulkImport: PBBulkImport, metaPo
             }
             childrenStr += "}"
 
-            const line = `${metaPointerStrings[containment.metaPointer]}${SEPARATOR}${childrenStr}${SEPARATOR}${nodeId}\n`
+            const line = `${metaPointerStrings[containment.mpiMetaPointer]}${SEPARATOR}${childrenStr}${SEPARATOR}${nodeId}\n`
             read_stream_string.push(line)
         }
     }
@@ -344,7 +344,7 @@ export async function performImportFromProtobuf(
         const parentsSet: Set<string> = new Set<string>()
         for (let i = 0; i < bulkImport.nodes.length; i++) {
             const pbNode = bulkImport.nodes[i]
-            const pbNodeID = bulkImport.internedStrings[pbNode.id]
+            const pbNodeID = bulkImport.internedStrings[pbNode.siId]
             if (newNodesSet.has(pbNodeID)) {
                 return {
                     status: HttpClientErrors.BadRequest,
@@ -353,7 +353,7 @@ export async function performImportFromProtobuf(
                 }
             }
             newNodesSet.add(pbNodeID)
-            const parent = bulkImport.internedStrings[pbNode.parent]
+            const parent = bulkImport.internedStrings[pbNode.siParent]
             if (parent) {
                 parentsSet.add(parent)
             }
@@ -364,7 +364,7 @@ export async function performImportFromProtobuf(
         const attachPointContainers: Set<string> = new Set<string>()
         for (let i = 0; i < bulkImport.attachPoints.length; i++) {
             const pbAttachPoint = bulkImport.attachPoints[i]
-            const pbAttachPointRoot = bulkImport.internedStrings[pbAttachPoint.rootId]
+            const pbAttachPointRoot = bulkImport.internedStrings[pbAttachPoint.siRoot]
             if (!newNodesSet.has(pbAttachPointRoot)) {
                 return {
                     status: HttpClientErrors.BadRequest,
@@ -372,7 +372,7 @@ export async function performImportFromProtobuf(
                     description: `Attach point root ${pbAttachPointRoot} does not appear among the new nodes`
                 }
             }
-            attachPointContainers.add(bulkImport.internedStrings[pbAttachPoint.container])
+            attachPointContainers.add(bulkImport.internedStrings[pbAttachPoint.siContainer])
         }
         parentsSet.forEach(parent => {
             if (!newNodesSet.has(parent) && !attachPointContainers.has(parent)) {
@@ -432,38 +432,38 @@ async function populateThroughProtobuf(
 ): Promise<void> {
     await metaPointersTracker.populate((collector: MetaPointersCollector) => {
         function considerAddingPBMetaPointer(metaPointer: PBMetaPointer) {
-            const languageVersion = bulkImport.internedLanguages[metaPointer.language]
+            const languageVersion = bulkImport.internedLanguages[metaPointer.liLanguage]
             collector.considerAddingMetaPointer({
-                key: bulkImport.internedStrings[metaPointer.key],
-                version: bulkImport.internedStrings[languageVersion.version],
-                language: bulkImport.internedStrings[languageVersion.key]
+                key: bulkImport.internedStrings[metaPointer.siKey],
+                version: bulkImport.internedStrings[languageVersion.siVersion],
+                language: bulkImport.internedStrings[languageVersion.siKey]
             })
         }
 
         for (let i = 0; i < bulkImport.nodes.length; i++) {
             const pbNode = bulkImport.nodes[i]
-            const metaPointerIndex = pbNode.classifier
+            const metaPointerIndex = pbNode.mpiClassifier
             const metaPointer = bulkImport.internedMetaPointers[metaPointerIndex]
             considerAddingPBMetaPointer(metaPointer)
             for (let j = 0; j < pbNode.containments.length; j++) {
-                const metaPointerIndex = pbNode.containments[j].metaPointer
+                const metaPointerIndex = pbNode.containments[j].mpiMetaPointer
                 const metaPointer = bulkImport.internedMetaPointers[metaPointerIndex]
                 considerAddingPBMetaPointer(metaPointer)
             }
             for (let j = 0; j < pbNode.references.length; j++) {
-                const metaPointerIndex = pbNode.references[j].metaPointer
+                const metaPointerIndex = pbNode.references[j].mpiMetaPointer
                 const metaPointer = bulkImport.internedMetaPointers[metaPointerIndex]
                 considerAddingPBMetaPointer(metaPointer)
             }
             for (let j = 0; j < pbNode.properties.length; j++) {
-                const metaPointerIndex = pbNode.properties[j].metaPointer
+                const metaPointerIndex = pbNode.properties[j].mpiMetaPointer
                 const metaPointer = bulkImport.internedMetaPointers[metaPointerIndex]
                 considerAddingPBMetaPointer(metaPointer)
             }
         }
         for (let i = 0; i < bulkImport.attachPoints.length; i++) {
             const attachPoint = bulkImport.attachPoints[i]
-            const metaPointer = bulkImport.internedMetaPointers[attachPoint.metaPointerIndex]
+            const metaPointer = bulkImport.internedMetaPointers[attachPoint.mpiMetaPointer]
             considerAddingPBMetaPointer(metaPointer)
         }
     }, dbConnection)
@@ -471,11 +471,11 @@ async function populateThroughProtobuf(
 
 export function forPBMetapointer(metaPointersTracker: MetaPointersTracker, metaPointer: PBMetaPointer,
                                  internedLanguages: PBLanguage[], internedStrings: string[]): number {
-    const language = internedLanguages[metaPointer.language]
+    const language = internedLanguages[metaPointer.liLanguage]
     return metaPointersTracker.forMetaPointer({
-        key: internedStrings[metaPointer.key],
-        language: internedStrings[language.key],
-        version: internedStrings[language.version]
+        key: internedStrings[metaPointer.siKey],
+        language: internedStrings[language.siKey],
+        version: internedStrings[language.siVersion]
     })
 }
 

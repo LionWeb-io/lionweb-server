@@ -109,15 +109,18 @@ export class AdditionalApiImpl implements AdditionalApi {
     }
 
     private convertPBBulkImportToBulkImport(pbBulkImport: PBBulkImport): BulkImport {
-        const { internedStrings, internedLanguages, internedMetaPointers, attachPoints, nodes } = pbBulkImport
+        const { internedStrings:tmpInternedStrings, internedLanguages, internedMetaPointers, attachPoints, nodes } = pbBulkImport
+
+        const internedStrings = [null, ...tmpInternedStrings];
 
         // Pre-compute all language mappings
-        const languagesArray = new Array(internedLanguages.length)
+        const languagesArray = new Array(internedLanguages.length+1)
+        languagesArray[0] = null;
         for (let i = 0; i < internedLanguages.length; i++) {
             const pbLanguage = internedLanguages[i]
-            languagesArray[i] = {
-                key: internedStrings[pbLanguage.key],
-                version: internedStrings[pbLanguage.version]
+            languagesArray[i+1] = {
+                key: internedStrings[pbLanguage.siKey],
+                version: internedStrings[pbLanguage.siVersion]
             }
         }
 
@@ -125,11 +128,11 @@ export class AdditionalApiImpl implements AdditionalApi {
         const metaPointersArray = new Array(internedMetaPointers.length)
         for (let i = 0; i < internedMetaPointers.length; i++) {
             const pbMetaPointer = internedMetaPointers[i]
-            const languageVersion = languagesArray[pbMetaPointer.language]
+            const languageVersion = languagesArray[pbMetaPointer.liLanguage]
             metaPointersArray[i] = {
                 language: languageVersion.key,
                 version: languageVersion.version,
-                key: internedStrings[pbMetaPointer.key]
+                key: internedStrings[pbMetaPointer.siKey]
             }
         }
 
@@ -138,9 +141,9 @@ export class AdditionalApiImpl implements AdditionalApi {
         for (let i = 0; i < attachPoints.length; i++) {
             const pbAttachPoint = attachPoints[i]
             convertedAttachPoints[i] = {
-                container: internedStrings[pbAttachPoint.container],
-                containment: metaPointersArray[pbAttachPoint.metaPointerIndex],
-                root: internedStrings[pbAttachPoint.rootId]
+                container: internedStrings[pbAttachPoint.siContainer],
+                containment: metaPointersArray[pbAttachPoint.mpiMetaPointer],
+                root: internedStrings[pbAttachPoint.siRoot]
             }
         }
 
@@ -159,20 +162,20 @@ export class AdditionalApiImpl implements AdditionalApi {
             for (let j = 0; j < properties.length; j++) {
                 const p = properties[j]
                 convertedProperties[j] = {
-                    property: metaPointersArray[p.metaPointer],
-                    value: internedStrings[p.value]
+                    property: metaPointersArray[p.mpiMetaPointer],
+                    value: internedStrings[p.siValue]
                 }
             }
 
             // Convert containments
             for (let j = 0; j < containments.length; j++) {
                 const c = containments[j]
-                const convertedChildren = new Array(c.children.length)
-                for (let k = 0; k < c.children.length; k++) {
-                    convertedChildren[k] = internedStrings[c.children[k]]
+                const convertedChildren = new Array(c.siChildren.length)
+                for (let k = 0; k < c.siChildren.length; k++) {
+                    convertedChildren[k] = internedStrings[c.siChildren[k]]
                 }
                 convertedContainments[j] = {
-                    containment: metaPointersArray[c.metaPointer],
+                    containment: metaPointersArray[c.mpiMetaPointer],
                     children: convertedChildren
                 }
             }
@@ -184,20 +187,20 @@ export class AdditionalApiImpl implements AdditionalApi {
                 for (let k = 0; k < r.values.length; k++) {
                     const rv = r.values[k]
                     convertedTargets[k] = {
-                        reference: internedStrings[rv.referred],
-                        resolveInfo: internedStrings[rv.resolveInfo]
+                        reference: internedStrings[rv.siReferred],
+                        resolveInfo: internedStrings[rv.siResolveInfo]
                     }
                 }
                 convertedReferences[j] = {
-                    reference: metaPointersArray[r.metaPointer],
+                    reference: metaPointersArray[r.mpiMetaPointer],
                     targets: convertedTargets
                 }
             }
 
             convertedNodes[i] = {
-                id: internedStrings[pbNode.id],
-                parent: internedStrings[pbNode.parent],
-                classifier: metaPointersArray[pbNode.classifier],
+                id: internedStrings[pbNode.siId],
+                parent: internedStrings[pbNode.siParent],
+                classifier: metaPointersArray[pbNode.mpiClassifier],
                 annotations: [], // Empty array as in original
                 properties: convertedProperties,
                 containments: convertedContainments,

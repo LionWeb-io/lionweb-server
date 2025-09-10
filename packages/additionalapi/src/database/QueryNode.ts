@@ -55,9 +55,9 @@ export const makeQueryToAttachNode = (attachPoint: AttachPoint, metaPointersTrac
 
 export const makeQueryToAttachNodeForProtobuf = (attachPoint: PBAttachPoint, metaPointersTracker: MetaPointersTracker,
                                                  internedLanguages: PBLanguage[], internedStrings: string[], internedMetaPointers: PBMetaPointer[]) : string => {
-    const containment = internedMetaPointers[attachPoint.metaPointerIndex];
-    const container = internedStrings[attachPoint.container];
-    const root = internedStrings[attachPoint.rootId];
+    const containment = internedMetaPointers[attachPoint.mpiMetaPointer];
+    const container = internedStrings[attachPoint.siContainer];
+    const root = internedStrings[attachPoint.siRoot];
     return `UPDATE ${CONTAINMENTS_TABLE} 
             SET "children"=array_append("children", '${root}')
             WHERE node_id = '${container}' AND containment = ${forPBMetapointer(metaPointersTracker, containment, internedLanguages, internedStrings)};`
