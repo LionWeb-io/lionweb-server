@@ -102,40 +102,34 @@ function prepareInputStreamContainments(nodes: LionWebJsonNode[], metaPointersTr
     return read_stream_string
 }
 
-function calculateMetaPointerStrings(internedMetaPointers: PBMetaPointer[], metaPointersTracker: MetaPointersTracker, internedLanguages: PBLanguage[],
+function calculatePbIndexesForMetaPointersToDBIndexes(internedMetaPointers: PBMetaPointer[], metaPointersTracker: MetaPointersTracker, internedLanguages: PBLanguage[],
                                      internedStrings: string[]) : string[] {
-    const metaPointerStrings = new Array(internedMetaPointers.length)
+    const pbIndexesForMetaPointersToDBIndexes = new Array(internedMetaPointers.length)
     for (let i = 0; i < internedMetaPointers.length; i++) {
-        metaPointerStrings[i] = getCorrespondingMetaPointerIDOnTheDB(metaPointersTracker, internedMetaPointers[i], internedLanguages, internedStrings).toString()
+        pbIndexesForMetaPointersToDBIndexes[i] = getCorrespondingMetaPointerIDOnTheDB(metaPointersTracker, internedMetaPointers[i], internedLanguages, internedStrings).toString()
     }
-    return metaPointerStrings
+    return pbIndexesForMetaPointersToDBIndexes
 }
 
-function prepareInputStreamNodesProtobuf(bulkImport: PBBulkImport, metaPointersTracker: MetaPointersTracker): Duplex {
+function prepareInputStreamNodesProtobuf(bulkImport: PBBulkImport, pbIndexesForMetaPointersToDBIndexes:  string[]): Duplex {
     const read_stream_string = new Duplex()
-    const { nodes, internedMetaPointers, internedLanguages, internedStrings } = bulkImport
-
-    // Pre-compute metapointer strings to avoid repeated function calls
-    const metaPointerStrings = calculateMetaPointerStrings(internedMetaPointers, metaPointersTracker, internedLanguages, internedStrings)
+    const { nodes, internedStrings } = bulkImport
 
     for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
         const annotations = node.siAnnotations.map(ann => internedStrings[ann])
 
         // Build the entire line at once instead of multiple pushes
-        const line = `${internedStrings[node.siId]}${PG_COPY_FIELD_SEPARATOR}${metaPointerStrings[node.mpiClassifier]}${PG_COPY_FIELD_SEPARATOR}{${annotations.join(",")}}${PG_COPY_FIELD_SEPARATOR}${node.siParent == null ? "\\N" : internedStrings[node.siParent]}\n`
+        const line = `${internedStrings[node.siId]}${PG_COPY_FIELD_SEPARATOR}${pbIndexesForMetaPointersToDBIndexes[node.mpiClassifier]}${PG_COPY_FIELD_SEPARATOR}{${annotations.join(",")}}${PG_COPY_FIELD_SEPARATOR}${node.siParent == null ? "\\N" : internedStrings[node.siParent]}\n`
         read_stream_string.push(line)
     }
     read_stream_string.push(null)
     return read_stream_string
 }
 
-function prepareInputStreamPropertiesProtobuf(bulkImport: PBBulkImport, metaPointersTracker: MetaPointersTracker): Duplex {
+function prepareInputStreamPropertiesProtobuf(bulkImport: PBBulkImport, pbIndexesForMetaPointersToDBIndexes:  string[]): Duplex {
     const read_stream_string = new Duplex()
-    const { nodes, internedMetaPointers, internedLanguages, internedStrings } = bulkImport
-
-    // Pre-compute metapointer strings
-    const metaPointerStrings = calculateMetaPointerStrings(internedMetaPointers, metaPointersTracker, internedLanguages, internedStrings)
+    const { nodes, internedStrings } = bulkImport
 
     // Pre-compile regex for better performance
     const escapeRegex = /[\n\r\t]/g
@@ -149,7 +143,7 @@ function prepareInputStreamPropertiesProtobuf(bulkImport: PBBulkImport, metaPoin
             const value = prop.siValue == null ? "\\N" :
                 internedStrings[prop.siValue].replace(escapeRegex, match => PG_COPY_ESCAPE_MAP[match])
 
-            const line = `${metaPointerStrings[prop.mpiMetaPointer]}${PG_COPY_FIELD_SEPARATOR}${value}${PG_COPY_FIELD_SEPARATOR}${nodeId}\n`
+            const line = `${pbIndexesForMetaPointersToDBIndexes[prop.mpiMetaPointer]}${PG_COPY_FIELD_SEPARATOR}${value}${PG_COPY_FIELD_SEPARATOR}${nodeId}\n`
             read_stream_string.push(line)
         }
     }
@@ -157,12 +151,9 @@ function prepareInputStreamPropertiesProtobuf(bulkImport: PBBulkImport, metaPoin
     return read_stream_string
 }
 
-function prepareInputStreamReferencesProtobuf(bulkImport: PBBulkImport, metaPointersTracker: MetaPointersTracker): Duplex {
+function prepareInputStreamReferencesProtobuf(bulkImport: PBBulkImport, pbIndexesForMetaPointersToDBIndexes:  string[]): Duplex {
     const read_stream_string = new Duplex()
-    const { nodes, internedMetaPointers, internedLanguages, internedStrings } = bulkImport
-
-    // Pre-compute metapointer strings
-    const metaPointerStrings = calculateMetaPointerStrings(internedMetaPointers, metaPointersTracker, internedLanguages, internedStrings)
+    const { nodes, internedStrings } = bulkImport
 
     for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
@@ -183,7 +174,7 @@ function prepareInputStreamReferencesProtobuf(bulkImport: PBBulkImport, metaPoin
             }
             refValueStr += "}"
 
-            const line = `${metaPointerStrings[ref.mpiMetaPointer]}${PG_COPY_FIELD_SEPARATOR}${refValueStr}${PG_COPY_FIELD_SEPARATOR}${nodeId}\n`
+            const line = `${pbIndexesForMetaPointersToDBIndexes[ref.mpiMetaPointer]}${PG_COPY_FIELD_SEPARATOR}${refValueStr}${PG_COPY_FIELD_SEPARATOR}${nodeId}\n`
             read_stream_string.push(line)
         }
     }
@@ -191,12 +182,10 @@ function prepareInputStreamReferencesProtobuf(bulkImport: PBBulkImport, metaPoin
     return read_stream_string
 }
 
-function prepareInputStreamContainmentsProtobuf(bulkImport: PBBulkImport, metaPointersTracker: MetaPointersTracker): Duplex {
+function prepareInputStreamContainmentsProtobuf(bulkImport: PBBulkImport, pbIndexesForMetaPointersToDBIndexes:  string[]): Duplex {
     const read_stream_string = new Duplex()
-    const { nodes, internedMetaPointers, internedLanguages, internedStrings } = bulkImport
+    const { nodes, internedStrings } = bulkImport
 
-    // Pre-compute metapointer strings
-    const metaPointerStrings = calculateMetaPointerStrings(internedMetaPointers, metaPointersTracker, internedLanguages, internedStrings)
 
     for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
@@ -214,7 +203,7 @@ function prepareInputStreamContainmentsProtobuf(bulkImport: PBBulkImport, metaPo
             }
             childrenStr += "}"
 
-            const line = `${metaPointerStrings[containment.mpiMetaPointer]}${PG_COPY_FIELD_SEPARATOR}${childrenStr}${PG_COPY_FIELD_SEPARATOR}${nodeId}\n`
+            const line = `${pbIndexesForMetaPointersToDBIndexes[containment.mpiMetaPointer]}${PG_COPY_FIELD_SEPARATOR}${childrenStr}${PG_COPY_FIELD_SEPARATOR}${nodeId}\n`
             read_stream_string.push(line)
         }
     }
@@ -299,28 +288,31 @@ async function storeNodesThroughProtobuf(
 
     const repositoryName = repositoryData.repository.repository_name
     const schemaName = repositoryData.repository.schema_name
+
+    const pbIndexesForMetaPointersToDBIndexes = calculatePbIndexesForMetaPointersToDBIndexes(bulkImport.internedMetaPointers, metaPointersTracker, bulkImport.internedLanguages, bulkImport.internedStrings)
+
     await pipeInputIntoQueryStream(
         client,
         `COPY "${schemaName}".lionweb_nodes(id,classifier,annotations,parent) FROM STDIN`,
-        prepareInputStreamNodesProtobuf(bulkImport, metaPointersTracker),
+        prepareInputStreamNodesProtobuf(bulkImport, pbIndexesForMetaPointersToDBIndexes),
         "nodes insertion"
     )
     await pipeInputIntoQueryStream(
         client,
         `COPY "${schemaName}".lionweb_containments(containment,children,node_id) FROM STDIN`,
-        prepareInputStreamContainmentsProtobuf(bulkImport, metaPointersTracker),
+        prepareInputStreamContainmentsProtobuf(bulkImport, pbIndexesForMetaPointersToDBIndexes),
         "containments insertion"
     )
     await pipeInputIntoQueryStream(
         client,
         `COPY "${schemaName}".lionweb_references(reference,targets,node_id) FROM STDIN`,
-        prepareInputStreamReferencesProtobuf(bulkImport, metaPointersTracker),
+        prepareInputStreamReferencesProtobuf(bulkImport, pbIndexesForMetaPointersToDBIndexes),
         `references ${repositoryName}`
     )
     await pipeInputIntoQueryStream(
         client,
         `COPY "${schemaName}".lionweb_properties(property,value,node_id) FROM STDIN`,
-        prepareInputStreamPropertiesProtobuf(bulkImport, metaPointersTracker),
+        prepareInputStreamPropertiesProtobuf(bulkImport, pbIndexesForMetaPointersToDBIndexes),
         `properties ${repositoryName}`
     )
     return metaPointersTracker
