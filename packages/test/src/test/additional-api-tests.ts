@@ -7,7 +7,7 @@ import { assert } from "chai"
 import sm from "source-map-support"
 import { BulkImport } from "@lionweb/server-shared"
 
-const { deepEqual, fail, strictEqual } = assert
+const { fail, strictEqual } = assert
 
 sm.install()
 
