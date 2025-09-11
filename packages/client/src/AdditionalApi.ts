@@ -123,6 +123,10 @@ export async function compressJSON(input: unknown): Promise<BodyInit> {
     throw new Error("Compression not support: this seems to be an old browser")
 }
 
+/**
+ * The `InterningContext` class is responsible for managing and interning strings, language versions,
+ * and meta-pointers, as needed when serializing to Protobuffer.
+ */
 class InterningContext {
     public strings: string[] = []
     public languages: PBLanguage[] = []
@@ -178,6 +182,16 @@ class InterningContext {
 
 }
 
+/**
+ * Encodes a BulkImport object into a Protobuf byte array.
+ *
+ * The method processes each component of the BulkImport object, including attach points, nodes, properties,
+ * containments, references, and annotations, transforming them into their Protobuf representations while
+ * using the interning mechanism expected by protobuf.
+ *
+ * @param {BulkImport} bulkImport - The BulkImport object representing a collection of nodes and their structure to be serialized.
+ * @return {Uint8Array} A serialized Protobuf representation of the BulkImport object as a byte array.
+ */
 export function encodeBulkImportToProtobuf(bulkImport: BulkImport): Uint8Array {
     const containerByAttached: Record<string, string> = {}
     const interningContext = new InterningContext()
@@ -187,7 +201,7 @@ export function encodeBulkImportToProtobuf(bulkImport: BulkImport): Uint8Array {
     const attachPoints = new Array<PBAttachPoint>(inputAttachPoints.length)
     const nodes = new Array<PBNode>(inputNodes.length)
 
-    // Convert attach points with for loop
+    // Convert attach points
     for (let attachPointIndex = 0; attachPointIndex < inputAttachPoints.length; attachPointIndex++) {
         const ap = inputAttachPoints[attachPointIndex]
         containerByAttached[ap.root] = ap.container
@@ -199,7 +213,7 @@ export function encodeBulkImportToProtobuf(bulkImport: BulkImport): Uint8Array {
         })
     }
 
-    // Convert nodes with for loops
+    // Convert nodes
     for (let nodeIndex = 0; nodeIndex < inputNodes.length; nodeIndex++) {
         const node = inputNodes[nodeIndex]
         const { properties: inputProperties, containments: inputContainments, references: inputReferences, annotations: inputAnnotations } = node

@@ -34,12 +34,11 @@ Note that:
 - all nodes to be imported _must not_ exist
 - all containers specified in the attach point _must_ exist
 
-## Binary formats
+## Binary format
 
-The operation can use a payload specified in JSON format or one two binary formats.
-The binary format is ProtoBuf.
+The operation can use a payload specified in JSON format or in ProtoBuf.
 
-For both formats we define schemas in their own DSL and then we generate code in Typescript to read
+For this format with define the schema in its own DSL and then we generate code in Typescript to read
 binary messages based on those schemas.
 
 Resources:
