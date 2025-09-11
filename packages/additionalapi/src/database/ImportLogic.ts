@@ -9,17 +9,21 @@ import { finished } from "stream/promises"
 import { BulkImportResultType } from "./AdditionalQueries.js"
 import { makeQueryToAttachNodeForProtobuf, makeQueryToCheckHowManyDoNotExist } from "./QueryNode.js"
 
-const SEPARATOR = "\t"
+// When using the Postgres COPY command, we need to escape newlines, tabs, and backslashes.
+// We also need to use a specific separator character to separate fields.
+const PG_COPY_ESCAPE_MAP : { [key: string]: string } = { '\n': '\\n', '\r': '\\r', '\t': '\\t' }
+const PG_COPY_FIELD_SEPARATOR = "\t"
+
 
 function prepareInputStreamNodes(nodes: LionWebJsonNode[], metaPointersTracker: MetaPointersTracker): Duplex {
     const read_stream_string = new Duplex()
     nodes.forEach(node => {
         read_stream_string.push(node.id)
-        read_stream_string.push(SEPARATOR)
+        read_stream_string.push(PG_COPY_FIELD_SEPARATOR)
         read_stream_string.push(metaPointersTracker.forMetaPointer(node.classifier).toString())
-        read_stream_string.push(SEPARATOR)
+        read_stream_string.push(PG_COPY_FIELD_SEPARATOR)
         read_stream_string.push("{" + node.annotations.join(",") + "}")
-        read_stream_string.push(SEPARATOR)
+        read_stream_string.push(PG_COPY_FIELD_SEPARATOR)
         if (node.parent == null) {
             read_stream_string.push("\\N")
         } else {
@@ -36,13 +40,13 @@ function prepareInputStreamProperties(nodes: LionWebJsonNode[], metaPointersTrac
     nodes.forEach(node => {
         node.properties.forEach(prop => {
             read_stream_string.push(metaPointersTracker.forMetaPointer(prop.property).toString())
-            read_stream_string.push(SEPARATOR)
+            read_stream_string.push(PG_COPY_FIELD_SEPARATOR)
             if (prop.value == null) {
                 read_stream_string.push("\\N")
             } else {
                 read_stream_string.push(prop.value.replaceAll("\n", "\\n").replaceAll("\r", "\\r").replaceAll("\t", "\\t"))
             }
-            read_stream_string.push(SEPARATOR)
+            read_stream_string.push(PG_COPY_FIELD_SEPARATOR)
             read_stream_string.push(node.id)
             read_stream_string.push("\n")
         })
@@ -57,7 +61,7 @@ function prepareInputStreamReferences(nodes: LionWebJsonNode[], metaPointersTrac
     nodes.forEach(node => {
         node.references.forEach(ref => {
             read_stream_string.push(metaPointersTracker.forMetaPointer(ref.reference).toString())
-            read_stream_string.push(SEPARATOR)
+            read_stream_string.push(PG_COPY_FIELD_SEPARATOR)
 
             const refValueStr =
                 "{" +
@@ -73,7 +77,7 @@ function prepareInputStreamReferences(nodes: LionWebJsonNode[], metaPointersTrac
                     .join(",") +
                 "}"
             read_stream_string.push(refValueStr)
-            read_stream_string.push(SEPARATOR)
+            read_stream_string.push(PG_COPY_FIELD_SEPARATOR)
             read_stream_string.push(node.id)
             read_stream_string.push("\n")
         })
@@ -87,9 +91,9 @@ function prepareInputStreamContainments(nodes: LionWebJsonNode[], metaPointersTr
     nodes.forEach(node => {
         node.containments.forEach(containment => {
             read_stream_string.push(metaPointersTracker.forMetaPointer(containment.containment).toString())
-            read_stream_string.push(SEPARATOR)
+            read_stream_string.push(PG_COPY_FIELD_SEPARATOR)
             read_stream_string.push("{" + containment.children.join(",") + "}")
-            read_stream_string.push(SEPARATOR)
+            read_stream_string.push(PG_COPY_FIELD_SEPARATOR)
             read_stream_string.push(node.id)
             read_stream_string.push("\n")
         })
@@ -98,13 +102,11 @@ function prepareInputStreamContainments(nodes: LionWebJsonNode[], metaPointersTr
     return read_stream_string
 }
 
-const escapeMap : { [key: string]: string } = { '\n': '\\n', '\r': '\\r', '\t': '\\t' }
-
 function calculateMetaPointerStrings(internedMetaPointers: PBMetaPointer[], metaPointersTracker: MetaPointersTracker, internedLanguages: PBLanguage[],
                                      internedStrings: string[]) : string[] {
     const metaPointerStrings = new Array(internedMetaPointers.length)
     for (let i = 0; i < internedMetaPointers.length; i++) {
-        metaPointerStrings[i] = forPBMetapointer(metaPointersTracker, internedMetaPointers[i], internedLanguages, internedStrings).toString()
+        metaPointerStrings[i] = getCorrespondingMetaPointerIDOnTheDB(metaPointersTracker, internedMetaPointers[i], internedLanguages, internedStrings).toString()
     }
     return metaPointerStrings
 }
@@ -121,7 +123,7 @@ function prepareInputStreamNodesProtobuf(bulkImport: PBBulkImport, metaPointersT
         const annotations = node.siAnnotations.map(ann => internedStrings[ann])
 
         // Build the entire line at once instead of multiple pushes
-        const line = `${internedStrings[node.siId]}${SEPARATOR}${metaPointerStrings[node.mpiClassifier]}${SEPARATOR}{${annotations.join(",")}}${SEPARATOR}${node.siParent == null ? "\\N" : internedStrings[node.siParent]}\n`
+        const line = `${internedStrings[node.siId]}${PG_COPY_FIELD_SEPARATOR}${metaPointerStrings[node.mpiClassifier]}${PG_COPY_FIELD_SEPARATOR}{${annotations.join(",")}}${PG_COPY_FIELD_SEPARATOR}${node.siParent == null ? "\\N" : internedStrings[node.siParent]}\n`
         read_stream_string.push(line)
     }
     read_stream_string.push(null)
@@ -145,9 +147,9 @@ function prepareInputStreamPropertiesProtobuf(bulkImport: PBBulkImport, metaPoin
         for (let j = 0; j < node.properties.length; j++) {
             const prop = node.properties[j]
             const value = prop.siValue == null ? "\\N" :
-                internedStrings[prop.siValue].replace(escapeRegex, match => escapeMap[match])
+                internedStrings[prop.siValue].replace(escapeRegex, match => PG_COPY_ESCAPE_MAP[match])
 
-            const line = `${metaPointerStrings[prop.mpiMetaPointer]}${SEPARATOR}${value}${SEPARATOR}${nodeId}\n`
+            const line = `${metaPointerStrings[prop.mpiMetaPointer]}${PG_COPY_FIELD_SEPARATOR}${value}${PG_COPY_FIELD_SEPARATOR}${nodeId}\n`
             read_stream_string.push(line)
         }
     }
@@ -181,7 +183,7 @@ function prepareInputStreamReferencesProtobuf(bulkImport: PBBulkImport, metaPoin
             }
             refValueStr += "}"
 
-            const line = `${metaPointerStrings[ref.mpiMetaPointer]}${SEPARATOR}${refValueStr}${SEPARATOR}${nodeId}\n`
+            const line = `${metaPointerStrings[ref.mpiMetaPointer]}${PG_COPY_FIELD_SEPARATOR}${refValueStr}${PG_COPY_FIELD_SEPARATOR}${nodeId}\n`
             read_stream_string.push(line)
         }
     }
@@ -212,7 +214,7 @@ function prepareInputStreamContainmentsProtobuf(bulkImport: PBBulkImport, metaPo
             }
             childrenStr += "}"
 
-            const line = `${metaPointerStrings[containment.mpiMetaPointer]}${SEPARATOR}${childrenStr}${SEPARATOR}${nodeId}\n`
+            const line = `${metaPointerStrings[containment.mpiMetaPointer]}${PG_COPY_FIELD_SEPARATOR}${childrenStr}${PG_COPY_FIELD_SEPARATOR}${nodeId}\n`
             read_stream_string.push(line)
         }
     }
@@ -465,8 +467,20 @@ async function populateThroughProtobuf(
     }, dbConnection)
 }
 
-export function forPBMetapointer(metaPointersTracker: MetaPointersTracker, metaPointer: PBMetaPointer,
-                                 internedLanguages: PBLanguage[], internedStrings: string[]): number {
+/**
+ * Provide the corresponding id of the MetaPointer in the PG table interning metapointers.
+ * Using the information provided it expand the data of the PBMetaPointer to a LionWebJsonMetaPointer.
+ * It then either retrieves or stores the corresponding MetaPointer in the PG table interning metapointers.
+ * Finally it returns the corresponding id of the MetaPointer in the PG table interning metapointers.
+ *
+ * @param {MetaPointersTracker} metaPointersTracker - The tracker responsible for handling meta pointers.
+ * @param {PBMetaPointer} metaPointer - The meta pointer object containing references to language and key data.
+ * @param {PBLanguage[]} internedLanguages - Array of interned languages accessible by index.
+ * @param {string[]} internedStrings - Array of interned strings accessible by index.
+ * @return {number} The result of processing the meta pointer using the metaPointersTracker.
+ */
+export function getCorrespondingMetaPointerIDOnTheDB(metaPointersTracker: MetaPointersTracker, metaPointer: PBMetaPointer,
+                                                     internedLanguages: PBLanguage[], internedStrings: string[]): number {
     const language = internedLanguages[metaPointer.liLanguage]
     return metaPointersTracker.forMetaPointer({
         key: internedStrings[metaPointer.siKey],
