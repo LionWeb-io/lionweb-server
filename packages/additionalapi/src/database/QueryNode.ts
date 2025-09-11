@@ -53,6 +53,11 @@ export const makeQueryToAttachNode = (attachPoint: AttachPoint, metaPointersTrac
             WHERE node_id = '${attachPoint.container}' AND containment = '${metaPointersTracker.forMetaPointer(attachPoint.containment)}';`
 }
 
+/**
+ * After we have inserted all the nodes imported through the bulk import, we need to attach the roots of the inserted trees
+ * to their attach points, if present. The attach points basically indicate where in the tree the root should be attached.
+ * They are defined by a container and a containment.
+ */
 export const makeQueryToAttachNodeForProtobuf = (attachPoint: PBAttachPoint, metaPointersTracker: MetaPointersTracker,
                                                  internedLanguages: PBLanguage[], internedStrings: string[], internedMetaPointers: PBMetaPointer[]) : string => {
     const containment = internedMetaPointers[attachPoint.mpiMetaPointer];
