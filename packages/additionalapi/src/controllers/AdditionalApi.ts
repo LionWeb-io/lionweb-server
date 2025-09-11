@@ -119,7 +119,14 @@ export class AdditionalApiImpl implements AdditionalApi {
     private convertPBBulkImportToBulkImport(pbBulkImport: PBBulkImport): BulkImport {
         const { internedStrings:tmpInternedStrings, internedLanguages, internedMetaPointers, attachPoints, nodes } = pbBulkImport
 
-        const internedStrings = [null, ...tmpInternedStrings];
+        // I am not very happy with this, but I don't know how to do it better
+        // I could change how we refer this array, but I am afraid that every an extra
+        // little check for a lot of times could be worse than this
+        const internedStrings = new Array(tmpInternedStrings.length + 1);
+        internedStrings[0] = null;
+        for (let i = 0; i < tmpInternedStrings.length; i++) {
+            internedStrings[i + 1] = tmpInternedStrings[i];
+        }
 
         // Pre-compute all language mappings
         const languagesArray = new Array(internedLanguages.length+1)
