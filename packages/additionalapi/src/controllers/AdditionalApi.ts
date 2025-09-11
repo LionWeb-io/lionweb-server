@@ -5,6 +5,14 @@ import { HttpClientErrors, HttpSuccessCodes, PROTOBUF_CONTENT_TYPE } from "@lion
 import { lionwebResponse } from "@lionweb/server-common"
 import { dbLogger, getIntegerParam, isParameterError } from "@lionweb/server-common"
 import { BulkImport, PBBulkImport } from "@lionweb/server-shared"
+import {
+    LionWebId,
+    LionWebJsonContainment,
+    LionWebJsonNode,
+    LionWebJsonProperty,
+    LionWebJsonReference,
+    LionWebJsonReferenceTarget
+} from "@lionweb/json"
 
 export const JSON_CONTENT_TYPE = "application/json"
 
@@ -124,7 +132,7 @@ export class AdditionalApiImpl implements AdditionalApi {
             }
         }
 
-        // Pre-compute all metapointer mappings using arrays instead of Map
+        // Pre-compute all metapointer mappings using arrays for fast access
         const metaPointersArray = new Array(internedMetaPointers.length)
         for (let i = 0; i < internedMetaPointers.length; i++) {
             const pbMetaPointer = internedMetaPointers[i]
@@ -148,15 +156,16 @@ export class AdditionalApiImpl implements AdditionalApi {
         }
 
         // Convert nodes with pre-allocated array
-        const convertedNodes = new Array(nodes.length)
+        const convertedNodes : LionWebJsonNode[] = new Array(nodes.length)
         for (let i = 0; i < nodes.length; i++) {
             const pbNode = nodes[i]
-            const { properties, containments, references } = pbNode
+            const { properties, containments, references, siAnnotations } = pbNode
 
             // Pre-allocate nested arrays
-            const convertedProperties = new Array(properties.length)
-            const convertedContainments = new Array(containments.length)
-            const convertedReferences = new Array(references.length)
+            const convertedProperties : LionWebJsonProperty[] = new Array(properties.length)
+            const convertedContainments : LionWebJsonContainment[] = new Array(containments.length)
+            const convertedReferences : LionWebJsonReference[] = new Array(references.length)
+            const convertedAnnotations : LionWebId[] = new Array(siAnnotations.length)
 
             // Convert properties
             for (let j = 0; j < properties.length; j++) {
@@ -170,42 +179,47 @@ export class AdditionalApiImpl implements AdditionalApi {
             // Convert containments
             for (let j = 0; j < containments.length; j++) {
                 const c = containments[j]
-                const convertedChildren = new Array(c.siChildren.length)
+                const convertedChildren : LionWebId[] = new Array(c.siChildren.length)
                 for (let k = 0; k < c.siChildren.length; k++) {
                     convertedChildren[k] = internedStrings[c.siChildren[k]]
                 }
                 convertedContainments[j] = {
                     containment: metaPointersArray[c.mpiMetaPointer],
                     children: convertedChildren
-                }
+                } as LionWebJsonContainment
             }
 
             // Convert references
             for (let j = 0; j < references.length; j++) {
                 const r = references[j]
-                const convertedTargets = new Array(r.values.length)
+                const convertedTargets : LionWebJsonReferenceTarget[] = new Array(r.values.length)
                 for (let k = 0; k < r.values.length; k++) {
                     const rv = r.values[k]
                     convertedTargets[k] = {
                         reference: internedStrings[rv.siReferred],
                         resolveInfo: internedStrings[rv.siResolveInfo]
-                    }
+                    } as LionWebJsonReferenceTarget
                 }
                 convertedReferences[j] = {
                     reference: metaPointersArray[r.mpiMetaPointer],
                     targets: convertedTargets
-                }
+                } as LionWebJsonReference
+            }
+
+            // Convert annotations
+            for (let j = 0; j < siAnnotations.length; j++) {
+                convertedAnnotations[j] = internedStrings[siAnnotations[j]];
             }
 
             convertedNodes[i] = {
                 id: internedStrings[pbNode.siId],
                 parent: internedStrings[pbNode.siParent],
                 classifier: metaPointersArray[pbNode.mpiClassifier],
-                annotations: [], // Empty array as in original
+                annotations: convertedAnnotations,
                 properties: convertedProperties,
                 containments: convertedContainments,
                 references: convertedReferences
-            }
+            } as LionWebJsonNode
         }
 
         return {

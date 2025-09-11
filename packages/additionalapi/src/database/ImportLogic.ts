@@ -100,19 +100,25 @@ function prepareInputStreamContainments(nodes: LionWebJsonNode[], metaPointersTr
 
 const escapeMap : { [key: string]: string } = { '\n': '\\n', '\r': '\\r', '\t': '\\t' }
 
+function calculateMetaPointerStrings(internedMetaPointers: PBMetaPointer[], metaPointersTracker: MetaPointersTracker, internedLanguages: PBLanguage[],
+                                     internedStrings: string[]) : string[] {
+    const metaPointerStrings = new Array(internedMetaPointers.length)
+    for (let i = 0; i < internedMetaPointers.length; i++) {
+        metaPointerStrings[i] = forPBMetapointer(metaPointersTracker, internedMetaPointers[i], internedLanguages, internedStrings).toString()
+    }
+    return metaPointerStrings
+}
+
 function prepareInputStreamNodesProtobuf(bulkImport: PBBulkImport, metaPointersTracker: MetaPointersTracker): Duplex {
     const read_stream_string = new Duplex()
     const { nodes, internedMetaPointers, internedLanguages, internedStrings } = bulkImport
 
     // Pre-compute metapointer strings to avoid repeated function calls
-    const metaPointerStrings = new Array(internedMetaPointers.length)
-    for (let i = 0; i < internedMetaPointers.length; i++) {
-        metaPointerStrings[i] = forPBMetapointer(metaPointersTracker, internedMetaPointers[i], internedLanguages, internedStrings).toString()
-    }
+    const metaPointerStrings = calculateMetaPointerStrings(internedMetaPointers, metaPointersTracker, internedLanguages, internedStrings)
 
     for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
-        const annotations = node.siAnnotations || []
+        const annotations = node.siAnnotations.map(ann => internedStrings[ann])
 
         // Build the entire line at once instead of multiple pushes
         const line = `${internedStrings[node.siId]}${SEPARATOR}${metaPointerStrings[node.mpiClassifier]}${SEPARATOR}{${annotations.join(",")}}${SEPARATOR}${node.siParent == null ? "\\N" : internedStrings[node.siParent]}\n`
@@ -127,14 +133,10 @@ function prepareInputStreamPropertiesProtobuf(bulkImport: PBBulkImport, metaPoin
     const { nodes, internedMetaPointers, internedLanguages, internedStrings } = bulkImport
 
     // Pre-compute metapointer strings
-    const metaPointerStrings = new Array(internedMetaPointers.length)
-    for (let i = 0; i < internedMetaPointers.length; i++) {
-        metaPointerStrings[i] = forPBMetapointer(metaPointersTracker, internedMetaPointers[i], internedLanguages, internedStrings).toString()
-    }
+    const metaPointerStrings = calculateMetaPointerStrings(internedMetaPointers, metaPointersTracker, internedLanguages, internedStrings)
 
     // Pre-compile regex for better performance
     const escapeRegex = /[\n\r\t]/g
-
 
     for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
@@ -158,10 +160,7 @@ function prepareInputStreamReferencesProtobuf(bulkImport: PBBulkImport, metaPoin
     const { nodes, internedMetaPointers, internedLanguages, internedStrings } = bulkImport
 
     // Pre-compute metapointer strings
-    const metaPointerStrings = new Array(internedMetaPointers.length)
-    for (let i = 0; i < internedMetaPointers.length; i++) {
-        metaPointerStrings[i] = forPBMetapointer(metaPointersTracker, internedMetaPointers[i], internedLanguages, internedStrings).toString()
-    }
+    const metaPointerStrings = calculateMetaPointerStrings(internedMetaPointers, metaPointersTracker, internedLanguages, internedStrings)
 
     for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
@@ -175,7 +174,7 @@ function prepareInputStreamReferencesProtobuf(bulkImport: PBBulkImport, metaPoin
             for (let k = 0; k < ref.values.length; k++) {
                 if (k > 0) refValueStr += ","
                 const value = ref.values[k]
-                const refStr = (value.siReferred != null && value.siReferred !== undefined)
+                const refStr = value.siReferred != null
                     ? `\\\\"${internedStrings[value.siReferred]}\\\\"`
                     : "null"
                 refValueStr += `"{\\\\"reference\\\\": ${refStr}, \\\\"resolveInfo\\\\": \\\\"${internedStrings[value.siResolveInfo] || ''}\\\\"}"`
@@ -195,10 +194,7 @@ function prepareInputStreamContainmentsProtobuf(bulkImport: PBBulkImport, metaPo
     const { nodes, internedMetaPointers, internedLanguages, internedStrings } = bulkImport
 
     // Pre-compute metapointer strings
-    const metaPointerStrings = new Array(internedMetaPointers.length)
-    for (let i = 0; i < internedMetaPointers.length; i++) {
-        metaPointerStrings[i] = forPBMetapointer(metaPointersTracker, internedMetaPointers[i], internedLanguages, internedStrings).toString()
-    }
+    const metaPointerStrings = calculateMetaPointerStrings(internedMetaPointers, metaPointersTracker, internedLanguages, internedStrings)
 
     for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
