@@ -12,15 +12,6 @@ describe("Repository tests for bulkImport API", () => {
     let initError: string = ""
     const lwVersion = "2023.1"
 
-    before("create database", async function () {
-        const initResponse = await client.dbAdmin.createDatabase()
-        if (initResponse.status !== HttpSuccessCodes.Ok) {
-            console.log("Cannot create database: " + JSON.stringify(initResponse.body))
-        } else {
-            console.log("database created: " + JSON.stringify(initResponse.body))
-        }
-    })
-
     beforeEach("a", async function () {
         client.repository = repository
         initError = ""
@@ -177,7 +168,7 @@ describe("Repository tests for bulkImport API", () => {
         const bulkImport:BulkImport = {
             nodes: [
                 {
-                    id: "node3",
+                    id: "node4",
                     classifier: {
                         language: "my-language",
                         version: "v1",
@@ -203,10 +194,10 @@ describe("Repository tests for bulkImport API", () => {
         };
 
         await client.additional.bulkImport(bulkImport, TransferFormat.JSON, false)
-        const retrievedNodes = (await client.bulk.retrieve(["node3"])).body.chunk.nodes
+        const retrievedNodes = (await client.bulk.retrieve(["node4"])).body.chunk.nodes
         deepEqual(retrievedNodes, [
             {
-                id: "node3",
+                id: "node4",
                 classifier: {
                     language: "my-language",
                     version: "v1",
@@ -226,6 +217,286 @@ describe("Repository tests for bulkImport API", () => {
                 references: [],
                 annotations: [],
                 parent: null,
+            }])
+    });
+
+    it("we can do a proper bulk import with references", async () => {
+        assert(initError === "", initError)
+
+        const bulkImport:BulkImport = {
+            nodes: [
+                {
+                    id: "node5",
+                    classifier: {
+                        language: "my-language",
+                        version: "v1",
+                        key: "concept-key1"
+                    },
+                    properties: [],
+                    containments: [],
+                    references: [
+                        {
+                            reference: {
+                                language: "my-language",
+                                version: "v1",
+                                key: "ref-key1"
+                            },
+                            targets: [
+                                {
+                                    reference: "a",
+                                    resolveInfo: "b"
+                                },
+                                {
+                                    reference: "a2",
+                                    resolveInfo: "b2"
+                                }
+                            ]
+                        }
+                    ],
+                    annotations: [],
+                    parent: null,
+                }
+            ],
+            attachPoints: []
+        };
+
+        await client.additional.bulkImport(bulkImport, TransferFormat.JSON, false)
+        const retrievedNodes = (await client.bulk.retrieve(["node5"])).body.chunk.nodes
+        deepEqual(retrievedNodes, [
+            {
+                id: "node5",
+                classifier: {
+                    language: "my-language",
+                    version: "v1",
+                    key: "concept-key1"
+                },
+                properties: [],
+                containments: [],
+                references: [
+                    {
+                        reference: {
+                            language: "my-language",
+                            version: "v1",
+                            key: "ref-key1"
+                        },
+                        targets: [
+                            {
+                                reference: "a",
+                                resolveInfo: "b"
+                            },
+                            {
+                                reference: "a2",
+                                resolveInfo: "b2"
+                            }
+                        ]
+                    }
+                ],
+                annotations: [],
+                parent: null,
+            }])
+    });
+    it("we can do a proper bulk import with annotations", async () => {
+        assert(initError === "", initError)
+
+        const bulkImport:BulkImport = {
+            nodes: [
+                {
+                    id: "node6",
+                    classifier: {
+                        language: "my-language",
+                        version: "v1",
+                        key: "concept-key1"
+                    },
+                    properties: [],
+                    containments: [],
+                    references: [],
+                    annotations: ["ann1", "ann2"],
+                    parent: null
+                },
+                {
+                    id: "ann1",
+                    classifier: {
+                        language: "my-language",
+                        version: "v1",
+                        key: "annotation-key1"
+                    },
+                    properties: [],
+                    containments: [],
+                    references: [],
+                    annotations: [],
+                    parent: "node6"
+                },
+                {
+                    id: "ann2",
+                    classifier: {
+                        language: "my-language",
+                        version: "v1",
+                        key: "annotation-key1"
+                    },
+                    properties: [],
+                    containments: [],
+                    references: [],
+                    annotations: [],
+                    parent: "node6"
+                },
+            ],
+            attachPoints: []
+        };
+
+        await client.additional.bulkImport(bulkImport, TransferFormat.JSON, false)
+        const retrievedNodes = (await client.bulk.retrieve(["node6"])).body.chunk.nodes
+        deepEqual(retrievedNodes.length, 3)
+        const retrievedNode3 = retrievedNodes.find(n => n.id == "node6")
+        deepEqual(retrievedNode3,
+            {
+                id: "node6",
+                classifier: {
+                    language: "my-language",
+                    version: "v1",
+                    key: "concept-key1"
+                },
+                properties: [],
+                containments: [],
+                references: [],
+                annotations: ["ann1", "ann2"],
+                parent: null,
+            })
+    });
+    it("bulk import with annotations with parent not set fails", async () => {
+        assert(initError === "", initError)
+
+        const bulkImport:BulkImport = {
+            nodes: [
+                {
+                    id: "node10",
+                    classifier: {
+                        language: "my-language",
+                        version: "v1",
+                        key: "concept-key1"
+                    },
+                    properties: [],
+                    containments: [],
+                    references: [],
+                    annotations: ["ann1", "ann2"],
+                    parent: null
+                },
+                {
+                    id: "ann1",
+                    classifier: {
+                        language: "my-language",
+                        version: "v1",
+                        key: "annotation-key1"
+                    },
+                    properties: [],
+                    containments: [],
+                    references: [],
+                    annotations: [],
+                    parent: null
+                },
+                {
+                    id: "ann2",
+                    classifier: {
+                        language: "my-language",
+                        version: "v1",
+                        key: "annotation-key1"
+                    },
+                    properties: [],
+                    containments: [],
+                    references: [],
+                    annotations: [],
+                    parent: null
+                },
+            ],
+            attachPoints: []
+        };
+
+        const result = await client.additional.bulkImport(bulkImport, TransferFormat.JSON, false)
+        deepEqual(result.body.success, false)
+    });
+    it("we can do a proper bulk import with attach points", async () => {
+        assert(initError === "", initError)
+
+        const bulkImport:BulkImport = {
+            nodes: [
+                {
+                    id: "node7",
+                    classifier: {
+                        language: "my-language",
+                        version: "v1",
+                        key: "concept-key1"
+                    },
+                    properties: [
+                        {
+                            property: {
+                                language: "my-language",
+                                version: "v1",
+                                key: "prop-key1"
+                            },
+                            value: "qwerty"
+                        }
+                    ],
+                    containments: [],
+                    references: [],
+                    annotations: [],
+                    parent: null,
+                }
+            ],
+            attachPoints: [
+                {
+                    container: "root1",
+                    containment: {
+                        language: "my-language",
+                        version: "v1",
+                        key: "root-key1"
+                    },
+                    root: "node7"
+                }
+            ]
+        };
+
+        await client.bulk.createPartitions({
+            serializationFormatVersion: lwVersion,
+            languages: [],
+            nodes: [
+                {
+                    id: "root1",
+                    classifier: {
+                        language: "my-language",
+                        version: "v1",
+                        key: "root-key1"
+                    },
+                    properties: [],
+                    containments: [],
+                    references: [],
+                    annotations: [],
+                    parent: null,
+                }
+            ]
+        })
+        await client.additional.bulkImport(bulkImport, TransferFormat.JSON, false)
+        const retrievedNodes = (await client.bulk.retrieve(["node7"])).body.chunk.nodes
+        deepEqual(retrievedNodes, [
+            {
+                id: "node7",
+                classifier: {
+                    language: "my-language",
+                    version: "v1",
+                    key: "concept-key1"
+                },
+                properties: [
+                    {
+                        property: {
+                            language: "my-language",
+                            version: "v1",
+                            key: "prop-key1"
+                        },
+                        value: "qwerty"
+                    }
+                ],
+                containments: [],
+                references: [],
+                annotations: [],
+                parent: "root1",
             }])
     });
 });

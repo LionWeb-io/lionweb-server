@@ -108,6 +108,48 @@ export class AdditionalQueries {
             return { status: HttpClientErrors.BadRequest, success: false, description: `Some of the attach point containers do not exist` }
         }
 
+        // Check - verify parent/containment coherency
+        const containedToContainer = new Map<string, string>()
+        for (const node of bulkImport.nodes) {
+            const existingContainer = containedToContainer.get(node.id)
+            if (existingContainer && existingContainer !== node.parent) {
+                return {
+                    status: HttpClientErrors.BadRequest,
+                    success: false,
+                    description: `Node ${node.id} is contained in ${node.parent} but is also contained in ${existingContainer}`
+                }
+            }
+            containedToContainer.set(node.id, node.parent)
+
+            // Check annotations
+            for (const ann of node.annotations) {
+                const existingContainer = containedToContainer.get(ann)
+                if (existingContainer && existingContainer !== node.id) {
+                    return {
+                        status: HttpClientErrors.BadRequest,
+                        success: false,
+                        description: `Annotation ${ann} is contained in ${node.id} but is also contained in ${existingContainer}`
+                    }
+                }
+                containedToContainer.set(ann, node.id)
+            }
+
+            // Check containments
+            for (const containment of node.containments) {
+                for (const child of containment.children) {
+                    const existingContainer = containedToContainer.get(child)
+                    if (existingContainer && existingContainer !== node.id) {
+                        return {
+                            status: HttpClientErrors.BadRequest,
+                            success: false,
+                            description: `Node ${child} is contained in ${node.id} but is also contained in ${existingContainer}`
+                        }
+                    }
+                    containedToContainer.set(child, node.id)
+                }
+            }
+        }
+
         // Add all the new nodes
         const pool = this.context.pgPool
         const metaPointersTracker = new MetaPointersTracker(repositoryData)
