@@ -6,13 +6,24 @@
   "startup": {
     "createDatabase": "always",
     "createRepositories": [
-
+        {
+            "name": "one",
+            "create": "always",
+            "history": false,
+            "lionWebVersion": "2023.1"
+        },
+        {
+            "name": "two",
+            "create": "always",
+            "history": false,
+            "lionWebVersion": "2023.1"
+        }
     ]
   },
   "logging": {
     "request": "info",
     "trace": "silent",
-    "database": "silent",
+    "database": "info",
     "express": "silent"
   },
   "postgres": {

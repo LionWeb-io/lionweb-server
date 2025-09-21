@@ -56,23 +56,28 @@ export type ParticipationInfo = {
     /**
      * The state of this participation.
      */
-    participationStatus: ParticipationStatus 
+    participationStatus: ParticipationStatus
+    /**
+     * The partitions that this client is subscribed to
+     */
+    subscribedPartitions: string[]
 }
+
 export class QueryRequestProcessor implements IQueryRequestProcessor {
     currentParticipationId: number = 1
     activeSockets: Map<WebSocket, ParticipationInfo> = new Map<WebSocket, ParticipationInfo>()
     
-    SubscribeToChangingPartitionsRequestFunction(socket: WebSocket, msg: SubscribeToChangingPartitionsRequest): EventType | QueryResponseType {
+    SubscribeToChangingPartitionsRequestFunction = (socket: WebSocket, msg: SubscribeToChangingPartitionsRequest): EventType | QueryResponseType => {
         console.log("Called SubscribeToChangingPartitionsRequestFunction " + msg.messageKind)
         return this.errorEvent(msg)
     }
 
-    SubscribeToPartitionContentsRequestFunction(socket: WebSocket, msg: SubscribeToPartitionContentsRequest): EventType | QueryResponseType {
+    SubscribeToPartitionContentsRequestFunction = (socket: WebSocket, msg: SubscribeToPartitionContentsRequest): EventType | QueryResponseType => {
         console.log("Called SubscribeToPartitionContentsRequestFunction " + msg.messageKind)
         return this.errorEvent(msg)
     }
 
-    UnsubscribeFromPartitionContentsRequestFunction(socket: WebSocket, msg: UnsubscribeFromPartitionContentsRequest): EventType  | QueryResponseType{
+    UnsubscribeFromPartitionContentsRequestFunction = (socket: WebSocket, msg: UnsubscribeFromPartitionContentsRequest): EventType  | QueryResponseType => {
         console.log("Called UnsubscribeFromPartitionContentsRequestFunction " + msg.messageKind)
         return this.errorEvent(msg)
     }
@@ -107,12 +112,12 @@ export class QueryRequestProcessor implements IQueryRequestProcessor {
         return response
     }
 
-    SignOffRequestFunction(socket: WebSocket, msg: SignOffRequest): EventType | QueryResponseType {
+    SignOffRequestFunction = (socket: WebSocket, msg: SignOffRequest): EventType | QueryResponseType => {
         deltaLogger.info("Called SignOffRequestFunction " + msg.messageKind)
         return this.errorEvent(msg)
     }
 
-    ListPartitionsRequestFunction(socket: WebSocket, msg: ListPartitionsRequest): EventType | QueryResponseType {
+    ListPartitionsRequestFunction = (socket: WebSocket, msg: ListPartitionsRequest): EventType | QueryResponseType => {
         deltaLogger.info("Called ListPartitionsRequestFunction " + msg.messageKind)
         const response: ListPartitionsQueryResponse = {
             messageKind: "ListPartitions",
@@ -122,12 +127,12 @@ export class QueryRequestProcessor implements IQueryRequestProcessor {
         return response
     }
 
-    GetAvailableIdsRequestFunction(socket: WebSocket, msg: GetAvailableIdsRequest): EventType | QueryResponseType {
+    GetAvailableIdsRequestFunction = (socket: WebSocket, msg: GetAvailableIdsRequest): EventType | QueryResponseType => {
         deltaLogger.info("Called GetAvailableIdsRequestFunction " + msg.messageKind)
         return this.errorEvent(msg)
     }
 
-    ReconnectRequestFunction(socket: WebSocket, msg: ReconnectRequest): EventType | QueryResponseType {
+    ReconnectRequestFunction = (socket: WebSocket, msg: ReconnectRequest): EventType | QueryResponseType => {
         deltaLogger.info("Called ReconnectRequestFunction " + msg.messageKind)
         return this.errorEvent(msg)
     }

@@ -35,5 +35,6 @@
     "pino-pretty": "11.2.1",
     "source-map-support": "0.5.21",
     "uuid": "9.0.1"
-  }
+  },
+    "files": ["dist", "src"]
 }

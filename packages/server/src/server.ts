@@ -154,6 +154,7 @@ async function setupDatabase() {
     await repositoryStore.initialize()
     const existingRepositoryNames = repositoryStore.allRepositories().map(r => r.repository_name)
     requestLogger.info("Existing repositories " + existingRepositoryNames)
+    console.log(":REPOS " + ServerConfig.getInstance().createRepositories())
     for (const repository of ServerConfig.getInstance().createRepositories()) {
         const repoCreation = repository.create
         switch (repoCreation) {
@@ -244,6 +245,7 @@ async function startServer() {
             eventSequenceNumber: 0,
             participationId: "pid-1",
             participationStatus: "connected",
+            subscribedPartitions: [],
             socket: socket
         })
         

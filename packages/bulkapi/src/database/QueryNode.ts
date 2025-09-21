@@ -33,7 +33,7 @@ export function versionResultToResponse(versionResult: object): ResponseMessage 
 
 /**
  * Query to retrieve the full LionWeb nodes from the database.
- * @param nodesQuery string SQL query to select the sub set of nodes to retrieve.
+ * @param nodesQuery string SQL query to select the set of nodes to retrieve.
  * @constructor
  */
 export const nodesForQueryQuery = (nodesQuery: string): string => {
@@ -41,6 +41,7 @@ export const nodesForQueryQuery = (nodesQuery: string): string => {
     WITH relevant_nodes AS (
         ${nodesQuery}
     ),
+    -- Get full nodes from the different tables
     node_properties AS ( 
         SELECT
             relevant_nodes.id ,

@@ -59,7 +59,7 @@ export class QueryMaker {
     }
 
     /**
-     * Create a query to insert _tbsNodesToCreate_ in the lionweb_nodes table
+     * Create a query to insert `tbsNodesToCreate` in the lionweb_nodes table
      * These nodes are all new nodes, so all nodes,  properties, containments and references are directly inserted
      * in their respective tables.
      * @param tbsNodesToCreate
@@ -127,6 +127,27 @@ export class QueryMaker {
 
     public selectNodesIdsWithoutParentQuery(): string {
         return `SELECT id FROM ${NODES_TABLE} WHERE parent is null`
+    }
+
+    /**
+     * Select all node id's in `idList` for which a node already exists in the database.
+     * @param idList
+     */
+    public selectExistingNodeIds(idList: string[]): string {
+        const sqlList = sqlArrayFromNodeIdArray(idList)
+        return `SELECT id FROM ${NODES_TABLE} WHERE ID IN ${sqlList}`
+    }
+
+    /**
+     * select aboolean that indocates whether there is at least one node in th databse
+     * whose id is in the `idList`.
+     * @param idList
+     */
+    public existsOnOfNodeIdList(idList: string[]): string {
+        const sqlList = sqlArrayFromNodeIdArray(idList)
+        const query = `select exists(SELECT node FROM ${NODES_TABLE} WHERE node.id IN ${sqlList});`
+        // const exists = await this.ctx.postgresConnection.one(query)
+        return query
     }
 
     public makeSelectNodesIdsWithoutParentWithVersion(repo_version: number): string {

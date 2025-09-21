@@ -23,14 +23,14 @@
     "setup": "npm run install-bulk-data && npm run install-delta-data",
     "install-bulk-data": "npx degit https://github.com/LionWeb-io/lionweb-integration-testing/testchanges/data/ data",
     "install-delta-data": "npx degit https://github.com/LionWeb-io/lionweb-integration-testing/delta/ delta",
-    "test": "mocha ./dist/test/tests.js ./dist/test/inspectionTests.js ./dist/test/tests-issue19.js ./dist/test/history-test.js ./dist/test/sequentialize-requests-test.js"
+      "test1": "mocha ./dist/test/tests.js ./dist/test/inspectionTests.js ./dist/test/tests-issue19.js ./dist/test/history-test.js ./dist/test/sequentialize-requests-test.js",
+      "test": "vitest ./dist/test/tests.js"
   },
   "devDependencies": {
     "prettier": "3.1.0",
     "@typescript-eslint/eslint-plugin": "6.13.2",
     "@typescript-eslint/parser": "6.13.2",
     "@types/chai": "4.3.11",
-    "@types/mocha": "10.0.10",
     "degit": "2.8.4",
     "eslint": "8.56.0",
     "chai": "4.3.10",
