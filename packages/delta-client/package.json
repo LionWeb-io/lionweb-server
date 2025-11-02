@@ -28,8 +28,8 @@
     "republish-local": "npm run unpublish-local && npm run publish-local"
   },
   "dependencies": {
-    "@lionweb/json": "0.7.0-alpha.10",
-    "@lionweb/validation": "0.7.0-alpha.10",
+    "@lionweb/json": "0.7.0-alpha.13",
+    "@lionweb/validation": "0.7.0-alpha.13",
     "@lionweb/server-shared": "0.3.0",
       "@lionweb/server-delta-definitions": "0.3.0"
   },

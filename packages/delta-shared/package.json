@@ -28,7 +28,7 @@
     "republish-local": "npm run unpublish-local && npm run publish-local"
   },
   "dependencies": {
-    "@lionweb/json": "0.7.0-alpha.10"
+    "@lionweb/json": "0.7.0-alpha.13"
   },
   "devDependencies": {
     "prettier": "3.1.0",

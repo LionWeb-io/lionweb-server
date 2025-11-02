@@ -39,10 +39,10 @@
     "@vitest/ui": "3.2.4"
   },
   "dependencies": {
-    "@lionweb/validation": "0.7.0-alpha.10",
-    "@lionweb/json": "0.7.0-alpha.10",
-    "@lionweb/json-diff": "0.7.0-alpha.10",
-    "@lionweb/json-utils": "0.7.0-alpha.10",
+    "@lionweb/validation": "0.7.0-alpha.13",
+    "@lionweb/json": "0.7.0-alpha.13",
+    "@lionweb/json-diff": "0.7.0-alpha.13",
+    "@lionweb/json-utils": "0.7.0-alpha.13",
     "@lionweb/server-delta-client": "0.3.0",
     "@lionweb/server-delta-shared": "0.3.0",
     "@lionweb/server-client": "0.3.0",

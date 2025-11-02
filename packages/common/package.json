@@ -25,7 +25,8 @@
     "@types/uuid": "^10.0.0"
   },
   "dependencies": {
-    "@lionweb/json": "0.7.0-alpha.10",
+    "@lionweb/json": "0.7.0-alpha.13",
+      "@lionweb/server-delta-shared": "~0.3.0",
     "@types/express": "4.17.21",
     "json-stream-stringify": "^3.1.4",
     "pg": "8.11.3",
