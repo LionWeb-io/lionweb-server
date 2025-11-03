@@ -1,6 +1,6 @@
 import { LionWebJsonChunk } from "@lionweb/json"
 import { LionWebJsonChunkWrapper } from "@lionweb/json-utils"
-import { CommandType } from "@lionweb/server-delta-shared"
+import { DeltaCommand } from "@lionweb/server-delta-shared"
 import fs from "fs"
 
 export function readModel(filename: string): LionWebJsonChunk | null {
@@ -14,11 +14,11 @@ export function readModel(filename: string): LionWebJsonChunk | null {
     return null
 }
 
-export function readDelta(filename: string): CommandType | null {
+export function readDelta(filename: string): DeltaCommand | null {
     if (fs.existsSync(filename)) {
         const stats = fs.statSync(filename)
         if (stats.isFile()) {
-            const cmd: CommandType = JSON.parse(fs.readFileSync(filename).toString())
+            const cmd: DeltaCommand = JSON.parse(fs.readFileSync(filename).toString())
             return cmd
         }
     }

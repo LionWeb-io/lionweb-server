@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 import {
     GetAvailableIdsResponse,
-    ListPartitionsQueryResponse,
+    ListPartitionsResponse,
     ReconnectResponse,
     SignOffResponse,
     SignOnResponse,
@@ -9,9 +9,9 @@ import {
     SubscribeToPartitionContentsResponse,
     UnsubscribeFromPartitionContentsResponse
 } from "@lionweb/server-delta-shared"
-import { IQueryResponseProcessor } from "./IQueryResponseProcessor.js"
+import { IResponseProcessor } from "./IQueryResponseProcessor.js"
 
-export class QueryResponseProcessor implements IQueryResponseProcessor {
+export class QueryResponseProcessor implements IResponseProcessor {
     SubscribeToChangingPartitionsResponseFunction(socket: WebSocket, msg: SubscribeToChangingPartitionsResponse): void {
         console.log("Called SubscribeToChangingPartitionsResponseFunction " + msg.messageKind)
     }
@@ -32,7 +32,7 @@ export class QueryResponseProcessor implements IQueryResponseProcessor {
         console.log("Called SignOffResponseFunction " + msg.messageKind)
     }
 
-    ListPartitionsResponseFunction(socket: WebSocket, msg: ListPartitionsQueryResponse): void {
+    ListPartitionsResponseFunction(socket: WebSocket, msg: ListPartitionsResponse): void {
         console.log("Called ListPartitionsResponseFunction " + msg.messageKind)
     }
 

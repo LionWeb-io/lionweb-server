@@ -24,7 +24,7 @@ import {
     EntryMovedFromOtherReferenceInSameParentEvent,
     EntryMovedInSameReferenceEvent,
     ErrorEvent,
-    NoOpEventEvent,
+    NoOpEvent,
     PartitionAddedEvent,
     PartitionDeletedEvent,
     PropertyAddedEvent,
@@ -118,5 +118,5 @@ export interface IEventProcessor {
 
     ErrorFunction(socket: WebSocket, msg: ErrorEvent): void
 
-    NoOpEventFunction(socket: WebSocket, msg: NoOpEventEvent): void
+    NoOpEventFunction(socket: WebSocket, msg: NoOpEvent): void
 }

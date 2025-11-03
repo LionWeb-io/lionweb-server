@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { CommandType, QueryRequestType, QueryType } from "@lionweb/server-delta-shared"
+import { DeltaCommand, DeltaRequest, } from "@lionweb/server-delta-shared"
 import { DefaultEventProcessor, LionWebDeltaClientProcessor, QueryResponseProcessor } from "./delta/index.js"
 
 // getVersionFromResponse(response: ClientResponse<LionwebResponse>): number {
@@ -93,7 +93,7 @@ export class DeltaClient {
         }
     }
 
-    sendCommand(command: CommandType): void {
+    sendCommand(command: DeltaCommand): void {
         console.log(`sendCommand: ${JSON.stringify(command)}`)
         if (this.socket === undefined) {
             throw new Error("No socket object")
@@ -106,7 +106,7 @@ export class DeltaClient {
         this.socket.send(JSON.stringify(command))
     }
 
-    sendRequest(query: QueryRequestType): void {
+    sendRequest(query: DeltaRequest): void {
         console.log(`sendRequest: ${JSON.stringify(query)}`)
         if (this.socket === undefined) {
             throw new Error("No socket object")

@@ -2,7 +2,7 @@ import { DeltaClient } from "@lionweb/server-delta-client"
 import { HttpSuccessCodes } from "@lionweb/server-shared"
 import { getVersionFromResponse, RepositoryClient } from "@lionweb/server-client"
 import { LionWebJsonChunk } from "@lionweb/json"
-import { AddPartitionCommand, CommandType, SignOnRequest } from "@lionweb/server-delta-shared"
+import { AddPartitionCommand, DeltaCommand, SignOnRequest } from "@lionweb/server-delta-shared"
 import { readModel } from "./utils.js"
 
 import { assert } from "chai"
@@ -38,15 +38,24 @@ const DATA: string = "./data/"
 
     const signOn: SignOnRequest = {
         clientId: "cli",
+        repositoryId: "1",
         deltaProtocolVersion: "1",
-        messageKind: "SignOnRequest",
-        queryId: "12"
+        messageKind: "SignOn",
+        queryId: "12",
+        protocolMessages: []
     }
     console.log("BEFORE ALL 3")
     deltaApiClient.sendRequest(signOn)
     console.log("BEFORE ALL 4")
     await delay(2000)
-    deltaApiClient.sendCommand({ "messageKind": "AddProperty" }  as CommandType)
+    deltaApiClient.sendCommand({ "messageKind": "AddProperty", node: "123", newValue: "NEW", property: {
+            key: "key",
+            language: "language",
+            version: "version"
+        },
+        commandId: "C1",
+        protocolMessages: []
+    }  as DeltaCommand)
     console.log("VEFORE ALL 5")
 
     bulkApiClient.repository = repository
@@ -57,7 +66,7 @@ const DATA: string = "./data/"
     if (initResponse.status !== HttpSuccessCodes.Ok) {
         console.log("Cannot initialize database: " + JSON.stringify(initResponse.body))
         initError = JSON.stringify(initResponse.body)
-        process.exit(1)
+        // process.exit(1)
     } else {
         console.log("initialized database: " + JSON.stringify(initResponse.body))
     }

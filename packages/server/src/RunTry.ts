@@ -20,7 +20,7 @@ export async function runWithTryDelta(socket: WebSocket, delta: DeltaCommand | D
             await deltaProcessor.processDelta(socket, delta)
         } catch (e) {
             const error = asError(e)
-            deltaLogger.error(`Exception ${myIndex} while serving delta for ${request.url}: ${error.message}`)
+            deltaLogger.error(`Exception ${myIndex} while serving delta for ${delta?.messageKind}: ${error.message}`)
             deltaLogger.error(error)
         }
     }

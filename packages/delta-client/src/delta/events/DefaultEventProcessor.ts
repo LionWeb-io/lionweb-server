@@ -24,7 +24,7 @@ import {
     EntryMovedFromOtherReferenceInSameParentEvent,
     EntryMovedInSameReferenceEvent,
     ErrorEvent,
-    NoOpEventEvent,
+    NoOpEvent,
     PartitionAddedEvent,
     PartitionDeletedEvent,
     PropertyAddedEvent,
@@ -195,7 +195,7 @@ export class DefaultEventProcessor implements IEventProcessor {
         console.log("Called ErrorFunction " + msg.messageKind)
     }
 
-    NoOpEventFunction(socket: WebSocket, msg: NoOpEventEvent): void {
+    NoOpEventFunction(socket: WebSocket, msg: NoOpEvent): void {
         console.log("Called NoOpEventFunction " + msg.messageKind)
     }
 }

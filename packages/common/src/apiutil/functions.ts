@@ -1,13 +1,11 @@
-import { CommandType, QueryRequestType } from "@lionweb/server-delta-shared";
 import { HttpServerErrors, isLionWebVersion, LionWebVersionType, LionWebVersionValues, ResponseMessage } from "@lionweb/server-shared"
-import { deltaLogger, requestLogger } from "./logging.js"
+import { requestLogger } from "./logging.js"
 import { Job, requestQueue } from "./RequestQueue.js"
 import { collectUsedLanguages } from "./UsedLanguages.js"
 import { LionWebJsonChunk, LionWebJsonNode } from "@lionweb/json"
-import { request, Request, response, Response } from "express"
+import { Request, Response } from "express"
 import { v4 as uuidv4 } from "uuid"
 import { lionwebResponse } from "./LionwebResponse.js"
-import WebSocket from 'ws';
 
 export type UnknownObjectType = { [key: string]: unknown }
 

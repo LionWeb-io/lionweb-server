@@ -6,7 +6,8 @@ import {
     MessageFunction,
     ParticipationInfo,
     partitionFunctions,
-    propertyFunctions2
+    propertyFunctions2,
+    requestFunctions
 } from "@lionweb/delta-server"
 import { deltaLogger } from "@lionweb/server-common";
 import { DeltaValidator } from "@lionweb/server-delta-definitions"
@@ -52,7 +53,7 @@ class DeltaProcessor {
         //  Next, get the processing function for the `messageKind`
         const func = this.processingFunctions.get(type)
         if (func === undefined) {
-            deltaLogger.error(`2 processDelta: no processor found for ${typeof type}`)
+            deltaLogger.error(`2 processDelta: no processor found for ${type}`)
             const response: ErrorEvent = {
                 errorCode: "invalidParticipation",
                 messageKind: "ErrorEvent",
@@ -130,7 +131,7 @@ class DeltaProcessor {
             const response: ErrorEvent = {
                 errorCode: "invalidParticipation",
                 messageKind: "ErrorEvent",
-                message: `Cannot perform ListPartitions request because participationstatus is ${participationInfo.participationStatus}`,
+                message: `Cannot perform ListPartitions request because participation status is ${participationInfo.participationStatus}`,
                 sequenceNumber: participationInfo.eventSequenceNumber++,
                 originCommands: [{
                     participationId: participationInfo.participationId,
@@ -155,4 +156,4 @@ class DeltaProcessor {
 // Status: connected + activeParticipation(s)
 //         connected + noParticipation
 
-export const deltaProcessor = new DeltaProcessor([childFunctions, partitionFunctions, propertyFunctions2])
+export const deltaProcessor = new DeltaProcessor([childFunctions, partitionFunctions, propertyFunctions2, requestFunctions])

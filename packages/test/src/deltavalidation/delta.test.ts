@@ -5,11 +5,14 @@ import fs from "node:fs"
 import { assert } from "chai"
 // const { deepEqual, fail } = assert
 import sm from "source-map-support"
-import { describe, test, expect, beforeEach } from "vitest";
+import { describe, test } from "vitest";
 
 // sm.install()
 
+console.log("HI")
 const addPropertyJson = fs.readFileSync("./src/deltavalidation/addProperty.json").toString()
+console.log(addPropertyJson)
+
 const addPropertyTests = JSON.parse(addPropertyJson)
 // console.log(JSON.stringify(addPropertyTests, null, 2))
 // console.log("=======")

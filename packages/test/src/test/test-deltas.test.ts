@@ -2,8 +2,8 @@ import { DeltaClient } from "@lionweb/server-delta-client"
 import { HttpSuccessCodes, RetrieveResponse } from "@lionweb/server-shared"
 import { getVersionFromResponse, RepositoryClient } from "@lionweb/server-client"
 import { LionWebJsonChunk } from "@lionweb/json"
-import { LanguageChange, LionWebJsonDiff } from "@lionweb/json-diff"
-import { AddPartitionCommand, CommandType } from "@lionweb/server-delta-shared"
+// import { LanguageChange, LionWebJsonDiff } from "@lionweb/json-diff"
+import { AddPartitionCommand, DeltaCommand } from "@lionweb/server-delta-shared"
 // import { describe, before, beforeEach, beforeAll, test } from "vitest"
 import { readDelta, readModel } from "./utils.js"
 
@@ -42,7 +42,7 @@ collection.forEach(withoutHistory => {
             console.log("VEFORE ALL 2")
             await deltaApiClient.connect()
             await delay(20000)
-            deltaApiClient.sendCommand({ "messageKind": "AddProperty" }  as CommandType)
+            deltaApiClient.sendCommand({ "messageKind": "AddProperty" }  as DeltaCommand)
             console.log("VEFORE ALL 3")
         })
 
