@@ -1,8 +1,6 @@
-import { CommandProcessor, QueryRequestProcessor } from "@lionweb/delta-server"
 import { activeSockets } from "@lionweb/delta-server";
-import { requestQueue } from "@lionweb/server-common/dist/apiutil/RequestQueue.js";
 import { registerHistoryApi } from "@lionweb/server-history"
-import { CommandType, PartitionAddedEvent, QueryRequestType } from "@lionweb/server-delta-shared"
+import { DeltaCommand, DeltaRequest } from "@lionweb/server-delta-shared"
 import express, { Express, NextFunction, Response, Request } from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
@@ -17,7 +15,7 @@ import {
     requestLogger,
     SCHEMA_PREFIX,
     ServerConfig,
-    initializeCommons, deltaLogger, runWithTry
+    initializeCommons, deltaLogger
 } from "@lionweb/server-common"
 import { registerDBAdmin, repositoryStore } from "@lionweb/server-dbadmin"
 import { registerInspection } from "@lionweb/server-inspection"
@@ -32,7 +30,6 @@ import { registerLanguagesApi } from "@lionweb/server-languages"
 import { HttpClientErrors } from "@lionweb/server-shared"
 import { pinoHttp } from "pino-http"
 import * as http from "node:http"
-import { deltaProcessor } from "./DeltaProcessor.js";
 import { runWithTryDelta } from "./RunTry.js";
 
 export const app: Express = express()
@@ -235,8 +232,7 @@ async function startServer() {
     })
     
     const wsServer = new WebSocketServer({server: httpServer})
-    wsServer.on('connection', (socket, request) => {
-        // @ts-ignore
+    wsServer.on('connection', (socket, _request) => {
         deltaLogger.info(`Client connected`);
         activeSockets.set(socket, {
             clientId: "",
@@ -251,13 +247,26 @@ async function startServer() {
         
         socket.on('message', (message: RawData) => {
             deltaLogger.info(`Server Received: ${message.toString()}`);
-            const msg = JSON.parse(message.toString()) as unknown as (CommandType | QueryRequestType)
+            const msg = JSON.parse(message.toString()) as unknown as (DeltaCommand | DeltaRequest)
             runWithTryDelta(socket, msg)
             deltaLogger.info(`Server Called Delta processor`);
         });
 
         socket.on('close', () => {
             deltaLogger.info('Client disconnected');
+            activeSockets.delete(socket)
+        });
+        socket.on('error', () => {
+            deltaLogger.info('Error message on socket');
+            // activeSockets.delete(socket)
+        });
+        socket.on('ping', () => {
+            deltaLogger.info('Ping message on socket');
+            // activeSockets.delete(socket)
+        });
+        socket.on('upgrade', () => {
+            deltaLogger.info('Upgrade message on socket');
+            // activeSockets.delete(socket)
         });
     });
     

@@ -24,7 +24,8 @@
     "request": "info",
     "trace": "silent",
     "database": "info",
-    "express": "silent"
+    "express": "silent",
+      "delta": "info"
   },
   "postgres": {
     "database": {
