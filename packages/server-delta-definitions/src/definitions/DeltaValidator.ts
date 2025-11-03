@@ -1,23 +1,24 @@
 import { JsonContext } from "@lionweb/json-utils"
-import { ValidationResult, SyntaxValidator, GenericIssue, LionWebSchema, DefinitionSchema } from "@lionweb/validation"
-import { DeltaCommandSchema } from "./CommandDefinitions.js"
-import { DeltaEventSchema } from "./EventDefinitions.js"
-import { DeltaQuerySchema } from "./QueryDefinitions.js"
-import { DeltaSharedSchema } from "./SharedDefinitions.js"
+import {
+    ValidationResult,
+    SyntaxValidator,
+    GenericIssue,
+    SyntaxDefinition,
+    CommandDefinitions,
+    EventDefinitions,
+    ChunksDefinitions,
+    DeltaTypesDefinitions,
+    RequestDefinitions,
+    ResponseDefinitions
+} from "@lionweb/validation"
 
 export type UnknownObjectType = { [key: string]: unknown }
 
-const alldefinitionSchema = new DefinitionSchema([
-    ...DeltaCommandSchema.definitions(),
-    ...DeltaSharedSchema.definitions(),
-    ...DeltaQuerySchema.definitions(),
-    ...DeltaEventSchema.definitions(),
-    ...LionWebSchema.definitions()])
-
+const definitions = new SyntaxDefinition([CommandDefinitions, ResponseDefinitions, RequestDefinitions, EventDefinitions], [ChunksDefinitions, DeltaTypesDefinitions])
 
 export class DeltaValidator extends SyntaxValidator {
     constructor(validationResult: ValidationResult) {
-        super(validationResult, alldefinitionSchema)
+        super(validationResult, definitions)
     }
 
     validateDelta(object: UnknownObjectType) {
