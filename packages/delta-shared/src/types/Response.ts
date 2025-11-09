@@ -93,3 +93,20 @@ export type DeltaResponse =
     | ReconnectResponse
     | GetAvailableIdsResponse
     | ListPartitionsResponse;
+
+export function isDeltaResponse(object: unknown): object is DeltaResponse {
+    const castObject = object as DeltaResponse;
+    return (
+        castObject.messageKind !== undefined &&
+        [
+            "SubscribeToChangingPartitionsResponse",
+            "SubscribeToPartitionContentsResponse",
+            "UnsubscribeFromPartitionContentsResponse",
+            "SignOnResponse",
+            "SignOffResponse",
+            "ReconnectResponse",
+            "GetAvailableIdsResponse",
+            "ListPartitionsResponse",
+        ].includes(castObject.messageKind)
+    );
+}

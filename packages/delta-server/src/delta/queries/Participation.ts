@@ -1,5 +1,4 @@
-import WebSocket from 'ws';
-
+import WebSocket from "ws"
 
 /**
  * Allowed state transitions:
@@ -7,43 +6,56 @@ import WebSocket from 'ws';
  * connected => signedOn
  * signedOn  => signedOff    NB should this not be "connected again?
  * signedOff => signedOn
- * 
+ *
  * connected => disconnected
  * signedOn  => dicponnected
  * signedOff => disconnected */
 export type ParticipationStatus = "connected" | "signedOn" | "signedOff" | "disconnected"
 
-export type ParticipationInfo = {
+export class ParticipationInfo {
+    static nextIdNumber = 0
     /**
-     * The socket which created thos participation
+     * The socket which created this participation
      */
-    socket: WebSocket,
+    socket: WebSocket
     /**
      * The unique id of the participation
      */
-    participationId: string,
+    participationId: string = ""
     /**
      * The repository for this participation.
      */
-    repository: string,
+    repository: string = ""
     /**
      * The LionWeb delta protocol version
      */
-    deltaProtocolVersion: string,
+    deltaProtocolVersion: string = ""
     /**
      * The client id as given by the client
      */
-    clientId: string,
+    clientId: string = ""
     /**
      * The first available number for the next event.
      */
-    eventSequenceNumber: number,
+    eventSequenceNumber: number = 0
     /**
      * The state of this participation.
      */
-    participationStatus: ParticipationStatus
+    participationStatus: ParticipationStatus = "connected"
     /**
      * The partitions that this client is subscribed to
      */
-    subscribedPartitions: string[]
+    subscribedPartitions: string[] = []
+
+    constructor(socket: WebSocket) {
+        this.socket = socket
+    }
+
+    startParticipation(): void {
+        this.participationId = "participation-" + ParticipationInfo.nextIdNumber++
+    }
+    
+    private nextParticipationId(): string {
+        return "participation-" + ParticipationInfo.nextIdNumber++
+    }
 }

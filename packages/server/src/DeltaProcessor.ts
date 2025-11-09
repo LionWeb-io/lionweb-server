@@ -11,17 +11,14 @@ import {
 } from "@lionweb/delta-server"
 import { deltaLogger } from "@lionweb/server-common";
 import { DeltaValidator } from "@lionweb/server-delta-definitions"
-import {
-    ErrorEvent, 
-    DeltaRequest
-} from "@lionweb/server-delta-shared"
+import { ErrorEvent, DeltaRequest, DeltaEvent, isDeltaResponse, DeltaCommand } from "@lionweb/server-delta-shared"
 import { ValidationResult } from "@lionweb/validation"
 import WebSocket from 'ws';
 
 export function isQueryRequestType(object: MessageFromClient): object is DeltaRequest {
     const messageKind = object.messageKind
     return [
-        "ReconnectRequest", "ListPartitionsRequest", "ReconnectRequest", "GetAvailableIdsRequest", "SignOffRequest",
+        "ReconnectRequest", "ListPartitionsRequest", "GetAvailableIdsRequest", "SignOffRequest",
         "SignOnRequest", "UnsubscribeFromPartitionContentsRequest", "SubscribeToPartitionContentsRequest", "SubscribeToChangingPartitionsRequest"
     ].includes(messageKind)
 }
@@ -42,42 +39,47 @@ class DeltaProcessor {
         })
     }
 
+    /**
+     * Validate the delta, and if it is a correct delta, call the processing function for the specific delta.
+     * @param socket
+     * @param delta
+     */
     processDelta = async (socket: WebSocket, delta: MessageFromClient): Promise<void> => {
         // first try to get the `messageKind`
         deltaLogger.info(`processDelta messageKind ${delta?.messageKind}`)
-        const type = delta.messageKind
-        if (typeof type !== "string") {
-            deltaLogger.error(`1 processDelta: messageKind is not a string but a ${typeof type}`)
+        const messageKind = delta.messageKind
+        if (typeof messageKind !== "string") {
+            deltaLogger.error(`processDelta 1: messageKind is not a string but a ${typeof messageKind}`)
             return
         }
         //  Next, get the processing function for the `messageKind`
-        const func = this.processingFunctions.get(type)
+        const func = this.processingFunctions.get(messageKind)
         if (func === undefined) {
-            deltaLogger.error(`2 processDelta: no processor found for ${type}`)
+            deltaLogger.error(`processDelta 2: no processor found for ${messageKind}`)
             const response: ErrorEvent = {
-                errorCode: "invalidParticipation",
+                errorCode: "MessageKindUnknown",
                 messageKind: "ErrorEvent",
-                message: "Cannot perform delta request because there is no participation",
+                message: `Cannot perform delta request message of kind '${messageKind}' is unknown`,
                 sequenceNumber: 0,
                 originCommands: [{
-                    participationId: "none",
-                    commandId: "??" //msg.queryId
+                    participationId: activeSockets.get(socket)?.participationId ?? "<unknown-participation-id>",
+                    commandId: (delta as DeltaCommand).commandId ?? (delta as DeltaRequest).queryId ?? "<unknown-command-or-query>"
                 }],
                 protocolMessages: []
             }
             socket.send(JSON.stringify(response))
             return
         }
-        // Now validate the full JSON message
+        // Now validate the all the properties of the full JSON message
         this.deltaValidator.validationResult.reset()
-        this.deltaValidator.validate(delta, type)
+        this.deltaValidator.validate(delta, messageKind)
         if (this.deltaValidator.validationResult.hasErrors()) {
             deltaLogger.error(`Validation errors:`)
             this.deltaValidator.validationResult.issues.forEach(issue => {
                 deltaLogger.error(issue.errorMsg())
             })
             const response: ErrorEvent = {
-                errorCode: "generic",
+                errorCode: "MessageSyntaxError",
                 messageKind: "ErrorEvent",
                 message: "Validation errors",
                 sequenceNumber: 0,
@@ -85,14 +87,20 @@ class DeltaProcessor {
                     participationId: "none",
                     commandId: "??" //msg.queryId
                 }],
-                protocolMessages: []
+                protocolMessages: this.deltaValidator.validationResult.issues.map(issue => {
+                    return {
+                        kind: issue.issueType,
+                        message: issue.errorMsg(),
+                        data: []
+                    }
+                })
             }
             socket.send(JSON.stringify(response))
             return
         }
         // Check participation status
         const participationInfo = activeSockets.get(socket)
-        const errorEvent = this.validatePinfo(delta, participationInfo)
+        const errorEvent = this.validateParticipationInfo(delta, participationInfo)
         if (errorEvent !== undefined) {
             deltaLogger.error(`error event ${JSON.stringify(errorEvent)}`)
             socket.send(JSON.stringify(errorEvent))
@@ -101,16 +109,23 @@ class DeltaProcessor {
 
         // Finally ok, process the delta and send the response
         const response = func(socket, delta)
-        for (const pInfo of activeSockets.values()) {
-            response.sequenceNumber = pInfo.eventSequenceNumber++
-            deltaLogger.info(`Sending ${JSON.stringify(response)} to ${pInfo.clientId}`)
-            pInfo.socket.send(JSON.stringify(response))
+        // Errors and responses only need to be sent to the client that sent the message
+        if (response.messageKind === "ErrorEvent" || isDeltaResponse(response)) {
+            socket.send(JSON.stringify(response))
+        } else {
+            // To whom needs this Event (yes, it's an Event now) need to be sent.
+            // For most/all events, we need to know whether the others are subscribed to the partition wjhre changes took place
+            // TODO: Add the changed partitions to the result of the processing function, so we know to whom to send.
+            for (const pInfo of activeSockets.values()) {
+                response.sequenceNumber = pInfo.eventSequenceNumber++
+                deltaLogger.info(`Sending ${JSON.stringify(response)} to ${pInfo.clientId}`)
+                pInfo.socket.send(JSON.stringify(response))
+            }
         }
-
     }
 
-    validatePinfo = (msg: MessageFromClient, participationInfo: ParticipationInfo | undefined): ErrorEvent | undefined => {
-        if (msg.messageKind === "SignOn") {
+    validateParticipationInfo = (delta: MessageFromClient, participationInfo: ParticipationInfo | undefined): ErrorEvent | undefined => {
+        if (delta.messageKind === "SignOn") {
             return undefined
         }
         if (participationInfo === undefined) {
@@ -120,8 +135,8 @@ class DeltaProcessor {
                 message: "Cannot perform delta request because there is no participation",
                 sequenceNumber: 0,
                 originCommands: [{
-                    participationId: "none",
-                    commandId: "??", //msg.queryId
+                    participationId: "<unknown-participation-id>",
+                    commandId: (delta as DeltaCommand).commandId ?? (delta as DeltaRequest).queryId ?? "<unknown-command-or-query>"
                 }],
                 protocolMessages: []
             }
@@ -135,16 +150,15 @@ class DeltaProcessor {
                 sequenceNumber: participationInfo.eventSequenceNumber++,
                 originCommands: [{
                     participationId: participationInfo.participationId,
-                    commandId: "??" // msg.queryId
+                    commandId: (delta as DeltaCommand).commandId ?? (delta as DeltaRequest).queryId ?? "<unknown-command-or-query>"
                 }],
                 protocolMessages: [ {
                     kind: "reason",
-                    message: "Participation status incorrect",
+                    message: "Participation status incorrect, should be SignedOn",
                     data: [{
                         key: "participationStatus",
                         value: participationInfo.participationStatus
-                    }
-                    ]
+                    }]
                 }]
             }
             return response

@@ -88,7 +88,7 @@ export type PropertyChangedEvent = {
  */
 export type ChildAddedEvent = {
     parent: LionWebId;
-    containment: undefined;
+    containment: LionWebJsonMetaPointer;
     newChild: LionWebDeltaJsonChunk;
     index: Number;
     sequenceNumber: Number;
@@ -248,7 +248,7 @@ export type AnnotationAddedEvent = {
  */
 export type AnnotationDeletedEvent = {
     parent: LionWebId;
-    deletedAnnotation: LionWebDeltaJsonChunk;
+    deletedAnnotation: LionWebId;
     deletedDescendants: LionWebId[];
     index: Number;
     sequenceNumber: Number;
@@ -656,3 +656,52 @@ export type DeltaEvent =
     | CompositeEvent
     | NoOpEvent
     | ErrorEvent;
+
+export function isDeltaEvent(object: unknown): object is DeltaEvent {
+    const castObject = object as DeltaEvent;
+    return (
+        castObject.messageKind !== undefined &&
+        [
+            "ClassifierChanged",
+            "PartitionAdded",
+            "PartitionDeleted",
+            "PropertyAdded",
+            "PropertyDeleted",
+            "PropertyChanged",
+            "ChildAdded",
+            "ChildDeleted",
+            "ChildReplaced",
+            "ChildMovedFromOtherContainment",
+            "ChildMovedFromOtherContainmentInSameParent",
+            "ChildMovedInSameContainment",
+            "ChildMovedAndReplacedFromOtherContainment",
+            "ChildMovedAndReplacedFromOtherContainmentInSameParent",
+            "ChildMovedAndReplacedInSameContainment",
+            "AnnotationAdded",
+            "AnnotationDeleted",
+            "AnnotationReplaced",
+            "AnnotationMovedFromOtherParent",
+            "AnnotationMovedInSameParent",
+            "AnnotationMovedAndReplacedFromOtherParent",
+            "AnnotationMovedAndReplacedInSameParent",
+            "ReferenceAdded",
+            "ReferenceDeleted",
+            "ReferenceChanged",
+            "EntryMovedFromOtherReference",
+            "EntryMovedFromOtherReferenceInSameParent",
+            "EntryMovedInSameReference",
+            "EntryMovedAndReplacedFromOtherReference",
+            "EntryMovedAndReplacedFromOtherReferenceInSameParent",
+            "EntryMovedAndReplacedInSameReference",
+            "ReferenceResolveInfoAdded",
+            "ReferenceResolveInfoDeleted",
+            "ReferenceResolveInfoChanged",
+            "ReferenceTargetAdded",
+            "ReferenceTargetDeleted",
+            "ReferenceTargetChanged",
+            "CompositeEvent",
+            "NoOp",
+            "ErrorEvent",
+        ].includes(castObject.messageKind)
+    );
+}

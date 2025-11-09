@@ -1,4 +1,4 @@
-import { activeSockets } from "@lionweb/delta-server";
+import { activeSockets, ParticipationInfo } from "@lionweb/delta-server";
 import { registerHistoryApi } from "@lionweb/server-history"
 import { DeltaCommand, DeltaRequest } from "@lionweb/server-delta-shared"
 import express, { Express, NextFunction, Response, Request } from "express"
@@ -234,16 +234,7 @@ async function startServer() {
     const wsServer = new WebSocketServer({server: httpServer})
     wsServer.on('connection', (socket, _request) => {
         deltaLogger.info(`Client connected`);
-        activeSockets.set(socket, {
-            clientId: "",
-            deltaProtocolVersion: "",
-            repository: "",
-            eventSequenceNumber: 0,
-            participationId: "pid-1",
-            participationStatus: "connected",
-            subscribedPartitions: [],
-            socket: socket
-        })
+        activeSockets.set(socket, new ParticipationInfo(socket))
         
         socket.on('message', (message: RawData) => {
             deltaLogger.info(`Server Received: ${message.toString()}`);

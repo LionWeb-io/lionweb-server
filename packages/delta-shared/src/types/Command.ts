@@ -295,7 +295,7 @@ export type DeleteReferenceCommand = {
     reference: LionWebJsonMetaPointer;
     index: Number;
     deletedTarget: LionWebId;
-    deleteResolveInfo: String;
+    deletedResolveInfo: String;
     commandId: CommandId;
     messageKind: "DeleteReference";
     protocolMessages: ProtocolMessage[];
@@ -549,3 +549,50 @@ export type DeltaCommand =
     | DeleteReferenceTargetCommand
     | ChangeReferenceTargetCommand
     | CompositeCommand;
+
+export function isDeltaCommand(object: unknown): object is DeltaCommand {
+    const castObject = object as DeltaCommand;
+    return (
+        castObject.messageKind !== undefined &&
+        [
+            "AddPartition",
+            "DeletePartition",
+            "ChangeClassifier",
+            "AddProperty",
+            "ChangeProperty",
+            "DeleteProperty",
+            "AddChild",
+            "DeleteChild",
+            "ReplaceChild",
+            "MoveChildFromOtherContainment",
+            "MoveChildFromOtherContainmentInSameParent",
+            "MoveChildInSameContainment",
+            "MoveAndReplaceChildFromOtherContainment",
+            "MoveAndReplaceChildFromOtherContainmentInSameParent",
+            "MoveAndReplaceChildInSameContainment",
+            "AddAnnotation",
+            "DeleteAnnotation",
+            "ReplaceAnnotation",
+            "MoveAnnotationFromOtherParent",
+            "MoveAnnotationInSameParent",
+            "MoveAndReplaceAnnotationFromOtherParent",
+            "MoveAndReplaceAnnotationInSameParent",
+            "AddReference",
+            "DeleteReference",
+            "ChangeReference",
+            "MoveEntryFromOtherReference",
+            "MoveEntryFromOtherReferenceInSameParent",
+            "MoveEntryInSameReference",
+            "MoveAndReplaceEntryFromOtherReference",
+            "MoveAndReplaceEntryFromOtherReferenceInSameParent",
+            "MoveAndReplaceEntryInSameReference",
+            "AddReferenceResolveInfo",
+            "DeleteReferenceResolveInfo",
+            "ChangeReferenceResolveInfo",
+            "AddReferenceTarget",
+            "DeleteReferenceTarget",
+            "ChangeReferenceTarget",
+            "CompositeCommand",
+        ].includes(castObject.messageKind)
+    );
+}

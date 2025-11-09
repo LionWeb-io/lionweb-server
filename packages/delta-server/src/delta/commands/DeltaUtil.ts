@@ -3,6 +3,7 @@ import {
     DeltaCommand,
     DeltaEvent,
     DeltaRequest,
+    DeltaResponse,
     ErrorEvent,
     ProtocolMessage
 } from "@lionweb/server-delta-shared"
@@ -16,7 +17,7 @@ export type CommandOrRequest = {
     protocolMessages: ProtocolMessage[];
 
 }
-export type MessageFunction =  (socket: WebSocket, msg: MessageFromClient) => DeltaEvent
+export type MessageFunction =  (socket: WebSocket, msg: MessageFromClient) => (DeltaEvent | DeltaResponse)
 
 export type DeltaFunction = {
     messageKind: string;

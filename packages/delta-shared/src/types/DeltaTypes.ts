@@ -1,3 +1,5 @@
+import { LionWebJsonNode } from "./Chunks.js";
+
 export type String = string;
 export type SequenceNumber = number;
 export type CommandId = string;
@@ -23,4 +25,6 @@ export type CommandSource = {
     commandId: CommandId;
 };
 
-export type LionWebDeltaJsonChunk = {};
+export type LionWebDeltaJsonChunk = {
+    nodes: LionWebJsonNode[];
+};

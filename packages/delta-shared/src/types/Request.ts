@@ -101,3 +101,20 @@ export type DeltaRequest =
     | ReconnectRequest
     | GetAvailableIdsRequest
     | ListPartitionsRequest;
+
+export function isDeltaRequest(object: unknown): object is DeltaRequest {
+    const castObject = object as DeltaRequest;
+    return (
+        castObject.messageKind !== undefined &&
+        [
+            "SubscribeToChangingPartitions",
+            "SubscribeToPartitionContents",
+            "UnsubscribeFromPartitionContents",
+            "SignOn",
+            "SignOff",
+            "Reconnect",
+            "GetAvailableIds",
+            "ListPartitions",
+        ].includes(castObject.messageKind)
+    );
+}
