@@ -41,11 +41,11 @@ collection.forEach(withoutHistory => {
             baseFullChunk = readModel(DATA + "Disk_A.json") as LionWebJsonChunk
             const initResponse = await client.dbAdmin.createRepository(repository, !withoutHistory, "2023.1")
             if (initResponse.status !== HttpSuccessCodes.Ok) {
-                console.log("Cannot initialize database: " + JSON.stringify(initResponse.body))
+                console.log("Cannot create repository: " + JSON.stringify(initResponse.body))
                 initError = JSON.stringify(initResponse.body)
                 return
             } else {
-                console.log("initialized database: " + JSON.stringify(initResponse.body))
+                console.log("created repository: " + JSON.stringify(initResponse.body))
             }
             const partResult = await client.bulk.createPartitions(initialPartition)
             if (partResult.status !== HttpSuccessCodes.Ok) {
@@ -53,9 +53,10 @@ collection.forEach(withoutHistory => {
                 initError = JSON.stringify(partResult.body)
                 return
             }
-            console.log("PARTITION INITIAL " + JSON.stringify(partResult.body.messages))
+            console.log("PARTITION INITIAL " + JSON.stringify(partResult.body))
             initialPartitionVersion = getVersionFromResponse(partResult)
             const result = await client.bulk.store(baseFullChunk)
+            console.log("CHUNK " + JSON.stringify(baseFullChunk, null, 2))
             if (result.status !== HttpSuccessCodes.Ok) {
                 console.log("Cannot store initial chunk: " + JSON.stringify(result.body))
                 initError = JSON.stringify(result.body)

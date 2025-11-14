@@ -38,7 +38,7 @@
   "dependencies": {
     "@lionweb/server-common": "0.3.0",
     "@lionweb/server-dbadmin": "0.3.0",
-    "@lionweb/json": "0.7.1-beta.14",
+    "@lionweb/json": "0.7.2",
     "@types/express": "4.17.21",
     "body-parser": "2.0.2",
     "cors": "2.8.5",

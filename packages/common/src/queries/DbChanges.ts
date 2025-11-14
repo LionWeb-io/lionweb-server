@@ -1,13 +1,3 @@
-import {
-    CONTAINMENTS_TABLE,
-    dbLogger,
-    NODES_TABLE,
-    PROPERTIES_TABLE,
-    REFERENCES_TABLE,
-    TableHelpers,
-    UnknownObjectType
-} from "@lionweb/server-common"
-import { MetaPointersTracker } from "@lionweb/server-dbadmin"
 import { LionWebJsonMetaPointer } from "@lionweb/json"
 import {
     AnnotationAdded,
@@ -20,10 +10,14 @@ import {
     PropertyValueChanged,
     ReferenceChange
 } from "@lionweb/json-diff"
-import { ColumnSet } from "pg-promise"
-import { BulkApiContext } from "../main.js"
+import pgPromise, { ColumnSet } from "pg-promise"
+import pg from "pg-promise/typescript/pg-subset.js"
+import { dbLogger, UnknownObjectType } from "../apiutil/index.js"
+import { CONTAINMENTS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "../database/index.js"
+import { TableHelpers } from "../main.js"
+import { MetaPointersTracker } from "../metapointers/MetaPointers.js"
 import { InitializedMapToArray } from "./InitializedMapToArray.js"
-import { sqlArrayFromNodeIdArray } from "./QueryNode.js"
+import { sqlArrayFromNodeIdArray } from "./PgHelpers.js"
 
 export type DbNodeUpdate = {
     id: string
@@ -90,7 +84,7 @@ export class DbChanges {
     // map of nodes to be removed
     deletedNodesTable: InitializedMapToArray<string, DbNodeDelete> = new InitializedMapToArray<string, DbNodeDelete>()
 
-    constructor(private context: BulkApiContext) {}
+    constructor(private pgp: pgPromise.IMain<object, pg.IClient>) {}
 
     /**
      * Add _changes_ and convert them to (virtual) updates in the underlying tables.
@@ -173,7 +167,7 @@ export class DbChanges {
             values.forEach(v => (newValue[v.column] = v.newValue))
             result += `-- update nodes
                         UPDATE ${NODES_TABLE}
-                            SET ${this.context.pgp.helpers.sets(newValue, Object.keys(newValue))}
+                            SET ${this.pgp.helpers.sets(newValue, Object.keys(newValue))}
                         WHERE
                             id = '${values[0].id}';
                       `
@@ -268,7 +262,7 @@ export class DbChanges {
         switch (missing) {
             case Missing.MissingBefore:
                 result += `-- insert new feature for existing node
-                                ${this.context.pgp.helpers.insert(data, columnSet)};`
+                                ${this.pgp.helpers.insert(data, columnSet)};`
                 break
             case Missing.MissingAfter:
                 result += `-- delete feature for existing node
@@ -281,7 +275,7 @@ export class DbChanges {
             case Missing.NotMissing:
                 result += `-- update feature for existing node
                                 UPDATE ${tableName} tabl
-                                    SET ${this.context.pgp.helpers.sets(data, columnSet)}
+                                    SET ${this.pgp.helpers.sets(data, columnSet)}
                                 WHERE
                                     tabl.node_id = '${data["node_id"]}' AND
                                     tabl.${metapointerColumn} = ${data[metapointerColumn]};

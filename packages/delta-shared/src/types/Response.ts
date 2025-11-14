@@ -94,6 +94,18 @@ export type DeltaResponse =
     | GetAvailableIdsResponse
     | ListPartitionsResponse;
 
+// The type for the tagged union property
+export type ResponseMessageKind =
+    | "SubscribeToChangingPartitionsResponse"
+    | "SubscribeToPartitionContentsResponse"
+    | "UnsubscribeFromPartitionContentsResponse"
+    | "SignOnResponse"
+    | "SignOffResponse"
+    | "ReconnectResponse"
+    | "GetAvailableIdsResponse"
+    | "ListPartitionsResponse";
+
+// Type Guard function
 export function isDeltaResponse(object: unknown): object is DeltaResponse {
     const castObject = object as DeltaResponse;
     return (

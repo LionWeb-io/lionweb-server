@@ -19,7 +19,11 @@ import {
     dbLogger,
     requestLogger,
     CURRENT_DATA,
-    CURRENT_DATA_REPO_VERSION_KEY
+    CURRENT_DATA_REPO_VERSION_KEY,
+    DbChanges,
+    currentRepoVersionQuery,
+    nextRepoVersionQuery,
+    MetaPointersTracker
 } from "@lionweb/server-common"
 import { LionWebJsonChunkWrapper, NodeUtils, JsonContext } from "@lionweb/json-utils"
 import { LionWebJsonChunk, LionWebJsonNode } from "@lionweb/json"
@@ -39,16 +43,11 @@ import {
 } from "@lionweb/json-diff"
 
 import { BulkApiContext } from "../main.js"
-import { DbChanges } from "./DbChanges.js"
 import {
-    currentRepoVersionQuery,
     makeQueryNodeTreeForIdList,
-    nextRepoVersionQuery,
-    nodesForQueryQuery,
     QueryNodeForIdList,
-    versionResultToResponse
-} from "./QueryNode.js"
-import { MetaPointersTracker } from "@lionweb/server-dbadmin"
+    versionResultToResponse,
+     nodesForQueryQuery } from "@lionweb/server-common"
 
 function createDummyNode(nodeId: string): LionWebJsonNode {
     return {
@@ -191,6 +190,7 @@ export class LionWebQueries {
         dbLogger.info({ tbsNodeAndChildIds: tbsNodeAndChildIds }, "tbsNodeAndChildIds ")
         // Retrieve nodes for all id's that exist
         const databaseChunk = await this.context.bulkApiWorker.bulkRetrieve(task, repositoryData, tbsNodeAndChildIds, 0)
+        console.log(`RETRIEVED ${JSON.stringify(databaseChunk)}`)
         const databaseChunkWrapper = new LionWebJsonChunkWrapper(databaseChunk.queryResult.chunk)
         dbLogger.info({ chunk: databaseChunkWrapper.jsonChunk }, "database chunk")
 
@@ -290,7 +290,7 @@ export class LionWebQueries {
             0
         )
         // Now all changes are turned into queries.
-        const dbCommands = new DbChanges(this.context)
+        const dbCommands = new DbChanges(this.context.pgp)
         let queries = ""
         dbCommands.addChanges(propertyChanged)
         dbCommands.addChanges([...addedChildren, ...removedChildren, ...childrenOrderChanged])

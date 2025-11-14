@@ -1,4 +1,4 @@
-import { activeSockets, ParticipationInfo } from "@lionweb/delta-server";
+import { activeSockets, ParticipationInfo, registerDeltaProcessor } from "@lionweb/delta-server";
 import { registerHistoryApi } from "@lionweb/server-history"
 import { DeltaCommand, DeltaRequest } from "@lionweb/server-delta-shared"
 import express, { Express, NextFunction, Response, Request } from "express"
@@ -95,6 +95,10 @@ registerInspection(app, DbConnection.getInstance(), pgp)
 registerAdditionalApi(app, DbConnection.getInstance(), pgp, dbConnection.pgPool)
 registerLanguagesApi(app, DbConnection.getInstance(), pgp)
 registerHistoryApi(app, DbConnection.getInstance(), pgp)
+registerDeltaProcessor(DbConnection.getInstance(), pgp)
+requestLogger.info(":start init")
+await repositoryStore.initialize()
+requestLogger.info(":end  init")
 
 /**********************************************************************
  *

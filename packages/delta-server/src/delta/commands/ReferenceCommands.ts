@@ -17,80 +17,81 @@ import {
     MoveEntryFromOtherReferenceInSameParentCommand,
     MoveEntryInSameReferenceCommand
 } from "@lionweb/server-delta-shared"
-import WebSocket from 'ws';
+import { DeltaContext } from "../DeltaContext.js"
+import { ParticipationInfo } from "../queries/index.js"
 import { DeltaFunction, errorEvent } from "./DeltaUtil.js"
 
-const AddReference = (socket: WebSocket, msg: AddReferenceCommand): DeltaEvent => {
+const AddReference = (participation: ParticipationInfo, msg: AddReferenceCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called AddReference " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const DeleteReference = (socket: WebSocket, msg: DeleteReferenceCommand): DeltaEvent => {
+const DeleteReference = (participation: ParticipationInfo, msg: DeleteReferenceCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called DeleteReference " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const ChangeReference = (socket: WebSocket, msg: ChangeReferenceCommand): DeltaEvent => {
+const ChangeReference = (participation: ParticipationInfo, msg: ChangeReferenceCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called ChangeReference " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const MoveEntryFromOtherReference = (socket: WebSocket, msg: MoveEntryFromOtherReferenceCommand): DeltaEvent => {
+const MoveEntryFromOtherReference = (participation: ParticipationInfo, msg: MoveEntryFromOtherReferenceCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called MoveEntryFromOtherReference " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const MoveEntryFromOtherReferenceInSameParent = (socket: WebSocket, msg: MoveEntryFromOtherReferenceInSameParentCommand): DeltaEvent => {
+const MoveEntryFromOtherReferenceInSameParent = (participation: ParticipationInfo, msg: MoveEntryFromOtherReferenceInSameParentCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called MoveEntryFromOtherReferenceInSameParent " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const MoveEntryInSameReference = (socket: WebSocket, msg: MoveEntryInSameReferenceCommand): DeltaEvent => {
+const MoveEntryInSameReference = (participation: ParticipationInfo, msg: MoveEntryInSameReferenceCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called MoveEntryInSameReference " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const MoveAndReplaceEntryFromOtherReference = (socket: WebSocket, msg: MoveAndReplaceEntryFromOtherReferenceCommand): DeltaEvent => {
+const MoveAndReplaceEntryFromOtherReference = (participation: ParticipationInfo, msg: MoveAndReplaceEntryFromOtherReferenceCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called MoveAndReplaceEntryFromOtherReference " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const MoveAndReplaceEntryFromOtherReferenceInSameParent = (socket: WebSocket, msg: MoveAndReplaceEntryFromOtherReferenceInSameParentCommand): DeltaEvent => {
+const MoveAndReplaceEntryFromOtherReferenceInSameParent = (participation: ParticipationInfo, msg: MoveAndReplaceEntryFromOtherReferenceInSameParentCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called MoveAndReplaceEntryFromOtherReferenceInSameParent " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const MoveAndReplaceEntryInSameReference = (socket: WebSocket, msg: MoveAndReplaceEntryInSameReferenceCommand): DeltaEvent => {
+const MoveAndReplaceEntryInSameReference = (participation: ParticipationInfo, msg: MoveAndReplaceEntryInSameReferenceCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called MoveAndReplaceEntryInSameReference " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const AddReferenceResolveInfo = (socket: WebSocket, msg: AddReferenceResolveInfoCommand): DeltaEvent => {
+const AddReferenceResolveInfo = (participation: ParticipationInfo, msg: AddReferenceResolveInfoCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called AddReferenceResolveInfo " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const DeleteReferenceResolveInfo = (socket: WebSocket, msg: DeleteReferenceResolveInfoCommand): DeltaEvent => {
+const DeleteReferenceResolveInfo = (participation: ParticipationInfo, msg: DeleteReferenceResolveInfoCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called DeleteReferenceResolveInfo " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const ChangeReferenceResolveInfo = (socket: WebSocket, msg: ChangeReferenceResolveInfoCommand): DeltaEvent => {
+const ChangeReferenceResolveInfo = (participation: ParticipationInfo, msg: ChangeReferenceResolveInfoCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called ChangeReferenceResolveInfo " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const AddReferenceTarget = (socket: WebSocket, msg: AddReferenceTargetCommand): DeltaEvent => {
+const AddReferenceTarget = (participation: ParticipationInfo, msg: AddReferenceTargetCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called AddReferenceTarget " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const DeleteReferenceTarget = (socket: WebSocket, msg: DeleteReferenceTargetCommand): DeltaEvent => {
+const DeleteReferenceTarget = (participation: ParticipationInfo, msg: DeleteReferenceTargetCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called DeleteReferenceTarget " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const ChangeReferenceTarget = (socket: WebSocket, msg: ChangeReferenceTargetCommand): DeltaEvent => {
+const ChangeReferenceTarget = (participation: ParticipationInfo, msg: ChangeReferenceTargetCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called ChangeReferenceTarget " + msg.messageKind)
         return errorEvent(msg)
     }

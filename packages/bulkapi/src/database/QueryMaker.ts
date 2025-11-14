@@ -8,14 +8,14 @@ import {
     ReservedIdRecord,
     NODES_TABLE_HISTORY,
     RepositoryData,
-    dbLogger
+    dbLogger,
+    sqlArrayFromNodeIdArray,
+    DbChanges,
+    MetaPointersTracker
 } from "@lionweb/server-common"
 import { ReferenceChange } from "@lionweb/json-diff"
 import { LionWebJsonNode, LionWebJsonReferenceTarget } from "@lionweb/json"
 import { BulkApiContext } from "../main.js"
-import { DbChanges } from "./DbChanges.js"
-import { sqlArrayFromNodeIdArray } from "./QueryNode.js"
-import { MetaPointersTracker } from "@lionweb/server-dbadmin"
 
 /**
  * Class that builds SQL queries.
@@ -45,7 +45,7 @@ export class QueryMaker {
 
     public upsertQueriesForReferenceChanges(referenceChanges: ReferenceChange[], repositoryData: RepositoryData) {
         let queries = ""
-        const db = new DbChanges(this.context)
+        const db = new DbChanges(this.context.pgp)
         db.addChanges(referenceChanges)
         const metaPointersTracker = new MetaPointersTracker(repositoryData)
         queries += db.createPostgresQuery(metaPointersTracker)
@@ -125,6 +125,9 @@ export class QueryMaker {
         return query
     }
 
+    /**
+     * Result of this query is [{id: string}]
+     */
     public selectNodesIdsWithoutParentQuery(): string {
         return `SELECT id FROM ${NODES_TABLE} WHERE parent is null`
     }
@@ -132,6 +135,7 @@ export class QueryMaker {
     /**
      * Select all node id's in `idList` for which a node already exists in the database.
      * @param idList
+     * @returns Result of this query is [{id: string}]
      */
     public selectExistingNodeIds(idList: string[]): string {
         const sqlList = sqlArrayFromNodeIdArray(idList)
@@ -142,6 +146,7 @@ export class QueryMaker {
      * select aboolean that indocates whether there is at least one node in th databse
      * whose id is in the `idList`.
      * @param idList
+     * @returns {exists: boolean}
      */
     public existsOnOfNodeIdList(idList: string[]): string {
         const sqlList = sqlArrayFromNodeIdArray(idList)

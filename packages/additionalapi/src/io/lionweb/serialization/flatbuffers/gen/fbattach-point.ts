@@ -4,7 +4,7 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { FBMetaPointer } from '../../../../../io/lionweb/serialization/flatbuffers/gen/fbmeta-pointer.js';
+import { FBMetaPointer } from './fbmeta-pointer.js';
 
 
 export class FBAttachPoint {

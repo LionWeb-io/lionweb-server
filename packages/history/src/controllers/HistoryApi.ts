@@ -23,7 +23,7 @@ export class HistoryApiImpl implements HistoryApi {
      */
     listPartitions = async (request: Request, response: Response): Promise<void> => {
         requestLogger.info(` * history listPartitions request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = getRepositoryData(request)
+        const repositoryData = await getRepositoryData(request)
         requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
         const repoVersion = getIntegerParam(request, "repoVersion", FOREVER)
         if (isParameterError(repositoryData)) {
@@ -53,7 +53,7 @@ export class HistoryApiImpl implements HistoryApi {
      */
     retrieve = async (request: Request, response: Response): Promise<void> => {
         requestLogger.info(` * retrieve request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = getRepositoryData(request)
+        const repositoryData = await getRepositoryData(request)
         requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
         const depthLimit = getIntegerParam(request, "depthLimit", Number.MAX_SAFE_INTEGER)
         const idList = request.body.ids

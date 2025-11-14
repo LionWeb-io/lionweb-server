@@ -1,3 +1,5 @@
 export * from "./commands/index.js"
-export * from "./queries/index.js"
 export * from "./DeltaClientAdmin.js"
+export * from "./DeltaProcessor.js"
+export * from "./DeltaContext.js"
+export * from "./queries/index.js"

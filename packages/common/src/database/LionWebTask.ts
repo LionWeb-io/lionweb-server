@@ -57,6 +57,7 @@ export class LionWebTask {
         traceLogger.info("LionWebTask.multi")
         query = addRepositorySchema(query, repositoryData)
         const multiResult = await this.task.multi(query)
+        console.log(`MULTI ${JSON.stringify(multiResult)}`)
         // Remove first two elements since these are the result of the inserted search_path and schema existence check
         multiResult.shift()
         multiResult.shift()

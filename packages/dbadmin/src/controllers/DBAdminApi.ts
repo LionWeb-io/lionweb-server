@@ -124,7 +124,7 @@ export class DBAdminApiImpl implements DBAdminApi {
             })
         } else {
             // Request is correct, fist check whether repo already exists
-            const existingRepo = repositoryStore.getRepository(repositoryName)
+            const existingRepo = await repositoryStore.getRepository(repositoryName)
             if (existingRepo !== undefined) {
                 lionwebResponse<ListPartitionsResponse>(response, HttpClientErrors.PreconditionFailed, {
                     success: false,
@@ -152,10 +152,12 @@ export class DBAdminApiImpl implements DBAdminApi {
                 }
             }
             let result: QueryReturnType<string>
+            requestLogger.info(`  createRepository go!`)
             await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
                 result = await this.ctx.dbAdminApiWorker.createRepository(task, repositoryData)
                 await this.ctx.dbAdminApiWorker.addRepositoryToTable(task, repositoryData)
             })
+            requestLogger.info(`  createRepository go 2 !`)
             await repositoryStore.refresh()
             lionwebResponse(response, result.status, {
                 success: result.status === HttpSuccessCodes.Ok,
@@ -173,6 +175,8 @@ export class DBAdminApiImpl implements DBAdminApi {
         requestLogger.info(
             ` * listRepositories request received, with body of ${request.headers["content-length"]} bytes. ${getClientLog(request)}`
         )
+        await repositoryStore.refresh()
+
         const repositories = Array.from(repositoryStore.repositoryName2repository.values()).map(repo => ({
             name: repo.repository_name,
             lionweb_version: repo.lionweb_version,
@@ -192,7 +196,7 @@ export class DBAdminApiImpl implements DBAdminApi {
      */
     deleteRepository = async (request: e.Request, response: e.Response): Promise<void> => {
         requestLogger.info(` * deleteRepository request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = getRepositoryData(request)
+        const repositoryData = await getRepositoryData(request)
         if (isParameterError(repositoryData)) {
             lionwebResponse<ListPartitionsResponse>(response, HttpClientErrors.PreconditionFailed, {
                 success: false,

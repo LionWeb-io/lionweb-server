@@ -1,21 +1,8 @@
+import { LionWebJsonNode } from "@lionweb/json"
 import { ResponseMessage } from "@lionweb/server-shared"
-import { CONTAINMENTS_TABLE, METAPOINTERS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "@lionweb/server-common"
-
-export function sqlArrayFromNodeIdArray(strings: string[]): string {
-    return `(${strings.map(id => `'${id}'`).join(", ")})`
-}
-
-export function postgresArrayFromStringArray(strings: string[]): string {
-    return `{${strings.map(id => `"${id}"`).join(", ")}}`
-}
-
-export function nextRepoVersionQuery(clientId: string) {
-    return `SELECT nextRepoVersion('${clientId}');\n`
-}
-
-export function currentRepoVersionQuery(): string {
-    return `SELECT currentRepoVersion();\n`
-}
+import { CONTAINMENTS_TABLE, METAPOINTERS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "../database/index.js"
+import { isLionWebJsonNode } from "./GuardFunctions.js"
+import { sqlArrayFromNodeIdArray } from "./PgHelpers.js"
 
 /**
  * Converts the result of queries using Postgres function nextRepoVersion or currentRepoVersion to the version number
@@ -31,10 +18,24 @@ export function versionResultToResponse(versionResult: object): ResponseMessage 
     }
 }
 
+type NodesForQueryQuery_ResultType = LionWebJsonNode[]
+
+export function is_NodesForQueryQuery_ResultType(o: unknown): o is NodesForQueryQuery_ResultType {
+    return Array.isArray(o) && o.every(n => isLionWebJsonNode(n))
+}
+
+// function isLionWebJsonNode(object: unknown):object is LionWebJsonNode {
+//     const validator = new LionWebSyntaxValidator(new ValidationResult())
+//     // Now validate the all the properties of the full JSON message
+//     validator.validationResult.reset()
+//     validator.validate(object, "LionWebJsonNode")
+//     return !validator.validationResult.hasErrors()
+// }
+
 /**
  * Query to retrieve the full LionWeb nodes from the database.
  * @param nodesQuery string SQL query to select the set of nodes to retrieve.
- * @constructor
+ *                   Must have an `id` property.
  */
 export const nodesForQueryQuery = (nodesQuery: string): string => {
     return `-- Get the nodes for the nodes query

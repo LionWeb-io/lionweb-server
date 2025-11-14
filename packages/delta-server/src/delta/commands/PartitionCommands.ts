@@ -1,23 +1,22 @@
 import { deltaLogger } from "@lionweb/server-common"
 import { AddPartitionCommand, DeletePartitionCommand, DeltaEvent, PartitionAddedEvent } from "@lionweb/server-delta-shared"
-import { activeSockets } from "../DeltaClientAdmin.js"
-import WebSocket from "ws"
+import { DeltaContext } from "../DeltaContext.js"
+import { ParticipationInfo } from "../queries/index.js"
 import { DeltaFunction, errorEvent } from "./DeltaUtil.js"
 
-const AddPartitionFunction = (socket: WebSocket, msg: AddPartitionCommand): DeltaEvent => {
+const AddPartitionFunction = (participation: ParticipationInfo, msg: AddPartitionCommand, _ctx: DeltaContext): DeltaEvent => {
     deltaLogger.info("Called AddPartitionFunction " + msg.messageKind)
-    const pInfo = activeSockets.get(socket)
     const response: PartitionAddedEvent = {
         messageKind: "PartitionAdded",
         newPartition: { nodes: [] },
-        originCommands: [{ commandId: msg.commandId, participationId: pInfo!.participationId }],
+        originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
         sequenceNumber: 0,
         protocolMessages: []
     }
     return response
 }
 
-const DeletePartitionFunction = (socket: WebSocket, msg: DeletePartitionCommand): DeltaEvent => {
+const DeletePartitionFunction = (participation: ParticipationInfo, msg: DeletePartitionCommand, _ctx: DeltaContext): DeltaEvent => {
     deltaLogger.info("Called DeletePartitionFunction " + msg.messageKind)
     return errorEvent(msg)
 }

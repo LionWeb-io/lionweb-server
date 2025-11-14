@@ -1,12 +1,4 @@
-import { nodesForQueryQuery } from "./QueryNode.js"
-
-export function sqlArrayFromNodeIdArray(strings: string[]): string {
-    return `(${strings.map(id => `'${id}'`).join(", ")})`
-}
-
-export function postgresArrayFromStringArray(strings: string[]): string {
-    return `{${strings.map(id => `"${id}"`).join(", ")}}`
-}
+import { nodesForQueryQuery, sqlArrayFromNodeIdArray } from "@lionweb/server-common"
 
 export const retrieveWith = (nodeid: string[], depthLimit: number): string => {
     const sqlArray = sqlArrayFromNodeIdArray(nodeid)

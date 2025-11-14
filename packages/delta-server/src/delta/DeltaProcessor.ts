@@ -1,19 +1,19 @@
+import { deltaLogger } from "@lionweb/server-common";
+import { DeltaValidator } from "@lionweb/server-delta-definitions"
+import { ErrorEvent, DeltaRequest, isDeltaResponse, DeltaCommand } from "@lionweb/server-delta-shared"
+import { SyntaxDefinition, SyntaxValidator, ValidationResult } from "@lionweb/validation"
+import WebSocket from 'ws';
+import { DeltaContext } from "./DeltaContext.js"
 import {
-    activeSockets,
     childFunctions,
     DeltaFunction,
     MessageFromClient,
     MessageFunction,
-    ParticipationInfo,
     partitionFunctions,
-    propertyFunctions2,
-    requestFunctions
-} from "@lionweb/delta-server"
-import { deltaLogger } from "@lionweb/server-common";
-import { DeltaValidator } from "@lionweb/server-delta-definitions"
-import { ErrorEvent, DeltaRequest, DeltaEvent, isDeltaResponse, DeltaCommand } from "@lionweb/server-delta-shared"
-import { ValidationResult } from "@lionweb/validation"
-import WebSocket from 'ws';
+    propertyFunctions
+} from "./commands/index.js"
+import { activeSockets } from "./DeltaClientAdmin.js"
+import { ParticipationInfo, requestFunctions } from "./queries/index.js"
 
 export function isQueryRequestType(object: MessageFromClient): object is DeltaRequest {
     const messageKind = object.messageKind
@@ -26,6 +26,7 @@ export function isQueryRequestType(object: MessageFromClient): object is DeltaRe
 class DeltaProcessor {
     processingFunctions: Map<string, MessageFunction> = new Map<string, MessageFunction>() 
     deltaValidator = new DeltaValidator(new ValidationResult())
+    context: DeltaContext | undefined
 
     constructor(pfs: DeltaFunction[][]) {
         this.initialize(pfs)
@@ -49,17 +50,17 @@ class DeltaProcessor {
         deltaLogger.info(`processDelta messageKind ${delta?.messageKind}`)
         const messageKind = delta.messageKind
         if (typeof messageKind !== "string") {
-            deltaLogger.error(`processDelta 1: messageKind is not a string but a ${typeof messageKind}`)
+            deltaLogger.error(`processDelta 1: messageKind should be a string but is a '${typeof messageKind}'`)
             return
         }
         //  Next, get the processing function for the `messageKind`
         const func = this.processingFunctions.get(messageKind)
         if (func === undefined) {
-            deltaLogger.error(`processDelta 2: no processor found for ${messageKind}`)
+            deltaLogger.error(`processDelta 2: no processor function found for ${messageKind}`)
             const response: ErrorEvent = {
                 errorCode: "MessageKindUnknown",
                 messageKind: "ErrorEvent",
-                message: `Cannot perform delta request message of kind '${messageKind}' is unknown`,
+                message: `Cannot perform delta request: message of kind '${messageKind}' is unknown`,
                 sequenceNumber: 0,
                 originCommands: [{
                     participationId: activeSockets.get(socket)?.participationId ?? "<unknown-participation-id>",
@@ -99,8 +100,8 @@ class DeltaProcessor {
             return
         }
         // Check participation status
-        const participationInfo = activeSockets.get(socket)
-        const errorEvent = this.validateParticipationInfo(delta, participationInfo)
+        const participation = activeSockets.get(socket)
+        const errorEvent = this.validateParticipation(delta, participation)
         if (errorEvent !== undefined) {
             deltaLogger.error(`error event ${JSON.stringify(errorEvent)}`)
             socket.send(JSON.stringify(errorEvent))
@@ -108,7 +109,7 @@ class DeltaProcessor {
         }
 
         // Finally ok, process the delta and send the response
-        const response = func(socket, delta)
+        const response = await func(participation!, delta, this.context!)
         // Errors and responses only need to be sent to the client that sent the message
         if (response.messageKind === "ErrorEvent" || isDeltaResponse(response)) {
             socket.send(JSON.stringify(response))
@@ -124,11 +125,11 @@ class DeltaProcessor {
         }
     }
 
-    validateParticipationInfo = (delta: MessageFromClient, participationInfo: ParticipationInfo | undefined): ErrorEvent | undefined => {
+    validateParticipation = (delta: MessageFromClient, participation: ParticipationInfo | undefined): ErrorEvent | undefined => {
         if (delta.messageKind === "SignOn") {
             return undefined
         }
-        if (participationInfo === undefined) {
+        if (participation === undefined) {
             const response: ErrorEvent = {
                 errorCode: "invalidParticipation",
                 messageKind: "ErrorEvent",
@@ -142,14 +143,14 @@ class DeltaProcessor {
             }
             return response
         }
-        if (participationInfo.participationStatus !== "signedOn") {
+        if (participation.participationStatus !== "signedOn") {
             const response: ErrorEvent = {
                 errorCode: "invalidParticipation",
                 messageKind: "ErrorEvent",
-                message: `Cannot perform ListPartitions request because participation status is ${participationInfo.participationStatus}`,
-                sequenceNumber: participationInfo.eventSequenceNumber++,
+                message: `Cannot perform ListPartitions request because participation status is ${participation.participationStatus}`,
+                sequenceNumber: participation.eventSequenceNumber++,
                 originCommands: [{
-                    participationId: participationInfo.participationId,
+                    participationId: participation.participationId,
                     commandId: (delta as DeltaCommand).commandId ?? (delta as DeltaRequest).queryId ?? "<unknown-command-or-query>"
                 }],
                 protocolMessages: [ {
@@ -157,7 +158,7 @@ class DeltaProcessor {
                     message: "Participation status incorrect, should be SignedOn",
                     data: [{
                         key: "participationStatus",
-                        value: participationInfo.participationStatus
+                        value: participation.participationStatus
                     }]
                 }]
             }
@@ -170,4 +171,4 @@ class DeltaProcessor {
 // Status: connected + activeParticipation(s)
 //         connected + noParticipation
 
-export const deltaProcessor = new DeltaProcessor([childFunctions, partitionFunctions, propertyFunctions2, requestFunctions])
+export const deltaProcessor = new DeltaProcessor([childFunctions, partitionFunctions, propertyFunctions, requestFunctions])

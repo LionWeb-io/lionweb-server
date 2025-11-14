@@ -1,5 +1,5 @@
 import { HttpClientErrors, HttpSuccessCodes } from "@lionweb/server-shared"
-import { QueryReturnType, RepositoryData, requestLogger } from "@lionweb/server-common"
+import { QueryReturnType, RepositoryData, requestLogger, MetaPointersTracker } from "@lionweb/server-common"
 import { AdditionalApiContext } from "../main.js"
 import {
     makeQueryNodeTreeForIdList,
@@ -10,7 +10,6 @@ import {
 import { performImportFromFlatBuffers, populateFromBulkImport, storeNodes } from "./ImportLogic.js"
 import { LionWebJsonMetaPointer, LionWebJsonNode } from "@lionweb/json"
 import { FBBulkImport } from "../io/lionweb/serialization/flatbuffers/index.js"
-import { MetaPointersTracker } from "@lionweb/server-dbadmin"
 
 export type NodeTreeResultType = {
     id: string

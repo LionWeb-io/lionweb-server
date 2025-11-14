@@ -1,4 +1,5 @@
 export * from "./DeltaTypes.js"
+export * from "./Chunks.js"
 export * from "./Command.js"
 export * from "./Event.js"
 export * from "./Request.js"

@@ -4,8 +4,8 @@
 
 import * as flatbuffers from 'flatbuffers';
 
-import { FBLanguage } from '../../../../../io/lionweb/serialization/flatbuffers/gen/fblanguage.js';
-import { FBNode } from '../../../../../io/lionweb/serialization/flatbuffers/gen/fbnode.js';
+import { FBLanguage } from './fblanguage.js';
+import { FBNode } from './fbnode.js';
 
 
 export class FBChunk {

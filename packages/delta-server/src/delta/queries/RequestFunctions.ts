@@ -14,9 +14,8 @@ import {
     SubscribeToPartitionContentsRequest,
     UnsubscribeFromPartitionContentsRequest
 } from "@lionweb/server-delta-shared"
-import WebSocket from "ws"
 import { DeltaFunction, errorRequestEvent } from "../commands/index.js"
-import { activeSockets } from "../DeltaClientAdmin.js"
+import { DeltaContext } from "../DeltaContext.js"
 import { ParticipationInfo } from "./Participation.js"
 
 /**
@@ -32,7 +31,7 @@ import { ParticipationInfo } from "./Participation.js"
 // export type ParticipationStatus = "connected" | "signedOn" | "signedOff" | "disconnected"
 
 const SubscribeToChangingPartitionsRequestFunction = (
-    socket: WebSocket,
+    participation: ParticipationInfo,
     msg: SubscribeToChangingPartitionsRequest
 ): DeltaEvent | DeltaResponse => {
     console.log("Called SubscribeToChangingPartitionsRequestFunction " + msg.messageKind)
@@ -40,7 +39,7 @@ const SubscribeToChangingPartitionsRequestFunction = (
 }
 
 const SubscribeToPartitionContentsRequestFunction = (
-    socket: WebSocket,
+    participation: ParticipationInfo,
     msg: SubscribeToPartitionContentsRequest
 ): DeltaEvent | DeltaResponse => {
     console.log("Called SubscribeToPartitionContentsRequestFunction " + msg.messageKind)
@@ -48,26 +47,24 @@ const SubscribeToPartitionContentsRequestFunction = (
 }
 
 const UnsubscribeFromPartitionContentsRequestFunction = (
-    socket: WebSocket,
-    msg: UnsubscribeFromPartitionContentsRequest
+    participation: ParticipationInfo,
+    msg: UnsubscribeFromPartitionContentsRequest, _ctx: DeltaContext
 ): DeltaEvent | DeltaResponse => {
     console.log("Called UnsubscribeFromPartitionContentsRequestFunction " + msg.messageKind)
     return errorRequestEvent(msg)
 }
 
-const SignOnRequestFunction = (socket: WebSocket, msg: SignOnRequest): DeltaEvent | DeltaResponse => {
+const SignOnRequestFunction = async (participation: ParticipationInfo, msg: SignOnRequest, _ctx: DeltaContext): Promise<DeltaEvent | DeltaResponse> => {
     deltaLogger.info("Called SignOnRequestFunction " + msg.messageKind)
-    const pInfo = activeSockets.get(socket)
-    const error = validateSignOnRequest(pInfo, msg)
+    const error = validateSignOnRequest(participation, msg)
     if (error !== undefined) {
         return error
     }
-    pInfo!.participationStatus = "signedOn"
-    pInfo!.clientId = msg.clientId
-    pInfo!.startParticipation()
+    participation.participationStatus = "signedOn"
+    await participation.startParticipation(msg.clientId, msg.repositoryId)
     const response: SignOnResponse = {
         messageKind: "SignOnResponse",
-        participationId: pInfo!.participationId,
+        participationId: participation.participationId,
         queryId: msg.queryId,
         protocolMessages: [{ data: [], kind: "Info", message: "SignOnRequest received ok" }]
     }
@@ -100,12 +97,12 @@ const validateSignOnRequest = (pInfo: ParticipationInfo | undefined, msg: SignOn
     }
 }
 
-const SignOffRequestFunction = (socket: WebSocket, msg: SignOffRequest): DeltaEvent | DeltaResponse => {
+const SignOffRequestFunction = (participation: ParticipationInfo, msg: SignOffRequest, _ctx: DeltaContext): DeltaEvent | DeltaResponse => {
     deltaLogger.info("Called SignOffRequestFunction " + msg.messageKind)
     return errorRequestEvent(msg)
 }
 
-const ListPartitionsRequestFunction = (socket: WebSocket, msg: ListPartitionsRequest): DeltaEvent | DeltaResponse => {
+const ListPartitionsRequestFunction = (participation: ParticipationInfo, msg: ListPartitionsRequest, _ctx: DeltaContext): DeltaEvent | DeltaResponse => {
     deltaLogger.info("Called ListPartitionsRequestFunction " + msg.messageKind)
     const response: ListPartitionsResponse = {
         messageKind: "ListPartitionsResponse",
@@ -116,12 +113,12 @@ const ListPartitionsRequestFunction = (socket: WebSocket, msg: ListPartitionsReq
     return response
 }
 
-const GetAvailableIdsRequestFunction = (socket: WebSocket, msg: GetAvailableIdsRequest): DeltaEvent | DeltaResponse => {
+const GetAvailableIdsRequestFunction = (participation: ParticipationInfo, msg: GetAvailableIdsRequest, _ctx: DeltaContext): DeltaEvent | DeltaResponse => {
     deltaLogger.info("Called GetAvailableIdsRequestFunction " + msg.messageKind)
     return errorRequestEvent(msg)
 }
 
-const ReconnectRequestFunction = (socket: WebSocket, msg: ReconnectRequest): DeltaEvent | DeltaResponse => {
+const ReconnectRequestFunction = (participation: ParticipationInfo, msg: ReconnectRequest, _ctx: DeltaContext): DeltaEvent | DeltaResponse => {
     deltaLogger.info("Called ReconnectRequestFunction " + msg.messageKind)
     return errorRequestEvent(msg)
 }

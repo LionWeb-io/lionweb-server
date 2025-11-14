@@ -14,13 +14,13 @@ import { JsonContext } from "@lionweb/json-utils"
 import { Request } from "express"
 import { DbAdminApiContext } from "../main.js"
 
-export function getRepositoryData(request: Request, defaultClient?: string): RepositoryData | ParameterError {
+export async function getRepositoryData(request: Request, defaultClient?: string): Promise<RepositoryData | ParameterError> {
     const clientId = getStringParam(request, "clientId", defaultClient)
     if (isParameterError(clientId)) {
         return clientId
     } else {
         const repoName = getRepositoryParameter(request)
-        const repo: RepositoryInfo = repositoryStore.getRepository(repoName)
+        const repo: RepositoryInfo = await repositoryStore.getRepository(repoName)
         // requestLogger.info(`getRepository(...): FOUND REPO '${JSON.stringify(repo)}' for reponame ${repoName}`)
         if (repo === undefined) {
             return {
@@ -61,6 +61,7 @@ export class RepositoryStore {
     }
 
     async initialize() {
+        requestLogger.info("RepositoryStore initialize")
         if (this.initialized) {
             requestLogger.info("ALREADY initialized")
             return
@@ -77,9 +78,12 @@ export class RepositoryStore {
         return Array.from(this.repositoryName2repository.values())
     }
 
-    getRepository(repoName: string): RepositoryInfo {
+    async getRepository(repoName: string): Promise<RepositoryInfo> {
+        if (!this.initialized) {
+            await this.initialize()
+        }
         const result = this.repositoryName2repository.get(repoName)
-        // requestLogger.info(`getRepository(${repoName}) => ${JSON.stringify(result)}`)
+        requestLogger.info(`getRepository(${repoName}) => ${JSON.stringify(result)}`)
         return result
     }
 

@@ -9,9 +9,9 @@ import { describe, test } from "vitest";
 
 // sm.install()
 
-console.log("HI")
+// console.log("HI")
 const addPropertyJson = fs.readFileSync("./src/deltavalidation/addProperty.json").toString()
-console.log(addPropertyJson)
+// console.log(addPropertyJson)
 
 const addPropertyTests = JSON.parse(addPropertyJson)
 // console.log(JSON.stringify(addPropertyTests, null, 2))
@@ -22,7 +22,7 @@ const validator = new DeltaValidator(new ValidationResult())
 addPropertyTests.tests.forEach((propTest: unknown, index: number) => {
     describe(`Repository tests addProperty[${index}]`, () => {
 
-        test("test addProperty ", async () => {
+        test(`test addProperty ${index}`, async () => {
             validator.validationResult.issues = []
             // console.log("-----")
             // console.log(JSON.stringify(propTest, null, 2))

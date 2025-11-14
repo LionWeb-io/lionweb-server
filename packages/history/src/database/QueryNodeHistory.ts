@@ -1,12 +1,4 @@
-import { METAPOINTERS_TABLE } from "@lionweb/server-common"
-
-export function sqlArrayFromNodeIdArray(strings: string[]): string {
-    return `(${strings.map(id => `'${id}'`).join(", ")})`
-}
-
-export function postgresArrayFromStringArray(strings: string[]): string {
-    return `{${strings.map(id => `"${id}"`).join(", ")}}`
-}
+import { METAPOINTERS_TABLE, sqlArrayFromNodeIdArray } from "@lionweb/server-common"
 
 /**
  * Query to retrieve the full LionWeb nodes from the database.

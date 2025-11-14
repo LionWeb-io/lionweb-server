@@ -550,6 +550,48 @@ export type DeltaCommand =
     | ChangeReferenceTargetCommand
     | CompositeCommand;
 
+// The type for the tagged union property
+export type CommandMessageKind =
+    | "AddPartition"
+    | "DeletePartition"
+    | "ChangeClassifier"
+    | "AddProperty"
+    | "ChangeProperty"
+    | "DeleteProperty"
+    | "AddChild"
+    | "DeleteChild"
+    | "ReplaceChild"
+    | "MoveChildFromOtherContainment"
+    | "MoveChildFromOtherContainmentInSameParent"
+    | "MoveChildInSameContainment"
+    | "MoveAndReplaceChildFromOtherContainment"
+    | "MoveAndReplaceChildFromOtherContainmentInSameParent"
+    | "MoveAndReplaceChildInSameContainment"
+    | "AddAnnotation"
+    | "DeleteAnnotation"
+    | "ReplaceAnnotation"
+    | "MoveAnnotationFromOtherParent"
+    | "MoveAnnotationInSameParent"
+    | "MoveAndReplaceAnnotationFromOtherParent"
+    | "MoveAndReplaceAnnotationInSameParent"
+    | "AddReference"
+    | "DeleteReference"
+    | "ChangeReference"
+    | "MoveEntryFromOtherReference"
+    | "MoveEntryFromOtherReferenceInSameParent"
+    | "MoveEntryInSameReference"
+    | "MoveAndReplaceEntryFromOtherReference"
+    | "MoveAndReplaceEntryFromOtherReferenceInSameParent"
+    | "MoveAndReplaceEntryInSameReference"
+    | "AddReferenceResolveInfo"
+    | "DeleteReferenceResolveInfo"
+    | "ChangeReferenceResolveInfo"
+    | "AddReferenceTarget"
+    | "DeleteReferenceTarget"
+    | "ChangeReferenceTarget"
+    | "CompositeCommand";
+
+// Type Guard function
 export function isDeltaCommand(object: unknown): object is DeltaCommand {
     const castObject = object as DeltaCommand;
     return (

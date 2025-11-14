@@ -102,6 +102,18 @@ export type DeltaRequest =
     | GetAvailableIdsRequest
     | ListPartitionsRequest;
 
+// The type for the tagged union property
+export type RequestMessageKind =
+    | "SubscribeToChangingPartitions"
+    | "SubscribeToPartitionContents"
+    | "UnsubscribeFromPartitionContents"
+    | "SignOn"
+    | "SignOff"
+    | "Reconnect"
+    | "GetAvailableIds"
+    | "ListPartitions";
+
+// Type Guard function
 export function isDeltaRequest(object: unknown): object is DeltaRequest {
     const castObject = object as DeltaRequest;
     return (

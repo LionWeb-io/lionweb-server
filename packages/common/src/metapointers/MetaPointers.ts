@@ -1,5 +1,5 @@
 import { LionWebJsonMetaPointer, LionWebJsonNode } from "@lionweb/json"
-import { DbConnection, LionWebTask, RepositoryData } from "@lionweb/server-common"
+import { DbConnection, LionWebTask, RepositoryData } from "../database/index.js"
 
 export type MetaPointersMap = Map<string, number>
 

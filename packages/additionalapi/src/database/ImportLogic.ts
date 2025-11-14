@@ -5,10 +5,9 @@ import { from as copyFrom } from "pg-copy-streams"
 import { FBBulkImport, FBMetaPointer } from "../io/lionweb/serialization/flatbuffers/index.js"
 import { makeQueryToAttachNodeForFlatBuffers, makeQueryToCheckHowManyDoNotExist, makeQueryToCheckHowManyExist } from "./QueryNode.js"
 import { HttpClientErrors, HttpSuccessCodes } from "@lionweb/server-shared"
-import { DbConnection, RepositoryData } from "@lionweb/server-common"
+import { DbConnection, RepositoryData, MetaPointersCollector, MetaPointersTracker  } from "@lionweb/server-common"
 import { BulkImportResultType } from "./AdditionalQueries.js"
 import { BulkImport } from "./AdditionalQueries.js"
-import { MetaPointersCollector, MetaPointersTracker } from "@lionweb/server-dbadmin"
 
 const SEPARATOR = "\t"
 

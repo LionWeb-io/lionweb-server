@@ -1,3 +1,5 @@
+import { deltaLogger, RepositoryInfo } from "@lionweb/server-common"
+import { repositoryStore } from "@lionweb/server-dbadmin"
 import WebSocket from "ws"
 
 /**
@@ -25,7 +27,7 @@ export class ParticipationInfo {
     /**
      * The repository for this participation.
      */
-    repository: string = ""
+    repositoryInfo: RepositoryInfo | undefined
     /**
      * The LionWeb delta protocol version
      */
@@ -51,8 +53,12 @@ export class ParticipationInfo {
         this.socket = socket
     }
 
-    startParticipation(): void {
+    async startParticipation(clientId: string, repositoryId: string): Promise<void> {
         this.participationId = "participation-" + ParticipationInfo.nextIdNumber++
+        this.participationStatus = "signedOn"
+        this.clientId = clientId
+        this.repositoryInfo = await repositoryStore.getRepository(repositoryId)
+        deltaLogger.info(`startParticipation repo '${repositoryId}' schema ${JSON.stringify(this.repositoryInfo)}`)
     }
     
     private nextParticipationId(): string {

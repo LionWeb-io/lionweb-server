@@ -1,8 +1,7 @@
-import { LionWebTask, QueryReturnType, removeNewlinesBetween$$, RepositoryData, ServerConfig } from "@lionweb/server-common"
+import { cleanGlobalPointersMap , LionWebTask, QueryReturnType, removeNewlinesBetween$$, RepositoryData, requestLogger, ServerConfig } from "@lionweb/server-common"
 import { HttpSuccessCodes } from "@lionweb/server-shared"
 import { DbAdminApiContext } from "../main.js"
 import { CREATE_DATABASE_SQL, CREATE_GLOBALS_SQL, dropSchema, initSchemaWithHistory, initSchemaWithoutHistory } from "../tools/index.js"
-import { cleanGlobalPointersMap } from "./MetaPointers.js"
 
 export type ListRepositoriesResult = {
     schema_name: string
@@ -35,6 +34,7 @@ export class DBAdminApiWorker {
     }
 
     async createRepository(task: LionWebTask, repositoryData: RepositoryData): Promise<QueryReturnType<string>> {
+        requestLogger.info("createRepository worker")
         cleanGlobalPointersMap(repositoryData.repository.repository_name)
         const schemaSql = repositoryData.repository.history
             ? initSchemaWithHistory(repositoryData.repository.schema_name)

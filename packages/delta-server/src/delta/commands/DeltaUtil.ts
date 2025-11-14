@@ -1,3 +1,4 @@
+
 import {
     CommandId,
     DeltaCommand,
@@ -7,7 +8,8 @@ import {
     ErrorEvent,
     ProtocolMessage
 } from "@lionweb/server-delta-shared"
-import WebSocket from "ws"
+import { DeltaContext } from "../DeltaContext.js"
+import { ParticipationInfo } from "../queries/index.js"
 
 export type MessageFromClient = DeltaCommand | DeltaRequest
 
@@ -17,7 +19,7 @@ export type CommandOrRequest = {
     protocolMessages: ProtocolMessage[];
 
 }
-export type MessageFunction =  (socket: WebSocket, msg: MessageFromClient) => (DeltaEvent | DeltaResponse)
+export type MessageFunction =  (participation: ParticipationInfo, msg: MessageFromClient, ctx: DeltaContext) => (DeltaEvent | DeltaResponse)
 
 export type DeltaFunction = {
     messageKind: string;
@@ -43,3 +45,4 @@ export const errorRequestEvent = (msg: DeltaRequest): ErrorEvent => (
         protocolMessages: []
     }
 )
+

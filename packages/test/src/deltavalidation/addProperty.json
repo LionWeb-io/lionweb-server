@@ -1,118 +1,140 @@
 {
-  "tests": [
-    {
-      "expectedError": "KeyFormat",
-      "command": {
-        "messageKind": "AddProperty",
-        "node": "123",
-        "property": {
-          "key": "",
-          "language": "l1",
-          "version": "1.0"
+    "tests": [
+        {
+            "expectedError": "KeyFormat",
+            "command": {
+                "messageKind": "AddProperty",
+                "commandId": "command-1",
+                "protocolMessages": [],
+                "node": "123",
+                "property": {
+                    "key": "",
+                    "language": "l1",
+                    "version": "1.0"
+                },
+                "newValue": "string"
+            }
         },
-        "newValue": "string"
-      }
-    },
-    {
-      "expectedError": "PropertyNull",
-      "command": {
-        "messageKind": "AddProperty",
-        "node": "123",
-        "property": {
-          "key": "key",
-          "language": "l1",
-          "version": "1.0"
+        {
+            "expectedError": "PropertyNull",
+            "command": {
+                "messageKind": "AddProperty",
+                "commandId": "command-1",
+                "protocolMessages": [],
+                "node": "123",
+                "property": {
+                    "key": "key",
+                    "language": "l1",
+                    "version": "1.0"
+                },
+                "newValue": null
+            }
         },
-        "newValue": null
-      }
-    },
-    {
-      "expectedError": "IdFormat",
-      "command": {
-        "messageKind": "AddProperty",
-        "node": "%#&@%@",
-        "property": {
-          "key": "key",
-          "language": "l1",
-          "version": "1.0"
+        {
+            "expectedError": "IdFormat",
+            "command": {
+                "messageKind": "AddProperty",
+                "commandId": "command-1",
+                "protocolMessages": [],
+                "node": "%#&@%@",
+                "property": {
+                    "key": "key",
+                    "language": "l1",
+                    "version": "1.0"
+                },
+                "newValue": "string"
+            }
         },
-        "newValue": "string"
-      }
-    },
-    {
-      "expectedError": "VersionFormat",
-      "command": {
-        "messageKind": "AddProperty",
-        "node": "123",
-        "property": {
-          "key": "key",
-          "language": "l1",
-          "version": ""
+        {
+            "expectedError": "VersionFormat",
+            "command": {
+                "messageKind": "AddProperty",
+                "commandId": "command-1",
+                "protocolMessages": [],
+                "node": "123",
+                "property": {
+                    "key": "key",
+                    "language": "l1",
+                    "version": ""
+                },
+                "newValue": "string"
+            }
         },
-        "newValue": "string"
-      }
-    },
-    {
-      "expectedError": "PropertyMissing",
-      "command": {
-        "messageKind": "AddProperty",
-        "node": "123",
-        "property": {
-          "key": "key",
-          "language": "l1",
-          "version": "22"
+        {
+            "expectedError": "PropertyMissing",
+            "command": {
+                "messageKind": "AddProperty",
+                "commandId": "command-1",
+                "protocolMessages": [],
+                "node": "123",
+                "property": {
+                    "key": "key",
+                    "language": "l1",
+                    "version": "22"
+                }
+            }
+        },
+        {
+            "expectedError": "PropertyMissing",
+            "command": {
+                "messageKind": "AddProperty",
+                "commandId": "command-1",
+                "protocolMessages": [],
+                "property": {
+                    "key": "key",
+                    "language": "l1",
+                    "version": "22"
+                },
+                "newValue": "hello"
+            }
+        },
+        {
+            "expectedError": "PropertyMissing",
+            "command": {
+                "messageKind": "AddProperty",
+                "commandId": "command-1",
+                "protocolMessages": [],
+                "node": "id",
+                "property": {
+                    "key": "key",
+                    "language": "l1",
+                    "version": "22"
+                },
+                "newValue": "hello",
+                "protocolMessages": [
+                    {
+                        "kind": "Info"
+                    }
+                ]
+            }
+        },
+        {
+            "expectedError": null,
+            "command": {
+                "messageKind": "AddProperty",
+                "commandId": "command-1",
+                "protocolMessages": [],
+                "node": "id",
+                "property": {
+                    "key": "key",
+                    "language": "l1",
+                    "version": "22"
+                },
+                "newValue": "hello",
+                "commandId": "1",
+                "protocolMessages": [
+                    {
+                        "kind": "Info",
+                        "message": "23",
+                        "data": [
+                            {
+                                "key": "12",
+                                "value": "12"
+                            }
+                        ]
+                    }
+                ]
+            }
         }
-      }
-    },
-    {
-      "expectedError": "PropertyMissing",
-      "command": {
-        "messageKind": "AddProperty",
-        "property": {
-          "key": "key",
-          "language": "l1",
-          "version": "22"
-        },
-        "newValue": "hello"
-      }
-    },
-    {
-      "expectedError": "PropertyMissing",
-      "command": {
-        "messageKind": "AddProperty",
-        "node": "id",
-        "property": {
-          "key": "key",
-          "language": "l1",
-          "version": "22"
-        },
-        "newValue": "hello",
-        "protocolMessages": [{
-          "kind": "Info"
-        }]
-      }
-    },
-    {
-      "expectedError": null,
-      "command": {
-        "messageKind": "AddProperty",
-        "node": "id",
-        "property": {
-          "key": "key",
-          "language": "l1",
-          "version": "22"
-        },
-        "newValue": "hello",
-        "commandId": "1",
-        "protocolMessages": [{
-          "kind": "Info",
-          "message": "23",
-          "data": [{
-            "key": "12",
-            "value": "12"
-          }]
-        }]
-      }
-    }
-  ]
+    ]
 }

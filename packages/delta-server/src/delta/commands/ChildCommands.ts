@@ -11,50 +11,51 @@ import {
     MoveChildInSameContainmentCommand,
     ReplaceChildCommand
 } from "@lionweb/server-delta-shared"
-import WebSocket from 'ws';
+import { DeltaContext } from "../DeltaContext.js"
+import { ParticipationInfo } from "../queries/index.js"
 import { DeltaFunction, errorEvent } from "./DeltaUtil.js"
 
-const AddChild = (socket: WebSocket, msg: AddChildCommand): DeltaEvent => {
+const AddChild = (participation: ParticipationInfo, msg: AddChildCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called AddChild " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const DeleteChild = (socket: WebSocket, msg: DeleteChildCommand): DeltaEvent => {
+const DeleteChild = (participation: ParticipationInfo, msg: DeleteChildCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called DeleteChild " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const ReplaceChild = (socket: WebSocket, msg: ReplaceChildCommand): DeltaEvent => {
+const ReplaceChild = (participation: ParticipationInfo, msg: ReplaceChildCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called ReplaceChild " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const MoveChildFromOtherContainment = (socket: WebSocket, msg: MoveChildFromOtherContainmentCommand): DeltaEvent => {
+const MoveChildFromOtherContainment = (participation: ParticipationInfo, msg: MoveChildFromOtherContainmentCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called MoveChildFromOtherContainment " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const MoveChildFromOtherContainmentInSameParent = (socket: WebSocket, msg: MoveChildFromOtherContainmentInSameParentCommand): DeltaEvent => {
+const MoveChildFromOtherContainmentInSameParent = (participation: ParticipationInfo, msg: MoveChildFromOtherContainmentInSameParentCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called MoveChildFromOtherContainmentInSameParent " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const MoveChildInSameContainment = (socket: WebSocket, msg: MoveChildInSameContainmentCommand): DeltaEvent => {
+const MoveChildInSameContainment = (participation: ParticipationInfo, msg: MoveChildInSameContainmentCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called MoveChildInSameContainment " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const MoveAndReplaceChildFromOtherContainment = (socket: WebSocket, msg: MoveAndReplaceChildFromOtherContainmentCommand): DeltaEvent => {
+const MoveAndReplaceChildFromOtherContainment = (participation: ParticipationInfo, msg: MoveAndReplaceChildFromOtherContainmentCommand): DeltaEvent => {
         deltaLogger.info("Called MoveAndReplaceChildFromOtherContainment " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const MoveAndReplaceChildFromOtherContainmentInSameParent = (socket: WebSocket, msg: MoveAndReplaceChildFromOtherContainmentInSameParentCommand): DeltaEvent => {
+const MoveAndReplaceChildFromOtherContainmentInSameParent = (participation: ParticipationInfo, msg: MoveAndReplaceChildFromOtherContainmentInSameParentCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called MoveAndReplaceChildFromOtherContainmentInSameParent " + msg.messageKind)
         return errorEvent(msg)
     }
 
-const MoveAndReplaceChildInSameContainment = (socket: WebSocket, msg: MoveAndReplaceChildInSameContainmentCommand): DeltaEvent => {
+const MoveAndReplaceChildInSameContainment = (participation: ParticipationInfo, msg: MoveAndReplaceChildInSameContainmentCommand, _ctx: DeltaContext): DeltaEvent => {
         deltaLogger.info("Called MoveAndReplaceChildInSameContainment " + msg.messageKind)
         return errorEvent(msg)
     }

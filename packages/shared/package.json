@@ -23,7 +23,7 @@
   "devDependencies": {
   },
   "dependencies": {
-    "@lionweb/json": "0.7.1-beta.14",
+    "@lionweb/json": "0.7.2",
     "source-map-support": "0.5.21"
   }
 }

@@ -9,12 +9,20 @@ import {
     ChunksDefinitions,
     DeltaTypesDefinitions,
     RequestDefinitions,
-    ResponseDefinitions
+    ResponseDefinitions,
+    validateSerializationFormatVersion,
+    validateVersion,
+    validateKey,
+    validateId
 } from "@lionweb/validation"
 
 export type UnknownObjectType = { [key: string]: unknown }
 
 const definitions = new SyntaxDefinition([CommandDefinitions, ResponseDefinitions, RequestDefinitions, EventDefinitions], [ChunksDefinitions, DeltaTypesDefinitions])
+definitions.addValidator("LionWebId", validateId ),
+    definitions.addValidator("LionWebKey", validateKey ),
+    definitions.addValidator("LionWebVersion",validateVersion),
+    definitions.addValidator("LionWebSerializationFormatVersion", validateSerializationFormatVersion)
 
 export class DeltaValidator extends SyntaxValidator {
     constructor(validationResult: ValidationResult) {

@@ -2,10 +2,11 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist",
+    "outDir": "./dist",
     "resolveJsonModule": true,
     /* Enable importing .json files */
-    "sourceRoot": "./src",
+//    "sourceRoot": "./src",
     "types": ["vitest/globals"]
-  }
+  },
+    "include": ["./src/**/*"]
 }

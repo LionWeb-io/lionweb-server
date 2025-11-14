@@ -1,9 +1,7 @@
-import { asError, deltaLogger } from "@lionweb/server-common";
-import { Job, requestQueue } from "@lionweb/server-common/dist/apiutil/RequestQueue.js";
+import { deltaProcessor } from "@lionweb/delta-server"
+import { asError, deltaLogger, Job, requestQueue } from "@lionweb/server-common";
 import { DeltaCommand, DeltaRequest } from "@lionweb/server-delta-shared";
-import { request } from "express";
 import WebSocket from "ws";
-import { deltaProcessor } from "./DeltaProcessor.js";
 
 let index = 0
 
@@ -13,7 +11,7 @@ let index = 0
  * @param func
  */
 export async function runWithTryDelta(socket: WebSocket, delta: DeltaCommand | DeltaRequest): Promise<void> {
-    console.log(`Run with try ${delta.messageKind}`)
+    deltaLogger.info(`Run with try ${delta.messageKind}`)
     const myIndex = index++
     const deltaFunction = async () => {
         try {

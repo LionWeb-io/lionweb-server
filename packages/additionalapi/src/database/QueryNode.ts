@@ -1,7 +1,6 @@
-import {CONTAINMENTS_TABLE, NODES_TABLE} from "@lionweb/server-common";
+import {CONTAINMENTS_TABLE, NODES_TABLE, MetaPointersTracker} from "@lionweb/server-common";
 import {AttachPoint} from "./AdditionalQueries.js";
 import {FBAttachPoint} from "../io/lionweb/serialization/flatbuffers/index.js";
-import {MetaPointersTracker} from "@lionweb/server-dbadmin";
 import {forFBMetapointer} from "./ImportLogic.js";
 
 function sqlArrayFromNodeIdArray(strings: string[]): string {
@@ -14,6 +13,7 @@ function sqlArrayFromNodeIdArray(strings: string[]): string {
  * This works ok because we use the _parent_ column to find the children, not the containment or annotation.
  * @param nodeidlist
  * @param depthLimit
+ * @returns A query string which results in an array of {id: string, parent: string, depth: number}
  */
 export const makeQueryNodeTreeForIdList = (nodeidlist: string[], depthLimit: number): string => {
     const sqlArray = sqlArrayFromNodeIdArray(nodeidlist)

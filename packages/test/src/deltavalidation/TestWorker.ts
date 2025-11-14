@@ -17,7 +17,7 @@ export class TestWorker implements DirectoryWorker {
             this.validator.validationResult.reset()
             this.validator.validateDelta(message)
             this.validator.validationResult.issues.forEach(issue => {
-                console.log(`Issue ${issue.issueType}: ${issue.errorMsg()}`)
+                console.log(`ISSIE ISSUE Issue ${issue.issueType}: ${issue.errorMsg()}`)
             })
             assert(!this.validator.validationResult.hasErrors(), `Command ${file} has errors`)
         })

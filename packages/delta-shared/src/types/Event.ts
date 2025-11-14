@@ -657,6 +657,50 @@ export type DeltaEvent =
     | NoOpEvent
     | ErrorEvent;
 
+// The type for the tagged union property
+export type EventMessageKind =
+    | "ClassifierChanged"
+    | "PartitionAdded"
+    | "PartitionDeleted"
+    | "PropertyAdded"
+    | "PropertyDeleted"
+    | "PropertyChanged"
+    | "ChildAdded"
+    | "ChildDeleted"
+    | "ChildReplaced"
+    | "ChildMovedFromOtherContainment"
+    | "ChildMovedFromOtherContainmentInSameParent"
+    | "ChildMovedInSameContainment"
+    | "ChildMovedAndReplacedFromOtherContainment"
+    | "ChildMovedAndReplacedFromOtherContainmentInSameParent"
+    | "ChildMovedAndReplacedInSameContainment"
+    | "AnnotationAdded"
+    | "AnnotationDeleted"
+    | "AnnotationReplaced"
+    | "AnnotationMovedFromOtherParent"
+    | "AnnotationMovedInSameParent"
+    | "AnnotationMovedAndReplacedFromOtherParent"
+    | "AnnotationMovedAndReplacedInSameParent"
+    | "ReferenceAdded"
+    | "ReferenceDeleted"
+    | "ReferenceChanged"
+    | "EntryMovedFromOtherReference"
+    | "EntryMovedFromOtherReferenceInSameParent"
+    | "EntryMovedInSameReference"
+    | "EntryMovedAndReplacedFromOtherReference"
+    | "EntryMovedAndReplacedFromOtherReferenceInSameParent"
+    | "EntryMovedAndReplacedInSameReference"
+    | "ReferenceResolveInfoAdded"
+    | "ReferenceResolveInfoDeleted"
+    | "ReferenceResolveInfoChanged"
+    | "ReferenceTargetAdded"
+    | "ReferenceTargetDeleted"
+    | "ReferenceTargetChanged"
+    | "CompositeEvent"
+    | "NoOp"
+    | "ErrorEvent";
+
+// Type Guard function
 export function isDeltaEvent(object: unknown): object is DeltaEvent {
     const castObject = object as DeltaEvent;
     return (

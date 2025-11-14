@@ -1,13 +1,15 @@
 import { deltaLogger } from "@lionweb/server-common"
 import { ChangeClassifierCommand, CompositeCommand, DeltaEvent } from "@lionweb/server-delta-shared"
+import { DeltaContext } from "../DeltaContext.js"
+import { ParticipationInfo } from "../queries/index.js"
 import { DeltaFunction, errorEvent } from "./DeltaUtil.js"
 
-const ChangeClassifier = (socket: WebSocket, msg: ChangeClassifierCommand): DeltaEvent => {
+const ChangeClassifier = (participation: ParticipationInfo, msg: ChangeClassifierCommand, _ctx: DeltaContext): DeltaEvent => {
     deltaLogger.info("Called ChangeClassifierFunction " + msg.messageKind)
     return errorEvent(msg)
 }
 
-const CompositeCommand = (socket: WebSocket, msg: CompositeCommand): DeltaEvent => {
+const CompositeCommand = (participation: ParticipationInfo, msg: CompositeCommand, _ctx: DeltaContext): DeltaEvent => {
     deltaLogger.info("Called CompositeCommandFunction " + msg.messageKind)
     return errorEvent(msg)
 }

@@ -42,7 +42,7 @@ export class BulkApiImpl implements BulkApi {
      */
     listPartitions = async (request: Request, response: Response): Promise<void> => {
         requestLogger.info(` * listPartitions request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = getRepositoryData(request)
+        const repositoryData = await getRepositoryData(request)
         requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
         if (isParameterError(repositoryData)) {
             lionwebResponse<ListPartitionsResponse>(response, HttpClientErrors.PreconditionFailed, {
@@ -60,7 +60,7 @@ export class BulkApiImpl implements BulkApi {
 
     createPartitions = async (request: Request, response: Response): Promise<void> => {
         requestLogger.info(` * createPartitions request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = getRepositoryData(request)
+        const repositoryData = await getRepositoryData(request)
         requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
         const chunk: LionWebJsonChunk = request.body
         if (isParameterError(repositoryData)) {
@@ -127,7 +127,7 @@ export class BulkApiImpl implements BulkApi {
 
     deletePartitions = async (request: Request, response: Response): Promise<void> => {
         requestLogger.info(` * deletePartitions request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = getRepositoryData(request)
+        const repositoryData = await getRepositoryData(request)
         requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
         if (isParameterError(repositoryData)) {
             lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
@@ -150,7 +150,7 @@ export class BulkApiImpl implements BulkApi {
      */
     store = async (request: Request, response: Response): Promise<void> => {
         requestLogger.info(` * store request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = getRepositoryData(request)
+        const repositoryData = await getRepositoryData(request)
         requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
         if (isParameterError(repositoryData)) {
             requestLogger.error("STORE ERROR: repository data incorrect: " + JSON.stringify(repositoryData))
@@ -188,7 +188,7 @@ export class BulkApiImpl implements BulkApi {
      */
     retrieve = async (request: Request, response: Response): Promise<void> => {
         requestLogger.info(` * retrieve request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = getRepositoryData(request)
+        const repositoryData = await getRepositoryData(request)
         requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
         const depthLimit = getIntegerParam(request, "depthLimit", Number.MAX_SAFE_INTEGER)
         const idList = request.body.ids
@@ -226,7 +226,7 @@ export class BulkApiImpl implements BulkApi {
      */
     ids = async (request: Request, response: Response): Promise<void> => {
         requestLogger.info(` * ids request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = getRepositoryData(request)
+        const repositoryData = await getRepositoryData(request)
         requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
         const count = getIntegerParam(request, "count", Number.MAX_SAFE_INTEGER)
         if (isParameterError(count)) {

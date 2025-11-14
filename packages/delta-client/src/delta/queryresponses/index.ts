@@ -1,2 +1,1 @@
-export * from "./IQueryResponseProcessor.js"
-export * from "./QueryResponseProcessor.js"
+export * from "./ResponseProcessingFunctions.js"

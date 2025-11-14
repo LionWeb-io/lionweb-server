@@ -1,13 +1,9 @@
 import WebSocket from 'ws';
 import { DeltaCommand, DeltaRequest, } from "@lionweb/server-delta-shared"
-import { DefaultEventProcessor, LionWebDeltaClientProcessor, QueryResponseProcessor } from "./delta/index.js"
+import { eventFunctions } from "./delta/events/EventProcessingFunctions.js"
+import { LionWebDeltaClientProcessor } from "./delta/index.js"
+import { responseFunctions } from "./delta/queryresponses/ResponseProcessingFunctions.js"
 
-// getVersionFromResponse(response: ClientResponse<LionwebResponse>): number {
-//     return Number.parseInt(response.body.messages.find(m => m.data["version"] !== undefined).data["version"])
-// }
-//
-// // export type LionWebVersionType = "2023.1" | "2024.1"
-//
 /**
  *  Access to the LionWeb repository API's.
  *  Can be configured by environment variables:
@@ -24,13 +20,7 @@ export class DeltaClient {
     private TIME_OUT = process.env.TIMEOUT ?? "20000";
     private TIMEOUT = typeof process !== "undefined" ? Number.parseInt(this.TIME_OUT) || 20000 : 20000;
 
-    loggingOn = false
-    logMessage(logMessage: string): string {
-        return this.loggingOn && logMessage !== undefined ? `&clientLog=${logMessage}` : ""
-    }
-    logMessageSolo(logMessage: string): string {
-        return this.loggingOn && logMessage !== undefined ? `clientLog=${logMessage}` : ""
-    }
+    loggingOn = true
     /**
      * The Client id that is used for all Api requests
      */
@@ -51,50 +41,38 @@ export class DeltaClient {
         this.repository = repository
     }
 
-    withClientId(id: string): DeltaClient {
-        this.clientId = id
-        return this
-    }
-
-    withRepository(repository: string): DeltaClient {
-        this.repository = repository
-        return this
-    }
-
-    withClientIdAndRepository(id: string, repository: string | null): DeltaClient {
-        this.clientId = id
-        this.repository = repository
-        return this
-    }
-
     socket: WebSocket | undefined
-    id: number = 0
-    deltaProcessor = new LionWebDeltaClientProcessor(new QueryResponseProcessor(), new DefaultEventProcessor())
+    deltaProcessor = new LionWebDeltaClientProcessor([eventFunctions, responseFunctions])
+
+    sentMessageHistory: string[] = []
+    receivedMessageHistory: string[] = []
     
     async connect(): Promise<void> {
-        console.log("Connecting socket")
+        this.log("Connecting socket")
         this.socket = await new WebSocket('ws://localhost:3005');
         this.socket.onopen = () => {
-            console.log("open socket")
+            this.log("open socket")
         }
         this.socket.onmessage = (ev) => {
-            console.log(`Incoming message type '${ev.type}': ` + JSON.stringify(ev.data))
+            this.log(`Incoming message type '${ev.type}': ` + ev.data)
+            this.receivedMessageHistory.push(ev.data.toString())
             if (this.socket === undefined) {
-                console.log("Error on message, socket is undefined")
+                this.logError("Error on message, socket is undefined")
                 return
             }
             this.deltaProcessor.processDelta(this.socket, JSON.parse(ev.data.toString()))
         }
         this.socket.onclose = (ev) => {
-            console.log("close socket", ev.reason)
+            this.log("close socket" + ev.reason)
         }
         this.socket.onerror = (ev) => {
-            console.log("erro socket")
+            this.log("error socket " + ev.message)
         }
     }
 
     sendCommand(command: DeltaCommand): void {
-        console.log(`sendCommand: ${JSON.stringify(command)}`)
+        const commandAsString = JSON.stringify(command)
+        this.log(`sendCommand: ${commandAsString}`)
         if (this.socket === undefined) {
             throw new Error("No socket object")
         }
@@ -103,11 +81,12 @@ export class DeltaClient {
         }
         // set unique id
         // command.commandId = `${this.id++}`
-        this.socket.send(JSON.stringify(command))
+        this.sentMessageHistory.push(commandAsString)
+        this.socket.send(commandAsString)
     }
 
     sendRequest(query: DeltaRequest): void {
-        console.log(`sendRequest: ${JSON.stringify(query)}`)
+        this.log(`sendRequest: ${JSON.stringify(query)}`)
         if (this.socket === undefined) {
             throw new Error("No socket object")
         }
@@ -123,12 +102,12 @@ export class DeltaClient {
         let errorMess: string = e.message
         if (e.message.includes("aborted")) {
             errorMess = `Time out: no response from ${this._SERVER_URL}.`
-            console.error(errorMess)
+            this.logError(errorMess)
         }
         if (method == "") {
-            console.error("handleError: " + JSON.stringify(e))
+            this.logError("handleError: " + JSON.stringify(e))
         } else {
-            console.error(`handleError on /${method}: ` + JSON.stringify(e))
+            this.logError(`handleError on /${method}: ` + JSON.stringify(e))
         }
     }
 
@@ -138,7 +117,7 @@ export class DeltaClient {
      */
     log(message: string): void {
         if (this.loggingOn) {
-            console.log("RepositoryDeltaClient: " + message)
+            console.log("DeltaClient: " + message)
         }
     }
 
@@ -147,7 +126,7 @@ export class DeltaClient {
      * @param message
      */
     logError(message: string): void {
-        console.log("RepositoryDeltaClient error: " + message)
+        console.log("DeltaClient error: " + message)
     }
 
     /**

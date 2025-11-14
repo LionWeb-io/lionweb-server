@@ -11,16 +11,17 @@ import {
 } from "@lionweb/server-shared"
 import {
     createId,
+    currentRepoVersionQuery,
     EMPTY_CHUNKS,
     LionWebTask,
     nodesToChunk,
     QueryReturnType,
     RepositoryData,
     requestLogger,
-    traceLogger
+    traceLogger,
+    versionResultToResponse
 } from "@lionweb/server-common"
 import { LionWebJsonChunk } from "@lionweb/json"
-import { currentRepoVersionQuery, versionResultToResponse } from "../database/index.js"
 import { retrieveWith } from "../database/RetrieveInOneQuery.js"
 import { BulkApiContext } from "../main.js"
 
@@ -141,7 +142,10 @@ export class BulkApiWorker {
             }
         }
 
-        const [versionResult, nodes] = await task.multi(repositoryData, currentRepoVersionQuery() + retrieveWith(nodeIdList, depthLimit))
+        const [versionResult, nodes, a] = await task.multi(repositoryData, currentRepoVersionQuery() + retrieveWith(nodeIdList, depthLimit))
+        console.log(`VERSION ${JSON.stringify(versionResult)}`)
+        console.log(`NODES ${JSON.stringify(nodes)}`)
+        console.log(`A ${JSON.stringify(a)}`)
         return {
             status: HttpSuccessCodes.Ok,
             query: "",
