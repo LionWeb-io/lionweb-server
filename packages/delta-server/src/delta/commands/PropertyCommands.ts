@@ -1,7 +1,7 @@
 import { isEqualMetaPointer } from "@lionweb/json"
 import { PropertyValueChanged } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
-import { deltaLogger, nodesForQueryQuery, is_NodesForQueryQuery_ResultType, DbChanges, MetaPointersTracker } from "@lionweb/server-common"
+import { deltaLogger, nodesForQueryQuery, is_NodesForQueryQuery_ResultType, DbChanges } from "@lionweb/server-common"
 import { retrieveNode } from "@lionweb/server-common/dist/queries/queries.js"
 import {
     AddPropertyCommand,
@@ -63,11 +63,11 @@ const ChangePropertyFunction = async (
     msg: ChangePropertyCommand,
     _ctx: DeltaContext
 ): Promise<DeltaEvent> => {
-    deltaLogger.info(`Called ChangePropertyFunction ${msg.node} pinfo ${JSON.stringify(participation.repositoryInfo)}`)
+    deltaLogger.info(`Called ChangePropertyFunction ${msg.node} pinfo ${JSON.stringify(participation.repositoryData)}`)
     // 1. Query to get the node
     const query = retrieveNode(msg.node)
     const q = nodesForQueryQuery(query)
-    const retrievedNode = await _ctx.dbConnection.query({ clientId: participation.clientId, repository: participation.repositoryInfo! }, q)
+    const retrievedNode = await _ctx.dbConnection.query(participation.repositoryData!, q)
     // eaasert isArry(retroeveNode) && retr
     deltaLogger.info(`Result of retrieveNode: '${JSON.stringify(retrievedNode)}'`)
     

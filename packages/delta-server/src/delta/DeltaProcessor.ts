@@ -1,7 +1,7 @@
 import { deltaLogger } from "@lionweb/server-common";
 import { DeltaValidator } from "@lionweb/server-delta-definitions"
 import { ErrorEvent, DeltaRequest, isDeltaResponse, DeltaCommand } from "@lionweb/server-delta-shared"
-import { SyntaxDefinition, SyntaxValidator, ValidationResult } from "@lionweb/validation"
+import { ValidationResult } from "@lionweb/validation"
 import WebSocket from 'ws';
 import { DeltaContext } from "./DeltaContext.js"
 import {
@@ -119,8 +119,8 @@ class DeltaProcessor {
             // TODO: Add the changed partitions to the result of the processing function, so we know to whom to send.
             for (const pInfo of activeSockets.values()) {
                 response.sequenceNumber = pInfo.eventSequenceNumber++
-                deltaLogger.info(`Sending ${JSON.stringify(response)} to ${pInfo.clientId}`)
-                pInfo.socket.send(JSON.stringify(response))
+                deltaLogger.info(`Sending ${JSON.stringify(response)} to ${pInfo.repositoryData!.clientId}`)
+                pInfo.socket.send(JSON.stringify(response))       
             }
         }
     }
