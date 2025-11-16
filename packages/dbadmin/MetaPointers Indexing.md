@@ -38,3 +38,11 @@ When using it we:
   already marked "to be indexed". If they are not, it will add them to the list of MetaPointers "to be indexed".
 - Finally, when the call `obtainIndexes`. This method will take all the MetaPointers marked as "to be indexed" and 
   add them to the Database. It will then get the indexes associated to them and store them in the global map.
+
+Note that the actual insertion on the MetaPointers table is done on the Database side, through a stored procedure.
+This procedure is:
+
+```
+# It returns an array of indexes
+toMetaPointerIDs(<array of languages>, <array of versions>, <array of keys>)
+```
