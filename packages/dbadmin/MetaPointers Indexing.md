@@ -33,11 +33,9 @@ We can then use the `getFromGlobalMetaPointersMap` method.
 The indexes are stored in the `MetaPointers` table. We want to work on such table by using the `MetaPointersCollector` class.
 When using it we:
 
-- First, let the instance knows about all the nodes we want to deal with. It will then look into them and examine all the MetaPointers.
-- When examining the MetaPointers, the instance will check if they are A) already in the global map, or B) if they are 
-  already marked "to be indexed". If they are not, it will add them to the list of MetaPointers "to be indexed".
-- Finally, when the call `obtainIndexes`. This method will take all the MetaPointers marked as "to be indexed" and 
-  add them to the Database. It will then get the indexes associated to them and store them in the global map.
+- First, let the instance know about all the nodes we want to deal with. It will then look into them and examine all the MetaPointers.
+- When examining the MetaPointers, the instance will check if they are A) already in the global map, or B) if they are  already marked "to be indexed". If they are not, it will add them to the list of MetaPointers "to be indexed".
+- Finally, we can call `obtainIndexes`. This method will take all the MetaPointers marked as "to be indexed" and add them to the Database. It will then get the indexes associated with them and store them in the global map.
 
 Note that the actual insertion on the MetaPointers table is done on the Database side, through a stored procedure.
 This procedure is:
