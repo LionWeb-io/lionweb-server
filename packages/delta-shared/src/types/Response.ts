@@ -6,93 +6,73 @@ import { ParticipationId } from "./DeltaTypes.js";
 import { SequenceNumber } from "./DeltaTypes.js";
 import { LionWebId } from "./Chunks.js";
 
+// The overall "super-type"
+export type DeltaResponse = {
+    messageKind: ResponseMessageKind;
+    protocolMessages: ProtocolMessage[];
+    queryId: QueryId;
+};
+
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-SubscribeToChangingPartitionsResponse
  */
-export type SubscribeToChangingPartitionsResponse = {
+export type SubscribeToChangingPartitionsResponse = DeltaResponse & {
     messageKind: "SubscribeToChangingPartitionsResponse";
-    protocolMessages: ProtocolMessage[];
-    queryId: QueryId;
 };
 
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-SubscribeToPartitionContentsResponse
  */
-export type SubscribeToPartitionContentsResponse = {
+export type SubscribeToPartitionContentsResponse = DeltaResponse & {
     contents: LionWebDeltaJsonChunk;
     messageKind: "SubscribeToPartitionContentsResponse";
-    protocolMessages: ProtocolMessage[];
-    queryId: QueryId;
 };
 
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-UnsubscribeFromPartitionContentsResponse
  */
-export type UnsubscribeFromPartitionContentsResponse = {
+export type UnsubscribeFromPartitionContentsResponse = DeltaResponse & {
     messageKind: "UnsubscribeFromPartitionContentsResponse";
-    protocolMessages: ProtocolMessage[];
-    queryId: QueryId;
 };
 
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-SignOnResponse
  */
-export type SignOnResponse = {
+export type SignOnResponse = DeltaResponse & {
     participationId: ParticipationId;
     messageKind: "SignOnResponse";
-    protocolMessages: ProtocolMessage[];
-    queryId: QueryId;
 };
 
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-SignOffResponse
  */
-export type SignOffResponse = {
+export type SignOffResponse = DeltaResponse & {
     messageKind: "SignOffResponse";
-    protocolMessages: ProtocolMessage[];
-    queryId: QueryId;
 };
 
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-ReconnectResponse
  */
-export type ReconnectResponse = {
+export type ReconnectResponse = DeltaResponse & {
     lastSentSequenceNumber: SequenceNumber;
     messageKind: "ReconnectResponse";
-    protocolMessages: ProtocolMessage[];
-    queryId: QueryId;
 };
 
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-GetAvailableIdsResponse
  */
-export type GetAvailableIdsResponse = {
+export type GetAvailableIdsResponse = DeltaResponse & {
     ids: LionWebId[];
     messageKind: "GetAvailableIdsResponse";
-    protocolMessages: ProtocolMessage[];
-    queryId: QueryId;
 };
 
 /**
  *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-ListPartitionsResponse
  */
-export type ListPartitionsResponse = {
+export type ListPartitionsResponse = DeltaResponse & {
     partitions: LionWebDeltaJsonChunk;
     messageKind: "ListPartitionsResponse";
-    protocolMessages: ProtocolMessage[];
-    queryId: QueryId;
 };
-
-// The overall "super-type"
-export type DeltaResponse =
-    | SubscribeToChangingPartitionsResponse
-    | SubscribeToPartitionContentsResponse
-    | UnsubscribeFromPartitionContentsResponse
-    | SignOnResponse
-    | SignOffResponse
-    | ReconnectResponse
-    | GetAvailableIdsResponse
-    | ListPartitionsResponse;
 
 // The type for the tagged union property
 export type ResponseMessageKind =

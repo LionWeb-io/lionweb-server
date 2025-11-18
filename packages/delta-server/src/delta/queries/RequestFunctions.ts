@@ -14,8 +14,9 @@ import {
     SubscribeToPartitionContentsRequest,
     UnsubscribeFromPartitionContentsRequest
 } from "@lionweb/server-delta-shared"
-import { DeltaFunction, errorRequestEvent } from "../commands/index.js"
+import { DeltaFunction, errorNotImplementedEvent } from "../commands/index.js"
 import { DeltaContext } from "../DeltaContext.js"
+import { newErrorEvent } from "../events.js"
 import { ParticipationInfo } from "./Participation.js"
 
 /**
@@ -34,24 +35,32 @@ const SubscribeToChangingPartitionsRequestFunction = (
     participation: ParticipationInfo,
     msg: SubscribeToChangingPartitionsRequest
 ): DeltaEvent | DeltaResponse => {
-    console.log("Called SubscribeToChangingPartitionsRequestFunction " + msg.messageKind)
-    return errorRequestEvent(msg)
+    deltaLogger.info("Called SubscribeToChangingPartitionsRequestFunction " + msg.messageKind)
+    return errorNotImplementedEvent(msg)
 }
 
 const SubscribeToPartitionContentsRequestFunction = (
     participation: ParticipationInfo,
     msg: SubscribeToPartitionContentsRequest
 ): DeltaEvent | DeltaResponse => {
-    console.log("Called SubscribeToPartitionContentsRequestFunction " + msg.messageKind)
-    return errorRequestEvent(msg)
+    deltaLogger.info("Called SubscribeToPartitionContentsRequestFunction " + msg.messageKind)
+    
+    participation.subscribedPartitions.push(msg.partition)
+    // const result: SubscribeToPartitionContentsResponse = {
+    //     messageKind: "SubscribeToPartitionContentsResponse",
+    //     contents: {},
+    //     protocolMessages: [],
+    //     queryId: msg.queryId
+    // }
+    return errorNotImplementedEvent(msg)
 }
 
 const UnsubscribeFromPartitionContentsRequestFunction = (
     participation: ParticipationInfo,
     msg: UnsubscribeFromPartitionContentsRequest, _ctx: DeltaContext
 ): DeltaEvent | DeltaResponse => {
-    console.log("Called UnsubscribeFromPartitionContentsRequestFunction " + msg.messageKind)
-    return errorRequestEvent(msg)
+    deltaLogger.info("Called UnsubscribeFromPartitionContentsRequestFunction " + msg.messageKind)
+    return errorNotImplementedEvent(msg)
 }
 
 const SignOnRequestFunction = async (participation: ParticipationInfo, msg: SignOnRequest, _ctx: DeltaContext): Promise<DeltaEvent | DeltaResponse> => {
@@ -73,33 +82,17 @@ const SignOnRequestFunction = async (participation: ParticipationInfo, msg: Sign
 
 const validateSignOnRequest = (pInfo: ParticipationInfo | undefined, msg: SignOnRequest): ErrorEvent | undefined => {
     if (msg.repositoryId === undefined) {
-        const response: ErrorEvent = {
-            messageKind: "ErrorEvent",
-            errorCode: "RepositoryMissing",
-            message: "SignOnRequest is missing repository id in the protocol message",
-            sequenceNumber: 0,
-            originCommands: [{ participationId: "none", commandId: msg.queryId }],
-            protocolMessages: []
-        }
-        return response
+        return newErrorEvent("RepositoryIdMissing", `Repository id missing in request`, msg, pInfo!)
     }
     if (pInfo === undefined) {
         // no participation info found for this socket, something unknown went wrong.
-        const response: ErrorEvent = {
-            messageKind: "ErrorEvent",
-            errorCode: "RepositoryMissing",
-            message: "No socket found: please disconnect and connect again.",
-            sequenceNumber: 0,
-            originCommands: [{ participationId: "unknown", commandId: msg.queryId }],
-            protocolMessages: []
-        }
-        return response
+        return newErrorEvent("RepositoryMissing", `Repository '${msg.repositoryId}' unknown`, msg, pInfo!)
     }
 }
 
 const SignOffRequestFunction = (participation: ParticipationInfo, msg: SignOffRequest, _ctx: DeltaContext): DeltaEvent | DeltaResponse => {
     deltaLogger.info("Called SignOffRequestFunction " + msg.messageKind)
-    return errorRequestEvent(msg)
+    return errorNotImplementedEvent(msg)
 }
 
 const ListPartitionsRequestFunction = (participation: ParticipationInfo, msg: ListPartitionsRequest, _ctx: DeltaContext): DeltaEvent | DeltaResponse => {
@@ -115,12 +108,12 @@ const ListPartitionsRequestFunction = (participation: ParticipationInfo, msg: Li
 
 const GetAvailableIdsRequestFunction = (participation: ParticipationInfo, msg: GetAvailableIdsRequest, _ctx: DeltaContext): DeltaEvent | DeltaResponse => {
     deltaLogger.info("Called GetAvailableIdsRequestFunction " + msg.messageKind)
-    return errorRequestEvent(msg)
+    return errorNotImplementedEvent(msg)
 }
 
 const ReconnectRequestFunction = (participation: ParticipationInfo, msg: ReconnectRequest, _ctx: DeltaContext): DeltaEvent | DeltaResponse => {
     deltaLogger.info("Called ReconnectRequestFunction " + msg.messageKind)
-    return errorRequestEvent(msg)
+    return errorNotImplementedEvent(msg)
 }
 
 export const requestFunctions: DeltaFunction[] = [

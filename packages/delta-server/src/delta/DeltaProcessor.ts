@@ -1,6 +1,6 @@
-import { deltaLogger } from "@lionweb/server-common";
+import { deltaLogger, isInternalQueryError } from "@lionweb/server-common";
 import { DeltaValidator } from "@lionweb/server-delta-definitions"
-import { ErrorEvent, DeltaRequest, isDeltaResponse, DeltaCommand } from "@lionweb/server-delta-shared"
+import { ErrorEvent, DeltaRequest, isDeltaResponse, DeltaCommand, DeltaEvent } from "@lionweb/server-delta-shared"
 import { ValidationResult } from "@lionweb/validation"
 import WebSocket from 'ws';
 import { DeltaContext } from "./DeltaContext.js"
@@ -13,6 +13,7 @@ import {
     propertyFunctions
 } from "./commands/index.js"
 import { activeSockets } from "./DeltaClientAdmin.js"
+import { isErrorEvent, newErrorEvent } from "./events.js"
 import { ParticipationInfo, requestFunctions } from "./queries/index.js"
 
 export function isQueryRequestType(object: MessageFromClient): object is DeltaRequest {
@@ -109,18 +110,55 @@ class DeltaProcessor {
         }
 
         // Finally ok, process the delta and send the response
-        const response = await func(participation!, delta, this.context!)
-        // Errors and responses only need to be sent to the client that sent the message
-        if (response.messageKind === "ErrorEvent" || isDeltaResponse(response)) {
-            socket.send(JSON.stringify(response))
-        } else {
-            // To whom needs this Event (yes, it's an Event now) need to be sent.
-            // For most/all events, we need to know whether the others are subscribed to the partition wjhre changes took place
-            // TODO: Add the changed partitions to the result of the processing function, so we know to whom to send.
-            for (const pInfo of activeSockets.values()) {
-                response.sequenceNumber = pInfo.eventSequenceNumber++
-                deltaLogger.info(`Sending ${JSON.stringify(response)} to ${pInfo.repositoryData!.clientId}`)
-                pInfo.socket.send(JSON.stringify(response))       
+        try {
+            const response = await func(participation!, delta, this.context!)
+            // Errors and responses only need to be sent to the client that sent the message
+            if (response.messageKind === "ErrorEvent" || isDeltaResponse(response)) {
+                socket.send(JSON.stringify(response))
+            } else {
+                // To whom needs this Event (yes, it's an Event now) need to be sent.
+                // For most/all events, we need to know whether the others are subscribed to the partition wjhre changes took place
+                // TODO: Add the changed partitions to the result of the processing function, so we know to whom to send.
+                for (const pInfo of activeSockets.values()) {
+                    response.sequenceNumber = pInfo.eventSequenceNumber++
+                    deltaLogger.info(`Sending ${JSON.stringify(response)} to ${pInfo.repositoryData!.clientId}`)
+                    pInfo.socket.send(JSON.stringify(response))
+                }
+            }
+        } catch (e: unknown) {
+            if (isErrorEvent(e)) {
+                socket.send(JSON.stringify(e))
+            }
+            if (isInternalQueryError(e)) {
+                const errorEvent: ErrorEvent = newErrorEvent('query error' + e.kind, e.message, delta, participation!, {
+                    originCommands: [
+                        {
+                            commandId: (delta as DeltaCommand).commandId ?? (delta as DeltaRequest).queryId ?? "<unknown-command-or-query>",
+                            participationId: participation!.participationId
+                        }
+                    ],
+                    protocolMessages: [e]
+                })
+                socket.send(JSON.stringify(errorEvent))
+            } else if (e instanceof Error) {
+                console.log(e.stack)
+                const errorEvent: ErrorEvent = newErrorEvent("Exception", e.message, delta, participation!,
+                    { originCommands: [
+                            {
+                                commandId: (delta as DeltaCommand).commandId ?? (delta as DeltaRequest).queryId ?? "<unknown-command-or-query>",
+                                participationId: participation!.participationId
+                            }
+                        ],
+                        protocolMessages: [{
+                            kind: "Extra",
+                            message: "stacktrace",
+                            data: [{
+                                key: "TRACE",
+                                value: e.stack ?? "NO TRACE"
+                            }]
+                        }]
+                    })
+                socket.send(JSON.stringify(errorEvent))
             }
         }
     }

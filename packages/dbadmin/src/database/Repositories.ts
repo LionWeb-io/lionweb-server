@@ -1,6 +1,6 @@
 import {
     getRepositoryParameter,
-    getStringParam,
+    getStringParam, initializeGlobalMetaPointersMap,
     isParameterError,
     ParameterError,
     REPOSITORIES_TABLE,
@@ -48,6 +48,7 @@ export class RepositoryStore {
     repositoryName2repository: Map<string, RepositoryInfo> = new Map<string, RepositoryInfo>()
     initialized: boolean = false
     ctx: DbAdminApiContext
+    i: number = 1
 
     constructor() {}
 
@@ -56,22 +57,26 @@ export class RepositoryStore {
     }
 
     async refresh(): Promise<void> {
+        requestLogger.info("RepositoryStore REFRESH")
         this.initialized = false
         await this.initialize()
     }
 
     async initialize() {
-        requestLogger.info("RepositoryStore initialize")
+        requestLogger.info("RepositoryStore initialize " + this.i++)
         if (this.initialized) {
             requestLogger.info("ALREADY initialized")
             return
         }
+        requestLogger.info("initializing")
         this.repositoryName2repository.clear()
         const repoTable = (await this.ctx.dbConnection.queryWithoutRepository(`SELECT * FROM ${REPOSITORIES_TABLE};\n`)) as RepositoryInfo[]
-        repoTable.forEach(repo => {
+        for(const repo of repoTable) {
             this.repositoryName2repository.set(repo.repository_name, repo)
             requestLogger.info("Repo row: " + JSON.stringify(repo))
-        })
+            await initializeGlobalMetaPointersMap(this.ctx.dbConnection, { repository: repo, clientId: "SERVER" })
+        }
+        this.initialized = true
     }
 
     allRepositories(): RepositoryInfo[] {

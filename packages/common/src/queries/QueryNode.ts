@@ -1,6 +1,7 @@
+import { InternalQueryError } from "./GuardFunctions.js"
 import { LionWebJsonNode } from "@lionweb/json"
 import { ResponseMessage } from "@lionweb/server-shared"
-import { CONTAINMENTS_TABLE, METAPOINTERS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "../database/index.js"
+import { CONTAINMENTS_TABLE, DbConnection, METAPOINTERS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE, RepositoryData } from "../database/index.js"
 import { isLionWebJsonNode } from "./GuardFunctions.js"
 import { sqlArrayFromNodeIdArray } from "./PgHelpers.js"
 
@@ -18,7 +19,7 @@ export function versionResultToResponse(versionResult: object): ResponseMessage 
     }
 }
 
-type NodesForQueryQuery_ResultType = LionWebJsonNode[]
+export type NodesForQueryQuery_ResultType = LionWebJsonNode[]
 
 export function is_NodesForQueryQuery_ResultType(o: unknown): o is NodesForQueryQuery_ResultType {
     return Array.isArray(o) && o.every(n => isLionWebJsonNode(n))
@@ -32,12 +33,33 @@ export function is_NodesForQueryQuery_ResultType(o: unknown): o is NodesForQuery
 //     return !validator.validationResult.hasErrors()
 // }
 
+export const retrieveFullNodesDB = async (dbConnection: DbConnection, repo: RepositoryData, nodeQuery: string): Promise<LionWebJsonNode[]> => {
+    const queryResult =  await dbConnection.query(repo, retrieveFullNodesFromQuerySQL(nodeQuery))
+    if (is_NodesForQueryQuery_ResultType(queryResult)) {
+        return queryResult
+    } else {
+        const error: InternalQueryError = {
+            kind: "InternalQueryError",
+            message: `Query return type incorrect, expected NodesForQueryQuery_ResultType`,
+            data: [{
+                key: "query",
+                value: retrieveFullNodesFromQuerySQL(nodeQuery)
+                },
+                {
+                    key: "queryResult",
+                    value: JSON.stringify(queryResult)
+                }
+            ]
+        }
+        throw error
+    }
+}
 /**
  * Query to retrieve the full LionWeb nodes from the database.
  * @param nodesQuery string SQL query to select the set of nodes to retrieve.
  *                   Must have an `id` property.
  */
-export const nodesForQueryQuery = (nodesQuery: string): string => {
+export const retrieveFullNodesFromQuerySQL = (nodesQuery: string): string => {
     return `-- Get the nodes for the nodes query
     WITH relevant_nodes AS (
         ${nodesQuery}
@@ -141,9 +163,9 @@ left join ${METAPOINTERS_TABLE} classifier on classifier.id = relevant_nodes.cla
 `
 }
 
-export const QueryNodeForIdList = (nodeid: string[]): string => {
+export const retrieveNodeForIdListSQL = (nodeid: string[]): string => {
     const sqlNodeCollection = sqlArrayFromNodeIdArray(nodeid)
-    return nodesForQueryQuery(`SELECT * FROM ${NODES_TABLE} WHERE id IN ${sqlNodeCollection}\n`)
+    return retrieveFullNodesFromQuerySQL(`SELECT * FROM ${NODES_TABLE} WHERE id IN ${sqlNodeCollection}\n`)
 }
 
 /**
@@ -153,7 +175,7 @@ export const QueryNodeForIdList = (nodeid: string[]): string => {
  * @param nodeidlist
  * @param depthLimit
  */
-export const makeQueryNodeTreeForIdList = (nodeidlist: string[], depthLimit: number): string => {
+export const retrieveNodeTreeForIdListSQL = (nodeidlist: string[], depthLimit: number): string => {
     const sqlArray = sqlArrayFromNodeIdArray(nodeidlist)
     return `-- Recursively retrieve node tree
             WITH RECURSIVE tmp AS (

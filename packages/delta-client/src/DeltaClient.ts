@@ -55,7 +55,7 @@ export class DeltaClient {
         }
         this.socket.onmessage = (ev) => {
             this.log(`Incoming message type '${ev.type}': ` + ev.data)
-            this.receivedMessageHistory.push(ev.data.toString())
+            this.receivedMessageHistory.push(ev.data.toString().substring(0, 400))
             if (this.socket === undefined) {
                 this.logError("Error on message, socket is undefined")
                 return
@@ -86,7 +86,8 @@ export class DeltaClient {
     }
 
     sendRequest(query: DeltaRequest): void {
-        this.log(`sendRequest: ${JSON.stringify(query)}`)
+        const queryAsString = JSON.stringify(query)
+        this.log(`sendRequest: ${queryAsString}`)
         if (this.socket === undefined) {
             throw new Error("No socket object")
         }
@@ -95,6 +96,7 @@ export class DeltaClient {
         }
         // set unique id
         // command.commandId = `${this.id++}`
+        this.sentMessageHistory.push(queryAsString)
         this.socket.send(JSON.stringify(query))
     }
 

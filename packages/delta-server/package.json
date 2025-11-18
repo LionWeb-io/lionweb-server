@@ -32,7 +32,8 @@
       "@lionweb/json-diff": "0.7.2",
       "@lionweb/json-utils": "0.7.2",
     "@lionweb/validation": "0.7.2",
-    "@lionweb/server-shared": "0.3.0",
+      "@lionweb/server-shared": "0.3.0",
+      "@lionweb/server-common": "0.3.0",
     "@lionweb/server-delta-shared": "0.3.0",
       "es-toolkit": "^1.41.0"
   },

@@ -96,9 +96,9 @@ registerAdditionalApi(app, DbConnection.getInstance(), pgp, dbConnection.pgPool)
 registerLanguagesApi(app, DbConnection.getInstance(), pgp)
 registerHistoryApi(app, DbConnection.getInstance(), pgp)
 registerDeltaProcessor(DbConnection.getInstance(), pgp)
-requestLogger.info(":start init")
-await repositoryStore.initialize()
-requestLogger.info(":end  init")
+// requestLogger.info(":start init")
+// await repositoryStore.initialize()
+// requestLogger.info(":end  init")
 
 /**********************************************************************
  *
@@ -152,6 +152,7 @@ async function setupDatabase() {
     }
 
     // Initialize repositories
+    deltaLogger.info("@@@@@@@@@@@@@@@@")
     await repositoryStore.initialize()
     const existingRepositoryNames = repositoryStore.allRepositories().map(r => r.repository_name)
     requestLogger.info("Existing repositories " + existingRepositoryNames)

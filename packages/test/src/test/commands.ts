@@ -1,15 +1,15 @@
 import { SignOnRequest, AddPropertyCommand, AddPartitionCommand, ChangePropertyCommand, DeletePropertyCommand } from "@lionweb/server-delta-shared"
 
 let queryId = 1
-let commandId = 1
+// let commandId = 1
 
 export const newSignOnRequest = (repo: string, clientId: string): SignOnRequest => {
     return {
-        repositoryId: repo,
-        clientId: clientId,
-        deltaProtocolVersion: "2023.1",
-        queryId: `query-id-${queryId++}`,
         messageKind: "SignOn",
+        repositoryId: repo,
+        deltaProtocolVersion: "2023.1",
+        clientId: clientId,
+        queryId: `query-id-${queryId++}`,
         protocolMessages: []
     }
 }
@@ -50,14 +50,13 @@ export const newDeletePropertyCommand = (nodeid: string, propertyKey: string): D
         commandId: `command-id-${queryId++}`,
         node: nodeid,
         property: {
-            language: "language",
+            language: "LionCore-builtins",
             key: propertyKey,
-            version: "1"
+            version: "2023.1"
         },
         protocolMessages: []
     }
 }
-
 
 export const newAddPartitionCommand = (nodeid: string, classifierKey: string): AddPartitionCommand => {
     return {
@@ -71,9 +70,9 @@ export const newAddPartitionCommand = (nodeid: string, classifierKey: string): A
                 containments: [],
                 references: [],
                 classifier: {
-                    language: "language",
+                    language: "LionCore-builtins",
                     key: classifierKey,
-                    version: "1"
+                    version: "2023.1"
                 },
                 annotations: []
             }]

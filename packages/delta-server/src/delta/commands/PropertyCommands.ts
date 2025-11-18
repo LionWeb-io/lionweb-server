@@ -1,33 +1,49 @@
 import { isEqualMetaPointer } from "@lionweb/json"
-import { PropertyValueChanged } from "@lionweb/json-diff"
+import { Missing, PropertyValueChanged } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
-import { deltaLogger, nodesForQueryQuery, is_NodesForQueryQuery_ResultType, DbChanges } from "@lionweb/server-common"
-import { retrieveNode } from "@lionweb/server-common/dist/queries/queries.js"
+import { DbChanges, deltaLogger, MetaPointersTracker } from "@lionweb/server-common"
 import {
     AddPropertyCommand,
     ChangePropertyCommand,
     DeletePropertyCommand,
+    DeltaEvent,
+    ErrorEvent,
     PropertyAddedEvent,
     PropertyChangedEvent,
-    PropertyDeletedEvent,
-    DeltaEvent,
-    ErrorEvent
+    PropertyDeletedEvent
 } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
 import { newErrorEvent } from "../events.js"
 import { ParticipationInfo } from "../queries/index.js"
-import { DeltaFunction } from "./DeltaUtil.js"
+import { DeltaFunction, retrieveNodeFromDB } from "./DeltaUtil.js"
 
-const AddPropertyFunction = (
+const AddPropertyFunction = async (
     participation: ParticipationInfo,
     msg: AddPropertyCommand,
     _ctx: DeltaContext
-): PropertyAddedEvent | ErrorEvent => {
+): Promise<PropertyAddedEvent | ErrorEvent> => {
     deltaLogger.info("Called AddPropertyFunction " + msg.messageKind)
-    // get node with properties
-    // CHECK: node exists, property does not exist (not there or value is null)
-    // Set value in Postgress
-    // Send event
+    const node = await retrieveNodeFromDB(msg.node, msg, participation, _ctx)
+    const oldProperty = node.properties.find(prop => isEqualMetaPointer(prop.property, msg.property))
+    if (oldProperty !== undefined && oldProperty.value !== null && oldProperty.value !== undefined) {
+        deltaLogger.info(`!!!!! ${JSON.stringify(node)}`)
+        return newErrorEvent("PropertyAlreadyExist", `The property with key '${msg.property.key}' already exist`, msg, participation)
+    }
+
+    // OKI, now store the new value
+    const change = new PropertyValueChanged(
+        new JsonContext(null, ["delta"]),
+        msg.node,
+        msg.property,
+        null,
+        msg.newValue,
+        Missing.MissingBefore
+    )
+    const changes = new DbChanges(_ctx.pgp)
+    changes.addChanges([change])
+    const metaPointersTracker = new MetaPointersTracker(participation.repositoryData!)
+    const dbResult = await _ctx.dbConnection.query(participation.repositoryData!, changes.createPostgresQuery(metaPointersTracker))
+    deltaLogger.info(`db delete is ${JSON.stringify(dbResult)}`)
     const event: PropertyAddedEvent = {
         messageKind: "PropertyAdded",
         newValue: msg.newValue,
@@ -40,20 +56,43 @@ const AddPropertyFunction = (
     return event
 }
 
-const DeletePropertyFunction = (
+const DeletePropertyFunction = async (
     participation: ParticipationInfo,
     msg: DeletePropertyCommand,
     _ctx: DeltaContext
-): PropertyDeletedEvent | ErrorEvent => {
+): Promise<PropertyDeletedEvent | ErrorEvent> => {
     deltaLogger.info("Called DeletePropertyFunction " + msg.messageKind)
+    const node = await retrieveNodeFromDB(msg.node, msg, participation, _ctx)
+    const oldProperty = node.properties.find(prop => isEqualMetaPointer(prop.property, msg.property))
+    if (oldProperty === undefined || oldProperty.value === null || oldProperty.value === undefined) {
+        deltaLogger.info(`!!!!! ${JSON.stringify(node)}`)
+        return newErrorEvent("PropertyDoesNotExist", `The property with key '${msg.property.key}' does not exist`, msg, participation)
+    }
+    // OKI, now store the new value
+    const change = new PropertyValueChanged(new JsonContext(null, ["delta"]), msg.node, msg.property, oldProperty.value, null, Missing.MissingAfter)
+    const changes = new DbChanges(_ctx.pgp)
+    changes.addChanges([change])
+    const metaPointersTracker = new MetaPointersTracker(participation.repositoryData!)
+    const dbResult = await _ctx.dbConnection.query(participation.repositoryData!, changes.createPostgresQuery(metaPointersTracker))
+    deltaLogger.info(`db delete is ${JSON.stringify(dbResult)}`)
+
     const event: PropertyDeletedEvent = {
         messageKind: "PropertyDeleted",
         node: msg.node,
         originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
         property: msg.property,
         sequenceNumber: 0, // dummy, will be changed for each participation before sending
-        protocolMessages: [],
-        oldValue: "any dummy"
+        protocolMessages: [
+            {
+                kind:"OldProperty",
+                message: "Value of old property",
+                data: [{
+                    key: "OldProperty",
+                    value: JSON.stringify(oldProperty)
+                }]
+            }
+        ],
+        oldValue: oldProperty.value
     }
     return event
 }
@@ -64,51 +103,39 @@ const ChangePropertyFunction = async (
     _ctx: DeltaContext
 ): Promise<DeltaEvent> => {
     deltaLogger.info(`Called ChangePropertyFunction ${msg.node} pinfo ${JSON.stringify(participation.repositoryData)}`)
-    // 1. Query to get the node
-    const query = retrieveNode(msg.node)
-    const q = nodesForQueryQuery(query)
-    const retrievedNode = await _ctx.dbConnection.query(participation.repositoryData!, q)
-    // eaasert isArry(retroeveNode) && retr
-    deltaLogger.info(`Result of retrieveNode: '${JSON.stringify(retrievedNode)}'`)
-    
-    if (Array.isArray(retrievedNode) && retrievedNode.length === 0) {
-        return newErrorEvent("NodeDoesNotExist", `The node with id '${msg.node}' does not exist`, msg, participation, retrievedNode)
+    const node = await retrieveNodeFromDB(msg.node, msg, participation, _ctx)
+    const oldProperty = node.properties.find(prop => isEqualMetaPointer(prop.property, msg.property))
+    if (oldProperty === undefined || oldProperty.value === null || oldProperty.value === undefined) {
+        return newErrorEvent("PropertyDoesNotExist", `The property with key '${msg.property.key}' does not exist`, msg, participation)
     }
-    // Validate return type
-    if (is_NodesForQueryQuery_ResultType(retrievedNode)) {
-        const node = retrievedNode[0]
-        const oldProperty = node.properties.find(prop => isEqualMetaPointer(prop.property, msg.property))
-        if (oldProperty === undefined) {
-            return newErrorEvent("PropertyDoesNotExist", `The property with key '${msg.property.key}' does not exist`, msg, participation, retrievedNode)
-        }
+    if (oldProperty.value === msg.newValue) {
+        return newErrorEvent("PropertyAlreadyHasNewValue", `The property with key '${msg.property.key}' already has value ${msg.newValue}`, msg, participation)
+    }
 
-        // OKI, now store the new value
-        // TODO
-        const change = new PropertyValueChanged(new JsonContext(null, ["delta"]), msg.node, msg.property, oldProperty.value, msg.newValue)
-        const dbch = new DbChanges(_ctx.pgp)
-        dbch.addChanges([change])
-        // const metaPointersTracker = new MetaPointersTracker(participation.repositoryInfo)
-        // await _ctx.dbConnection.query({ clientId: participation.clientId, repository: participation.repositoryInfo! }, dbch.createPostgresQuery())
-        const event: PropertyChangedEvent = {
-            messageKind: "PropertyChanged",
-            newValue: msg.newValue,
-            node: msg.node,
-            originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
-            property: msg.property,
-            sequenceNumber: 0, // dummy, will be changed for each participation before sending
-            protocolMessages: [
-                {
-                    kind: "Info",
-                    message: JSON.stringify(retrievedNode),
-                    data: []
-                }
-            ],
-            oldValue: "any dummy"
-        }
-        return event
-    } else {
-        return newErrorEvent("Internal", "Query result has incorrect type", msg, participation, retrievedNode)
+    // OKI, now store the new value
+    const change = new PropertyValueChanged(new JsonContext(null, ["delta"]), msg.node, msg.property, oldProperty.value, msg.newValue, Missing.NotMissing)
+    const changes = new DbChanges(_ctx.pgp)
+    changes.addChanges([change])
+    const metaPointersTracker = new MetaPointersTracker(participation.repositoryData!)
+    const dbResult = await _ctx.dbConnection.query(participation.repositoryData!, changes.createPostgresQuery(metaPointersTracker))
+    deltaLogger.info(`Result is ${JSON.stringify(dbResult)}`)
+    const event: PropertyChangedEvent = {
+        messageKind: "PropertyChanged",
+        newValue: msg.newValue,
+        node: msg.node,
+        originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
+        property: msg.property,
+        sequenceNumber: 0, // dummy, will be changed for each participation before sending
+        protocolMessages: [
+            {
+                kind: "OldNode",
+                message: JSON.stringify(node),
+                data: []
+            }
+        ],
+        oldValue: oldProperty.value
     }
+    return event 
 }
 
 export const propertyFunctions: DeltaFunction[] = [

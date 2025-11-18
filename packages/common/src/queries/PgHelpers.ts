@@ -6,10 +6,10 @@ export function postgresArrayFromStringArray(strings: string[]): string {
     return `{${strings.map(id => `"${id}"`).join(", ")}}`
 }
 
-export function nextRepoVersionQuery(clientId: string) {
+export function nextRepoVersionSQL(clientId: string) {
     return `SELECT nextRepoVersion('${clientId}');\n`
 }
 
-export function currentRepoVersionQuery(): string {
+export function currentRepoVersionSQL(): string {
     return `SELECT currentRepoVersion();\n`
 }

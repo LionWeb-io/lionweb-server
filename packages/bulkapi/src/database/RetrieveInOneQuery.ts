@@ -1,19 +1,19 @@
-import { nodesForQueryQuery, sqlArrayFromNodeIdArray } from "@lionweb/server-common"
+import { NODES_TABLE, retrieveFullNodesFromQuerySQL, sqlArrayFromNodeIdArray } from "@lionweb/server-common"
 
-export const retrieveWith = (nodeid: string[], depthLimit: number): string => {
+export const retrieveWithSQL = (nodeid: string[], depthLimit: number): string => {
     const sqlArray = sqlArrayFromNodeIdArray(nodeid)
-    return nodesForQueryQuery(`--
+    return retrieveFullNodesFromQuerySQL(`--
             WITH RECURSIVE tmp AS (
                 SELECT id, parent, 0 as depth
-                FROM lionweb_nodes
+                FROM ${NODES_TABLE}
                 WHERE id IN ${sqlArray}    
                 UNION
                     SELECT nn.id, nn.parent, tmp.depth + 1
-                    FROM lionweb_nodes as nn
+                    FROM ${NODES_TABLE} as nn
                     INNER JOIN tmp ON tmp.id = nn.parent
                     WHERE tmp.depth < ${depthLimit}
             )
-            SELECT * FROM lionweb_nodes as nodesTable
+            SELECT * FROM ${NODES_TABLE} as nodesTable
             WHERE nodesTable.id IN (SELECT id FROM tmp)
     `)
 }

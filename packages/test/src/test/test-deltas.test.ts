@@ -1,6 +1,6 @@
+import { RepositoryClient } from "@lionweb/server-client"
 import { DeltaClient } from "@lionweb/server-delta-client"
 import { HttpSuccessCodes } from "@lionweb/server-shared"
-import { getVersionFromResponse, RepositoryClient } from "@lionweb/server-client"
 import { LionWebJsonChunk } from "@lionweb/json"
 import {
     newAddPartitionCommand,
@@ -11,7 +11,7 @@ import {
 } from "./commands.js"
 import { readModel } from "./utils.js"
 
-import { test, assert, describe, beforeAll, beforeEach, afterEach, expect } from "vitest"
+import { test, assert, describe, beforeAll, beforeEach, afterEach } from "vitest"
 // const { deepEqual, equal } = assert
 import sm from "source-map-support"
 
@@ -90,19 +90,20 @@ collection.forEach(withoutHistory => {
             await bulkApiClient.dbAdmin.deleteRepository(repository)
         })
         
-        describe("Partition tests", () => {
+        describe("Simple Delta tests", () => {
             test("AddPartition", async () => {
                 assert(initError === "", initError)
-                const cmd = newAddPartitionCommand("ID-NewPartition","key")
-                deltaApiClient.sendCommand(cmd)
+                deltaApiClient.sendCommand(newAddPartitionCommand("ID-NewPartition","key"))
                 deltaApiClient.sendCommand(newDeletePropertyCommand("ID-NewPartition", "-key-Partition-name"))
-                deltaApiClient.sendCommand(newChangePropertyCommand("ID-2", "nw value", "LionCore-builtins-INamed-name"))
+                deltaApiClient.sendCommand(newDeletePropertyCommand("ID-2", "-key-Partition-name"))
+                // deltaApiClient.sendCommand(newDeletePropertyCommand("ID-2", "LionCore-builtins-INamed-name"))
+                deltaApiClient.sendCommand(newChangePropertyCommand("ID-2", "NEW value", "LionCore-builtins-INamed-name"))
                 await delay(200)
                 console.log("SentMessages")
                 console.log(deltaApiClient.sentMessageHistory)
                 console.log("ReceivedMessages")
                 console.log(deltaApiClient.receivedMessageHistory)
-                assert(deltaApiClient.receivedMessageHistory[deltaApiClient.receivedMessageHistory.length-3].includes("PartitionAdded"), "Expected PartitionAdded")
+                assert(deltaApiClient.receivedMessageHistory[3].includes("PartitionAdded"), "Expected PartitionAdded")
             })
         })
     })

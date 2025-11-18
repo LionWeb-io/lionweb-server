@@ -1,20 +1,43 @@
 import { LionWebJsonMetaPointer, LionWebJsonNode } from "@lionweb/json"
-import { DbConnection, LionWebTask, RepositoryData } from "../database/index.js"
+import { deltaLogger, requestLogger } from "../apiutil/index.js"
+import { DbConnection, LionWebTask, METAPOINTERS_TABLE, RepositoryData } from "../database/index.js"
 
+/**
+ * Map from the calculated metapointer id which is `language`@`version`@`key` to
+ * the id of the metapointer in the metapointer table in the database.
+ */
 export type MetaPointersMap = Map<string, number>
 
 // This is private and global. Metapointers never change and their index can be shared
 // We expect their number to be limited so we can have a cache that cannot be emptied
+// This is a Map from `repository name` to the MetaPointersMap of this repository.
 const globalMetaPointersMap: Map<string, MetaPointersMap> = new Map<string, Map<string, number>>()
 
-function insertInGlobalMetaPointersMap(repositoryName: string, key: string, metaPointerIndex: number) {
-    if (!globalMetaPointersMap.has(repositoryName)) {
-        globalMetaPointersMap.set(repositoryName, new Map<string, number>())
+export async function initializeGlobalMetaPointersMap(task: LionWebTask | DbConnection, repositoryData: RepositoryData): Promise<void> {
+    // if (!globalMetaPointersMap.has(repositoryData.repository.repository_name)) {
+    //     globalMetaPointersMap.set(repositoryData.repository.repository_name, new Map<string, number>())
+    // }
+    // // Since this is the first access to the metapointer map, we need to fetch all
+    // // existing metapointers from the database
+    // const queryResult = await task.query(repositoryData, `SELECT id, language, _version, key from ${METAPOINTERS_TABLE}`)
+    // const map = globalMetaPointersMap.get(repositoryData.repository.repository_name)
+    // for(const mp of queryResult) {
+    //     const mpKey = `${mp.language}@${mp._version}@${mp.key}`
+    //     map.set(mpKey, mp.id)
+    //     deltaLogger.info(`Initializing key '${mpKey}' with id '${mp.id}'`)
+    // }
+}
+
+async function insertInGlobalMetaPointersMap(task: LionWebTask | DbConnection, repositoryData: RepositoryData, key: string, metaPointerIndex: number) {
+    deltaLogger.info(`insertInGlobalMetaPointersMap repo ${repositoryData.repository.repository_name} key ${key} index ${metaPointerIndex}`)
+    if (!globalMetaPointersMap.has(repositoryData.repository.repository_name)) {
+        globalMetaPointersMap.set(repositoryData.repository.repository_name, new Map<string, number>())
     }
-    globalMetaPointersMap.get(repositoryName).set(key, metaPointerIndex)
+    globalMetaPointersMap.get(repositoryData.repository.repository_name).set(key, metaPointerIndex)
 }
 
 function hasInGlobalMetaPointersMap(repositoryName: string, key: string): boolean {
+    deltaLogger.info(`hasInGlobalMetaPointersMap repo '${repositoryName}' key '${key}'`)
     const map = globalMetaPointersMap.get(repositoryName)
     if (map !== undefined) {
         return map.has(key)
@@ -73,11 +96,13 @@ export class MetaPointersCollector {
         const vs = `array[${metaPointersList.map(el => `'${el.version}'`).join(",")}]`
         const ks = `array[${metaPointersList.map(el => `'${el.key}'`).join(",")}]`
         const raw_res: { tometapointerids: string }[] = await task.query(this.repositoryData, `SELECT toMetaPointerIDs(${ls},${vs},${ks});`)
-        raw_res.forEach(el => {
+        deltaLogger.info(`> obtainindices for repo ${this.repositoryData.repository.repository_name} rawres is ${raw_res.length}`)
+        raw_res.forEach(async (el) => {
             const value = el.tometapointerids
             const parts = value.substring(1, value.length - 1).split(",")
-            insertInGlobalMetaPointersMap(
-                this.repositoryData.repository.repository_name,
+            await insertInGlobalMetaPointersMap(
+                task,
+                this.repositoryData,
                 `${parts[1]}@${parts[2]}@${parts[3]}`,
                 Number(parts[0])
             )
@@ -99,15 +124,17 @@ export class MetaPointersTracker {
     }
 
     async populate(populationLogic: (collector: MetaPointersCollector) => void, dbConnection: DbConnection | LionWebTask): Promise<void> {
-        const collector = new MetaPointersCollector(this.repositoryData)
-        populationLogic(collector)
-        await collector.obtainIndexes(dbConnection)
+        deltaLogger.info(`Populate ${this.repositoryData.repository.repository_name}`)
+        const localCollector = new MetaPointersCollector(this.repositoryData)
+        populationLogic(localCollector)
+        await localCollector.obtainIndexes(dbConnection)
     }
 
     forMetaPointer(metaPointer: LionWebJsonMetaPointer): number {
+        deltaLogger.info("forMetaPointer")
         const key = `${metaPointer.language}@${metaPointer.version}@${metaPointer.key}`
         if (!hasInGlobalMetaPointersMap(this.repositoryData.repository.repository_name, key)) {
-            throw new Error(`MetaPointer not found: ${JSON.stringify(metaPointer)}`)
+            throw new Error(`MetaPointer not found: '${JSON.stringify(metaPointer)}' language '${metaPointer.language}'`)
         }
         return getFromGlobalMetaPointersMap(this.repositoryData.repository.repository_name, key)
     }

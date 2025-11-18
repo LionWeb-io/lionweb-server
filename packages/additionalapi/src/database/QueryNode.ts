@@ -1,11 +1,7 @@
-import {CONTAINMENTS_TABLE, NODES_TABLE, MetaPointersTracker} from "@lionweb/server-common";
+import { CONTAINMENTS_TABLE, NODES_TABLE, MetaPointersTracker, sqlArrayFromNodeIdArray } from "@lionweb/server-common"
 import {AttachPoint} from "./AdditionalQueries.js";
 import {FBAttachPoint} from "../io/lionweb/serialization/flatbuffers/index.js";
 import {forFBMetapointer} from "./ImportLogic.js";
-
-function sqlArrayFromNodeIdArray(strings: string[]): string {
-    return `(${strings.map(id => `'${id}'`).join(", ")})`
-}
 
 /**
  * Query that will recursively get all child (ids) of all nodes in _nodeIdList_

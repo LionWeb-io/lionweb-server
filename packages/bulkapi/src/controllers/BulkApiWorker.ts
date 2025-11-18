@@ -11,7 +11,7 @@ import {
 } from "@lionweb/server-shared"
 import {
     createId,
-    currentRepoVersionQuery,
+    currentRepoVersionSQL,
     EMPTY_CHUNKS,
     LionWebTask,
     nodesToChunk,
@@ -22,7 +22,7 @@ import {
     versionResultToResponse
 } from "@lionweb/server-common"
 import { LionWebJsonChunk } from "@lionweb/json"
-import { retrieveWith } from "../database/RetrieveInOneQuery.js"
+import { retrieveWithSQL } from "../database/RetrieveInOneQuery.js"
 import { BulkApiContext } from "../main.js"
 
 /**
@@ -37,7 +37,7 @@ export class BulkApiWorker {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async bulkPartitions(task: LionWebTask, repositoryData: RepositoryData): Promise<QueryReturnType<ListPartitionsResponse>> {
-        const result = await this.context.queries.getPartitions(task, repositoryData)
+        const result = await this.context.queries.retrievePartitionsFromDB(task, repositoryData)
         return result
     }
 
@@ -142,10 +142,9 @@ export class BulkApiWorker {
             }
         }
 
-        const [versionResult, nodes, a] = await task.multi(repositoryData, currentRepoVersionQuery() + retrieveWith(nodeIdList, depthLimit))
-        console.log(`VERSION ${JSON.stringify(versionResult)}`)
-        console.log(`NODES ${JSON.stringify(nodes)}`)
-        console.log(`A ${JSON.stringify(a)}`)
+        const [versionResult, nodes] = await task.multi(repositoryData, currentRepoVersionSQL() + retrieveWithSQL(nodeIdList, depthLimit))
+        requestLogger.info(`VERSION ${JSON.stringify(versionResult)}`)
+        requestLogger.info(`NODES ${JSON.stringify(nodes)}`)
         return {
             status: HttpSuccessCodes.Ok,
             query: "",
