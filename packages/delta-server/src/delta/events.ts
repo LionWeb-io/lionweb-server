@@ -1,5 +1,5 @@
-import { ParticipationInfo } from "@lionweb/delta-server"
 import { ErrorEvent, DeltaCommand, DeltaRequest, ProtocolMessage } from "@lionweb/server-delta-shared"
+import { ParticipationInfo } from "./queries/index.js"
 
 export function isErrorEvent(object: unknown): object is ErrorEvent {
     return (object as ErrorEvent).messageKind === "ErrorEvent"

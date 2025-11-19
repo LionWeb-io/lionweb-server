@@ -19,10 +19,10 @@ import {
     RepositoryData,
     requestLogger,
     traceLogger,
+    retrieveNodesSQL,
     versionResultToResponse
 } from "@lionweb/server-common"
 import { LionWebJsonChunk } from "@lionweb/json"
-import { retrieveWithSQL } from "../database/RetrieveInOneQuery.js"
 import { BulkApiContext } from "../main.js"
 
 /**
@@ -142,7 +142,7 @@ export class BulkApiWorker {
             }
         }
 
-        const [versionResult, nodes] = await task.multi(repositoryData, currentRepoVersionSQL() + retrieveWithSQL(nodeIdList, depthLimit))
+        const [versionResult, nodes] = await task.multi(repositoryData, currentRepoVersionSQL() + retrieveNodesSQL(nodeIdList, depthLimit))
         requestLogger.info(`VERSION ${JSON.stringify(versionResult)}`)
         requestLogger.info(`NODES ${JSON.stringify(nodes)}`)
         return {

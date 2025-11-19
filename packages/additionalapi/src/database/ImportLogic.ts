@@ -3,7 +3,7 @@ import { Duplex } from "stream"
 import { PoolClient } from "pg"
 import { from as copyFrom } from "pg-copy-streams"
 import { FBBulkImport, FBMetaPointer } from "../io/lionweb/serialization/flatbuffers/index.js"
-import { makeQueryToAttachNodeForFlatBuffers, makeQueryToCheckHowManyDoNotExist, makeQueryToCheckHowManyExist } from "./QueryNode.js"
+import { makeQueryToAttachNodeForFlatBuffers, checkHowManyDoNotExistSQL, checkHowManyExistSQL } from "./QueryNode.js"
 import { HttpClientErrors, HttpSuccessCodes } from "@lionweb/server-shared"
 import { DbConnection, RepositoryData, MetaPointersCollector, MetaPointersTracker  } from "@lionweb/server-common"
 import { BulkImportResultType } from "./AdditionalQueries.js"
@@ -362,7 +362,7 @@ export async function performImportFromFlatBuffers(
 
         // Check - verify all the given new nodes are effectively new
         const allNewNodesResult =
-            newNodesSet.size == 0 ? 0 : await dbConnection.query(repositoryData, makeQueryToCheckHowManyExist(newNodesSet))
+            newNodesSet.size == 0 ? 0 : await dbConnection.query(repositoryData, checkHowManyExistSQL(newNodesSet))
         if (allNewNodesResult > 0) {
             return {
                 status: HttpClientErrors.BadRequest,
@@ -375,7 +375,7 @@ export async function performImportFromFlatBuffers(
         const allExistingNodesResult =
             attachPointContainers.size == 0
                 ? 0
-                : await dbConnection.query(repositoryData, makeQueryToCheckHowManyDoNotExist(attachPointContainers))
+                : await dbConnection.query(repositoryData, checkHowManyDoNotExistSQL(attachPointContainers))
         if (allExistingNodesResult > 0) {
             return {
                 status: HttpClientErrors.BadRequest,

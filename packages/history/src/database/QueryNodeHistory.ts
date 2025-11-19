@@ -117,6 +117,7 @@ LEFT JOIN ${METAPOINTERS_TABLE} mp on mp.id = nodes_for_version.classifier
  * This works ok because we use the _parent_ column to find the children, not the containment or annotation.
  * @param nodeidlist
  * @param depthLimit
+ * @param repoVersion The version of the repo for which the query is done.
  */
 export const makeQueryNodeTreeForIdList = (nodeidlist: string[], depthLimit: number, repoVersion: number): string => {
     const sqlArray = sqlArrayFromNodeIdArray(nodeidlist)

@@ -1,4 +1,5 @@
 import { CONTAINMENTS_TABLE, NODES_TABLE, MetaPointersTracker, sqlArrayFromNodeIdArray } from "@lionweb/server-common"
+import { ParameterizedQuery } from "pg-promise"
 import {AttachPoint} from "./AdditionalQueries.js";
 import {FBAttachPoint} from "../io/lionweb/serialization/flatbuffers/index.js";
 import {forFBMetapointer} from "./ImportLogic.js";
@@ -7,11 +8,11 @@ import {forFBMetapointer} from "./ImportLogic.js";
  * Query that will recursively get all child (ids) of all nodes in _nodeIdList_
  * Note that annotations are also considered children for this method.
  * This works ok because we use the _parent_ column to find the children, not the containment or annotation.
- * @param nodeidlist
+ * @param nodeidlist List of node `id`'s 
  * @param depthLimit
  * @returns A query string which results in an array of {id: string, parent: string, depth: number}
  */
-export const makeQueryNodeTreeForIdList = (nodeidlist: string[], depthLimit: number): string => {
+export const retrieveNodeTreeForIdListSQL = (nodeidlist: string[], depthLimit: number): string => {
     const sqlArray = sqlArrayFromNodeIdArray(nodeidlist)
     return `-- Recursively retrieve node tree
             WITH RECURSIVE tmp AS (
@@ -28,7 +29,7 @@ export const makeQueryNodeTreeForIdList = (nodeidlist: string[], depthLimit: num
     `
 }
 
-export const makeQueryToCheckHowManyExist = (nodeidlist: Set<string>): string => {
+export const checkHowManyExistSQL = (nodeidlist: Set<string>): string => {
     if (nodeidlist.size === 0) {
         throw new Error("Invalid nodeidlist (it is empty)")
     }
@@ -36,7 +37,7 @@ export const makeQueryToCheckHowManyExist = (nodeidlist: Set<string>): string =>
     return `SELECT COUNT(*) FROM ${NODES_TABLE} WHERE ID IN (${ids});`
 }
 
-export const makeQueryToCheckHowManyDoNotExist = (nodeidlist: Set<string>): string => {
+export const checkHowManyDoNotExistSQL = (nodeidlist: Set<string>): string => {
     if (nodeidlist.size === 0) {
         throw new Error("Invalid nodeidlist (it is empty)")
     }

@@ -150,7 +150,7 @@ export class LionWebQueries {
         let query = nextRepoVersionSQL(repositoryData.clientId)
         const metaPointersTracker = new MetaPointersTracker(repositoryData)
         await metaPointersTracker.populateFromNodes(partitions.nodes, task)
-        query += this.context.queryMaker.dbInsertNodeArray(partitions.nodes, metaPointersTracker)
+        query += this.context.queryMaker.insertNodeArraySQL(partitions.nodes, metaPointersTracker)
         dbLogger.info(query)
         const [versionresult] = await task.multi(repositoryData, query)
         return {
@@ -351,7 +351,7 @@ export class LionWebQueries {
                 }
             }
         }
-        queries += this.context.queryMaker.dbInsertNodeArray(
+        queries += this.context.queryMaker.insertNodeArraySQL(
             toBeStoredNewNodes.map(ch => (ch as NodeAdded).node),
             metaPointersTracker
         )
@@ -399,7 +399,7 @@ export class LionWebQueries {
         addedNodes: string[]
     ): Promise<ReservedIdRecord[]> {
         if (addedNodes.length > 0) {
-            const query = this.context.queryMaker.findReservedNodesFromIdList(repositoryData, addedNodes)
+            const query = this.context.queryMaker.retrieveReservedNodesFromIdListSQL(repositoryData, addedNodes)
             const result = (await task.query(repositoryData, query)) as ReservedIdRecord[]
             return result
         }
@@ -407,7 +407,7 @@ export class LionWebQueries {
 
     async nodeIdsInUse(task: LionWebTask, repositoryData: RepositoryData, nodeIds: string[]): Promise<{ id: string }[]> {
         if (nodeIds.length > 0) {
-            const query = this.context.queryMaker.findNodeIdsInUse(nodeIds)
+            const query = this.context.queryMaker.retrieveNodeIdsInUseSQL(nodeIds)
             const result = (await task.query(repositoryData, query)) as { id: string }[]
             return result
         }
@@ -419,7 +419,7 @@ export class LionWebQueries {
         idsAdded: string[]
     ): Promise<QueryReturnType<LionwebResponse>> {
         if (idsAdded.length > 0) {
-            const query = this.context.queryMaker.storeReservedNodeIds(repositoryData, idsAdded)
+            const query = this.context.queryMaker.insertReservedNodeIdsSQL(repositoryData, idsAdded)
             await task.query(repositoryData, query)
             return {
                 status: HttpSuccessCodes.Ok,
@@ -506,7 +506,7 @@ export class LionWebQueries {
         // Remove the partition nodes and all children/annotations
         const removedNodes = (await this.getNodeTree(task, repositoryData, idList, UNLIMITED_DEPTH)).queryResult.map(n => n.id)
         let query = nextRepoVersionSQL(repositoryData.clientId)
-        query += this.context.queryMaker.makeQueriesForOrphans(removedNodes)
+        query += this.context.queryMaker.deleteOrphansSQL(removedNodes)
         dbLogger.debug("DELETE PARTITIONS QUERY: " + query)
         const [versionResult] = await task.multi(repositoryData, query)
         return {

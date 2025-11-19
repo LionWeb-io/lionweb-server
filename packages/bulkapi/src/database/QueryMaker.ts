@@ -23,7 +23,11 @@ import { BulkApiContext } from "../main.js"
 export class QueryMaker {
     constructor(private context: BulkApiContext) {}
 
-    public makeQueriesForOrphans(orphanIds: string[]) {
+    /**
+     * Delete all nodes with id in `orphanIds`, including all of their features
+     * @param orphanIds
+     */
+    public deleteOrphansSQL(orphanIds: string[]) {
         if (orphanIds.length === 0) {
             return ""
         }
@@ -43,7 +47,7 @@ export class QueryMaker {
                 `
     }
 
-    public upsertQueriesForReferenceChanges(referenceChanges: ReferenceChange[], repositoryData: RepositoryData) {
+    public upsertForReferenceChangesSQL(referenceChanges: ReferenceChange[], repositoryData: RepositoryData): string {
         let queries = ""
         const db = new DbChanges(this.context.pgp)
         db.addChanges(referenceChanges)
@@ -64,7 +68,7 @@ export class QueryMaker {
      * in their respective tables.
      * @param tbsNodesToCreate
      */
-    public dbInsertNodeArray(tbsNodesToCreate: LionWebJsonNode[], metaPointersTracker: MetaPointersTracker): string {
+    public insertNodeArraySQL(tbsNodesToCreate: LionWebJsonNode[], metaPointersTracker: MetaPointersTracker): string {
         dbLogger.debug("Queries insert new nodes " + tbsNodesToCreate.map(n => n.id))
         {
             let query = "-- create new nodes\n"
@@ -80,7 +84,7 @@ export class QueryMaker {
                 }
             })
             query += this.context.pgp.helpers.insert(node_rows, TableHelpers.NODES_COLUMN_SET) + ";\n"
-            query += this.insertContainments(tbsNodesToCreate, metaPointersTracker)
+            query += this.insertContainmentsSQL(tbsNodesToCreate, metaPointersTracker)
 
             // INSERT Properties
             const insertProperties = tbsNodesToCreate.flatMap(node =>
@@ -109,7 +113,7 @@ export class QueryMaker {
         }
     }
 
-    public insertContainments(tbsNodesToCreate: LionWebJsonNode[], metaPointersTracker: MetaPointersTracker): string {
+    public insertContainmentsSQL(tbsNodesToCreate: LionWebJsonNode[], metaPointersTracker: MetaPointersTracker): string {
         let query = "-- insert containments for new node\n"
         // INSERT Containments
         const insertRowData = tbsNodesToCreate.flatMap(node =>
@@ -128,16 +132,16 @@ export class QueryMaker {
     /**
      * Result of this query is [{id: string}]
      */
-    public selectNodesIdsWithoutParentQuery(): string {
+    public selectNodesIdsWithoutParentSQL(): string {
         return `SELECT id FROM ${NODES_TABLE} WHERE parent is null`
     }
 
     /**
      * Select all node id's in `idList` for which a node already exists in the database.
-     * @param idList
-     * @returns Result of this query is [{id: string}]
+     * @param idList    The list of id's that is checked for existence.
+     * @returns         [{id: string}] The list of nodes from `idList` that already exist. 
      */
-    public selectExistingNodeIds(idList: string[]): string {
+    public retrieveExistingNodeIdsSQL(idList: string[]): string {
         const sqlList = sqlArrayFromNodeIdArray(idList)
         return `SELECT id FROM ${NODES_TABLE} WHERE ID IN ${sqlList}`
     }
@@ -148,7 +152,7 @@ export class QueryMaker {
      * @param idList
      * @returns {exists: boolean}
      */
-    public existsOnOfNodeIdList(idList: string[]): string {
+    public existsOnOfNodeIdListSQL(idList: string[]): string {
         const sqlList = sqlArrayFromNodeIdArray(idList)
         const query = `select exists(SELECT node FROM ${NODES_TABLE} WHERE node.id IN ${sqlList});`
         // const exists = await this.ctx.postgresConnection.one(query)
@@ -159,7 +163,12 @@ export class QueryMaker {
         return `SELECT id FROM ${NODES_TABLE_HISTORY} WHERE parent is null AND from_version <= ${repo_version} AND to_version >${repo_version}`
     }
 
-    public findReservedNodesFromIdList(repositoryData: RepositoryData, nodeIdList: string[]): string {
+    /**
+     * Retrieve all reserved `id`s from `nodeIdList` which are not reserved by `repositoryData.clientId` 
+     * @param repositoryData
+     * @param nodeIdList
+     */
+    public retrieveReservedNodesFromIdListSQL(repositoryData: RepositoryData, nodeIdList: string[]): string {
         const sqlArray = sqlArrayFromNodeIdArray(nodeIdList)
         return `-- Retrieve node tree
             SELECT node_id, client_id
@@ -172,7 +181,7 @@ export class QueryMaker {
      * Return the subset of _nodeIdList_ that are currently in use in the repository.
      * @param nodeIdList The list of node is's to be checked.
      */
-    public findNodeIdsInUse(nodeIdList: string[]): string {
+    public retrieveNodeIdsInUseSQL(nodeIdList: string[]): string {
         // This works ok as along as you don't mix old (deleted) nodes with newer node,
         // because it allows node id's to be reused.
         const sqlArray = sqlArrayFromNodeIdArray(nodeIdList)
@@ -183,7 +192,12 @@ export class QueryMaker {
     `
     }
 
-    public storeReservedNodeIds(repositoryData: RepositoryData, nodeIdList: string[]): string {
+    /**
+     * Insert all ids in `nodeIdList` as being reserved by the client in `repositoryData`.
+     * @param repositoryData
+     * @param nodeIdList
+     */
+    public insertReservedNodeIdsSQL(repositoryData: RepositoryData, nodeIdList: string[]): string {
         const insertReservation: ReservedIdRecord[] = nodeIdList.map(id => ({
             node_id: id,
             client_id: repositoryData.clientId

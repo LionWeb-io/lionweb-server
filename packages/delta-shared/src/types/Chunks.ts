@@ -15,7 +15,7 @@ export type LionWebJsonMetaPointer = {
 export type ResponseMessage = {
     kind: String;
     message: String;
-    data?: KeyValuePair;
+    data?: KeyValuePair | null;
 };
 
 export type LionWebJsonChunk = {
@@ -36,12 +36,12 @@ export type LionWebJsonNode = {
     containments: LionWebJsonContainment[];
     references: LionWebJsonReference[];
     annotations: LionWebId[];
-    parent: LionWebId;
+    parent: LionWebId | null;
 };
 
 export type LionWebJsonProperty = {
     property: LionWebJsonMetaPointer;
-    value: String;
+    value: String | null;
 };
 
 export type LionWebJsonContainment = {
@@ -55,6 +55,6 @@ export type LionWebJsonReference = {
 };
 
 export type LionWebJsonReferenceTarget = {
-    resolveInfo: String;
-    reference: LionWebId;
+    resolveInfo: String | null;
+    reference: LionWebId | null;
 };

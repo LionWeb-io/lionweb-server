@@ -25,23 +25,13 @@ export function is_NodesForQueryQuery_ResultType(o: unknown): o is NodesForQuery
     return Array.isArray(o) && o.every(n => isLionWebJsonNode(n))
 }
 
-// function isLionWebJsonNode(object: unknown):object is LionWebJsonNode {
-//     const validator = new LionWebSyntaxValidator(new ValidationResult())
-//     // Now validate the all the properties of the full JSON message
-//     validator.validationResult.reset()
-//     validator.validate(object, "LionWebJsonNode")
-//     return !validator.validationResult.hasErrors()
-// }
-
 export const retrieveFullNodesDB = async (dbConnection: DbConnection, repo: RepositoryData, nodeQuery: string): Promise<LionWebJsonNode[]> => {
     const queryResult =  await dbConnection.query(repo, retrieveFullNodesFromQuerySQL(nodeQuery))
     if (is_NodesForQueryQuery_ResultType(queryResult)) {
         return queryResult
     } else {
-        const error: InternalQueryError = {
-            kind: "InternalQueryError",
-            message: `Query return type incorrect, expected NodesForQueryQuery_ResultType`,
-            data: [{
+        throw InternalQueryError(`Query return type incorrect, expected NodesForQueryQuery_ResultType`,
+            [{
                 key: "query",
                 value: retrieveFullNodesFromQuerySQL(nodeQuery)
                 },
@@ -49,9 +39,7 @@ export const retrieveFullNodesDB = async (dbConnection: DbConnection, repo: Repo
                     key: "queryResult",
                     value: JSON.stringify(queryResult)
                 }
-            ]
-        }
-        throw error
+            ])
     }
 }
 /**

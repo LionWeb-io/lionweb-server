@@ -130,14 +130,14 @@ class DeltaProcessor {
                 socket.send(JSON.stringify(e))
             }
             if (isInternalQueryError(e)) {
-                const errorEvent: ErrorEvent = newErrorEvent('query error' + e.kind, e.message, delta, participation!, {
+                const errorEvent: ErrorEvent = newErrorEvent('query error' + e.name, e.message, delta, participation!, {
                     originCommands: [
                         {
                             commandId: (delta as DeltaCommand).commandId ?? (delta as DeltaRequest).queryId ?? "<unknown-command-or-query>",
                             participationId: participation!.participationId
                         }
                     ],
-                    protocolMessages: [e]
+                    protocolMessages: []
                 })
                 socket.send(JSON.stringify(errorEvent))
             } else if (e instanceof Error) {

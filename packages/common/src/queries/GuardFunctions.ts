@@ -16,12 +16,18 @@ export function isLionWebJsonNode(o: unknown): o is LionWebJsonNode {
     return !validator.validationResult.hasErrors()
 }
 
-export type InternalQueryError = {
-    kind: string;
-    message: string;
+export interface InternalQueryError extends Error {
+    name: "InternalQueryError"
     data: KeyValuePair[]
 }
 
 export function isInternalQueryError(o: unknown): o is InternalQueryError {
-    return (o as InternalQueryError)?.data !== undefined
+    return (o as InternalQueryError)?.name !== "InternalQueryError"
+}
+
+export function InternalQueryError(msg: string, data?: KeyValuePair[]): InternalQueryError {
+    const result = new Error(msg) as InternalQueryError
+    result.name = "InternalQueryError"
+    result.data = data ?? []
+    return result
 }
