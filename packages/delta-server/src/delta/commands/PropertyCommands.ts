@@ -42,6 +42,7 @@ const AddPropertyFunction = async (
     const changes = new DbChanges(_ctx.pgp)
     changes.addChanges([change])
     const metaPointersTracker = new MetaPointersTracker(participation.repositoryData!)
+    await changes.populateMetaPointersFromDbChanges(metaPointersTracker, [], _ctx.dbConnection)
     const dbResult = await _ctx.dbConnection.query(participation.repositoryData!, changes.createPostgresQuery(metaPointersTracker))
     deltaLogger.info(`db delete is ${JSON.stringify(dbResult)}`)
     return {
@@ -78,6 +79,7 @@ const DeletePropertyFunction = async (
     const changes = new DbChanges(_ctx.pgp)
     changes.addChanges([change])
     const metaPointersTracker = new MetaPointersTracker(participation.repositoryData!)
+    await changes.populateMetaPointersFromDbChanges(metaPointersTracker, [], _ctx.dbConnection)
     const dbResult = await _ctx.dbConnection.query(participation.repositoryData!, changes.createPostgresQuery(metaPointersTracker))
     deltaLogger.info(`db delete is ${JSON.stringify(dbResult)}`)
 
@@ -118,6 +120,7 @@ const ChangePropertyFunction = async (
     const changes = new DbChanges(_ctx.pgp)
     changes.addChanges([change])
     const metaPointersTracker = new MetaPointersTracker(participation.repositoryData!)
+    await changes.populateMetaPointersFromDbChanges(metaPointersTracker, [], _ctx.dbConnection)
     const dbResult = await _ctx.dbConnection.query(participation.repositoryData!, changes.createPostgresQuery(metaPointersTracker))
     deltaLogger.info(`Result is ${JSON.stringify(dbResult)}`)
     return {

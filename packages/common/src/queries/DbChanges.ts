@@ -1,4 +1,4 @@
-import { LionWebJsonMetaPointer } from "@lionweb/json"
+import { LionWebJsonMetaPointer, LionWebJsonNode } from "@lionweb/json"
 import {
     AnnotationAdded,
     AnnotationChange,
@@ -12,8 +12,8 @@ import {
 } from "@lionweb/json-diff"
 import pgPromise, { ColumnSet } from "pg-promise"
 import pg from "pg-promise/typescript/pg-subset.js"
-import { dbLogger, UnknownObjectType } from "../apiutil/index.js"
-import { CONTAINMENTS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "../database/index.js"
+import { dbLogger, deltaLogger, UnknownObjectType } from "../apiutil/index.js"
+import { CONTAINMENTS_TABLE, DbConnection, LionWebTask, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "../database/index.js"
 import { TableHelpers } from "../main.js"
 import { MetaPointersTracker } from "../metapointers/MetaPointers.js"
 import { InitializedMapToArray } from "./InitializedMapToArray.js"
@@ -283,5 +283,26 @@ export class DbChanges {
                 break
         }
         return result
+    }
+
+    /**
+     * Populate the MetaPointers table with metapointers from all the changes in this.
+     * @param metaPointersTracker
+     * @param dbCommands
+     * @param nodes
+     * @param task
+     */
+    async populateMetaPointersFromDbChanges(
+        metaPointersTracker: MetaPointersTracker,
+        newNodes: LionWebJsonNode[],
+        task: LionWebTask | DbConnection
+    ): Promise<void> {
+        deltaLogger.info(`populateFromDbChanges`)
+        await metaPointersTracker.populate(collector => {
+            this.updatesPropertyTable.values().forEach(table => table.forEach(e => collector.considerAddingMetaPointer(e.property)))
+            this.updatesContainmentTable.values().forEach(table => table.forEach(e => collector.considerAddingMetaPointer(e.containment)))
+            this.updatesReferenceTable.values().forEach(table => table.forEach(e => collector.considerAddingMetaPointer(e.reference)))
+            newNodes.forEach((node: LionWebJsonNode) => collector.considerNode(node))
+        }, task)
     }
 }
