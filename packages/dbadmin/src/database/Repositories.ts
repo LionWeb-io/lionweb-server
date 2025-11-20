@@ -65,15 +65,15 @@ export class RepositoryStore {
     async initialize() {
         requestLogger.info("RepositoryStore initialize " + this.i++)
         if (this.initialized) {
-            requestLogger.info("ALREADY initialized")
+            // requestLogger.info("ALREADY initialized")
             return
         }
-        requestLogger.info("initializing")
+        // requestLogger.info("initializing")
         this.repositoryName2repository.clear()
         const repoTable = (await this.ctx.dbConnection.queryWithoutRepository(`SELECT * FROM ${REPOSITORIES_TABLE};\n`)) as RepositoryInfo[]
         for(const repo of repoTable) {
             this.repositoryName2repository.set(repo.repository_name, repo)
-            requestLogger.info("Repo row: " + JSON.stringify(repo))
+            // requestLogger.info("Repo row: " + JSON.stringify(repo))
             await initializeGlobalMetaPointersMap(this.ctx.dbConnection, { repository: repo, clientId: "SERVER" })
         }
         this.initialized = true

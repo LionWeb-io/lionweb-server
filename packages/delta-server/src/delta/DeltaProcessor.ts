@@ -1,4 +1,4 @@
-import { deltaLogger, isInternalQueryError } from "@lionweb/server-common";
+import { deltaLogger, isInternalQueryError, retrieveParentsDB } from "@lionweb/server-common";
 import { DeltaValidator } from "@lionweb/server-delta-definitions"
 import { ErrorEvent, DeltaRequest, isDeltaResponse, DeltaCommand, DeltaEvent } from "@lionweb/server-delta-shared"
 import { ValidationResult } from "@lionweb/validation"
@@ -112,24 +112,46 @@ class DeltaProcessor {
         // Finally ok, process the delta and send the response
         try {
             const response = await func(participation!, delta, this.context!)
-            // Errors and responses only need to be sent to the client that sent the message
+            // Errors and responses to requests only need to be sent to the client that sent the message
             if (response.messageKind === "ErrorEvent" || isDeltaResponse(response)) {
                 socket.send(JSON.stringify(response))
             } else {
                 // To whom needs this Event (yes, it's an Event now) need to be sent.
                 // For most/all events, we need to know whether the others are subscribed to the partition wjhre changes took place
                 // TODO: Add the changed partitions to the result of the processing function, so we know to whom to send.
-                for (const pInfo of activeSockets.values()) {
-                    response.sequenceNumber = pInfo.eventSequenceNumber++
-                    deltaLogger.info(`Sending ${JSON.stringify(response)} to ${pInfo.repositoryData!.clientId}`)
-                    pInfo.socket.send(JSON.stringify(response))
+                deltaLogger.info(`looking foir affected nodes in ${response}`)
+                const affectedNodeData = response.protocolMessages.find(m => m.kind == "AffectedNode")
+                const affectedNode = affectedNodeData?.data?.find(kv => kv.key === "node")
+                if (affectedNode === undefined) {
+                    deltaLogger.info("No affected node found, not sending delta's")
+                } else {
+                    const parentChain = await retrieveParentsDB(this.context!.dbConnection, participation!.repositoryData!, affectedNode.value)
+                    if (parentChain === undefined) {
+                        throw new Error("PARENTCHAIN UNDEFINED")
+                    } else {
+                        deltaLogger.info(`PARENT CHAIN IS ${parentChain.map(p => `${p.id} parent ${p.parent} | `)}`)
+                    }
+                    const affectedPartition = parentChain[parentChain.length-1]
+                    if (affectedPartition !== undefined) {
+                        for (const participationInfo of activeSockets.values()) {
+                            if (participationInfo.subscribedPartitions.includes(affectedPartition.id)) {
+                                response.sequenceNumber = participationInfo.eventSequenceNumber++
+                                deltaLogger.info(`Subscribed Sending ${JSON.stringify(response)} to ${participationInfo.repositoryData!.clientId}`)
+                                participationInfo.socket.send(JSON.stringify(response))
+                            } else {
+                                deltaLogger.info(`NOT Subscribed ${participationInfo.repositoryData!.clientId}`)
+
+                            }
+                        }
+                    } else {
+                        deltaLogger.info(`NO Subscribed no affected node`)
+                    }
                 }
             }
         } catch (e: unknown) {
             if (isErrorEvent(e)) {
                 socket.send(JSON.stringify(e))
-            }
-            if (isInternalQueryError(e)) {
+            } else if (isInternalQueryError(e)) {
                 const errorEvent: ErrorEvent = newErrorEvent('query error' + e.name, e.message, delta, participation!, {
                     originCommands: [
                         {
@@ -137,7 +159,11 @@ class DeltaProcessor {
                             participationId: participation!.participationId
                         }
                     ],
-                    protocolMessages: []
+                    protocolMessages: [ {
+                        data: e.data,
+                        kind: "Internal",
+                        message:"Additional data"
+                    }]
                 })
                 socket.send(JSON.stringify(errorEvent))
             } else if (e instanceof Error) {

@@ -1,4 +1,11 @@
-import { SignOnRequest, AddPropertyCommand, AddPartitionCommand, ChangePropertyCommand, DeletePropertyCommand } from "@lionweb/server-delta-shared"
+import {
+    SignOnRequest,
+    AddPropertyCommand,
+    AddPartitionCommand,
+    ChangePropertyCommand,
+    DeletePropertyCommand,
+    SubscribeToPartitionContentsRequest
+} from "@lionweb/server-delta-shared"
 
 let queryId = 1
 // let commandId = 1
@@ -14,6 +21,15 @@ export const newSignOnRequest = (repo: string, clientId: string): SignOnRequest 
     }
 }
 
+export const newSubscribeToPartitionRequest = (repo: string, clientId: string, partition: string): SubscribeToPartitionContentsRequest => {
+    return {
+        messageKind: "SubscribeToPartitionContents",
+        partition: partition,
+        queryId: `query-id-${queryId++}`,
+        protocolMessages: []
+    }
+}
+
 export const newAddPropertyCommand = (nodeid: string, newValue: string, propertyKey: string): AddPropertyCommand => {
     return {
         messageKind: "AddProperty",
@@ -21,9 +37,9 @@ export const newAddPropertyCommand = (nodeid: string, newValue: string, property
         node: nodeid,
         newValue: newValue,
         property: {
-            language: "language",
+            language: "LionCore-builtins",
             key: propertyKey,
-            version: "1"
+            version: "2023.1"
         },
         protocolMessages: []
     }
@@ -61,7 +77,7 @@ export const newDeletePropertyCommand = (nodeid: string, propertyKey: string): D
 export const newAddPartitionCommand = (nodeid: string, classifierKey: string): AddPartitionCommand => {
     return {
         messageKind: "AddPartition",
-        commandId: "2",
+        commandId: `command-id-${queryId++}`,
         newPartition: {
             nodes: [{
                 id: nodeid,

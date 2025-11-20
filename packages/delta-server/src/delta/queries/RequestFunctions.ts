@@ -14,7 +14,8 @@ import {
     SubscribeToChangingPartitionsRequest,
     SubscribeToPartitionContentsRequest,
     SubscribeToPartitionContentsResponse,
-    UnsubscribeFromPartitionContentsRequest
+    UnsubscribeFromPartitionContentsRequest,
+    UnsubscribeFromPartitionContentsResponse
 } from "@lionweb/server-delta-shared"
 import { DeltaFunction, errorNotImplementedEvent } from "../commands/index.js"
 import { DeltaContext } from "../DeltaContext.js"
@@ -52,13 +53,12 @@ const SubscribeToPartitionContentsRequestFunction = async (
     }
     participation.subscribedPartitions.push(msg.partition)
     const queryResult = await retrieveNodesDB(ctx.dbConnection, participation.repositoryData!, [msg.partition], Number.MAX_SAFE_INTEGER)
-    const event: SubscribeToPartitionContentsResponse = {
+    return {
         messageKind: "SubscribeToPartitionContentsResponse",
         contents: {nodes: queryResult},
         protocolMessages: [],
         queryId: msg.queryId
-    }
-    return event
+    } as SubscribeToPartitionContentsResponse
 }
 
 const UnsubscribeFromPartitionContentsRequestFunction = (
@@ -66,7 +66,16 @@ const UnsubscribeFromPartitionContentsRequestFunction = (
     msg: UnsubscribeFromPartitionContentsRequest, _ctx: DeltaContext
 ): DeltaEvent | DeltaResponse => {
     deltaLogger.info("Called UnsubscribeFromPartitionContentsRequestFunction " + msg.messageKind)
-    return errorNotImplementedEvent(msg)
+    if (!participation.subscribedPartitions.includes(msg.partition)) {
+        return newErrorEvent("NotSubscribed", `Not subscribed to partition ${msg.partition}, cannot unsubscribe`, msg, participation)
+    }
+    const index = participation.subscribedPartitions.findIndex(p => p === msg.partition)
+    participation.subscribedPartitions.splice(index, 1)
+    return {
+        queryId: msg.queryId,
+        messageKind: "UnsubscribeFromPartitionContentsResponse",
+        protocolMessages: []
+    } as UnsubscribeFromPartitionContentsResponse
 }
 
 const SignOnRequestFunction = async (participation: ParticipationInfo, msg: SignOnRequest, _ctx: DeltaContext): Promise<DeltaEvent | DeltaResponse> => {
@@ -77,13 +86,12 @@ const SignOnRequestFunction = async (participation: ParticipationInfo, msg: Sign
     }
     participation.participationStatus = "signedOn"
     await participation.startParticipation(msg.clientId, msg.repositoryId)
-    const response: SignOnResponse = {
+    return {
         messageKind: "SignOnResponse",
         participationId: participation.participationId,
         queryId: msg.queryId,
         protocolMessages: [{ data: [], kind: "Info", message: "SignOnRequest received ok" }]
-    }
-    return response
+    } as SignOnResponse
 }
 
 const validateSignOnRequest = (participation: ParticipationInfo | undefined, msg: SignOnRequest): ErrorEvent | undefined => {
@@ -102,12 +110,11 @@ const SignOffRequestFunction = (participation: ParticipationInfo, msg: SignOffRe
         return newErrorEvent("NotSignedOn", "Cannot SignOff a participation, because you are not signed on.", msg, participation)
     }
     participation.participationStatus = "signedOff"
-    const response: SignOffResponse = {
+    return {
         messageKind: "SignOffResponse",
         queryId: msg.queryId,
         protocolMessages: []
-    }
-    return response
+    } as SignOffResponse
 }
 
 const ListPartitionsRequestFunction = (participation: ParticipationInfo, msg: ListPartitionsRequest, _ctx: DeltaContext): DeltaEvent | DeltaResponse => {

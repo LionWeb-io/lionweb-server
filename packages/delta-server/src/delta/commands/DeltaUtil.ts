@@ -70,10 +70,11 @@ export const retrieveNodeFromDB = async(id: string, delta: DeltaCommand | DeltaR
             protocolMessages: queryData(query, queryResult)
         })
     }
-    if (queryResult.length === 0) {
-        throw newErrorEvent("NodeDoesNotExist", `The node with id '${id}' does not exist`, delta, participation, {
-            protocolMessages: queryData(query, queryResult)
-        })
+    if (queryResult === undefined || queryResult.length === 0) {
+        throw newErrorEvent("NodeDoesNotExist", `The node with id '${id}' does not exist result ${queryResult}`, delta, participation)
+        //     , {
+        //     protocolMessages: queryData(query, queryResult)
+        // })
     }
     if (queryResult.length > 1) {
         throw newErrorEvent("TwoNodesWithSameId", `There are two nodes with id '${id}' in the repository`, delta, participation, {

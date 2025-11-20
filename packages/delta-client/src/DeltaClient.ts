@@ -55,7 +55,7 @@ export class DeltaClient {
         }
         this.socket.onmessage = (ev) => {
             this.log(`Incoming message type '${ev.type}': ` + ev.data)
-            this.receivedMessageHistory.push(ev.data.toString().substring(0, 400))
+            this.receivedMessageHistory.push(ev.data.toString())
             if (this.socket === undefined) {
                 this.logError("Error on message, socket is undefined")
                 return

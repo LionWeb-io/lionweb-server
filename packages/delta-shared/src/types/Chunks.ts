@@ -8,7 +8,7 @@ export type LionWebSerializationFormatVersion = string;
 
 export type LionWebJsonMetaPointer = {
     key: LionWebKey;
-    version: LionWebVersion;
+    version: string;
     language: LionWebKey;
 };
 
@@ -19,14 +19,14 @@ export type ResponseMessage = {
 };
 
 export type LionWebJsonChunk = {
-    serializationFormatVersion: LionWebSerializationFormatVersion;
+    serializationFormatVersion: string;
     languages: LionWebJsonUsedLanguage[];
     nodes: LionWebJsonNode[];
 };
 
 export type LionWebJsonUsedLanguage = {
     key: LionWebKey;
-    version: LionWebVersion;
+    version: string;
 };
 
 export type LionWebJsonNode = {
@@ -55,6 +55,6 @@ export type LionWebJsonReference = {
 };
 
 export type LionWebJsonReferenceTarget = {
-    resolveInfo: String | null;
-    reference: LionWebId | null;
+    resolveInfo: string | null;
+    reference: LionWebId;
 };

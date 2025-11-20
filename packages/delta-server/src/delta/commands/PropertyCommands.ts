@@ -1,7 +1,7 @@
 import { isEqualMetaPointer } from "@lionweb/json"
 import { Missing, PropertyValueChanged } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
-import { DbChanges, deltaLogger, MetaPointersTracker } from "@lionweb/server-common"
+import { DbChanges, deltaLogger, MetaPointersTracker, retrieveParentsDB } from "@lionweb/server-common"
 import {
     AddPropertyCommand,
     ChangePropertyCommand,
@@ -22,7 +22,7 @@ const AddPropertyFunction = async (
     msg: AddPropertyCommand,
     _ctx: DeltaContext
 ): Promise<PropertyAddedEvent | ErrorEvent> => {
-    deltaLogger.info("Called AddPropertyFunction " + msg.messageKind)
+    deltaLogger.info(`Called AddPropertyFunction ${msg.messageKind} id ${msg.commandId}`)
     const node = await retrieveNodeFromDB(msg.node, msg, participation, _ctx)
     const oldProperty = node.properties.find(prop => isEqualMetaPointer(prop.property, msg.property))
     if (oldProperty !== undefined && oldProperty.value !== null && oldProperty.value !== undefined) {
@@ -44,16 +44,21 @@ const AddPropertyFunction = async (
     const metaPointersTracker = new MetaPointersTracker(participation.repositoryData!)
     const dbResult = await _ctx.dbConnection.query(participation.repositoryData!, changes.createPostgresQuery(metaPointersTracker))
     deltaLogger.info(`db delete is ${JSON.stringify(dbResult)}`)
-    const event: PropertyAddedEvent = {
+    return {
         messageKind: "PropertyAdded",
         newValue: msg.newValue,
         node: msg.node,
         originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
         property: msg.property,
         sequenceNumber: 0, // dummy, will be changed for each participation before sending
-        protocolMessages: []
-    }
-    return event
+        protocolMessages: [
+            {
+                kind: "AffectedNode",
+                message: `Node ${node.id} has been changed`,
+                data: [ { key: "node", value: node.id}]
+            }
+        ]
+    } as PropertyAddedEvent
 }
 
 const DeletePropertyFunction = async (
@@ -61,7 +66,7 @@ const DeletePropertyFunction = async (
     msg: DeletePropertyCommand,
     _ctx: DeltaContext
 ): Promise<PropertyDeletedEvent | ErrorEvent> => {
-    deltaLogger.info("Called DeletePropertyFunction " + msg.messageKind)
+    deltaLogger.info(`Called DeletePropertyFunction ${msg.messageKind} id ${msg.commandId}`)
     const node = await retrieveNodeFromDB(msg.node, msg, participation, _ctx)
     const oldProperty = node.properties.find(prop => isEqualMetaPointer(prop.property, msg.property))
     if (oldProperty === undefined || oldProperty.value === null || oldProperty.value === undefined) {
@@ -76,7 +81,7 @@ const DeletePropertyFunction = async (
     const dbResult = await _ctx.dbConnection.query(participation.repositoryData!, changes.createPostgresQuery(metaPointersTracker))
     deltaLogger.info(`db delete is ${JSON.stringify(dbResult)}`)
 
-    const event: PropertyDeletedEvent = {
+    return {
         messageKind: "PropertyDeleted",
         node: msg.node,
         originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
@@ -84,17 +89,13 @@ const DeletePropertyFunction = async (
         sequenceNumber: 0, // dummy, will be changed for each participation before sending
         protocolMessages: [
             {
-                kind:"OldProperty",
-                message: "Value of old property",
-                data: [{
-                    key: "OldProperty",
-                    value: JSON.stringify(oldProperty)
-                }]
-            }
+                kind: "AffectedNode",
+                message: `Node ${node.id} has been changed`,
+                data: [ { key: "node", value: node.id}]
+            },
         ],
         oldValue: oldProperty.value
-    }
-    return event
+    } as PropertyDeletedEvent
 }
 
 const ChangePropertyFunction = async (
@@ -102,7 +103,7 @@ const ChangePropertyFunction = async (
     msg: ChangePropertyCommand,
     _ctx: DeltaContext
 ): Promise<DeltaEvent> => {
-    deltaLogger.info(`Called ChangePropertyFunction ${msg.node} pinfo ${JSON.stringify(participation.repositoryData)}`)
+    deltaLogger.info(`Called ChangePropertyFunction ${msg.node} pinfo ${JSON.stringify(participation.repositoryData)} kind ${msg.messageKind} id ${msg.commandId}`)
     const node = await retrieveNodeFromDB(msg.node, msg, participation, _ctx)
     const oldProperty = node.properties.find(prop => isEqualMetaPointer(prop.property, msg.property))
     if (oldProperty === undefined || oldProperty.value === null || oldProperty.value === undefined) {
@@ -119,7 +120,7 @@ const ChangePropertyFunction = async (
     const metaPointersTracker = new MetaPointersTracker(participation.repositoryData!)
     const dbResult = await _ctx.dbConnection.query(participation.repositoryData!, changes.createPostgresQuery(metaPointersTracker))
     deltaLogger.info(`Result is ${JSON.stringify(dbResult)}`)
-    const event: PropertyChangedEvent = {
+    return {
         messageKind: "PropertyChanged",
         newValue: msg.newValue,
         node: msg.node,
@@ -128,14 +129,13 @@ const ChangePropertyFunction = async (
         sequenceNumber: 0, // dummy, will be changed for each participation before sending
         protocolMessages: [
             {
-                kind: "OldNode",
-                message: JSON.stringify(node),
-                data: []
+                kind: "AffectedNode",
+                message: `Node ${node.id} has been changed`,
+                data: [ { key: "node", value: node.id}]
             }
         ],
         oldValue: oldProperty.value
-    }
-    return event 
+    } as PropertyChangedEvent
 }
 
 export const propertyFunctions: DeltaFunction[] = [
