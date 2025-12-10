@@ -24,6 +24,8 @@
         "publish-docker": "bash scripts/tag-and-release-docker-image.sh"
     },
     "devDependencies": {
+        "@changesets/cli": "2.27.11",
+        "@changesets/config": "3.0.0",
         "@types/chai": "4.3.11",
         "@types/mocha": "10.0.10",
         "@types/pg": "8.11.6",
@@ -31,8 +33,6 @@
         "@typescript-eslint/parser": "6.13.2",
         "chai": "4.3.10",
         "changesets": "1.0.2",
-        "@changesets/cli": "2.27.11",
-        "@changesets/config": "3.0.0",
         "eslint": "8.56.0",
         "mocha": "11.0.1",
         "prettier": "3.1.0",
@@ -58,5 +58,8 @@
         "./packages/test",
         "./scripts",
         "."
-    ]
+    ],
+    "dependencies": {
+        "pg-monitor": "^3.1.0"
+    }
 }

@@ -12,7 +12,7 @@ import {
 } from "@lionweb/json-diff"
 import pgPromise, { ColumnSet } from "pg-promise"
 import pg from "pg-promise/typescript/pg-subset.js"
-import { dbLogger, deltaLogger, UnknownObjectType } from "../apiutil/index.js"
+import { dbLogger, UnknownObjectType } from "../apiutil/index.js"
 import { CONTAINMENTS_TABLE, DbConnection, LionWebTask, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "../database/index.js"
 import { TableHelpers } from "../main.js"
 import { MetaPointersTracker } from "../metapointers/MetaPointers.js"
@@ -297,7 +297,7 @@ export class DbChanges {
         newNodes: LionWebJsonNode[],
         task: LionWebTask | DbConnection
     ): Promise<void> {
-        deltaLogger.info(`populateFromDbChanges`)
+        // deltaLogger.info(`populateFromDbChanges`)
         await metaPointersTracker.populate(collector => {
             this.updatesPropertyTable.values().forEach(table => table.forEach(e => collector.considerAddingMetaPointer(e.property)))
             this.updatesContainmentTable.values().forEach(table => table.forEach(e => collector.considerAddingMetaPointer(e.containment)))

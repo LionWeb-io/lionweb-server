@@ -1,19 +1,19 @@
-import { deltaLogger, isInternalQueryError, retrieveParentsDB } from "@lionweb/server-common";
+import { deltaLogger, isInternalQueryError, DB } from "@lionweb/server-common";
 import { DeltaValidator } from "@lionweb/server-delta-definitions"
-import { ErrorEvent, DeltaRequest, isDeltaResponse, DeltaCommand, DeltaEvent } from "@lionweb/server-delta-shared"
+import { ErrorEvent, DeltaRequest, isDeltaResponse, DeltaCommand } from "@lionweb/server-delta-shared"
 import { ValidationResult } from "@lionweb/validation"
 import WebSocket from 'ws';
 import { DeltaContext } from "./DeltaContext.js"
 import {
     childFunctions,
-    DeltaFunction,
+    DeltaFunction, issuesToProtocolNessages,
     MessageFromClient,
     MessageFunction,
     partitionFunctions,
     propertyFunctions
 } from "./commands/index.js"
 import { activeSockets } from "./DeltaClientAdmin.js"
-import { isErrorEvent, newErrorEvent } from "./events.js"
+import { affectedNodeMessage, affectedPartitionMessage, isErrorEvent, newErrorEvent } from "./events.js"
 import { ParticipationInfo, requestFunctions } from "./queries/index.js"
 
 export function isQueryRequestType(object: MessageFromClient): object is DeltaRequest {
@@ -48,7 +48,7 @@ class DeltaProcessor {
      */
     processDelta = async (socket: WebSocket, delta: MessageFromClient): Promise<void> => {
         // first try to get the `messageKind`
-        deltaLogger.info(`processDelta messageKind ${delta?.messageKind}`)
+        deltaLogger.debug(`processDelta messageKind ${delta?.messageKind}`)
         const messageKind = delta.messageKind
         if (typeof messageKind !== "string") {
             deltaLogger.error(`processDelta 1: messageKind should be a string but is a '${typeof messageKind}'`)
@@ -89,13 +89,7 @@ class DeltaProcessor {
                     participationId: "none",
                     commandId: "??" //msg.queryId
                 }],
-                protocolMessages: this.deltaValidator.validationResult.issues.map(issue => {
-                    return {
-                        kind: issue.issueType,
-                        message: issue.errorMsg(),
-                        data: []
-                    }
-                })
+                protocolMessages: issuesToProtocolNessages(this.deltaValidator.validationResult.issues)
             }
             socket.send(JSON.stringify(response))
             return
@@ -114,25 +108,28 @@ class DeltaProcessor {
             const response = await func(participation!, delta, this.context!)
             // Errors and responses to requests only need to be sent to the client that sent the message
             if (response.messageKind === "ErrorEvent" || isDeltaResponse(response)) {
+                deltaLogger.info(`Sending Error Event or response ${JSON.stringify(response)}`)
                 socket.send(JSON.stringify(response))
             } else {
                 // To whom needs this Event (yes, it's an Event now) need to be sent.
                 // For most/all events, we need to know whether the others are subscribed to the partition wjhre changes took place
                 // TODO: Add the changed partitions to the result of the processing function, so we know to whom to send.
-                deltaLogger.info(`looking foir affected nodes in ${response}`)
+                deltaLogger.debug(`looking foir affected nodes in ${response}`)
                 const affectedNodeData = response.protocolMessages.find(m => m.kind == "AffectedNode")
                 const affectedNode = affectedNodeData?.data?.find(kv => kv.key === "node")
                 if (affectedNode === undefined) {
-                    deltaLogger.info("No affected node found, not sending delta's")
+                    deltaLogger.debug("No affected node found, not sending delta's")
                 } else {
-                    const parentChain = await retrieveParentsDB(this.context!.dbConnection, participation!.repositoryData!, affectedNode.value)
+                    // TODO The parent is retrieved outside the transaction, could already be changed by another delta.
+                    const parentChain = await DB.retrieveParentsDB(this.context!.dbConnection, participation!.repositoryData!, affectedNode.value)
                     if (parentChain === undefined) {
                         throw new Error("PARENTCHAIN UNDEFINED")
                     } else {
-                        deltaLogger.info(`PARENT CHAIN IS ${parentChain.map(p => `${p.id} parent ${p.parent} | `)}`)
+                        deltaLogger.debug(`PARENT CHAIN IS ${parentChain.map(p => `${p.id} parent ${p.parent} | `)}`)
                     }
                     const affectedPartition = parentChain[parentChain.length-1]
                     if (affectedPartition !== undefined) {
+                        response.protocolMessages.push(affectedPartitionMessage(affectedPartition.id))
                         for (const participationInfo of activeSockets.values()) {
                             if (participationInfo.subscribedPartitions.includes(affectedPartition.id)) {
                                 response.sequenceNumber = participationInfo.eventSequenceNumber++

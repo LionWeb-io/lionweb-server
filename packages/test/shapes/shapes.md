@@ -63,12 +63,15 @@ before
     classDiagram
     direction TD
     %% other possibilites: LR RL DT TB (same as TD)
-    class `rectangles:Diagram`  {
+    class rectangles["Diagram"]  {
+        
     }
     class `rectangle-0` {
     }
     class `connection-0` {
     }
+    class AAA["Animal with a label"]
+
 `rectangles:Diagram` *-- `connection-0`
 `rectangles:Diagram` *-- `rectangle-0`
 `rectangles:Diagram` *-- `rectangle-1`
@@ -83,16 +86,17 @@ After:
     classDiagram
     direction TD
     %% other possibilites: LR RL DT TB (same as TD)
-    class `rectangles:Diagram`  {
+    class rectangles["Diagram"]  {
     }
     class `rectangle-0` {
     }
     class `connection-0` {
     }
-`rectangles:Diagram` *-- `connection-0`
-`rectangles:Diagram` *-- `rectangle-0`
-`rectangles:Diagram` *-- `rectangle-1`
-`rectangles:Diagram` *-- `rectangle-2`
+   
+rectangles *-- `connection-0`
+rectangles *-- `rectangle-0`
+rectangles *-- `rectangle-1`
+rectangles *-- `rectangle-2`
 `connection-0` --> `rectangle-0` : start
 `connection-0` --> `rectangle-1` : end
 ```

@@ -4,7 +4,10 @@ import {
     AddPartitionCommand,
     ChangePropertyCommand,
     DeletePropertyCommand,
-    SubscribeToPartitionContentsRequest
+    SubscribeToPartitionContentsRequest,
+    UnsubscribeFromPartitionContentsRequest,
+    AddChildCommand,
+    DeleteChildCommand
 } from "@lionweb/server-delta-shared"
 
 let queryId = 1
@@ -24,6 +27,15 @@ export const newSignOnRequest = (repo: string, clientId: string): SignOnRequest 
 export const newSubscribeToPartitionRequest = (repo: string, clientId: string, partition: string): SubscribeToPartitionContentsRequest => {
     return {
         messageKind: "SubscribeToPartitionContents",
+        partition: partition,
+        queryId: `query-id-${queryId++}`,
+        protocolMessages: []
+    }
+}
+
+export const newUnSubscribeToPartitionRequest = (repo: string, clientId: string, partition: string): UnsubscribeFromPartitionContentsRequest => {
+    return {
+        messageKind: "UnsubscribeFromPartitionContents",
         partition: partition,
         queryId: `query-id-${queryId++}`,
         protocolMessages: []
@@ -94,7 +106,51 @@ export const newAddPartitionCommand = (nodeid: string, classifierKey: string): A
             }]
         },
         protocolMessages: []
-    }    
+    }
+}
+
+export const newAddChildCommand = (nodeid: string, parent: string, containmentKey: string): AddChildCommand => {
+    return {
+        messageKind: "AddChild",
+        commandId: `command-id-${queryId++}`,
+        containment: {
+            language: "LogoProgram",
+            key: containmentKey,
+            version: "1"
+        },
+        index: 0,
+        parent: parent,
+        newChild: {
+            nodes: [{
+                id: nodeid,
+                parent: parent,
+                properties: [
+                    { property: { language: "LogoProgram", key: "-key-MoveCommand-distance", version: "1"}, value: "20"}
+                ],
+                containments: [],
+                references: [],
+                classifier: { language: "LogoProgram", key: "-key-MoveCommand", version: "1"},
+                annotations: []
+            }]
+        },
+        protocolMessages: []
+    }
+}
+
+export const newDeleteChildCommand = (nodeid: string, index: number, parent: string, containmentKey: string): DeleteChildCommand => {
+    return {
+        messageKind: "DeleteChild",
+        commandId: `command-id-${queryId++}`,
+        containment: {
+            language: "LogoProgram",
+            key: containmentKey,
+            version: "1"
+        },
+        index: index,
+        parent: parent,
+        deletedChild: nodeid,
+        protocolMessages: []
+    }
 }
 
 export const ALL = {

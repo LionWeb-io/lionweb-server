@@ -15,7 +15,9 @@ import {
     requestLogger,
     SCHEMA_PREFIX,
     ServerConfig,
-    initializeCommons, deltaLogger
+    initializeCommons,
+    deltaLogger,
+    bulkLogger
 } from "@lionweb/server-common"
 import { registerDBAdmin, repositoryStore } from "@lionweb/server-dbadmin"
 import { registerInspection } from "@lionweb/server-inspection"
@@ -76,7 +78,7 @@ app.use(verifyToken)
 
 const dbConnection = DbConnection.getInstance()
 dbConnection.postgresConnection = postgresConnectionWithoutDatabase
-dbConnection.dbConnection = postgresConnectionWithDatabase
+dbConnection.pgDatabaseConnection = postgresConnectionWithDatabase
 dbConnection.pgp = pgPromise()
 const { TransactionMode } = pgPromise.txMode
 const mode = new TransactionMode({
@@ -152,11 +154,9 @@ async function setupDatabase() {
     }
 
     // Initialize repositories
-    deltaLogger.info("@@@@@@@@@@@@@@@@")
     await repositoryStore.initialize()
     const existingRepositoryNames = repositoryStore.allRepositories().map(r => r.repository_name)
     requestLogger.info("Existing repositories " + existingRepositoryNames)
-    console.log(":REPOS " + ServerConfig.getInstance().createRepositories())
     for (const repository of ServerConfig.getInstance().createRepositories()) {
         const repoCreation = repository.create
         switch (repoCreation) {
@@ -164,7 +164,7 @@ async function setupDatabase() {
                 requestLogger.info(`Creating new repository ${repository.name} (config option 'always')`)
                 if (existingRepositoryNames.includes(repository.name)) {
                     // need to remove the repository first
-                    dbAdminApi.tx(async (task: LionWebTask) => {
+                    await dbAdminApi.tx(async (task: LionWebTask) => {
                         const deletedn = await dbAdminApi.deleteRepository(task, {
                             clientId: "setup",
                             repository: {
@@ -225,14 +225,14 @@ async function startServer() {
     const serverPort = ServerConfig.getInstance().serverPort()
 
     httpServer.listen(serverPort, () => {
-        requestLogger.info(`Server is running at port ${serverPort} =========================================================`)
+        bulkLogger.info(`Server is running at port ${serverPort} =========================================================`)
         if (expectedToken == null) {
-            requestLogger.warn(
+            bulkLogger.warn(
                 "WARNING! The server is not protected by a token. It can be accessed freely. " +
                     "If that is NOT your intention act accordingly."
             )
         } else if (expectedToken.length < 24) {
-            requestLogger.warn("WARNING! The used token is quite short. Consider using a token of 24 characters or more.")
+            bulkLogger.warn("WARNING! The used token is quite short. Consider using a token of 24 characters or more.")
         }
     })
     
@@ -245,7 +245,6 @@ async function startServer() {
             deltaLogger.info(`Server Received: ${message.toString()}`);
             const msg = JSON.parse(message.toString()) as unknown as (DeltaCommand | DeltaRequest)
             runWithTryDelta(socket, msg)
-            deltaLogger.info(`Server Called Delta processor`);
         });
 
         socket.on('close', () => {

@@ -1,7 +1,8 @@
+import { dbLogger } from "../apiutil/index.js"
 import { InternalQueryError } from "./GuardFunctions.js"
 import { LionWebJsonNode } from "@lionweb/json"
 import { ResponseMessage } from "@lionweb/server-shared"
-import { CONTAINMENTS_TABLE, DbConnection, METAPOINTERS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE, RepositoryData } from "../database/index.js"
+import { CONTAINMENTS_TABLE, DbConnection, LionWebTask, METAPOINTERS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE, RepositoryData } from "../database/index.js"
 import { isLionWebJsonNode } from "./GuardFunctions.js"
 import { sqlArrayFromNodeIdArray } from "./PgHelpers.js"
 
@@ -25,7 +26,14 @@ export function is_NodesForQueryQuery_ResultType(o: unknown): o is NodesForQuery
     return Array.isArray(o) && o.every(n => isLionWebJsonNode(n))
 }
 
-export const retrieveFullNodesDB = async (dbConnection: DbConnection, repo: RepositoryData, nodeQuery: string): Promise<LionWebJsonNode[]> => {
+/**
+ * Retrieve the full LionWeb nodes from the database, based on the nodes that result from
+ * the given `nodesQuery`.
+ * Not recursive!
+ * @param nodesQuery string SQL query to select the set of nodes to retrieve.
+ *                   Must have an `id` property.
+ */
+export const retrieveFullNodesFromQueryDB = async (dbConnection: DbConnection, repo: RepositoryData, nodeQuery: string): Promise<LionWebJsonNode[]> => {
     const queryResult =  await dbConnection.query(repo, retrieveFullNodesFromQuerySQL(nodeQuery))
     if (is_NodesForQueryQuery_ResultType(queryResult)) {
         return queryResult
@@ -42,6 +50,7 @@ export const retrieveFullNodesDB = async (dbConnection: DbConnection, repo: Repo
             ])
     }
 }
+
 /**
  * Query to retrieve the full LionWeb nodes from the database.
  * @param nodesQuery string SQL query to select the set of nodes to retrieve.
@@ -151,31 +160,27 @@ left join ${METAPOINTERS_TABLE} classifier on classifier.id = relevant_nodes.cla
 `
 }
 
-export const retrieveNodeForIdListSQL = (nodeid: string[]): string => {
+export const retrieveFullNodesFromIdListSQL = (nodeid: string[]): string => {
     const sqlNodeCollection = sqlArrayFromNodeIdArray(nodeid)
     return retrieveFullNodesFromQuerySQL(`SELECT * FROM ${NODES_TABLE} WHERE id IN ${sqlNodeCollection}\n`)
 }
 
 /**
- * Query that will recursively get all child (ids) of all nodes in _nodeIdList_
- * Note that annotations are also considered children for this method.
- * This works ok because we use the _parent_ column to find the children, not the containment or annotation.
- * @param nodeidlist
- * @param depthLimit
+ * Retrieve the full nodes for all the node id's in `nodeiIdList`.
+ * @param task
+ * @param repositoryData
+ * @param nodeIdList
  */
-export const retrieveNodeTreeForIdListSQL = (nodeidlist: string[], depthLimit: number): string => {
-    const sqlArray = sqlArrayFromNodeIdArray(nodeidlist)
-    return `-- Recursively retrieve node tree
-            WITH RECURSIVE tmp AS (
-                SELECT id, parent, 0 as depth
-                FROM ${NODES_TABLE}
-                WHERE id IN ${sqlArray}    
-                UNION
-                    SELECT nn.id, nn.parent, tmp.depth + 1
-                    FROM ${NODES_TABLE} as nn
-                    INNER JOIN tmp ON tmp.id = nn.parent
-                    WHERE tmp.depth < ${depthLimit} -- AND nn.id NOT in ${"otherArray"}
-            )
-            SELECT * FROM tmp;
-    `
+export async function retrieveFullNodesFromIdListDB(
+    task: LionWebTask,
+    repositoryData: RepositoryData,
+    nodeIdList: string[]
+): Promise<LionWebJsonNode[]> {
+    dbLogger.info("RetrieveNodes.getNodesFromIdListIncludingChildren: " + nodeIdList)
+    // this is necessary as otherwise the query would crash as it is not intended to be run on an empty set
+    if (nodeIdList.length == 0) {
+        return []
+    }
+    return await task.query(repositoryData, retrieveFullNodesFromIdListSQL(nodeIdList))
 }
+

@@ -1,5 +1,6 @@
-import { LionWebJsonNode } from "@lionweb/server-delta-shared"
-import { dbLogger } from "../apiutil/index.js"
+import { LionWebJsonNode } from "@lionweb/json"
+import { dbLogger, deltaLogger } from "../apiutil/index.js"
+import { NodeRecord } from "../database/index.js"
 import { TableHelpers } from "../main.js"
 import { MetaPointersTracker } from "../metapointers/MetaPointers.js"
 
@@ -16,10 +17,10 @@ export function insertNodeArraySQL(tbsNodesToCreate: LionWebJsonNode[], metaPoin
         if (tbsNodesToCreate === undefined || tbsNodesToCreate.length === 0) {
             return query
         }
-        const node_rows = tbsNodesToCreate.map(node => {
+        const node_rows: NodeRecord[] = tbsNodesToCreate.map(node => {
             return {
                 id: node.id,
-                classifier: TableHelpers.pgp.as.format(metaPointersTracker.forMetaPointer(node.classifier).toString()),
+                classifier: metaPointersTracker.forMetaPointer(node.classifier), //TableHelpers.pgp.as.format(metaPointersTracker.forMetaPointer(node.classifier).toString()),
                 annotations: node.annotations,
                 parent: node.parent
             }
@@ -68,4 +69,9 @@ export function insertContainmentsSQL(tbsNodesToCreate: LionWebJsonNode[], metaP
         query += TableHelpers.pgp.helpers.insert(insertRowData, TableHelpers.CONTAINMENTS_COLUMN_SET) + ";\n"
     }
     return query
+}
+
+export const QUERIES = {
+    insertNodeArraySQL,
+    insertContainmentsSQL,
 }

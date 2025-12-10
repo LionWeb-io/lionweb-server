@@ -1,4 +1,12 @@
-import { ErrorEvent, DeltaCommand, DeltaRequest, ProtocolMessage } from "@lionweb/server-delta-shared"
+import {
+    ErrorEvent,
+    DeltaCommand,
+    DeltaRequest,
+    ProtocolMessage,
+    LionWebJsonNode,
+    KeyValuePair,
+    LionWebId
+} from "@lionweb/server-delta-shared"
 import { ParticipationInfo } from "./queries/index.js"
 
 export function isErrorEvent(object: unknown): object is ErrorEvent {
@@ -24,6 +32,21 @@ export const newErrorEvent = (
             }
         ],
         sequenceNumber: participation.eventSequenceNumber
+    }
+}
+
+export function affectedNodeMessage(node: LionWebJsonNode): ProtocolMessage {
+    return {
+        kind: "AffectedNode",
+        message: `Node ${node.id} has been changed`,
+        data: [ { key: "node", value: node.id}]
+    }
+}
+export function affectedPartitionMessage(nodeid: LionWebId): ProtocolMessage {
+    return {
+        kind: "AffectedPartition",
+        message: `Partition ${nodeid} has a delta change`,
+        data: [ { key: "node", value: nodeid}]
     }
 }
 

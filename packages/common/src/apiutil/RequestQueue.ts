@@ -1,5 +1,3 @@
-import { requestLogger } from "./logging.js";
-
 /**
  * The RequestQueue keeps a queue of all requests done to the server and
  * executes them one by one in the order they are put into the queue (FIFO).

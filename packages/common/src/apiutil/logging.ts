@@ -49,14 +49,18 @@ const pinoLogger = pino(
     transport
 )
 
+export const bulkLogger = pinoLogger.child({ type: "bulk" })
 export const requestLogger = pinoLogger.child({ type: "request" })
 export const expressLogger = pinoLogger.child({ type: "express" })
 export const dbLogger = pinoLogger.child({ type: "database" })
 export const traceLogger = pinoLogger.child({ type: "trace" })
 export const deltaLogger = pinoLogger.child({ type: "delta" })
+export const messageLogger = pinoLogger.child({ type: "message" })
 
+bulkLogger.level = ServerConfig.getInstance().bulkLog()
 requestLogger.level = ServerConfig.getInstance().requestLog()
 traceLogger.level = ServerConfig.getInstance().traceLog()
 expressLogger.level = ServerConfig.getInstance().expressLog()
 dbLogger.level = ServerConfig.getInstance().databaseLog()
 deltaLogger.level = ServerConfig.getInstance().deltaLog()
+messageLogger.level = ServerConfig.getInstance().messageLog()

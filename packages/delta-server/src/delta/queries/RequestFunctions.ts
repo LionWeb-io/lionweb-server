@@ -1,4 +1,4 @@
-import { deltaLogger, retrieveNodesDB } from "@lionweb/server-common"
+import { deltaLogger, LionWebTask, DB } from "@lionweb/server-common"
 import {
     DeltaEvent,
     DeltaResponse,
@@ -48,22 +48,27 @@ const SubscribeToPartitionContentsRequestFunction = async (
     ctx: DeltaContext
 ): Promise<DeltaEvent | DeltaResponse> => {
     deltaLogger.info("Called SubscribeToPartitionContentsRequestFunction " + msg.messageKind)
-    if (participation.subscribedPartitions.includes(msg.partition)) {
-        return newErrorEvent("AlreadySubscribed", `Already subscribed to partition ${msg.partition}`, msg, participation)
-    }
-    participation.subscribedPartitions.push(msg.partition)
-    const queryResult = await retrieveNodesDB(ctx.dbConnection, participation.repositoryData!, [msg.partition], Number.MAX_SAFE_INTEGER)
-    return {
-        messageKind: "SubscribeToPartitionContentsResponse",
-        contents: {nodes: queryResult},
-        protocolMessages: [],
-        queryId: msg.queryId
-    } as SubscribeToPartitionContentsResponse
+    const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
+        if (participation.subscribedPartitions.includes(msg.partition)) {
+            return newErrorEvent("AlreadySubscribed", `Already subscribed to partition ${msg.partition}`, msg, participation)
+        }
+        participation.subscribedPartitions.push(msg.partition)
+        const queryResult = await DB.retrieveFullNodesRecursiveDB(task, participation.repositoryData!, [msg.partition], Number.MAX_SAFE_INTEGER)
+        // console.log(`=========== + ${JSON.stringify(queryResult)}`)
+        return {
+            messageKind: "SubscribeToPartitionContentsResponse",
+            contents: { nodes: queryResult },
+            protocolMessages: [],
+            queryId: msg.queryId
+        } as SubscribeToPartitionContentsResponse
+    })
+    return result
 }
 
 const UnsubscribeFromPartitionContentsRequestFunction = (
     participation: ParticipationInfo,
-    msg: UnsubscribeFromPartitionContentsRequest, _ctx: DeltaContext
+    msg: UnsubscribeFromPartitionContentsRequest,
+    _ctx: DeltaContext
 ): DeltaEvent | DeltaResponse => {
     deltaLogger.info("Called UnsubscribeFromPartitionContentsRequestFunction " + msg.messageKind)
     if (!participation.subscribedPartitions.includes(msg.partition)) {
@@ -78,7 +83,11 @@ const UnsubscribeFromPartitionContentsRequestFunction = (
     } as UnsubscribeFromPartitionContentsResponse
 }
 
-const SignOnRequestFunction = async (participation: ParticipationInfo, msg: SignOnRequest, _ctx: DeltaContext): Promise<DeltaEvent | DeltaResponse> => {
+const SignOnRequestFunction = async (
+    participation: ParticipationInfo,
+    msg: SignOnRequest,
+    _ctx: DeltaContext
+): Promise<DeltaEvent | DeltaResponse> => {
     deltaLogger.info("Called SignOnRequestFunction " + msg.messageKind)
     const error = validateSignOnRequest(participation, msg)
     if (error !== undefined) {
@@ -117,23 +126,38 @@ const SignOffRequestFunction = (participation: ParticipationInfo, msg: SignOffRe
     } as SignOffResponse
 }
 
-const ListPartitionsRequestFunction = (participation: ParticipationInfo, msg: ListPartitionsRequest, _ctx: DeltaContext): DeltaEvent | DeltaResponse => {
+const ListPartitionsRequestFunction = async (
+    participation: ParticipationInfo,
+    msg: ListPartitionsRequest,
+    _ctx: DeltaContext
+): Promise<DeltaEvent | DeltaResponse> => {
     deltaLogger.info("Called ListPartitionsRequestFunction " + msg.messageKind)
-    const response: ListPartitionsResponse = {
-        messageKind: "ListPartitionsResponse",
-        partitions: { nodes: [] },
-        queryId: msg.queryId,
-        protocolMessages: []
-    }
-    return response
+    const result = await _ctx.dbConnection.tx(async (_task: LionWebTask) => {
+        const response: ListPartitionsResponse = {
+            messageKind: "ListPartitionsResponse",
+            partitions: { nodes: [] },
+            queryId: msg.queryId,
+            protocolMessages: []
+        }
+        return response
+    })
+    return result
 }
 
-const GetAvailableIdsRequestFunction = (participation: ParticipationInfo, msg: GetAvailableIdsRequest, _ctx: DeltaContext): DeltaEvent | DeltaResponse => {
+const GetAvailableIdsRequestFunction = (
+    participation: ParticipationInfo,
+    msg: GetAvailableIdsRequest,
+    _ctx: DeltaContext
+): DeltaEvent | DeltaResponse => {
     deltaLogger.info("Called GetAvailableIdsRequestFunction " + msg.messageKind)
     return errorNotImplementedEvent(msg)
 }
 
-const ReconnectRequestFunction = (participation: ParticipationInfo, msg: ReconnectRequest, _ctx: DeltaContext): DeltaEvent | DeltaResponse => {
+const ReconnectRequestFunction = (
+    participation: ParticipationInfo,
+    msg: ReconnectRequest,
+    _ctx: DeltaContext
+): DeltaEvent | DeltaResponse => {
     deltaLogger.info("Called ReconnectRequestFunction " + msg.messageKind)
     return errorNotImplementedEvent(msg)
 }

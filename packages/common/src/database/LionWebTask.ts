@@ -10,7 +10,7 @@ import { addRepositorySchema, RepositoryData } from "./DbConnection.js"
  * This is a wrapper for a pg-promise task.
  * @see pgPromise.ITask
  */
-export class LionWebTask {
+export class    LionWebTask {
     task: pgPromise.ITask<object> & object
 
     /**
@@ -57,7 +57,6 @@ export class LionWebTask {
         traceLogger.info("LionWebTask.multi")
         query = addRepositorySchema(query, repositoryData)
         const multiResult = await this.task.multi(query)
-        console.log(`MULTI ${JSON.stringify(multiResult)}`)
         // Remove first two elements since these are the result of the inserted search_path and schema existence check
         multiResult.shift()
         multiResult.shift()

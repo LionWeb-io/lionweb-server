@@ -10,7 +10,7 @@ import {
     newSignOnRequest,
     newSubscribeToPartitionRequest
 } from "./commands.js"
-import { readModel } from "./utils.js"
+import { printChunk, readModel } from "./utils.js"
 
 import { test, assert, describe, beforeAll, beforeEach, afterEach } from "vitest"
 // const { deepEqual, equal } = assert
@@ -56,10 +56,8 @@ collection.forEach(withoutHistory => {
             await deltaApiClient.connect()
             await delay(200)
             await deltaApiClient.sendRequest(newSignOnRequest(repository, "TestClient"))
-            await deltaApiClient.sendRequest(newSubscribeToPartitionRequest(repository, "TestClient", "ID-2"))
+            // await deltaApiClient.sendRequest(newSubscribeToPartitionRequest(repository, "TestClient", "ID-2"))
             // await delay(200)
-            await deltaApiClient.sendCommand(newAddPropertyCommand("node-122", "value-1", "-key-Concept-name"))
-            await deltaApiClient.sendCommand(newChangePropertyCommand("node-124", "value-2", "-key-Concept-name"))
         })
 
         beforeEach(async function () {
@@ -74,12 +72,17 @@ collection.forEach(withoutHistory => {
                 // return
             }
             const result = await bulkApiClient.bulk.store(baseFullChunk)
-            // console.log("CHUNK " + JSON.stringify(baseFullChunk, null, 2))
+            printChunk(baseFullChunk)
             if (result.status !== HttpSuccessCodes.Ok) {
                 console.log("Cannot store initial chunk: " + JSON.stringify(result.body))
                 // initError = JSON.stringify(result.body)
                 // return
             }
+
+            await deltaApiClient.sendRequest(newSubscribeToPartitionRequest(repository, "TestClient", "ID-2"))
+            await deltaApiClient.sendCommand(newAddPropertyCommand("node-122", "value-1", "-key-Concept-name"))
+            await deltaApiClient.sendCommand(newChangePropertyCommand("node-124", "value-2", "-key-Concept-name"))
+            // await delay(200)
 
             const repositories = await bulkApiClient.dbAdmin.listRepositories()
             console.log("repositories: " + JSON.stringify(repositories.body.repositories))
@@ -92,15 +95,15 @@ collection.forEach(withoutHistory => {
         describe("Simple Delta tests", () => {
             test("AddPartition", async () => {
                 assert(initError === "", initError)
-                deltaApiClient.sendCommand(newAddPartitionCommand("ID-NewPartition16","key"))
+                deltaApiClient.sendCommand(newAddPartitionCommand("ID-NewPartition20","key"))
                 await delay(200)
 
-                deltaApiClient.sendRequest(newSubscribeToPartitionRequest(repository, "TestClient", "ID-NewPartition16",))
-                deltaApiClient.sendCommand(newDeletePropertyCommand("ID-NewPartition16", "-key-Partition-name"))
+                deltaApiClient.sendRequest(newSubscribeToPartitionRequest(repository, "TestClient", "ID-NewPartition20",))
+                deltaApiClient.sendCommand(newDeletePropertyCommand("ID-NewPartition20", "-key-Partition-name"))
                 deltaApiClient.sendCommand(newDeletePropertyCommand("ID-2", "-key-Partition-name"))
                 // deltaApiClient.sendCommand(newDeletePropertyCommand("ID-2", "LionCore-builtins-INamed-name"))
                 deltaApiClient.sendCommand(newChangePropertyCommand("ID-12", "NEW value", "LionCore-builtins-INamed-name"))
-                deltaApiClient.sendCommand(newAddPropertyCommand("ID-NewPartition16", "value-1", "LionCore-builtins-INamed-name"))
+                deltaApiClient.sendCommand(newAddPropertyCommand("ID-NewPartition20", "value-1", "Lione-builtins-INamed-name"))
 
                 await delay(200)
                 console.log("SentMessages")

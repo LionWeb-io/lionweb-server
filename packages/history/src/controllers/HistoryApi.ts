@@ -4,7 +4,7 @@
 // - pack response
 import { getRepositoryData } from "@lionweb/server-dbadmin"
 import { HttpClientErrors, ListPartitionsResponse, StoreResponse } from "@lionweb/server-shared"
-import { lionwebResponse } from "@lionweb/server-common"
+import { bulkLogger, lionwebResponse } from "@lionweb/server-common"
 import { Request, Response } from "express"
 import { HistoryContext } from "../main.js"
 import { getIntegerParam, isParameterError, FOREVER, dbLogger, requestLogger, LionWebTask } from "@lionweb/server-common"
@@ -22,7 +22,7 @@ export class HistoryApiImpl implements HistoryApi {
      * @param response The list of all partition nodes, without children or annotations
      */
     listPartitions = async (request: Request, response: Response): Promise<void> => {
-        requestLogger.info(` * history listPartitions request received, with body of ${request.headers["content-length"]} bytes`)
+        bulkLogger.info(` * history listPartitions request received, with body of ${request.headers["content-length"]} bytes`)
         const repositoryData = await getRepositoryData(request)
         requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
         const repoVersion = getIntegerParam(request, "repoVersion", FOREVER)
@@ -52,7 +52,7 @@ export class HistoryApiImpl implements HistoryApi {
      * @param response
      */
     retrieve = async (request: Request, response: Response): Promise<void> => {
-        requestLogger.info(` * retrieve request received, with body of ${request.headers["content-length"]} bytes`)
+        bulkLogger.info(` * retrieve request received, with body of ${request.headers["content-length"]} bytes`)
         const repositoryData = await getRepositoryData(request)
         requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
         const depthLimit = getIntegerParam(request, "depthLimit", Number.MAX_SAFE_INTEGER)

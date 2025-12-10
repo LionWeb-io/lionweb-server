@@ -42,6 +42,9 @@ export type ServerConfigJson = {
         trace?: LevelWithSilent
         database?: LevelWithSilent
         express?: LevelWithSilent
+        delta?: LevelWithSilent
+        bulk?: LevelWithSilent
+        message?: LevelWithSilent
     }
     postgres: {
         database: {
@@ -138,7 +141,12 @@ export class ServerConfig {
 
     requestLog(): LevelWithSilent {
         const result = this?.config?.logging?.request
-        return verbosity(result, "warn")
+        return verbosity(result, "error")
+    }
+
+    bulkLog(): LevelWithSilent {
+        const result = this?.config?.logging?.bulk
+        return verbosity(result, "info")
     }
 
     traceLog(): LevelWithSilent {
@@ -148,17 +156,21 @@ export class ServerConfig {
 
     databaseLog(): LevelWithSilent {
         const result = this.config?.logging?.database
-        return verbosity(result, "warn")
+        return verbosity(result, "error")
     }
 
     expressLog(): LevelWithSilent {
         const result = this?.config?.logging?.express
         return verbosity(result, "error")
     }
-    
-    // TODO Add deltalog in the serverconfig.json
+
     deltaLog(): LevelWithSilent {
-        return "info"
+        const result = this.config?.logging?.delta
+        return verbosity(result, "info")
+    }
+    messageLog(): LevelWithSilent {
+        const result = this.config?.logging?.message
+        return verbosity(result, "error")
     }
 
     pgHost(): string {

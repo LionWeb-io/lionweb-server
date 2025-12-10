@@ -11,7 +11,6 @@ import {
 } from "@lionweb/server-shared"
 import {
     createId,
-    currentRepoVersionSQL,
     EMPTY_CHUNKS,
     LionWebTask,
     nodesToChunk,
@@ -19,8 +18,7 @@ import {
     RepositoryData,
     requestLogger,
     traceLogger,
-    retrieveNodesSQL,
-    versionResultToResponse
+    SQL, DB,
 } from "@lionweb/server-common"
 import { LionWebJsonChunk } from "@lionweb/json"
 import { BulkApiContext } from "../main.js"
@@ -52,7 +50,7 @@ export class BulkApiWorker {
         requestLogger.info(`BulkApiWorker.createPartitions repo [${JSON.stringify(repositoryData)}]`)
         // TODO Optimize: This reuses the "getNodesFromIdList", but that retrieves full nodes, which is not needed here
 
-        const existingNodes = await this.context.queries.getNodesFromIdListIncludingChildren(
+        const existingNodes = await DB.retrieveFullNodesFromIdListDB(
             task,
             repositoryData,
             chunk.nodes.map(n => n.id)
@@ -87,7 +85,7 @@ export class BulkApiWorker {
         idList: string[]
     ): Promise<QueryReturnType<DeletePartitionsResponse>> => {
         // TODO Optimize: only need parent, all features are not needed, can be optimized.
-        const partitions = await this.context.queries.getNodesFromIdListIncludingChildren(task, repositoryData, idList)
+        const partitions = await DB.retrieveFullNodesFromIdListDB(task, repositoryData, idList)
         const issues: ResponseMessage[] = []
         partitions.forEach(part => {
             if (part.parent !== null) {
@@ -142,15 +140,15 @@ export class BulkApiWorker {
             }
         }
 
-        const [versionResult, nodes] = await task.multi(repositoryData, currentRepoVersionSQL() + retrieveNodesSQL(nodeIdList, depthLimit))
+        const [versionResult, nodes] = await task.multi(repositoryData, SQL.currentRepoVersionSQL() + SQL.retrieveFullNodesRecursiveSQL(nodeIdList, depthLimit))
         requestLogger.info(`VERSION ${JSON.stringify(versionResult)}`)
-        requestLogger.info(`NODES ${JSON.stringify(nodes)}`)
+        requestLogger.trace(`NODES ${JSON.stringify(nodes)}`)
         return {
             status: HttpSuccessCodes.Ok,
             query: "",
             queryResult: {
                 success: true,
-                messages: [versionResultToResponse(versionResult)],
+                messages: [SQL.versionResultToResponse(versionResult)],
                 chunk: nodesToChunk(nodes, repositoryData.repository.lionweb_version)
             }
         }
@@ -172,7 +170,7 @@ export class BulkApiWorker {
                 result.push(createId(id))
             }
             // Check for already used or reserved ids and remove them if needed
-            const reservedByOtherClient = await this.context.queries.reservedNodeIdsByOtherClient(task, repositoryData, result)
+            const reservedByOtherClient = await DB.reservedNodeIdsByOtherClientDB(task, repositoryData, result)
             if (reservedByOtherClient.length > 0) {
                 reservedByOtherClient.forEach(reservedId => {
                     const index = result.indexOf(reservedId.node_id)
@@ -180,7 +178,7 @@ export class BulkApiWorker {
                 })
             }
             // Remove ids that are already in use
-            const usedIds = await this.context.queries.nodeIdsInUse(task, repositoryData, result)
+            const usedIds = await DB.nodeIdsInUseDB(task, repositoryData, result)
             if (usedIds.length > 0) {
                 usedIds.forEach(usedId => {
                     const index = result.indexOf(usedId.id)

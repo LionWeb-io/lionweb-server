@@ -6,10 +6,15 @@ export function postgresArrayFromStringArray(strings: string[]): string {
     return `{${strings.map(id => `"${id}"`).join(", ")}}`
 }
 
-export function nextRepoVersionSQL(clientId: string) {
+function nextRepoVersionSQL(clientId: string) {
     return `SELECT nextRepoVersion('${clientId}');\n`
 }
 
-export function currentRepoVersionSQL(): string {
+function currentRepoVersionSQL(): string {
     return `SELECT currentRepoVersion();\n`
+}
+
+export const VERSIONS_SQL = {
+    currentRepoVersionSQL,
+    nextRepoVersionSQL
 }

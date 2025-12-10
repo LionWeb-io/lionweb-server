@@ -57,13 +57,13 @@ export class RepositoryStore {
     }
 
     async refresh(): Promise<void> {
-        requestLogger.info("RepositoryStore REFRESH")
+        requestLogger.trace("RepositoryStore REFRESH")
         this.initialized = false
         await this.initialize()
     }
 
     async initialize() {
-        requestLogger.info("RepositoryStore initialize " + this.i++)
+        requestLogger.trace("RepositoryStore initialize " + this.i++)
         if (this.initialized) {
             // requestLogger.info("ALREADY initialized")
             return
@@ -88,7 +88,7 @@ export class RepositoryStore {
             await this.initialize()
         }
         const result = this.repositoryName2repository.get(repoName)
-        requestLogger.info(`getRepository(${repoName}) => ${JSON.stringify(result)}`)
+        requestLogger.trace(`getRepository(${repoName}) => ${JSON.stringify(result)}`)
         return result
     }
 

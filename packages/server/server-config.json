@@ -1,43 +1,44 @@
 {
-  "server": {
-    "serverPort": 3005,
-    "expectedToken": null
-  },
-  "startup": {
-    "createDatabase": "always",
-    "createRepositories": [
-        {
-            "name": "one",
-            "create": "always",
-            "history": false,
-            "lionWebVersion": "2023.1"
-        },
-        {
-            "name": "two",
-            "create": "always",
-            "history": false,
-            "lionWebVersion": "2023.1"
-        }
-    ]
-  },
-  "logging": {
-    "request": "info",
-    "trace": "silent",
-    "database": "info",
-    "express": "silent",
-      "delta": "info"
-  },
-  "postgres": {
-    "database": {
-      "host": "postgres",
-      "user": "postgres",
-      "db": "lionweb",
-      "password": "lionweb",
-      "port": "5432"
+    "server": {
+        "serverPort": 3005,
+        "expectedToken": null
     },
-    "certificates": {
-      "rootcert": null,
-      "rootcertcontent": null
+    "startup": {
+        "createDatabase": "always",
+        "createRepositories": [
+            {
+                "name": "one",
+                "create": "always",
+                "history": false,
+                "lionWebVersion": "2023.1"
+            },
+            {
+                "name": "two",
+                "create": "always",
+                "history": false,
+                "lionWebVersion": "2023.1"
+            }
+        ]
+    },
+    "logging": {
+        "request": "silent",
+        "trace": "silent",
+        "database": "silent",
+        "express": "silent",
+        "delta": "debug",
+        "message": "silent"
+    },
+    "postgres": {
+        "database": {
+            "host": "postgres",
+            "user": "postgres",
+            "db": "lionweb",
+            "password": "lionweb",
+            "port": "5432"
+        },
+        "certificates": {
+            "rootcert": null,
+            "rootcertcontent": null
+        }
     }
-  }
 }

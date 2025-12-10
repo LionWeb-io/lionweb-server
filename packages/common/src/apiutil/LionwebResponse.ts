@@ -1,6 +1,7 @@
 import { LionwebResponse } from "@lionweb/server-shared"
-import {Response} from "express";
-import {JsonStreamStringify} from "json-stream-stringify";
+import { Response } from "express"
+import { JsonStreamStringify } from "json-stream-stringify"
+import { bulkLogger } from "./logging.js"
 
 /**
  * Indicates the configuration of an existing repository.
@@ -29,5 +30,6 @@ export type QueryReturnType<T> = {
 
 export function lionwebResponse<T extends LionwebResponse>(response: Response, status: number, body: T): void {
     response.status(status)
+    bulkLogger.info(`<< response: status: ${status} body: ${JSON.stringify(body)}`)
     new JsonStreamStringify(body).pipe(response)
 }

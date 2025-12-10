@@ -16,7 +16,7 @@ export type ClientResponse<T extends LionwebResponse> = {
 }
 
 export function getVersionFromResponse(response: ClientResponse<LionwebResponse>): number {
-    return Number.parseInt(response.body.messages.find(m => m.data["version"] !== undefined).data["version"])
+    return Number.parseInt(response.body.messages.find(m => m.data["version"] !== undefined)?.data["version"])
 }
 
 // export type LionWebVersionType = "2023.1" | "2024.1"

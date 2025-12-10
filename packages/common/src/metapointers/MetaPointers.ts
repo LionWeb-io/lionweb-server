@@ -1,5 +1,5 @@
 import { LionWebJsonMetaPointer, LionWebJsonNode } from "@lionweb/json"
-import { deltaLogger, requestLogger } from "../apiutil/index.js"
+import { deltaLogger } from "../apiutil/index.js"
 import { DbConnection, LionWebTask, METAPOINTERS_TABLE, RepositoryData } from "../database/index.js"
 
 /**
@@ -13,6 +13,11 @@ export type MetaPointersMap = Map<string, number>
 // This is a Map from `repository name` to the MetaPointersMap of this repository.
 const globalMetaPointersMap: Map<string, MetaPointersMap> = new Map<string, Map<string, number>>()
 
+/**
+ * Initialize tghe global metapointers map with the contents of the metapointer table in the respository
+ * @param task
+ * @param repositoryData    The repository to initialize 
+ */
 export async function initializeGlobalMetaPointersMap(task: LionWebTask | DbConnection, repositoryData: RepositoryData): Promise<void> {
     if (!globalMetaPointersMap.has(repositoryData.repository.repository_name)) {
         globalMetaPointersMap.set(repositoryData.repository.repository_name, new Map<string, number>())
@@ -24,7 +29,7 @@ export async function initializeGlobalMetaPointersMap(task: LionWebTask | DbConn
     for(const mp of queryResult) {
         const mpKey = `${mp.language}@${mp._version}@${mp.key}`
         map.set(mpKey, mp.id)
-        deltaLogger.info(`Initializing key '${mpKey}' with id '${mp.id}'`)
+        // deltaLogger.info(`Initializing key '${mpKey}' with id '${mp.id}'`)
     }
 }
 
@@ -79,9 +84,13 @@ export class MetaPointersCollector {
 
     considerAddingMetaPointer(metaPointer: LionWebJsonMetaPointer) {
         const key = `${metaPointer.language}@${metaPointer.version}@${metaPointer.key}`
+        deltaLogger.info(`considerAddingMetaPointer ${key}`)
+
         if (hasInGlobalMetaPointersMap(this.repositoryData.repository.repository_name, key) || this.keysOfMetaPointers.has(key)) {
+            deltaLogger.info(`considerAddingMetaPointer ${key} already there`)
             return
         } else {
+            deltaLogger.info(`considerAddingMetaPointer ${key} added to liost`)
             this.keysOfMetaPointers.add(key)
             this.metaPointers.add(metaPointer)
         }
@@ -123,19 +132,37 @@ export class MetaPointersCollector {
 export class MetaPointersTracker {
     constructor(private repositoryData: RepositoryData) {}
 
-    async populateFromNodes(nodes: LionWebJsonNode[], task: LionWebTask | DbConnection) {
+    /**
+     * Add all metapointers inside all `nodes ` to the MetaPointersCollector
+     * @param nodes
+     * @param task
+     */
+    async populateFromNodes(nodes: LionWebJsonNode[], task: LionWebTask) {
         await this.populate(collector => {
-            nodes.forEach((node: LionWebJsonNode) => collector.considerNode(node))
+            nodes.forEach((node: LionWebJsonNode) => {
+                deltaLogger.info(`populateFromNodes ${node.id}`)
+                collector.considerNode(node)
+            })
         }, task)
     }
 
+    /**
+     * Find the id's for all metapointers returned by the `populationLogic` function.
+     * If a metapointer is new, it will be inserted into the metapointer table in the database.
+     * @param populationLogic   The function that finds all metapointers 
+     * @param dbConnection      The database connection.
+     */
     async populate(populationLogic: (collector: MetaPointersCollector) => void, dbConnection: DbConnection | LionWebTask): Promise<void> {
-        deltaLogger.info(`Populate ${this.repositoryData.repository.repository_name}`)
+        // deltaLogger.info(`Populate ${this.repositoryData.repository.repository_name}`)
         const localCollector = new MetaPointersCollector(this.repositoryData)
         populationLogic(localCollector)
         await localCollector.obtainIndexes(dbConnection)
     }
 
+    /**
+     * Get the database id for `metaPointer`
+     * @param metaPointer   The metepointer for which the id is returned.
+     */
     forMetaPointer(metaPointer: LionWebJsonMetaPointer): number {
         // deltaLogger.info("forMetaPointer")
         const key = `${metaPointer.language}@${metaPointer.version}@${metaPointer.key}`

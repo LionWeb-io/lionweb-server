@@ -1,4 +1,5 @@
 import {
+    bulkLogger,
     getClientIdParameter,
     getClientLog,
     getHistoryParameter,
@@ -68,7 +69,7 @@ export class DBAdminApiImpl implements DBAdminApi {
      * @param response
      */
     databaseExists = async (request: e.Request, response: e.Response) => {
-        requestLogger.info(` * databaseExists request received, with body of ${request.headers["content-length"]} bytes`)
+        bulkLogger.info(` * databaseExists request received, with body of ${request.headers["content-length"]} bytes`)
         await this.ctx.dbAdminApiWorker.databaseExists()
         lionwebResponse(response, HttpSuccessCodes.Ok, {
             success: true,
@@ -82,7 +83,7 @@ export class DBAdminApiImpl implements DBAdminApi {
      * @param response
      */
     createDatabase = async (request: e.Request, response: e.Response) => {
-        requestLogger.info(` * createDatabase request received, with body of ${request.headers["content-length"]} bytes`)
+        bulkLogger.info(` * createDatabase request received, with body of ${request.headers["content-length"]} bytes`)
         await this.ctx.dbAdminApiWorker.createDatabase()
         lionwebResponse(response, HttpSuccessCodes.Ok, {
             success: true,
@@ -96,7 +97,7 @@ export class DBAdminApiImpl implements DBAdminApi {
      * @param response
      */
     createRepository = async (request: e.Request, response: e.Response) => {
-        requestLogger.info(
+        bulkLogger.info(
             ` * createRepository request received, with body of ${request.headers["content-length"]} bytes params: ${JSON.stringify(
                 request.query
             )}`
@@ -152,7 +153,7 @@ export class DBAdminApiImpl implements DBAdminApi {
                 }
             }
             let result: QueryReturnType<string>
-            requestLogger.info(`  createRepository go!`)
+            requestLogger.trace(`  createRepository go!`)
             await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
                 result = await this.ctx.dbAdminApiWorker.createRepository(task, repositoryData)
                 await this.ctx.dbAdminApiWorker.addRepositoryToTable(task, repositoryData)
@@ -172,7 +173,7 @@ export class DBAdminApiImpl implements DBAdminApi {
      * @param response
      */
     listRepositories = async (request: Request, response: Response) => {
-        requestLogger.info(
+        bulkLogger.info(
             ` * listRepositories request received, with body of ${request.headers["content-length"]} bytes. ${getClientLog(request)}`
         )
         await repositoryStore.refresh()
@@ -195,7 +196,7 @@ export class DBAdminApiImpl implements DBAdminApi {
      * @param response
      */
     deleteRepository = async (request: e.Request, response: e.Response): Promise<void> => {
-        requestLogger.info(` * deleteRepository request received, with body of ${request.headers["content-length"]} bytes`)
+        bulkLogger.info(` * deleteRepository request received, with body of ${request.headers["content-length"]} bytes`)
         const repositoryData = await getRepositoryData(request)
         if (isParameterError(repositoryData)) {
             lionwebResponse<ListPartitionsResponse>(response, HttpClientErrors.PreconditionFailed, {

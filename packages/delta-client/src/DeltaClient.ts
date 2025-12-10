@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { DeltaCommand, DeltaRequest, } from "@lionweb/server-delta-shared"
+import { DeltaCommand, DeltaEvent, DeltaRequest, DeltaResponse, isDeltaEvent } from "@lionweb/server-delta-shared"
 import { eventFunctions } from "./delta/events/EventProcessingFunctions.js"
 import { LionWebDeltaClientProcessor } from "./delta/index.js"
 import { responseFunctions } from "./delta/queryresponses/ResponseProcessingFunctions.js"
@@ -44,8 +44,14 @@ export class DeltaClient {
     socket: WebSocket | undefined
     deltaProcessor = new LionWebDeltaClientProcessor([eventFunctions, responseFunctions])
 
+    messageIndex = 0;
+
     sentMessageHistory: string[] = []
     receivedMessageHistory: string[] = []
+    // Map from command-id to event => 
+    receivedEvents: Map<string, DeltaEvent> = new Map<string, DeltaEvent>()
+    // Map from response-id to response => 
+    receivedResponses: Map<string, DeltaResponse> = new Map<string, DeltaResponse>()
     
     async connect(): Promise<void> {
         this.log("Connecting socket")
@@ -60,7 +66,13 @@ export class DeltaClient {
                 this.logError("Error on message, socket is undefined")
                 return
             }
-            this.deltaProcessor.processDelta(this.socket, JSON.parse(ev.data.toString()))
+            const incomingEventOrResponse = JSON.parse(ev.data.toString())
+            if (isDeltaEvent(incomingEventOrResponse)) {
+                incomingEventOrResponse.originCommands.forEach(cmd => {
+                    this.receivedEvents.set(cmd.commandId, incomingEventOrResponse)
+                })
+            }
+            this.deltaProcessor.processDelta(this.socket, incomingEventOrResponse)
         }
         this.socket.onclose = (ev) => {
             this.log("close socket" + ev.reason)
@@ -70,7 +82,10 @@ export class DeltaClient {
         }
     }
 
-    sendCommand(command: DeltaCommand): void {
+    sendCommand(command: DeltaCommand): DeltaCommand {
+        // set unique id
+        command.commandId = `command-${this.messageIndex++}`
+        
         const commandAsString = JSON.stringify(command)
         this.log(`sendCommand: ${commandAsString}`)
         if (this.socket === undefined) {
@@ -79,14 +94,15 @@ export class DeltaClient {
         if (this.socket.readyState !== WebSocket.OPEN) {
             throw new Error("Socket has no open connection")
         }
-        // set unique id
-        // command.commandId = `${this.id++}`
         this.sentMessageHistory.push(commandAsString)
         this.socket.send(commandAsString)
+        return command
     }
 
-    sendRequest(query: DeltaRequest): void {
-        const queryAsString = JSON.stringify(query)
+    sendRequest(request: DeltaRequest): DeltaRequest {
+        // set unique id
+        request.queryId = `request-${this.messageIndex++}`
+        const queryAsString = JSON.stringify(request)
         this.log(`sendRequest: ${queryAsString}`)
         if (this.socket === undefined) {
             throw new Error("No socket object")
@@ -94,10 +110,9 @@ export class DeltaClient {
         if (this.socket.readyState !== WebSocket.OPEN) {
             throw new Error("Socket has no open connection")
         }
-        // set unique id
-        // command.commandId = `${this.id++}`
         this.sentMessageHistory.push(queryAsString)
-        this.socket.send(JSON.stringify(query))
+        this.socket.send(queryAsString)
+        return request
     }
 
     private handleError(e: Error, method: string = ""): void {

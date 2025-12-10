@@ -1,4 +1,5 @@
 import { HttpServerErrors, isLionWebVersion, LionWebVersionType, LionWebVersionValues, ResponseMessage } from "@lionweb/server-shared"
+import { isInternalQueryError } from "../queries/index.js"
 import { requestLogger } from "./logging.js"
 import { Job, requestQueue } from "./RequestQueue.js"
 import { collectUsedLanguages } from "./UsedLanguages.js"
@@ -222,13 +223,22 @@ export function runWithTry(func: (request: Request, response: Response) => void)
             try {
                 await func(request, response)
             } catch (e) {
-                const error = asError(e)
-                requestLogger.error(`Exception ${myIndex} while serving request for ${request.url}: ${error.message}`)
-                requestLogger.error(error)
-                lionwebResponse(response, HttpServerErrors.InternalServerError, {
-                    success: false,
-                    messages: [{ kind: error.name, message: `Exception while serving request for ${request.url}: ${error.message}` }]
-                })
+                if (isInternalQueryError(e)) {
+                    requestLogger.error(`Exception ${myIndex} while serving request for ${request.url}: ${e.message}`)
+                    requestLogger.error(e)
+                    lionwebResponse(response, HttpServerErrors.InternalServerError, {
+                        success: false,
+                        messages: [{ kind: e.name, message: `Exception while serving request for ${request.url}: ${e.message}` }]
+                    })
+                } else {
+                    const error = asError(e)
+                    requestLogger.error(`Exception ${myIndex} while serving request for ${request.url}: ${error.message}`)
+                    requestLogger.error(error)
+                    lionwebResponse(response, HttpServerErrors.InternalServerError, {
+                        success: false,
+                        messages: [{ kind: error.name, message: `Exception while serving request for ${request.url}: ${error.message}` }]
+                    })
+                }
             }
         }
         requestQueue.add(new Job("request-" + myIndex, requestFunction))

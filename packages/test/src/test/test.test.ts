@@ -56,7 +56,7 @@ collection.forEach(withoutHistory => {
             console.log("PARTITION INITIAL " + JSON.stringify(partResult.body))
             initialPartitionVersion = getVersionFromResponse(partResult)
             const result = await client.bulk.store(baseFullChunk)
-            console.log("CHUNK " + JSON.stringify(baseFullChunk, null, 2))
+            // console.log("CHUNK " + JSON.stringify(baseFullChunk, null, 2))
             if (result.status !== HttpSuccessCodes.Ok) {
                 console.log("Cannot store initial chunk: " + JSON.stringify(result.body))
                 initError = JSON.stringify(result.body)
@@ -64,7 +64,7 @@ collection.forEach(withoutHistory => {
             }
             baseFullChunkVersion = getVersionFromResponse(result)
             console.log(
-                "repoVersionAfterPartitionCreated " + initialPartitionVersion + "repoVersionAfterPartitionFilled " + baseFullChunkVersion
+                `repoVersionAfterPartitionCreated ${initialPartitionVersion} => ${baseFullChunkVersion}`
             )
             const repositories = await client.dbAdmin.listRepositories()
             console.log("repositories: " + JSON.stringify(repositories.body.repositories))

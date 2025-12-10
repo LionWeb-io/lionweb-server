@@ -11,7 +11,7 @@ let index = 0
  * @param func
  */
 export async function runWithTryDelta(socket: WebSocket, delta: DeltaCommand | DeltaRequest): Promise<void> {
-    deltaLogger.info(`Run with try ${delta.messageKind}`)
+    // deltaLogger.info(`Run with try ${delta.messageKind}`)
     const myIndex = index++
     const deltaFunction = async () => {
         try {
