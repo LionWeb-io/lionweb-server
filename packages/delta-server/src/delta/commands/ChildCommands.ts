@@ -5,7 +5,6 @@ import {
     DbChanges,
     deltaLogger,
     SQL, DB,
-    isProperTree,
     LionWebTask,
     MetaPointersTracker,
     TableHelpers
@@ -29,10 +28,12 @@ import {
 import { DeltaContext } from "../DeltaContext.js"
 import { affectedNodeMessage, newErrorEvent } from "../events.js"
 import { ParticipationInfo } from "../queries/index.js"
-import { DeltaFunction, errorEvent, issuesToProtocolNessages } from "./DeltaUtil.js"
+import { DeltaFunction, errorEvent } from "./DeltaUtil.js"
+import { validateContainment, validateParentNodeExists, validateProperTree } from "./Validations.js"
 
 const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorEvent> => {
     deltaLogger.info("Called AddChild command id: " + msg.commandId)
+    const newChildNode = validateProperTree(msg.newChild, msg.parent, msg, participation)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
             msg.parent,
@@ -40,9 +41,7 @@ const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, 
         ])
         const parentNode = nodesFromDB.find(n => n.id === msg.parent)
         // Check whether parent exists
-        if (parentNode === undefined) {
-            return newErrorEvent("err-unknownNode", `Parent ${msg.parent} does not exist`, msg, participation)
-        }
+        validateParentNodeExists(msg.parent, parentNode, msg, participation)
         const existingChildNodes = nodesFromDB.filter(n => n.id !== msg.parent)
         // node alreadyExists
         if (existingChildNodes.length > 0) {
@@ -50,44 +49,17 @@ const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, 
             return newErrorEvent("err-nodeAlreadyExists", `Nodes '${existingIds}' already exist`, msg, participation)
         }
         // Find the new child node
-        const newChildNode = msg.newChild.nodes.find(node => node.parent === msg.parent)
-        if (newChildNode === undefined) {
-            // TODO this check can be moved to the ReferenceValidator by giving the `parent` as parameter
-            return newErrorEvent("NoChildFound", `The newChild chunk does not contain a node with parent ${msg.parent}`, msg, participation)
-        }
         // find the containment, create a new one if it isn't there
-        let containment = parentNode.containments.find(c => isEqualMetaPointer(c.containment, msg.containment))
-        if (containment === undefined) {
-            if (msg.index !== 0) {
-                return newErrorEvent("err-unknownIndex", `Index '${msg.index}' is out of bounds`, msg, participation)
-            } else {
-                // create new containment
-                containment = {
-                    containment: msg.containment,
-                    children: [newChildNode.id]
-                }
-            }
-        } else if (containment.children.length < msg.index) {
-            return newErrorEvent("err-unknownIndex", `Index '${msg.index}' is out of bounds`, msg, participation)
-        } else {
-            // Add newChild to current containment of parent
-            containment.children.splice(msg.index, 0, newChildNode.id)
-        }
-        // - There is exactly one node with parent `parentNode`, called `childNode`
-        // - All nodes together form a proper tree with root `childNode`, i.e. no orphans allowed
-        //   This can be done through the LionwebReferenceValidator.
-        const issues = isProperTree(msg.newChild)
-        if (issues.length > 0) {
-            return newErrorEvent("NotATree", `the newChild chunk is not a proper tree`, msg, participation, {
-                protocolMessages: issuesToProtocolNessages(issues)
-            })
-        }
+        const containment = validateContainment(parentNode!, msg.containment, msg.index,  "Add",undefined, msg, participation)
+        // let containment = parentNode.containments.find(c => isEqualMetaPointer(c.containment, msg.containment))
+        // Add newChild to current containment of parent
+        containment.children.splice(msg.index, 0, newChildNode!.id)
         // Check done, do the work
         const changes = new DbChanges(TableHelpers.pgp)
         // Add child to parent
 
         changes.addChanges(
-            [new ChildAdded(new JsonContext(null, ["delta"]), parentNode, msg.containment, containment, newChildNode.id, Missing.MissingBefore)]
+            [new ChildAdded(new JsonContext(null, ["delta"]), parentNode!, msg.containment, containment, newChildNode!.id, Missing.MissingBefore)]
         )
         // Add child nodes to database
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
@@ -104,7 +76,7 @@ const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, 
             newChild: msg.newChild,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,          // dummy, will be changed for each participation before sending
-            protocolMessages: [affectedNodeMessage(parentNode)]
+            protocolMessages: [affectedNodeMessage(parentNode!.id)]
         } as ChildAddedEvent
     })
     return result
@@ -164,7 +136,7 @@ const DeleteChild = async (
             parent: msg.parent,
             containment: msg.containment,
             deletedDescendants: subtreeNodes.filter(node => node.id !== msg.deletedChild).map(node => node.id),
-            protocolMessages: [affectedNodeMessage(parentNode)],
+            protocolMessages: [affectedNodeMessage(parentNode.id)],
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0
         } as ChildDeletedEvent
@@ -178,14 +150,7 @@ const ReplaceChild = async (
     ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorEvent> => {
     deltaLogger.info("Called ReplaceChild " + msg.messageKind)
-    // - All nodes together form a proper tree with root `childNode`, i.e. no orphans allowed
-    //   This can be done through the LionwebReferenceValidator.
-    const issues = isProperTree(msg.newChild)
-    if (issues.length > 0) {
-        return newErrorEvent("NotATree", `the newChild chunk is not a proper tree`, msg, participation, {
-            protocolMessages: issuesToProtocolNessages(issues)
-        })
-    }
+    validateProperTree(msg.newChild, msg.parent, msg, participation)
     
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
@@ -270,7 +235,7 @@ const ReplaceChild = async (
             replacedChild: msg.replacedChild,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,          // dummy, will be changed for each participation before sending
-            protocolMessages: [affectedNodeMessage(parentNode)]
+            protocolMessages: [affectedNodeMessage(parentNode.id)]
         } as ChildReplacedEvent
     })
 

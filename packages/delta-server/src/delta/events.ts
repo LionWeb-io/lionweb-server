@@ -35,11 +35,11 @@ export const newErrorEvent = (
     }
 }
 
-export function affectedNodeMessage(node: LionWebJsonNode): ProtocolMessage {
+export function affectedNodeMessage(nodeid: LionWebId): ProtocolMessage {
     return {
         kind: "AffectedNode",
-        message: `Node ${node.id} has been changed`,
-        data: [ { key: "node", value: node.id}]
+        message: `Node ${nodeid} has been changed`,
+        data: [ { key: "node", value: nodeid}]
     }
 }
 export function affectedPartitionMessage(nodeid: LionWebId): ProtocolMessage {

@@ -3,8 +3,7 @@ import {
     LionWebTask,
     MetaPointersTracker,
     SQL,
-    DB,
-    isProperTree
+    DB
 } from "@lionweb/server-common"
 import {
     AddPartitionCommand,
@@ -17,7 +16,8 @@ import {
 import { DeltaContext } from "../DeltaContext.js"
 import { affectedNodeMessage, newErrorEvent } from "../events.js"
 import { ParticipationInfo } from "../queries/index.js"
-import { DeltaFunction, issuesToProtocolNessages } from "./DeltaUtil.js"
+import { DeltaFunction } from "./DeltaUtil.js"
+import { validateProperTree } from "./Validations.js"
 
 const AddPartitionFunction = async (
     participation: ParticipationInfo,
@@ -25,16 +25,7 @@ const AddPartitionFunction = async (
     _ctx: DeltaContext
 ): Promise<DeltaEvent> => {
     deltaLogger.info("Called AddPartitionFunction " + msg.messageKind + " nodes ") // + msg.newPartition?.nodes?.length)
-    // - There is exactly one node with parent `parentNode`, called `childNode`
-    // - All nodes together form a proper tree with root `childNode`, i.e. no orphans allowed
-    //   This can be done through the LionwebReferenceValidator.
-    const issues = isProperTree(msg.newPartition)
-    if (issues.length > 0) {
-        deltaLogger.debug(`Issue with partition ${JSON.stringify(msg)}`)
-        return newErrorEvent("NotATree", `the newPartition chunk is not a proper tree`, msg, participation, {
-            protocolMessages: issuesToProtocolNessages(issues)
-        })
-    }
+    validateProperTree(msg.newPartition, null, msg, participation)
 
     const result = await _ctx.dbConnection.tx(async (task: LionWebTask) => {
         const existingNodes = await DB.nodeIdsInUseDB(
@@ -68,7 +59,7 @@ const AddPartitionFunction = async (
             newPartition: { nodes: [] },
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,
-            protocolMessages: [ affectedNodeMessage(partitionNode) ]
+            protocolMessages: [ affectedNodeMessage(partitionNode.id) ]
         } as PartitionAddedEvent
     })
     return result

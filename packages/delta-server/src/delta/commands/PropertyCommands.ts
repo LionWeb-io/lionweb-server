@@ -52,7 +52,7 @@ const AddPropertyFunction = async (
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             property: msg.property,
             sequenceNumber: 0, // dummy, will be changed for each participation before sending
-            protocolMessages: [affectedNodeMessage(node)]
+            protocolMessages: [affectedNodeMessage(node.id)]
         } as PropertyAddedEvent
     })
     return result
@@ -92,7 +92,7 @@ const DeletePropertyFunction = async (
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             property: msg.property,
             sequenceNumber: 0, // dummy, will be changed for each participation before sending
-            protocolMessages: [affectedNodeMessage(node)],
+            protocolMessages: [affectedNodeMessage(node.id)],
             oldValue: oldProperty.value
         } as PropertyDeletedEvent
     })
@@ -144,7 +144,7 @@ const ChangePropertyFunction = async (
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             property: msg.property,
             sequenceNumber: 0, // dummy, will be changed for each participation before sending
-            protocolMessages: [affectedNodeMessage(node)],
+            protocolMessages: [affectedNodeMessage(node.id)],
             oldValue: oldProperty.value
         } as PropertyChangedEvent
     })
