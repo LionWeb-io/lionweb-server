@@ -93,13 +93,15 @@ export function validateContainment(
     return foundContainment
 }
 
-export function validateParentNodeExists(
+export function findAndvalidateNodeExists(
     id: LionWebId,
-    parentNode: LionWebJsonNode  | undefined,
+    nodes: LionWebJsonNode[],
     msg: DeltaCommand,
     participation: ParticipationInfo
-): void {
-    if (parentNode === undefined) {
-        throw newErrorEvent("err-unknownNode", `Parent ${id} does not exist`, msg, participation)
+): LionWebJsonNode {
+    const result = nodes.find(n => n.id = id)
+    if (result === undefined) {
+        throw newErrorEvent("err-unknownNode", `Node ${id} does not exist`, msg, participation)
     }
+    return result
 }

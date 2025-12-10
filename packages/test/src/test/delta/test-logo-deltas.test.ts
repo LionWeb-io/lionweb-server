@@ -1,5 +1,7 @@
+import { isErrorEvent } from "@lionweb/delta-server"
 import { RepositoryClient } from "@lionweb/server-client"
 import { DeltaClient } from "@lionweb/server-delta-client"
+import { DeltaEvent } from "@lionweb/server-delta-shared"
 import { HttpSuccessCodes } from "@lionweb/server-shared"
 import {
     newAddChildCommand,
@@ -119,10 +121,14 @@ collection.forEach(withoutHistory => {
                 console.log(deltaApiClient01.receivedMessageHistory)
 
                 assert( deltaApiClient01.receivedEvents.get(deleteChildCommandOk.commandId).messageKind === "ChildDeleted")
-                assert( deltaApiClient01.receivedEvents.get(deleteChildCommandError1.commandId).messageKind === "ErrorEvent")
-                assert( deltaApiClient01.receivedEvents.get(deleteChildCommandError2.commandId).messageKind === "ErrorEvent")
-                assert( deltaApiClient01.receivedEvents.get(deleteChildCommandError3.commandId).messageKind === "ErrorEvent")
+                assert( hasError(deltaApiClient01.receivedEvents.get(deleteChildCommandError1.commandId),"unknownContainment") )
+                assert( hasError(deltaApiClient01.receivedEvents.get(deleteChildCommandError2.commandId), "err-unknownNode") )
+                assert( hasError(deltaApiClient01.receivedEvents.get(deleteChildCommandError3.commandId), "unknownIndex") )
             })
         })
     })
 })
+
+function hasError(event: DeltaEvent, errorCode: string): boolean {
+    return isErrorEvent(event) && event.errorCode === errorCode
+}

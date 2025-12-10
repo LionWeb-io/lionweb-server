@@ -3,8 +3,6 @@ import {
     DeltaCommand,
     DeltaRequest,
     ProtocolMessage,
-    LionWebJsonNode,
-    KeyValuePair,
     LionWebId
 } from "@lionweb/server-delta-shared"
 import { ParticipationInfo } from "./queries/index.js"
