@@ -1,4 +1,4 @@
-import {
+import type {
     SignOnRequest,
     AddPropertyCommand,
     AddPartitionCommand,
@@ -7,7 +7,10 @@ import {
     SubscribeToPartitionContentsRequest,
     UnsubscribeFromPartitionContentsRequest,
     AddChildCommand,
-    DeleteChildCommand
+    DeleteChildCommand,
+    AddReferenceCommand,
+    DeleteReferenceCommand,
+    LionWebJsonMetaPointer, LionWebId
 } from "@lionweb/server-delta-shared"
 
 let queryId = 1
@@ -109,7 +112,40 @@ export const newAddPartitionCommand = (nodeid: string, classifierKey: string): A
     }
 }
 
-export const newAddChildCommand = (nodeid: string, parent: string, containmentKey: string): AddChildCommand => {
+type NewChild = {
+    id: LionWebId,
+    cls: LionWebJsonMetaPointer,
+    parent: LionWebId,
+    containment: LionWebJsonMetaPointer
+    props: PropValue[]
+}
+export type PropValue = {prop: LionWebJsonMetaPointer; value: string}
+
+export const newAddChild = (child: NewChild): AddChildCommand => {
+    return {
+        messageKind: "AddChild",
+        commandId: `command-id-${queryId++}`,
+        containment: child.containment,
+        index: 0,
+        parent: child.parent,
+        newChild: {
+            nodes: [{
+                id: child.id,
+                parent: child.parent,
+                properties: child.props.map(p => {
+                    return { property: p.prop, value: p.value }
+                }),
+                containments: [],
+                references: [],
+                classifier: child.cls,
+                annotations: []
+            }]
+        },
+        protocolMessages: []
+    }
+}
+
+export const newAddChildCommand = (nodeid: string, clsKey: LionWebJsonMetaPointer, parent: string, containmentKey: string, props: PropValue[] = []): AddChildCommand => {
     return {
         messageKind: "AddChild",
         commandId: `command-id-${queryId++}`,
@@ -124,12 +160,12 @@ export const newAddChildCommand = (nodeid: string, parent: string, containmentKe
             nodes: [{
                 id: nodeid,
                 parent: parent,
-                properties: [
-                    { property: { language: "LogoProgram", key: "-key-MoveCommand-distance", version: "1"}, value: "20"}
-                ],
+                properties: props.map(p => {
+                        return { property: p.prop, value: p.value }
+                    }),
                 containments: [],
                 references: [],
-                classifier: { language: "LogoProgram", key: "-key-MoveCommand", version: "1"},
+                classifier: clsKey,
                 annotations: []
             }]
         },
@@ -137,18 +173,57 @@ export const newAddChildCommand = (nodeid: string, parent: string, containmentKe
     }
 }
 
-export const newDeleteChildCommand = (nodeid: string, index: number, parent: string, containmentKey: string): DeleteChildCommand => {
+export type DeleteChildType = {
+    id: LionWebId,
+    index: number,
+    parent: LionWebId,
+    containment: LionWebJsonMetaPointer
+}
+
+export const deleteChild = (deleteChild: DeleteChildType): DeleteChildCommand => {
     return {
         messageKind: "DeleteChild",
         commandId: `command-id-${queryId++}`,
-        containment: {
-            language: "LogoProgram",
-            key: containmentKey,
-            version: "1"
-        },
-        index: index,
-        parent: parent,
-        deletedChild: nodeid,
+        containment: deleteChild.containment,
+        index: deleteChild.index,
+        parent: deleteChild.parent,
+        deletedChild: deleteChild.id,
+        protocolMessages: []
+    }
+}
+
+export type AddReferenceType = {
+    id: LionWebId,
+    index: number,
+    target: LionWebId,
+    resolveInfo: string,
+    reference: LionWebJsonMetaPointer
+}
+
+export const addReference = (addRef: AddReferenceType):  AddReferenceCommand =>
+{
+    return {
+        messageKind: "AddReference",
+        commandId: `command-id-${queryId++}`,
+        parent: addRef.id,
+        reference: addRef.reference,
+        index: addRef.index,
+        newTarget: addRef.target,
+        newResolveInfo: addRef.resolveInfo,
+        protocolMessages: []
+    }
+}
+
+export const deleteReference = (ref: AddReferenceType):  DeleteReferenceCommand =>
+{
+    return {
+        messageKind: "DeleteReference",
+        commandId: `command-id-${queryId++}`,
+        parent: ref.id,
+        reference: ref.reference,
+        deletedTarget: ref.target,
+        deletedResolveInfo: ref.resolveInfo,
+        index: ref.index,
         protocolMessages: []
     }
 }
