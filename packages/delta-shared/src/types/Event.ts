@@ -16,7 +16,7 @@ export type DeltaEvent = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ClassifierChanged
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ClassifierChanged
  */
 export type ClassifierChangedEvent = DeltaEvent & {
     node: LionWebId;
@@ -26,7 +26,7 @@ export type ClassifierChangedEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-PartitionAdded
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-PartitionAdded
  */
 export type PartitionAddedEvent = DeltaEvent & {
     newPartition: LionWebDeltaJsonChunk;
@@ -34,7 +34,7 @@ export type PartitionAddedEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-PartitionDeleted
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-PartitionDeleted
  */
 export type PartitionDeletedEvent = DeltaEvent & {
     deletedPartition: LionWebId;
@@ -43,7 +43,7 @@ export type PartitionDeletedEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-PropertyAdded
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-PropertyAdded
  */
 export type PropertyAddedEvent = DeltaEvent & {
     node: LionWebId;
@@ -53,7 +53,7 @@ export type PropertyAddedEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-PropertyDeleted
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-PropertyDeleted
  */
 export type PropertyDeletedEvent = DeltaEvent & {
     node: LionWebId;
@@ -63,7 +63,7 @@ export type PropertyDeletedEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-PropertyChanged
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-PropertyChanged
  */
 export type PropertyChangedEvent = DeltaEvent & {
     node: LionWebId;
@@ -74,7 +74,7 @@ export type PropertyChangedEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildAdded
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ChildAdded
  */
 export type ChildAddedEvent = DeltaEvent & {
     parent: LionWebId;
@@ -85,7 +85,7 @@ export type ChildAddedEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildDeleted
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ChildDeleted
  */
 export type ChildDeletedEvent = DeltaEvent & {
     parent: LionWebId;
@@ -97,7 +97,7 @@ export type ChildDeletedEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildReplaced
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ChildReplaced
  */
 export type ChildReplacedEvent = DeltaEvent & {
     parent: LionWebId;
@@ -110,7 +110,7 @@ export type ChildReplacedEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildMovedFromOtherContainment
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ChildMovedFromOtherContainment
  */
 export type ChildMovedFromOtherContainmentEvent = DeltaEvent & {
     newParent: LionWebId;
@@ -124,7 +124,7 @@ export type ChildMovedFromOtherContainmentEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildMovedFromOtherContainmentInSameParent
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ChildMovedFromOtherContainmentInSameParent
  */
 export type ChildMovedFromOtherContainmentInSameParentEvent = DeltaEvent & {
     parent: LionWebId;
@@ -137,7 +137,7 @@ export type ChildMovedFromOtherContainmentInSameParentEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildMovedInSameContainment
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ChildMovedInSameContainment
  */
 export type ChildMovedInSameContainmentEvent = DeltaEvent & {
     parent: LionWebId;
@@ -149,7 +149,7 @@ export type ChildMovedInSameContainmentEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildMovedAndReplacedFromOtherContainment
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ChildMovedAndReplacedFromOtherContainment
  */
 export type ChildMovedAndReplacedFromOtherContainmentEvent = DeltaEvent & {
     newParent: LionWebId;
@@ -165,7 +165,7 @@ export type ChildMovedAndReplacedFromOtherContainmentEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildMovedAndReplacedFromOtherContainmentInSameParent
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ChildMovedAndReplacedFromOtherContainmentInSameParent
  */
 export type ChildMovedAndReplacedFromOtherContainmentInSameParentEvent = DeltaEvent & {
     parent: LionWebId;
@@ -180,7 +180,7 @@ export type ChildMovedAndReplacedFromOtherContainmentInSameParentEvent = DeltaEv
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ChildMovedAndReplacedInSameContainment
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ChildMovedAndReplacedInSameContainment
  */
 export type ChildMovedAndReplacedInSameContainmentEvent = DeltaEvent & {
     parent: LionWebId;
@@ -194,7 +194,7 @@ export type ChildMovedAndReplacedInSameContainmentEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-AnnotationAdded
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-AnnotationAdded
  */
 export type AnnotationAddedEvent = DeltaEvent & {
     parent: LionWebId;
@@ -204,7 +204,7 @@ export type AnnotationAddedEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-AnnotationDeleted
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-AnnotationDeleted
  */
 export type AnnotationDeletedEvent = DeltaEvent & {
     parent: LionWebId;
@@ -215,7 +215,7 @@ export type AnnotationDeletedEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-AnnotationReplaced
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-AnnotationReplaced
  */
 export type AnnotationReplacedEvent = DeltaEvent & {
     parent: LionWebId;
@@ -227,7 +227,7 @@ export type AnnotationReplacedEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-AnnotationMovedFromOtherParent
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-AnnotationMovedFromOtherParent
  */
 export type AnnotationMovedFromOtherParentEvent = DeltaEvent & {
     newParent: LionWebId;
@@ -239,7 +239,7 @@ export type AnnotationMovedFromOtherParentEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-AnnotationMovedInSameParent
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-AnnotationMovedInSameParent
  */
 export type AnnotationMovedInSameParentEvent = DeltaEvent & {
     parent: LionWebId;
@@ -250,7 +250,7 @@ export type AnnotationMovedInSameParentEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-AnnotationMovedAndReplacedFromOtherParent
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-AnnotationMovedAndReplacedFromOtherParent
  */
 export type AnnotationMovedAndReplacedFromOtherParentEvent = DeltaEvent & {
     newParent: LionWebId;
@@ -264,7 +264,7 @@ export type AnnotationMovedAndReplacedFromOtherParentEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-AnnotationMovedAndReplacedInSameParent
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-AnnotationMovedAndReplacedInSameParent
  */
 export type AnnotationMovedAndReplacedInSameParentEvent = DeltaEvent & {
     parent: LionWebId;
@@ -277,45 +277,45 @@ export type AnnotationMovedAndReplacedInSameParentEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceAdded
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ReferenceAdded
  */
 export type ReferenceAddedEvent = DeltaEvent & {
     parent: LionWebId;
     index: Number;
     reference: LionWebJsonMetaPointer;
-    newTarget?: LionWebId;
-    newResolveInfo?: String;
+    newTarget: LionWebId | null;
+    newResolveInfo: String | null;
     messageKind: "ReferenceAdded";
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceDeleted
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ReferenceDeleted
  */
 export type ReferenceDeletedEvent = DeltaEvent & {
     parent: LionWebId;
     index: Number;
     reference: LionWebJsonMetaPointer;
-    deletedTarget?: LionWebId;
-    deletedResolveInfo?: String;
+    deletedTarget: LionWebId | null;
+    deletedResolveInfo: String | null;
     messageKind: "ReferenceDeleted";
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceChanged
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ReferenceChanged
  */
 export type ReferenceChangedEvent = DeltaEvent & {
     parent: LionWebId;
     index: Number;
     reference: LionWebJsonMetaPointer;
-    newTarget?: LionWebId;
-    newResolveInfo?: String;
-    oldTarget?: LionWebId;
-    oldResolveInfo?: String;
+    newTarget: LionWebId | null;
+    newResolveInfo: String | null;
+    oldTarget: LionWebId | null;
+    oldResolveInfo: String | null;
     messageKind: "ReferenceChanged";
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-EntryMovedFromOtherReference
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-EntryMovedFromOtherReference
  */
 export type EntryMovedFromOtherReferenceEvent = DeltaEvent & {
     newParent: LionWebId;
@@ -324,13 +324,13 @@ export type EntryMovedFromOtherReferenceEvent = DeltaEvent & {
     oldParent: LionWebId;
     oldIndex: Number;
     oldReference: LionWebJsonMetaPointer;
-    movedTarget?: LionWebId;
-    movedResolveInfo?: String;
+    movedTarget: LionWebId | null;
+    movedResolveInfo: String | null;
     messageKind: "EntryMovedFromOtherReference";
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-EntryMovedFromOtherReferenceInSameParent
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-EntryMovedFromOtherReferenceInSameParent
  */
 export type EntryMovedFromOtherReferenceInSameParentEvent = DeltaEvent & {
     parent: LionWebId;
@@ -338,26 +338,26 @@ export type EntryMovedFromOtherReferenceInSameParentEvent = DeltaEvent & {
     newReference: LionWebJsonMetaPointer;
     oldIndex: Number;
     oldReference: LionWebJsonMetaPointer;
-    movedTarget?: LionWebId;
-    movedResolveInfo?: String;
+    movedTarget: LionWebId | null;
+    movedResolveInfo: String | null;
     messageKind: "EntryMovedFromOtherReferenceInSameParent";
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-EntryMovedInSameReference
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-EntryMovedInSameReference
  */
 export type EntryMovedInSameReferenceEvent = DeltaEvent & {
     parent: LionWebId;
     newIndex: Number;
     oldIndex: Number;
     reference: LionWebJsonMetaPointer;
-    movedTarget?: LionWebId;
-    movedResolveInfo?: String;
+    movedTarget: LionWebId | null;
+    movedResolveInfo: String | null;
     messageKind: "EntryMovedInSameReference";
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-EntryMovedAndReplacedFromOtherReference
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-EntryMovedAndReplacedFromOtherReference
  */
 export type EntryMovedAndReplacedFromOtherReferenceEvent = DeltaEvent & {
     newParent: LionWebId;
@@ -366,15 +366,15 @@ export type EntryMovedAndReplacedFromOtherReferenceEvent = DeltaEvent & {
     oldParent: LionWebId;
     oldIndex: Number;
     oldReference: LionWebJsonMetaPointer;
-    movedTarget?: LionWebId;
-    movedResolveInfo?: String;
-    replacedTarget?: LionWebId;
-    replacedResolveInfo?: String;
+    movedTarget: LionWebId | null;
+    movedResolveInfo: String | null;
+    replacedTarget: LionWebId | null;
+    replacedResolveInfo: String | null;
     messageKind: "EntryMovedAndReplacedFromOtherReference";
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-EntryMovedAndReplacedFromOtherReferenceInSameParent
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-EntryMovedAndReplacedFromOtherReferenceInSameParent
  */
 export type EntryMovedAndReplacedFromOtherReferenceInSameParentEvent = DeltaEvent & {
     parent: LionWebId;
@@ -382,30 +382,30 @@ export type EntryMovedAndReplacedFromOtherReferenceInSameParentEvent = DeltaEven
     newReference: LionWebJsonMetaPointer;
     oldIndex: Number;
     oldReference: LionWebJsonMetaPointer;
-    movedTarget?: LionWebId;
-    movedResolveInfo?: String;
-    replacedTarget?: LionWebId;
-    replacedResolveInfo?: String;
+    movedTarget: LionWebId | null;
+    movedResolveInfo: String | null;
+    replacedTarget: LionWebId | null;
+    replacedResolveInfo: String | null;
     messageKind: "EntryMovedAndReplacedFromOtherReferenceInSameParent";
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-EntryMovedAndReplacedInSameReference
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-EntryMovedAndReplacedInSameReference
  */
 export type EntryMovedAndReplacedInSameReferenceEvent = DeltaEvent & {
     parent: LionWebId;
     newIndex: Number;
     reference: LionWebJsonMetaPointer;
     oldIndex: Number;
-    movedTarget?: LionWebId;
-    movedResolveInfo?: String;
-    replacedTarget?: LionWebId;
-    replacedResolveInfo?: String;
+    movedTarget: LionWebId | null;
+    movedResolveInfo: String | null;
+    replacedTarget: LionWebId | null;
+    replacedResolveInfo: String | null;
     messageKind: "EntryMovedAndReplacedInSameReference";
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceResolveInfoAdded
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ReferenceResolveInfoAdded
  */
 export type ReferenceResolveInfoAddedEvent = DeltaEvent & {
     parent: LionWebId;
@@ -417,7 +417,7 @@ export type ReferenceResolveInfoAddedEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceResolveInfoDeleted
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ReferenceResolveInfoDeleted
  */
 export type ReferenceResolveInfoDeletedEvent = DeltaEvent & {
     parent: LionWebId;
@@ -429,20 +429,20 @@ export type ReferenceResolveInfoDeletedEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceResolveInfoChanged
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ReferenceResolveInfoChanged
  */
 export type ReferenceResolveInfoChangedEvent = DeltaEvent & {
     parent: LionWebId;
     index: Number;
     reference: LionWebJsonMetaPointer;
     newResolveInfo: String;
-    target?: LionWebId;
+    target: LionWebId | null;
     oldResolveInfo: String;
     messageKind: "ReferenceResolveInfoChanged";
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceTargetAdded
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ReferenceTargetAdded
  */
 export type ReferenceTargetAddedEvent = DeltaEvent & {
     parent: LionWebId;
@@ -454,7 +454,7 @@ export type ReferenceTargetAddedEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceTargetDeleted
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ReferenceTargetDeleted
  */
 export type ReferenceTargetDeletedEvent = DeltaEvent & {
     parent: LionWebId;
@@ -466,7 +466,7 @@ export type ReferenceTargetDeletedEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ReferenceTargetChanged
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ReferenceTargetChanged
  */
 export type ReferenceTargetChangedEvent = DeltaEvent & {
     parent: LionWebId;
@@ -479,7 +479,7 @@ export type ReferenceTargetChangedEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-CompositeEvent
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-CompositeEvent
  */
 export type CompositeEvent = DeltaEvent & {
     parts: DeltaEvent[];
@@ -487,14 +487,14 @@ export type CompositeEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-NoOp
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-NoOp
  */
 export type NoOpEvent = DeltaEvent & {
     messageKind: "NoOp";
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/events.adoc#evnt-ErrorEvent
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ErrorEvent
  */
 export type ErrorEvent = DeltaEvent & {
     errorCode: String;

@@ -14,14 +14,14 @@ export type DeltaResponse = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-SubscribeToChangingPartitionsResponse
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-SubscribeToChangingPartitionsResponse
  */
 export type SubscribeToChangingPartitionsResponse = DeltaResponse & {
     messageKind: "SubscribeToChangingPartitionsResponse";
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-SubscribeToPartitionContentsResponse
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-SubscribeToPartitionContentsResponse
  */
 export type SubscribeToPartitionContentsResponse = DeltaResponse & {
     contents: LionWebDeltaJsonChunk;
@@ -29,14 +29,14 @@ export type SubscribeToPartitionContentsResponse = DeltaResponse & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-UnsubscribeFromPartitionContentsResponse
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-UnsubscribeFromPartitionContentsResponse
  */
 export type UnsubscribeFromPartitionContentsResponse = DeltaResponse & {
     messageKind: "UnsubscribeFromPartitionContentsResponse";
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-SignOnResponse
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-SignOnResponse
  */
 export type SignOnResponse = DeltaResponse & {
     participationId: ParticipationId;
@@ -44,14 +44,14 @@ export type SignOnResponse = DeltaResponse & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-SignOffResponse
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-SignOffResponse
  */
 export type SignOffResponse = DeltaResponse & {
     messageKind: "SignOffResponse";
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-ReconnectResponse
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-ReconnectResponse
  */
 export type ReconnectResponse = DeltaResponse & {
     lastSentSequenceNumber: SequenceNumber;
@@ -59,7 +59,7 @@ export type ReconnectResponse = DeltaResponse & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-GetAvailableIdsResponse
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-GetAvailableIdsResponse
  */
 export type GetAvailableIdsResponse = DeltaResponse & {
     ids: LionWebId[];
@@ -67,11 +67,20 @@ export type GetAvailableIdsResponse = DeltaResponse & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-ListPartitionsResponse
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-ListPartitionsResponse
  */
 export type ListPartitionsResponse = DeltaResponse & {
     partitions: LionWebDeltaJsonChunk;
     messageKind: "ListPartitionsResponse";
+};
+
+/**
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-ErrorResponse
+ */
+export type ErrorResponse = DeltaResponse & {
+    errorCode: String;
+    message: String;
+    messageKind: "ErrorResponse";
 };
 
 // The type for the tagged union property
@@ -83,7 +92,8 @@ export type ResponseMessageKind =
     | "SignOffResponse"
     | "ReconnectResponse"
     | "GetAvailableIdsResponse"
-    | "ListPartitionsResponse";
+    | "ListPartitionsResponse"
+    | "ErrorResponse";
 
 // Type Guard function
 export function isDeltaResponse(object: unknown): object is DeltaResponse {
@@ -99,6 +109,7 @@ export function isDeltaResponse(object: unknown): object is DeltaResponse {
             "ReconnectResponse",
             "GetAvailableIdsResponse",
             "ListPartitionsResponse",
+            "ErrorResponse",
         ].includes(castObject.messageKind)
     );
 }

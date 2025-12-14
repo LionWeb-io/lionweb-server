@@ -16,7 +16,7 @@ export type DeltaRequest = {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-SubscribeToChangingPartitions
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-SubscribeToChangingPartitions
  */
 export type SubscribeToChangingPartitionsRequest = DeltaRequest & {
     creation: Boolean;
@@ -26,7 +26,7 @@ export type SubscribeToChangingPartitionsRequest = DeltaRequest & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-SubscribeToPartitionContents
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-SubscribeToPartitionContents
  */
 export type SubscribeToPartitionContentsRequest = DeltaRequest & {
     partition: LionWebId;
@@ -34,7 +34,7 @@ export type SubscribeToPartitionContentsRequest = DeltaRequest & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-UnsubscribeFromPartitionContents
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-UnsubscribeFromPartitionContents
  */
 export type UnsubscribeFromPartitionContentsRequest = DeltaRequest & {
     partition: LionWebId;
@@ -42,7 +42,7 @@ export type UnsubscribeFromPartitionContentsRequest = DeltaRequest & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-SignOn
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-SignOn
  */
 export type SignOnRequest = DeltaRequest & {
     deltaProtocolVersion: String;
@@ -52,14 +52,14 @@ export type SignOnRequest = DeltaRequest & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-SignOff
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-SignOff
  */
 export type SignOffRequest = DeltaRequest & {
     messageKind: "SignOff";
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-Reconnect
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-Reconnect
  */
 export type ReconnectRequest = DeltaRequest & {
     participationId: ParticipationId;
@@ -68,7 +68,7 @@ export type ReconnectRequest = DeltaRequest & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-GetAvailableIds
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-GetAvailableIds
  */
 export type GetAvailableIdsRequest = DeltaRequest & {
     count: Number;
@@ -76,7 +76,7 @@ export type GetAvailableIdsRequest = DeltaRequest & {
 };
 
 /**
- *  @see https://github.com/LionWeb-io/specification/blob/main/delta/queries.adoc#qry-ListPartitions
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-ListPartitions
  */
 export type ListPartitionsRequest = DeltaRequest & {
     messageKind: "ListPartitions";
