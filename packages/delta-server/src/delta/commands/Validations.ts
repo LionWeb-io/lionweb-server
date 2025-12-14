@@ -5,9 +5,10 @@ import {
     LionWebId,
     LionWebJsonContainment,
     LionWebJsonMetaPointer,
-    LionWebJsonNode
+    LionWebJsonReference,
+    LionWebJsonReferenceTarget
 } from "@lionweb/server-delta-shared"
-import { isEqualMetaPointer } from "@lionweb/json"
+import { isEqualMetaPointer, LionWebJsonNode } from "@lionweb/json"
 import { newErrorEvent } from "../events.js"
 import { ParticipationInfo } from "../queries/index.js"
 import { issuesToProtocolNessages } from "./DeltaUtil.js"
@@ -93,7 +94,60 @@ export function validateContainment(
     return foundContainment
 }
 
-export function findAndvalidateNodeExists(
+/**
+ * Validate whether `parentNode` has a `containment` with a valid `index`, and currently `expectedChild` at `index`
+ * @param parentNode    The node in which the containment is to be changed.
+ * @param containment   The containment which is to be changed
+ * @param index         The index of the child to be changed / added deleted
+ * @param expectedChild The current child at `index`
+ * @param msg
+ * @param participation
+ * @returns             The containment of the parent node, or a copy of it
+ */
+export function validateReference(
+    parentNode: LionWebJsonNode,
+    reference: LionWebJsonMetaPointer,
+    index: number,
+    change: Change,
+    expectedReference: LionWebJsonReferenceTarget | undefined,
+    msg: DeltaCommand,
+    participation: ParticipationInfo
+): LionWebJsonReference {
+    // Check whether containment exists in the parent
+    let foundReference = parentNode.references.find(c => isEqualMetaPointer(c.reference, reference))
+    if (foundReference === undefined) {
+        if (index !== 0) {
+            throw newErrorEvent("err-unknownIndex", `Index '${index}' is out of bounds`, msg, participation)
+        } else if (change === "Add") {
+            // create new containment with one child
+            foundReference = {
+                reference: reference,
+                targets: []
+            }
+        } else {
+            throw newErrorEvent(
+                "unknownContainment",
+                `Reference '${JSON.stringify(reference)}' does not exists in node '${parentNode.id}'`,
+                msg,
+                participation
+            )
+        }
+    }
+    // Check the index is within bounds
+    if (change === "Add" && index > foundReference.targets.length) {
+        throw newErrorEvent("unknownIndex", "TODO", msg, participation)
+    }
+    if ((change === "Replace" || change === "Delete") && index > foundReference.targets.length - 1) {
+        throw newErrorEvent("unknownIndex", "TODO", msg, participation)
+    }
+    // Check whether the replaced child is at the given index
+    if (expectedReference !== undefined && foundReference.targets[index] !== expectedReference) {
+        throw newErrorEvent("indexEntryMismatch", `The child '${expectedReference}' is not at index ${index} `, msg, participation)
+    }
+    return foundReference
+}
+
+export function findAndValidateNodeExists(
     id: LionWebId,
     nodes: LionWebJsonNode[],
     msg: DeltaCommand,

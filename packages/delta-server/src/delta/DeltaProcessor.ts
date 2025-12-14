@@ -5,12 +5,15 @@ import { ValidationResult } from "@lionweb/validation"
 import WebSocket from 'ws';
 import { DeltaContext } from "./DeltaContext.js"
 import {
+    annotationFunctions,
     childFunctions,
-    DeltaFunction, issuesToProtocolNessages,
+    DeltaFunction,
+    issuesToProtocolNessages,
     MessageFromClient,
     MessageFunction,
     partitionFunctions,
-    propertyFunctions
+    propertyFunctions,
+    referenceFunctions
 } from "./commands/index.js"
 import { activeSockets } from "./DeltaClientAdmin.js"
 import { affectedNodeMessage, affectedPartitionMessage, isErrorEvent, newErrorEvent } from "./events.js"
@@ -87,7 +90,7 @@ class DeltaProcessor {
                 sequenceNumber: 0,
                 originCommands: [{
                     participationId: "none",
-                    commandId: "??" //msg.queryId
+                    commandId: (delta as DeltaCommand).commandId ?? (delta as DeltaRequest).queryId ?? "<unknown-command-or-query>"
                 }],
                 protocolMessages: issuesToProtocolNessages(this.deltaValidator.validationResult.issues)
             }
@@ -123,7 +126,7 @@ class DeltaProcessor {
                     // TODO The parent is retrieved outside the transaction, could already be changed by another delta.
                     const parentChain = await DB.retrieveParentsDB(this.context!.dbConnection, participation!.repositoryData!, affectedNode.value)
                     if (parentChain === undefined) {
-                        throw new Error("PARENTCHAIN UNDEFINED")
+                        throw new Error("PARENT CHAIN UNDEFINED")
                     } else {
                         deltaLogger.debug(`PARENT CHAIN IS ${parentChain.map(p => `${p.id} parent ${p.parent} | `)}`)
                     }
@@ -134,6 +137,7 @@ class DeltaProcessor {
                             if (participationInfo.subscribedPartitions.includes(affectedPartition.id)) {
                                 response.sequenceNumber = participationInfo.eventSequenceNumber++
                                 deltaLogger.info(`Subscribed Sending ${JSON.stringify(response)} to ${participationInfo.repositoryData!.clientId}`)
+                                deltaLogger.info(`Subscribed Sending active sockets number is ${activeSockets.size}`)
                                 participationInfo.socket.send(JSON.stringify(response))
                             } else {
                                 deltaLogger.info(`NOT Subscribed ${participationInfo.repositoryData!.clientId}`)
@@ -232,4 +236,4 @@ class DeltaProcessor {
 // Status: connected + activeParticipation(s)
 //         connected + noParticipation
 
-export const deltaProcessor = new DeltaProcessor([childFunctions, partitionFunctions, propertyFunctions, requestFunctions])
+export const deltaProcessor = new DeltaProcessor([childFunctions, requestFunctions, referenceFunctions, annotationFunctions, partitionFunctions, propertyFunctions, requestFunctions])

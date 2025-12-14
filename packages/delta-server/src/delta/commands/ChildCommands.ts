@@ -30,7 +30,7 @@ import { DeltaContext } from "../DeltaContext.js"
 import { affectedNodeMessage, newErrorEvent } from "../events.js"
 import { ParticipationInfo } from "../queries/index.js"
 import { DeltaFunction, errorEvent } from "./DeltaUtil.js"
-import { findAndvalidateNodeExists, validateContainment, validateProperTree } from "./Validations.js"
+import { findAndValidateNodeExists, validateContainment, validateProperTree } from "./Validations.js"
 
 const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorEvent> => {
     deltaLogger.info("Called AddChild command id: " + msg.commandId)
@@ -40,7 +40,7 @@ const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, 
             msg.parent,
             ...msg.newChild.nodes.map(n => n.id)
         ])
-        const parentNode = findAndvalidateNodeExists(msg.parent, nodesFromDB, msg, participation)
+        const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
         const existingChildNodes = nodesFromDB.filter(n => n.id !== msg.parent)
         // node alreadyExists
         if (existingChildNodes.length > 0) {
@@ -156,7 +156,7 @@ const ReplaceChild = async (
             msg.parent, msg.replacedChild, ...msg.newChild.nodes.map(n => n.id)
 
         ])
-        const parentNode = findAndvalidateNodeExists(msg.parent, nodesFromDB, msg, participation)
+        const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
         
         const existingChildNodes = nodesFromDB.filter(n => n.id !== msg.parent && n.id !== msg.replacedChild)
         // node alreadyExists
@@ -224,12 +224,12 @@ const MoveChildFromOtherContainment = async (
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
             msg.newParent, msg.movedChild
         ])
-        const newParentNode = findAndvalidateNodeExists(msg.newParent, nodesFromDB, msg, participation)
-        const movedChildNode = findAndvalidateNodeExists(msg.movedChild, nodesFromDB, msg, participation)
+        const newParentNode = findAndValidateNodeExists(msg.newParent, nodesFromDB, msg, participation)
+        const movedChildNode = findAndValidateNodeExists(msg.movedChild, nodesFromDB, msg, participation)
         const oldParentFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
             movedChildNode.parent!
         ])
-        const oldParentNode = findAndvalidateNodeExists(movedChildNode.parent!, oldParentFromDB, msg, participation)
+        const oldParentNode = findAndValidateNodeExists(movedChildNode.parent!, oldParentFromDB, msg, participation)
         if (newParentNode.id === oldParentNode.id) {
             throw newErrorEvent("SameParents", `Old and new parent are the same (${newParentNode.id}, not allowed for MoveChildFromOtherContainment command`, msg, participation)
         }
