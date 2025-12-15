@@ -1,6 +1,7 @@
 import { DB, DbChanges, deltaLogger, LionWebTask, MetaPointersTracker, TableHelpers } from "@lionweb/server-common"
 import { TargetAdded, TargetRemoved, Missing } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
+import { isEqualMetaPointer } from "@lionweb/json"
 import {
     AddReferenceCommand,
     AddReferenceResolveInfoCommand,
@@ -38,11 +39,15 @@ const AddReference = async (participation: ParticipationInfo, msg: AddReferenceC
         afterReference.targets.splice(msg.index, 0, { resolveInfo: msg.newResolveInfo, reference: msg.newTarget!})
 
         const changes = new DbChanges(TableHelpers.pgp)
+        const missing: Missing = parentNode.references.find(c => isEqualMetaPointer(c.reference, msg.reference)) === undefined ? Missing.MissingBefore : Missing.NotMissing
+
         changes.addChanges(
-            [new TargetAdded(new JsonContext(null, ["delta"]), parentNode!, beforeReference, afterReference, { resolveInfo: msg.newResolveInfo, reference: msg.newTarget!}, Missing.MissingBefore)]
+            [new TargetAdded(new JsonContext(null, ["delta"]), parentNode!, beforeReference, afterReference, { resolveInfo: msg.newResolveInfo, reference: msg.newTarget!}, missing)]
         )
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [], task)
+        const changesQuery = changes.createPostgresQuery(metaPointerTracker)
+        const queryResult = await task.query(participation.repositoryData!, changesQuery)
         return {
             messageKind: "ReferenceAdded",
             newResolveInfo: msg.newResolveInfo,

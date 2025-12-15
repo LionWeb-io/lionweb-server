@@ -149,7 +149,7 @@ collection.forEach(withoutHistory => {
             deltaApiClient01.sendRequest(newSubscribeToPartitionRequest(deltaApiClient01.repository, deltaApiClient01.clientId, "ID-Library-01",))
             const addPropertyCmd = deltaApiClient01.sendCommand(newAddPropertyCommand(   "ID-Program-01", "draw rectangle", "LionCore-builtins-INamed-name"))
             const addChildCommand = newAddChild({
-                id: "ID-Procedure-01", cls: CLASSIFIER.Procedure, parent:"ID-Library-01", containment: CONTAINMENT.LibraryProcedures, props: []
+                id: "ID-Procedure-01", cls: CLASSIFIER.Procedure, parent:"ID-Library-01", containment: CONTAINMENT.LibraryProcedures, props: [{prop: PROPERTY.INamedName, value: "Proc first"}]
             })
             deltaApiClient01.sendCommand(addChildCommand)
             const addChildCommand1 = newAddChild(
@@ -189,6 +189,7 @@ collection.forEach(withoutHistory => {
             console.log("ReceivedMessages")
             console.log(deltaApiClient01.receivedMessageHistory)
 
+            await makeSnapShot()
         })
 
     })
