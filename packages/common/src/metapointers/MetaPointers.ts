@@ -104,8 +104,9 @@ export class MetaPointersCollector {
         const ls = `array[${metaPointersList.map(el => `'${el.language}'`).join(",")}]`
         const vs = `array[${metaPointersList.map(el => `'${el.version}'`).join(",")}]`
         const ks = `array[${metaPointersList.map(el => `'${el.key}'`).join(",")}]`
+        deltaLogger.info(`> obtainindices for repo ${this.repositoryData.repository.repository_name} query is: SELECT toMetaPointerIDs(${ls},${vs},${ks});`)
         const raw_res: { tometapointerids: string }[] = await task.query(this.repositoryData, `SELECT toMetaPointerIDs(${ls},${vs},${ks});`)
-        // deltaLogger.info(`> obtainindices for repo ${this.repositoryData.repository.repository_name} rawres is ${raw_res.length}`)
+        deltaLogger.info(`> obtainindices for repo ${this.repositoryData.repository.repository_name} rawres is ${raw_res.length}`)
         raw_res.forEach(async (el) => {
             if (el === undefined) {
                 throw new Error("EL IS UNDEFINED")

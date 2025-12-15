@@ -56,9 +56,10 @@ const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, 
         // Check done, do the work
         const changes = new DbChanges(TableHelpers.pgp)
         // Add child to parent
-
+        const missing: Missing = (parentNode.containments.find(c => isEqualMetaPointer(c.containment, msg.containment)) === undefined ? Missing.MissingBefore : Missing.NotMissing)
+        deltaLogger.info(`Missing is ${missing} ================================ ${JSON.stringify(msg.containment)}`)
         changes.addChanges(
-            [new ChildAdded(new JsonContext(null, ["delta"]), parentNode!, msg.containment, containment, newChildNode!.id, Missing.MissingBefore)]
+            [new ChildAdded(new JsonContext(null, ["delta"]), parentNode!, msg.containment, containment, newChildNode!.id, missing)]
         )
         // Add child nodes to database
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
@@ -66,6 +67,8 @@ const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, 
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, msg.newChild.nodes, task)
         const addNodesquery = SQL.insertNodeArraySQL(msg.newChild.nodes, metaPointerTracker)
         const addChildQuery = changes.createPostgresQuery(metaPointerTracker)
+        deltaLogger.info(`ADD NODES QUERY '${addNodesquery}`)
+        deltaLogger.info(`ADD CHILD QUERY '${addChildQuery}`)
         const queryResult = await task.query(participation.repositoryData!, addNodesquery + addChildQuery)
         return {
             messageKind: "ChildAdded",
@@ -123,7 +126,7 @@ const DeleteChild = async (
         const deleteSql = SQL.deleteFullNodesSQL(subtreeNodes.map(n => n.id))
         const dbChanges = new DbChanges(TableHelpers.pgp)
         dbChanges.addChanges(            
-            [new ChildRemoved(new JsonContext(null, ["delta"]), parentNode, msg.containment, containment, msg.deletedChild, Missing.MissingAfter)]
+            [new ChildRemoved(new JsonContext(null, ["delta"]), parentNode, msg.containment, containment, msg.deletedChild, Missing.NotMissing)]
         ) 
         // Run the query with metapointers as a dummy, there are no metapointers being added
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
@@ -184,10 +187,9 @@ const ReplaceChild = async (
         const replacedTree = await DB.retrieveNodeTreeDB(task, participation.repositoryData!, [
             msg.replacedChild], Number.MAX_SAFE_INTEGER)
 
-        // Add child to parent
-
+        const missing: Missing = (parentNode.containments.find(c => isEqualMetaPointer(c.containment, msg.containment)) === undefined ? Missing.MissingBefore : Missing.NotMissing)
         changes.addChanges(
-            [new ChildAdded(new JsonContext(null, ["delta"]), parentNode, msg.containment, containment, newChildNode.id, Missing.MissingBefore)]
+            [new ChildAdded(new JsonContext(null, ["delta"]), parentNode, msg.containment, containment, newChildNode.id, missing)]
         )
         // Add child nodes to database
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)

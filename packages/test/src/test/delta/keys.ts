@@ -3,7 +3,14 @@ const INamed = { "language": "LionCore-builtins", "key": "LionCore-builtins-INam
 const Program = { "language": "-key-LogoProgram", "key": "-key-Program", "version": "1" }
 const Library = { "language": "-key-LogoProgram", "key": "-key-Library", "version": "1" }
 const ICommand = { "language": "-key-LogoProgram", "key": "-key-ICommand", "version": "1" }
+const Forward = { "language": "-key-LogoProgram", "key": "-key-Forward", "version": "1" }
+const Backward = { "language": "-key-LogoProgram", "key": "-key-Backward", "version": "1" }
+const Left = { "language": "-key-LogoProgram", "key": "-key-Left", "version": "1" }
+const Right = { "language": "-key-LogoProgram", "key": "-key-Right", "version": "1" }
+const Heading = { "language": "-key-LogoProgram", "key": "-key-Heading", "version": "1" }
 const MoveCommand = { "language": "-key-LogoProgram", "key": "-key-MoveCommand", "version": "1" }
+const PenDown = { "language": "-key-LogoProgram", "key": "-key-PenDown", "version": "1" }
+const PenUp = { "language": "-key-LogoProgram", "key": "-key-PenUp", "version": "1" }
 const List = { "language": "-key-LogoProgram", "key": "-key-List", "version": "1" }
 const SetPos = { "language": "-key-LogoProgram", "key": "-key-SetPos", "version": "1" }
 const SetHeading = { "language": "-key-LogoProgram", "key": "-key-SetHeading", "version": "1" }
@@ -16,10 +23,32 @@ const Parameter = { "language": "-key-LogoProgram", "key": "-key-Parameter", "ve
 const ProcedureCall = { "language": "-key-LogoProgram", "key": "-key-ProcedureCall", "version": "1" }
 
 export const CLASSIFIER = {
-    Node, INamed, Program, Library, ICommand, MoveCommand, List, SetPos, SetHeading, HomeCommand, Repeat, If, IExpression, Procedure, Parameter, ProcedureCall
+    Node,
+    INamed,
+    Program,
+    Library,
+    ICommand,
+    Forward,
+    Backward,
+    Left,
+    Right,
+    Heading,
+    MoveCommand,
+    PenDown,
+    PenUp,
+    List,
+    SetPos,
+    SetHeading,
+    HomeCommand,
+    Repeat,
+    If,
+    IExpression,
+    Procedure,
+    Parameter,
+    ProcedureCall
 }
 const INamedName = { "language": "LionCore-builtins", "key": "LionCore-builtins-INamed-name", "version": "1" }
-const MoveCommandDirection = { "language": "-key-LogoProgram", "key": "-key-MoveCommand-direction", "version": "1" }
+const HeadingDegrees = { "language": "-key-LogoProgram", "key": "-key-Heading-degrees", "version": "1" }
 const MoveCommandDistance = { "language": "-key-LogoProgram", "key": "-key-MoveCommand-distance", "version": "1" }
 const SetPosX = { "language": "-key-LogoProgram", "key": "-key-SetPos-x", "version": "1" }
 const SetPosY = { "language": "-key-LogoProgram", "key": "-key-SetPos-y", "version": "1" }
@@ -27,7 +56,7 @@ const SetHeadingDegrees = { "language": "-key-LogoProgram", "key": "-key-SetHead
 const RepeatCount = { "language": "-key-LogoProgram", "key": "-key-Repeat-count", "version": "1" }
 
 export const PROPERTY = {
-    INamedName, MoveCommandDirection, MoveCommandDistance, SetPosX, SetPosY, SetHeadingDegrees, RepeatCount
+    INamedName, HeadingDegrees, MoveCommandDistance, SetPosX, SetPosY, SetHeadingDegrees, RepeatCount
 }
 const ProcedureCallProcedure = { "language": "-key-LogoProgram", "key": "-key-ProcedureCall-procedure", "version": "1" }
 

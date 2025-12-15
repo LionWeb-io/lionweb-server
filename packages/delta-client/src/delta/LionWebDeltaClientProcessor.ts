@@ -35,7 +35,7 @@ export class LionWebDeltaClientProcessor {
         this.deltaValidator.validationResult.reset()
         this.deltaValidator.validate(delta, type)
         if (this.deltaValidator.validationResult.hasErrors()) {
-            console.error(`3 Valoidation errors:`)
+            console.error(`3 Validation errors in: ${JSON.stringify(delta)}`)
             this.deltaValidator.validationResult.issues.forEach(issue => {
                 console.error(issue.errorMsg())
             })

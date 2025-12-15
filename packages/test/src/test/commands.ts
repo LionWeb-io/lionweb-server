@@ -10,7 +10,9 @@ import type {
     DeleteChildCommand,
     AddReferenceCommand,
     DeleteReferenceCommand,
-    LionWebJsonMetaPointer, LionWebId
+    LionWebJsonMetaPointer,
+    LionWebId,
+    LionWebJsonProperty
 } from "@lionweb/server-delta-shared"
 
 let queryId = 1
@@ -89,22 +91,23 @@ export const newDeletePropertyCommand = (nodeid: string, propertyKey: string): D
     }
 }
 
-export const newAddPartitionCommand = (nodeid: string, classifierKey: string): AddPartitionCommand => {
+export type PartitionType = {
+    id: LionWebId,
+    classifier: LionWebJsonMetaPointer,
+    properties?: LionWebJsonProperty[]
+}
+export const newAddPartitionCommand = (partition: PartitionType): AddPartitionCommand => {
     return {
         messageKind: "AddPartition",
         commandId: `command-id-${queryId++}`,
         newPartition: {
             nodes: [{
-                id: nodeid,
+                id: partition.id,
                 parent: null,
-                properties: [],
+                properties: partition.properties ?? [],
                 containments: [],
                 references: [],
-                classifier: {
-                    language: "LionCore-builtins",
-                    key: classifierKey,
-                    version: "2023.1"
-                },
+                classifier: partition.classifier,
                 annotations: []
             }]
         },

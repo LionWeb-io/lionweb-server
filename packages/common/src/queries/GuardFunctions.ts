@@ -43,7 +43,9 @@ export function isInternalQueryError(o: unknown): o is InternalQueryError {
 
 export function InternalQueryError(msg: string, data?: KeyValuePair[]): InternalQueryError {
     const result = new Error(msg) as InternalQueryError
+    const newData = (data ?? [])
+    newData.push({key: "error-message", value: msg})
     result.name = "InternalQueryError"
-    result.data = data ?? []
+    result.data = newData
     return result
 }

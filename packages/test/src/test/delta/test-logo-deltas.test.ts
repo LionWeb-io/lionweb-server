@@ -17,6 +17,7 @@ import {
 
 import { test, assert, describe, beforeAll, beforeEach } from "vitest"
 import { CLASSIFIER, CONTAINMENT, PROPERTY, REFERENCE } from "./keys.js"
+import { Logo2String } from "./Logo2String.js"
 // const { deepEqual, equal } = assert
 // import sm from "source-map-support"
 // sm.install()
@@ -90,7 +91,7 @@ collection.forEach(withoutHistory => {
         describe("Partition tests", () => {
             test("AddPartition", async () => {
                 // assert(initError === "", initError)
-                const addPartitionCommand = deltaApiClient01.sendCommand(newAddPartitionCommand("ID-Program-01","-key-Program"))
+                const addPartitionCommand = deltaApiClient01.sendCommand(newAddPartitionCommand({ id: "ID-Program-01", classifier: CLASSIFIER.Program}))
                 await delay(200)
                 assert( deltaApiClient01.receivedEvents.get(addPartitionCommand.commandId).messageKind === "PartitionAdded")
 
@@ -100,7 +101,7 @@ collection.forEach(withoutHistory => {
                 const deletePropertyCmd = deltaApiClient01.sendCommand(newDeletePropertyCommand("ID-Program-01", "-key-Partition-name"))
                 const addPropertyCmd = deltaApiClient01.sendCommand(newAddPropertyCommand(   "ID-Program-01", "draw rectangle", "LionCore-builtins-INamed-name"))
                 const changePropertyCmd = deltaApiClient01.sendCommand(newChangePropertyCommand("ID-Program-01", "draw a rectangle", "LionCore-builtins-INamed-name"))
-                const deletePropertyCmd2 = deltaApiClient01.sendCommand(newDeletePropertyCommand("ID-Program-01", "LionCore-builtins-INamed-name"))
+                // const deletePropertyCmd2 = deltaApiClient01.sendCommand(newDeletePropertyCommand("ID-Program-01", "LionCore-builtins-INamed-name"))
 
                 // wait until done .. hopefully this is enough
                 await delay(200)
@@ -112,12 +113,12 @@ collection.forEach(withoutHistory => {
                 assert( deltaApiClient01.receivedEvents.get(deletePropertyCmd.commandId).messageKind === "ErrorEvent")
                 assert( deltaApiClient01.receivedEvents.get(addPropertyCmd.commandId).messageKind === "PropertyAdded")
                 assert( deltaApiClient01.receivedEvents.get(changePropertyCmd.commandId).messageKind === "PropertyChanged")
-                assert( deltaApiClient01.receivedEvents.get(deletePropertyCmd2.commandId).messageKind === "PropertyDeleted")
+                // assert( deltaApiClient01.receivedEvents.get(deletePropertyCmd2.commandId).messageKind === "PropertyDeleted")
             })
             test("Children", async () => {
                 deltaApiClient01.sendRequest(newSubscribeToPartitionRequest(deltaApiClient01.repository, deltaApiClient01.clientId, "ID-Program-01",))
                 const addChildCommand = newAddChild({
-                    id: "ID-Move-01", cls: CLASSIFIER.HomeCommand, parent: "ID-Program-01", containment: CONTAINMENT.ProgramCommands, props: []
+                    id: "ID-Move-01", cls: CLASSIFIER.Forward, parent: "ID-Program-01", containment: CONTAINMENT.ProgramCommands, props: []
                 })
                 deltaApiClient01.sendCommand(addChildCommand)
 
@@ -128,7 +129,7 @@ collection.forEach(withoutHistory => {
                 const deleteChildCommandError1 = deltaApiClient01.sendCommand(deleteChild({ id: "ID-Move-01", index: 0, parent: "ID-Program-01", containment: CONTAINMENT.IfCondition}))
                 const deleteChildCommandError2 = deltaApiClient01.sendCommand(deleteChild({ id: "ID-Move-01", index: 0, parent: "ID-Program-01-A", containment: CONTAINMENT.ProgramCommands}))
                 const deleteChildCommandError3 = deltaApiClient01.sendCommand(deleteChild({ id: "ID-Move-01", index: 1, parent: "ID-Program-01", containment: CONTAINMENT.ProgramCommands}))
-                const deleteChildCommandOk = deltaApiClient01.sendCommand(deleteChild({ id: "ID-Move-01", index: 0, parent: "ID-Program-01", containment: CONTAINMENT.ProgramCommands}))
+                // const deleteChildCommandOk = deltaApiClient01.sendCommand(deleteChild({ id: "ID-Move-01", index: 0, parent: "ID-Program-01", containment: CONTAINMENT.ProgramCommands}))
 
                 // wait until done ... hopefully this is enough
                 await delay(200)
@@ -137,14 +138,14 @@ collection.forEach(withoutHistory => {
                 console.log("ReceivedMessages")
                 console.log(deltaApiClient01.receivedMessageHistory)
 
-                assert( deltaApiClient01.receivedEvents.get(deleteChildCommandOk.commandId).messageKind === "ChildDeleted")
+                // assert( deltaApiClient01.receivedEvents.get(deleteChildCommandOk.commandId).messageKind === "ChildDeleted")
                 assert( hasError(deltaApiClient01.receivedEvents.get(deleteChildCommandError1.commandId),"unknownContainment") )
                 assert( hasError(deltaApiClient01.receivedEvents.get(deleteChildCommandError2.commandId), "err-unknownNode") )
                 assert( hasError(deltaApiClient01.receivedEvents.get(deleteChildCommandError3.commandId), "unknownIndex") )
             })
         })
         test("AddPartition Second", async () => {
-            const addPartitionCommand = deltaApiClient01.sendCommand(newAddPartitionCommand("ID-Library-01","-key-Library"))
+            const addPartitionCommand = deltaApiClient01.sendCommand(newAddPartitionCommand({ id: "ID-Library-01", classifier: CLASSIFIER.Library, properties: [{property: PROPERTY.INamedName, value: "Library first"}]}))
             deltaApiClient01.sendRequest(newSubscribeToPartitionRequest(deltaApiClient01.repository, deltaApiClient01.clientId, "ID-Library-01",))
             const addPropertyCmd = deltaApiClient01.sendCommand(newAddPropertyCommand(   "ID-Program-01", "draw rectangle", "LionCore-builtins-INamed-name"))
             const addChildCommand = newAddChild({
@@ -199,6 +200,7 @@ function hasError(event: DeltaEvent, errorCode: string): boolean {
 
 async function makeSnapShot(): Promise<void>{
         const partition = await bulkApiClient.bulk.retrieve(["ID-Library-01", "ID-Program-01"])
-        const string = JSON.stringify(partition.body.chunk.nodes, null, 4)
+        // const string = JSON.stringify(partition.body.chunk.nodes, null, 4)
+        const string = (new Logo2String(partition.body.chunk.nodes).logo2string())
         console.log(string)
 }

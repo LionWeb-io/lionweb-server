@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { DeltaCommand, DeltaEvent, DeltaRequest, DeltaResponse, isDeltaEvent } from "@lionweb/server-delta-shared"
+import { DeltaCommand, DeltaEvent, DeltaRequest, DeltaResponse, isDeltaEvent, isDeltaResponse } from "@lionweb/server-delta-shared"
 import { eventFunctions } from "./delta/events/EventProcessingFunctions.js"
 import { LionWebDeltaClientProcessor } from "./delta/index.js"
 import { responseFunctions } from "./delta/queryresponses/ResponseProcessingFunctions.js"
@@ -16,9 +16,9 @@ export class DeltaClient {
     private _nodePort = (typeof process !== "undefined" && process.env.NODE_PORT) || 3005
     private _SERVER_IP = (typeof process !== "undefined" && process.env.REPO_IP) || "ws://127.0.0.1"
     private _SERVER_URL = `${this._SERVER_IP}:${this._nodePort}/`
-    
-    private TIME_OUT = process.env.TIMEOUT ?? "20000";
-    private TIMEOUT = typeof process !== "undefined" ? Number.parseInt(this.TIME_OUT) || 20000 : 20000;
+
+    private TIME_OUT = process.env.TIMEOUT ?? "20000"
+    private TIMEOUT = typeof process !== "undefined" ? Number.parseInt(this.TIME_OUT) || 20000 : 20000
 
     loggingOn = true
     /**
@@ -28,7 +28,7 @@ export class DeltaClient {
 
     /**
      * The name of the repository used for all Api calls
-     */        
+     */
     repository: string | null = "default"
 
     /**
@@ -43,23 +43,24 @@ export class DeltaClient {
 
     socket: WebSocket | undefined
     deltaProcessor = new LionWebDeltaClientProcessor([eventFunctions, responseFunctions])
-
-    messageIndex = 0;
+    eventFunction: ((event: DeltaEvent) => Promise<void>) | undefined
+    responseFunction: ((response: DeltaResponse) => Promise<void>) | undefined = undefined
+    messageIndex = 0
 
     sentMessageHistory: string[] = []
     receivedMessageHistory: string[] = []
-    // Map from command-id to event => 
+    // Map from command-id to event =>
     receivedEvents: Map<string, DeltaEvent> = new Map<string, DeltaEvent>()
-    // Map from response-id to response => 
+    // Map from response-id to response =>
     receivedResponses: Map<string, DeltaResponse> = new Map<string, DeltaResponse>()
-    
+
     async connect(): Promise<void> {
         this.log("Connecting socket")
-        this.socket = await new WebSocket('ws://localhost:3005');
+        this.socket = await new WebSocket("ws://localhost:3005")
         this.socket.onopen = () => {
             this.log("open socket")
         }
-        this.socket.onmessage = (ev) => {
+        this.socket.onmessage = async ev => {
             this.log(`Incoming message type '${ev.type}': ` + ev.data)
             this.receivedMessageHistory.push(ev.data.toString())
             if (this.socket === undefined) {
@@ -68,24 +69,32 @@ export class DeltaClient {
             }
             const incomingEventOrResponse = JSON.parse(ev.data.toString())
             if (isDeltaEvent(incomingEventOrResponse)) {
+                if (this.eventFunction !== undefined) {
+                    console.log("============================================")
+                    await this.eventFunction(incomingEventOrResponse)
+                }
                 incomingEventOrResponse.originCommands.forEach(cmd => {
                     this.receivedEvents.set(cmd.commandId, incomingEventOrResponse)
                 })
+            } else if (isDeltaResponse(incomingEventOrResponse)) {
+                if (this.responseFunction !== undefined) {
+                    await this.responseFunction(incomingEventOrResponse)
+                }
             }
             this.deltaProcessor.processDelta(this.socket, incomingEventOrResponse)
         }
-        this.socket.onclose = (ev) => {
+        this.socket.onclose = ev => {
             this.log("close socket" + ev.reason)
         }
-        this.socket.onerror = (ev) => {
+        this.socket.onerror = ev => {
             this.log("error socket " + ev.message)
         }
     }
 
     sendCommand(command: DeltaCommand): DeltaCommand {
         // set unique id
-        command.commandId = `command-${this.messageIndex++}`
-        
+        // command.commandId = `command-${this.messageIndex++}`
+
         const commandAsString = JSON.stringify(command)
         this.log(`sendCommand: ${commandAsString}`)
         if (this.socket === undefined) {
@@ -150,7 +159,7 @@ export class DeltaClient {
      * Return _error_ as en Error, just return itself if it already is.
      * @param error
      */
-// NB Copy from repository-common
+    // NB Copy from repository-common
     asError(error: unknown): Error {
         if (error instanceof Error) return error
         return new Error(JSON.stringify(error))
