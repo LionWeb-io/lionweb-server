@@ -3,7 +3,7 @@ import { DbConnection, LionWebTask, RepositoryData } from "@lionweb/server-commo
 
 export type MetaPointersMap = Map<string, number>
 
-// This is private and global. Metapointers never change and their index can be shared
+// This is private and global. MetaPointers never change and their index can be shared
 // We expect their number to be limited so we can have a cache that cannot be emptied
 const globalMetaPointersMap: Map<string, MetaPointersMap> = new Map<string, Map<string, number>>()
 
@@ -37,7 +37,7 @@ export function cleanGlobalPointersMap(repositoryName: string) {
 }
 
 /**
- * This class is used to collect the MetaPointers to then collect at once.
+ * This class is used to collect the MetaPointers to then store them in the DB at once.
  */
 export class MetaPointersCollector {
     // Given the set of LionWebJsonMetaPointers would not recognize duplicate, we store also
@@ -98,7 +98,8 @@ export class MetaPointersTracker {
         }, task)
     }
 
-    async populate(populationLogic: (collector: MetaPointersCollector) => void, dbConnection: DbConnection | LionWebTask): Promise<void> {
+    async populate(populationLogic: (collector: MetaPointersCollector) => void,
+                   dbConnection: DbConnection | LionWebTask): Promise<void> {
         const collector = new MetaPointersCollector(this.repositoryData)
         populationLogic(collector)
         await collector.obtainIndexes(dbConnection)
