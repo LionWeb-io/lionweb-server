@@ -11,7 +11,7 @@ sm.install()
 const DATA: string = "./data/"
 
 describe("Repository tests for inspection APIs", () => {
-    const client = new RepositoryClient("InspectionTests", "default")
+    const client = new RepositoryClient({ clientId: "InspectionTests", repository: "default"})
     client.loggingOn = true
     let jsonModel: LionWebJsonChunk
 

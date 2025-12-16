@@ -9,7 +9,7 @@ sm.install()
 const DATA: string = "./data/"
 
 describe("Repository tests", () => {
-    const t = new RepositoryClient("TestClient", "default")
+    const t = new RepositoryClient({ clientId: "TestClient", repository: "default" })
     t.loggingOn = true
 
     beforeEach("a", async function () {

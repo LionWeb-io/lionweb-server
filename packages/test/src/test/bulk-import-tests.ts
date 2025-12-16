@@ -7,7 +7,7 @@ console.log("bulk-import-tests")
 
 describe("Repository tests for bulkImport API", () => {
     const repository: string = "MyBulkImportRepo"
-    const client = new RepositoryClient("TestClient", repository)
+    const client = new RepositoryClient({ clientId: "TestClient", repository: repository })
     const withHistory = false
     let initError: string = ""
     const lwVersion = "2023.1"

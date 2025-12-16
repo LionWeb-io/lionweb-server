@@ -6,6 +6,11 @@ import { HistoryApi } from "./HistoryApi.js"
 import { InspectionApi } from "./InspectionApi.js"
 import { LanguagesApi } from "./LanguagesApi.js"
 
+// Default config values
+const DEFAULT_NODE_PORT = (typeof process !== "undefined" && process.env.NODE_PORT) || "3005"
+const DEFAULT_SERVER_IP = (typeof process !== "undefined" && process.env.REPO_IP) || "127.0.0.1"
+const DEFAULT_TIMEOUT = typeof process !== "undefined" ? Number.parseInt(process.env.TIMEOUT) || 20000 : 20000
+
 export type Status = number
 /**
  * The generic response object for all server commands
@@ -19,6 +24,14 @@ export function getVersionFromResponse(response: ClientResponse<LionwebResponse>
     return Number.parseInt(response.body.messages.find(m => m.data["version"] !== undefined).data["version"])
 }
 
+export type ClientConfiguration = {
+    clientId: string;
+    repository: string;
+    hostname?: string;
+    port?: string;
+    authorizationtoken?: string;
+    timeout?: number
+}
 // export type LionWebVersionType = "2023.1" | "2024.1"
 
 /**
@@ -29,19 +42,10 @@ export function getVersionFromResponse(response: ClientResponse<LionwebResponse>
  *      TIMEOUT: the timeout in ms for a server call
  */
 export class RepositoryClient {
-    // Server parameters
-    private _DEFAULT_NODE_PORT = (typeof process !== "undefined" && process.env.NODE_PORT) || 3005
-    private _DEFAULT_SERVER_IP = (typeof process !== "undefined" && process.env.REPO_IP) || "http://127.0.0.1"
-    private _DEFAULT_SERVER_URL = `${this._DEFAULT_SERVER_IP}:${this._DEFAULT_NODE_PORT}/`
-    private _DEFAULT_TIMEOUT = typeof process !== "undefined" ? Number.parseInt(process.env.TIMEOUT) || 20000 : 20000
-
-    loggingOn = false
-    logMessage(logMessage: string): string {
-        return this.loggingOn && logMessage !== undefined ? `&clientLog=${logMessage}` : ""
-    }
-    logMessageSolo(logMessage: string): string {
-        return this.loggingOn && logMessage !== undefined ? `clientLog=${logMessage}` : ""
-    }
+    port: string
+    hostname: string
+    serverUrl: string
+    
     /**
      * The Client id that is used for all Api requests
      */
@@ -51,8 +55,7 @@ export class RepositoryClient {
      * The name of the repository used for all Api calls
      */
     repository: string | null = "default"
-    timeout: number = this._DEFAULT_TIMEOUT
-    serverUrl: string = this._DEFAULT_SERVER_URL
+    timeout: number
 
     // The different API's that the repository provides
     dbAdmin: DbAdminApi
@@ -67,9 +70,14 @@ export class RepositoryClient {
      * @param repository we may want to pass a null repository if we are interested only in using the APIs that list,
      * create, or delete repositories and do not operate on a specific repository.
      */
-    constructor(clientId: string, repository: string | null = "default") {
-        this.clientId = clientId
-        this.repository = repository
+    constructor(config: ClientConfiguration) {
+        this.clientId = config.clientId
+        this.repository = config.repository
+        this.port = config.port ?? DEFAULT_NODE_PORT
+        this.hostname = config.hostname ?? DEFAULT_SERVER_IP
+        this.serverUrl = `http://${this.hostname}:${this.port}/`
+        this.timeout = config.timeout ?? DEFAULT_TIMEOUT
+        
         this.dbAdmin = new DbAdminApi(this)
         this.bulk = new BulkApi(this)
         this.additional = new AdditionalApi(this)
@@ -78,6 +86,16 @@ export class RepositoryClient {
         this.languages = new LanguagesApi(this)
     }
 
+    loggingOn = false
+    
+    logMessage(logMessage: string): string {
+        return this.loggingOn && logMessage !== undefined ? `&clientLog=${logMessage}` : ""
+    }
+    
+    logMessageSolo(logMessage: string): string {
+        return this.loggingOn && logMessage !== undefined ? `clientLog=${logMessage}` : ""
+    }
+    
     withClientId(id: string): RepositoryClient {
         this.clientId = id
         return this
