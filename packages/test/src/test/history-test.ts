@@ -17,7 +17,7 @@ type StoredAst = {
 }
 
 describe("Repository tests", () => {
-    const client = new RepositoryClient("TestHistoryClient", "history")
+    const client = new RepositoryClient({ clientId: "TestHistoryClient", repository: "history" })
     client.loggingOn = true
     let initialPartition: LionWebJsonChunk
     let baseFullChunk: LionWebJsonChunk
@@ -89,7 +89,7 @@ describe("Repository tests", () => {
                 return new Set<string>(response.body.chunk.nodes.map(n => n.id))
             }
 
-            const client = new RepositoryClient("TestHistoryClient", "history-partition-crud")
+            const client = new RepositoryClient({ clientId: "TestHistoryClient", repository: "history-partition-crud" })
             client.dbAdmin.createRepository("history-partition-crud", true, "2023.1")
             const v1 = getRepoVersion(
                 await client.bulk.createPartitions({

@@ -6,9 +6,9 @@ import { readModel } from "./utils.js"
 
 import { assert } from "chai"
 const { deepEqual, equal } = assert
-import sm from "source-map-support"
-
-sm.install()
+// import sm from "source-map-support"
+//
+// sm.install()
 const DATA: string = "./data/"
 
 const collection = [true, false]
@@ -17,7 +17,7 @@ const collection = [true, false]
 collection.forEach(withoutHistory => {
     const repository = withoutHistory ? "MyFirstRepo" : "MyFirstHistoryRepo"
     describe("Repository tests " + (withoutHistory ? "without history" : "with history"), () => {
-        const client = new RepositoryClient("TestClient", repository)
+        const client = new RepositoryClient({ clientId: "TestClient", repository: repository })
         // client.loggingOn = true
         let initialPartition: LionWebJsonChunk
         let initialPartitionVersion: number = 0

@@ -13,7 +13,7 @@ sm.install()
 
 describe("Client - Additional API tests", () => {
     const repository = "clientAdditionalAPIRepo"
-    const client = new RepositoryClient("TestClient", repository)
+    const client = new RepositoryClient({ clientId: "TestClient", repository: repository })
     let initError: string = ""
 
     before("create database", async function () {
