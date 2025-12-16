@@ -16,12 +16,10 @@ export class Logo2String {
 
     logo2string(): string {
         let result = ""
-        console.log(`Fopund libraries ${this.chunkWrapper.findNodesOfClassifier(CLASSIFIER.Library).length}`)
         for (const library of this.chunkWrapper.findNodesOfClassifier(CLASSIFIER.Library)) {
             result += this.library2string(library, "")
         }
         result += "\n"
-        console.log(`Found programs ${this.chunkWrapper.findNodesOfClassifier(CLASSIFIER.Program).length}`)
         for (const program of this.chunkWrapper.findNodesOfClassifier(CLASSIFIER.Program)) {
             result += this.program2string(program, "")
         }

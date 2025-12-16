@@ -160,8 +160,8 @@ collection.forEach(withoutHistory => {
             // deltaApiClient01.sendCommand(addChildCommand2)
             await makeSnapShot()
             // await delay(4000)
-            const deleteChildCommand2 = deleteChild({ id: "ID-Procedure-01", index: 0, parent: "ID-Library-01",containment: CONTAINMENT.LibraryProcedures})
-            deltaApiClient01.sendCommand(deleteChildCommand2)
+            // const deleteChildCommand2 = deleteChild({ id: "ID-Procedure-01", index: 0, parent: "ID-Library-01",containment: CONTAINMENT.LibraryProcedures})
+            // deltaApiClient01.sendCommand(deleteChildCommand2)
             
             await delay(2000)
             assert( deltaApiClient01.receivedEvents.get(addPartitionCommand.commandId).messageKind === "PartitionAdded")

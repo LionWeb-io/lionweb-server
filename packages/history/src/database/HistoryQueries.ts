@@ -72,7 +72,7 @@ export class HistoryQueries {
         requestLogger.info("HistoryQueries.getPartitions for version " + JSON.stringify(repoVersion))
         // TODO Combine both queries
         const query = `SELECT id FROM nodesForVersion(${repoVersion}) WHERE parent is null`
-        const partitionIds = (await await task.query(repositoryData, query)) as { id: string }[]
+        const partitionIds = (await task.query(repositoryData, query)) as { id: string }[]
 
         dbLogger.debug("HistoryQueries.getPartitions.Result: " + JSON.stringify(partitionIds))
         const nodes = await this.getNodesFromIdList(
