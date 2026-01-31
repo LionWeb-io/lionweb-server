@@ -7,9 +7,9 @@ import { InspectionApi } from "./InspectionApi.js"
 import { LanguagesApi } from "./LanguagesApi.js"
 
 // Default config values
-const DEFAULT_NODE_PORT = (typeof process !== "undefined" && process.env.NODE_PORT) || "3005"
-const DEFAULT_SERVER_IP = (typeof process !== "undefined" && process.env.REPO_IP) || "127.0.0.1"
-const DEFAULT_TIMEOUT = typeof process !== "undefined" ? Number.parseInt(process.env.TIMEOUT) || 20000 : 20000
+const DEFAULT_NODE_PORT = (process !== undefined && process.env.NODE_PORT) || "3005"
+const DEFAULT_SERVER_IP = (process !== undefined && process.env.REPO_IP) || "127.0.0.1"
+const DEFAULT_TIMEOUT = process !== undefined ? Number.parseInt(process.env.TIMEOUT) || 20000 : 20000
 
 export type Status = number
 /**
@@ -29,7 +29,7 @@ export type ClientConfiguration = {
     repository: string;
     hostname?: string;
     port?: string;
-    authorizationtoken?: string;
+    authorizationToken?: string;
     timeout?: number
 }
 // export type LionWebVersionType = "2023.1" | "2024.1"
