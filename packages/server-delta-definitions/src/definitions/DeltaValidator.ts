@@ -13,16 +13,25 @@ import {
     validateSerializationFormatVersion,
     validateVersion,
     validateKey,
-    validateId
+    validateId,
+    AdminTypesDefinitions,
+    AdminRequestDefinitions,
+    AdminResponseDefinitions
 } from "@lionweb/validation"
 
 export type UnknownObjectType = { [key: string]: unknown }
 
-const definitions = new SyntaxDefinition([CommandDefinitions, ResponseDefinitions, RequestDefinitions, EventDefinitions], [ChunksDefinitions, DeltaTypesDefinitions])
-definitions.addValidator("LionWebId", validateId ),
-    definitions.addValidator("LionWebKey", validateKey ),
-    definitions.addValidator("LionWebVersion",validateVersion),
-    definitions.addValidator("LionWebSerializationFormatVersion", validateSerializationFormatVersion)
+/**
+ * All the validator definitions use by the delta protocol.
+ */
+const definitions = new SyntaxDefinition(
+    [CommandDefinitions, ResponseDefinitions, RequestDefinitions, EventDefinitions, AdminRequestDefinitions, AdminResponseDefinitions], 
+    [ChunksDefinitions, DeltaTypesDefinitions, AdminTypesDefinitions]
+)
+definitions.addValidator("LionWebId", validateId )
+definitions.addValidator("LionWebKey", validateKey )
+definitions.addValidator("LionWebVersion",validateVersion)
+definitions.addValidator("LionWebSerializationFormatVersion", validateSerializationFormatVersion)
 
 export class DeltaValidator extends SyntaxValidator {
     constructor(validationResult: ValidationResult) {

@@ -65,21 +65,7 @@ export class LionWebQueries {
     /**
      * Get all partitions: this returns all nodes that have parent set to null or undefined
      */
-    retrievePartitionsFromDB = async (task: LionWebTask, repositoryData: RepositoryData): Promise<QueryReturnType<ListPartitionsResponse>> => {
-        dbLogger.info("LionWebQueries.getPartitions")
-        let query = SQL.currentRepoVersionSQL()
-        query += SQL.retrieveFullNodesFromQuerySQL(`SELECT * FROM ${NODES_TABLE} WHERE parent is null`)
-        const [versionResult, result] = await task.multi(repositoryData, query)
-        return {
-            status: HttpSuccessCodes.Ok,
-            query: "query",
-            queryResult: {
-                chunk: nodesToChunk(result, repositoryData.repository.lionweb_version),
-                success: true,
-                messages: [SQL.versionResultToResponse(versionResult)]
-            }
-        }
-    }
+
 
     /**
      * Get the current version of the repo.
@@ -341,24 +327,24 @@ export class LionWebQueries {
         }
     }
 
-    async makeNodeIdsReservation(
-        task: LionWebTask,
-        repositoryData: RepositoryData,
-        idsAdded: string[]
-    ): Promise<QueryReturnType<LionwebResponse>> {
-        if (idsAdded.length > 0) {
-            const query = SQL.insertReservedNodeIdsSQL(repositoryData, idsAdded)
-            await task.query(repositoryData, query)
-            return {
-                status: HttpSuccessCodes.Ok,
-                query: query,
-                queryResult: {
-                    success: true,
-                    messages: []
-                }
-            }
-        }
-    }
+    // async makeNodeIdsReservation(
+    //     task: LionWebTask,
+    //     repositoryData: RepositoryData,
+    //     idsAdded: string[]
+    // ): Promise<QueryReturnType<LionwebResponse>> {
+    //     if (idsAdded.length > 0) {
+    //         const query = SQL.insertReservedNodeIdsSQL(repositoryData, idsAdded)
+    //         await task.query(repositoryData, query)
+    //         return {
+    //             status: HttpSuccessCodes.Ok,
+    //             query: query,
+    //             queryResult: {
+    //                 success: true,
+    //                 messages: []
+    //             }
+    //         }
+    //     }
+    // }
 
     private dbCommandsForImplicitlyRemovedChildNodes(
         dbCommands: DbChanges,

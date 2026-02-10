@@ -1,7 +1,7 @@
+import { String } from "./DeltaTypes.js";
 import { Number } from "./DeltaTypes.js";
 import { CommandSource } from "./DeltaTypes.js";
-import { String } from "./DeltaTypes.js";
-import { ProtocolMessage } from "./DeltaTypes.js";
+import { AdditionalInfo } from "./DeltaTypes.js";
 import { LionWebId } from "./Chunks.js";
 import { LionWebJsonMetaPointer } from "./Chunks.js";
 import { LionWebDeltaJsonChunk } from "./DeltaTypes.js";
@@ -9,10 +9,10 @@ import { LionWebDeltaJsonChunk } from "./DeltaTypes.js";
 
 // The overall "super-type"
 export type DeltaEvent = {
+    messageKind: EventMessageKind;
     sequenceNumber: Number;
     originCommands: CommandSource[];
-    messageKind: EventMessageKind;
-    protocolMessages: ProtocolMessage[];
+    additionalInfo: AdditionalInfo[];
 };
 
 /**
@@ -283,8 +283,8 @@ export type ReferenceAddedEvent = DeltaEvent & {
     parent: LionWebId;
     index: Number;
     reference: LionWebJsonMetaPointer;
-    newTarget: LionWebId | null;
-    newResolveInfo: String | null;
+    newTarget?: LionWebId | null;
+    newResolveInfo?: String | null;
     messageKind: "ReferenceAdded";
 };
 
@@ -295,8 +295,8 @@ export type ReferenceDeletedEvent = DeltaEvent & {
     parent: LionWebId;
     index: Number;
     reference: LionWebJsonMetaPointer;
-    deletedTarget: LionWebId | null;
-    deletedResolveInfo: String | null;
+    deletedTarget?: LionWebId | null;
+    deletedResolveInfo?: String | null;
     messageKind: "ReferenceDeleted";
 };
 
@@ -307,175 +307,11 @@ export type ReferenceChangedEvent = DeltaEvent & {
     parent: LionWebId;
     index: Number;
     reference: LionWebJsonMetaPointer;
-    newTarget: LionWebId | null;
-    newResolveInfo: String | null;
-    oldTarget: LionWebId | null;
-    oldResolveInfo: String | null;
+    newTarget?: LionWebId | null;
+    newResolveInfo?: String | null;
+    oldTarget?: LionWebId | null;
+    oldResolveInfo?: String | null;
     messageKind: "ReferenceChanged";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-EntryMovedFromOtherReference
- */
-export type EntryMovedFromOtherReferenceEvent = DeltaEvent & {
-    newParent: LionWebId;
-    newIndex: Number;
-    newReference: LionWebJsonMetaPointer;
-    oldParent: LionWebId;
-    oldIndex: Number;
-    oldReference: LionWebJsonMetaPointer;
-    movedTarget: LionWebId | null;
-    movedResolveInfo: String | null;
-    messageKind: "EntryMovedFromOtherReference";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-EntryMovedFromOtherReferenceInSameParent
- */
-export type EntryMovedFromOtherReferenceInSameParentEvent = DeltaEvent & {
-    parent: LionWebId;
-    newIndex: Number;
-    newReference: LionWebJsonMetaPointer;
-    oldIndex: Number;
-    oldReference: LionWebJsonMetaPointer;
-    movedTarget: LionWebId | null;
-    movedResolveInfo: String | null;
-    messageKind: "EntryMovedFromOtherReferenceInSameParent";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-EntryMovedInSameReference
- */
-export type EntryMovedInSameReferenceEvent = DeltaEvent & {
-    parent: LionWebId;
-    newIndex: Number;
-    oldIndex: Number;
-    reference: LionWebJsonMetaPointer;
-    movedTarget: LionWebId | null;
-    movedResolveInfo: String | null;
-    messageKind: "EntryMovedInSameReference";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-EntryMovedAndReplacedFromOtherReference
- */
-export type EntryMovedAndReplacedFromOtherReferenceEvent = DeltaEvent & {
-    newParent: LionWebId;
-    newIndex: Number;
-    newReference: LionWebJsonMetaPointer;
-    oldParent: LionWebId;
-    oldIndex: Number;
-    oldReference: LionWebJsonMetaPointer;
-    movedTarget: LionWebId | null;
-    movedResolveInfo: String | null;
-    replacedTarget: LionWebId | null;
-    replacedResolveInfo: String | null;
-    messageKind: "EntryMovedAndReplacedFromOtherReference";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-EntryMovedAndReplacedFromOtherReferenceInSameParent
- */
-export type EntryMovedAndReplacedFromOtherReferenceInSameParentEvent = DeltaEvent & {
-    parent: LionWebId;
-    newIndex: Number;
-    newReference: LionWebJsonMetaPointer;
-    oldIndex: Number;
-    oldReference: LionWebJsonMetaPointer;
-    movedTarget: LionWebId | null;
-    movedResolveInfo: String | null;
-    replacedTarget: LionWebId | null;
-    replacedResolveInfo: String | null;
-    messageKind: "EntryMovedAndReplacedFromOtherReferenceInSameParent";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-EntryMovedAndReplacedInSameReference
- */
-export type EntryMovedAndReplacedInSameReferenceEvent = DeltaEvent & {
-    parent: LionWebId;
-    newIndex: Number;
-    reference: LionWebJsonMetaPointer;
-    oldIndex: Number;
-    movedTarget: LionWebId | null;
-    movedResolveInfo: String | null;
-    replacedTarget: LionWebId | null;
-    replacedResolveInfo: String | null;
-    messageKind: "EntryMovedAndReplacedInSameReference";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ReferenceResolveInfoAdded
- */
-export type ReferenceResolveInfoAddedEvent = DeltaEvent & {
-    parent: LionWebId;
-    index: Number;
-    reference: LionWebJsonMetaPointer;
-    newResolveInfo: String;
-    target: LionWebId;
-    messageKind: "ReferenceResolveInfoAdded";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ReferenceResolveInfoDeleted
- */
-export type ReferenceResolveInfoDeletedEvent = DeltaEvent & {
-    parent: LionWebId;
-    index: Number;
-    reference: LionWebJsonMetaPointer;
-    deletedResolveInfo: String;
-    target: LionWebId;
-    messageKind: "ReferenceResolveInfoDeleted";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ReferenceResolveInfoChanged
- */
-export type ReferenceResolveInfoChangedEvent = DeltaEvent & {
-    parent: LionWebId;
-    index: Number;
-    reference: LionWebJsonMetaPointer;
-    newResolveInfo: String;
-    target: LionWebId | null;
-    oldResolveInfo: String;
-    messageKind: "ReferenceResolveInfoChanged";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ReferenceTargetAdded
- */
-export type ReferenceTargetAddedEvent = DeltaEvent & {
-    parent: LionWebId;
-    index: Number;
-    reference: LionWebJsonMetaPointer;
-    resolveInfo: String;
-    newTarget: LionWebId;
-    messageKind: "ReferenceTargetAdded";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ReferenceTargetDeleted
- */
-export type ReferenceTargetDeletedEvent = DeltaEvent & {
-    parent: LionWebId;
-    index: Number;
-    reference: LionWebJsonMetaPointer;
-    resolveInfo: String;
-    deletedTarget: LionWebId;
-    messageKind: "ReferenceTargetDeleted";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ReferenceTargetChanged
- */
-export type ReferenceTargetChangedEvent = DeltaEvent & {
-    parent: LionWebId;
-    index: Number;
-    reference: LionWebJsonMetaPointer;
-    resolveInfo: String;
-    newTarget: LionWebId;
-    replacedTarget: LionWebId;
-    messageKind: "ReferenceTargetChanged";
 };
 
 /**
@@ -529,18 +365,6 @@ export type EventMessageKind =
     | "ReferenceAdded"
     | "ReferenceDeleted"
     | "ReferenceChanged"
-    | "EntryMovedFromOtherReference"
-    | "EntryMovedFromOtherReferenceInSameParent"
-    | "EntryMovedInSameReference"
-    | "EntryMovedAndReplacedFromOtherReference"
-    | "EntryMovedAndReplacedFromOtherReferenceInSameParent"
-    | "EntryMovedAndReplacedInSameReference"
-    | "ReferenceResolveInfoAdded"
-    | "ReferenceResolveInfoDeleted"
-    | "ReferenceResolveInfoChanged"
-    | "ReferenceTargetAdded"
-    | "ReferenceTargetDeleted"
-    | "ReferenceTargetChanged"
     | "CompositeEvent"
     | "NoOp"
     | "ErrorEvent";
@@ -576,18 +400,6 @@ export function isDeltaEvent(object: unknown): object is DeltaEvent {
             "ReferenceAdded",
             "ReferenceDeleted",
             "ReferenceChanged",
-            "EntryMovedFromOtherReference",
-            "EntryMovedFromOtherReferenceInSameParent",
-            "EntryMovedInSameReference",
-            "EntryMovedAndReplacedFromOtherReference",
-            "EntryMovedAndReplacedFromOtherReferenceInSameParent",
-            "EntryMovedAndReplacedInSameReference",
-            "ReferenceResolveInfoAdded",
-            "ReferenceResolveInfoDeleted",
-            "ReferenceResolveInfoChanged",
-            "ReferenceTargetAdded",
-            "ReferenceTargetDeleted",
-            "ReferenceTargetChanged",
             "CompositeEvent",
             "NoOp",
             "ErrorEvent",

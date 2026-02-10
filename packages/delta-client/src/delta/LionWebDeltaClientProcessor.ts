@@ -1,4 +1,3 @@
-import WebSocket from "ws"
 import { DeltaValidator } from "@lionweb/server-delta-definitions"
 import { DeltaEvent } from "@lionweb/server-delta-shared"
 import { ValidationResult } from "@lionweb/validation"
@@ -21,6 +20,7 @@ export class LionWebDeltaClientProcessor {
     }
 
     processDelta(socket: WebSocket, delta: DeltaEvent): void {
+        console.log("LionWebDeltaClientProcessor.processDelta")
         const type = delta.messageKind
         if (typeof type !== "string") {
             console.error(`1 : messageKind is not a string but a '${typeof type}'`)
@@ -42,6 +42,6 @@ export class LionWebDeltaClientProcessor {
             return
         }
         // Finally ok
-        func(socket, delta)
+        func(delta)
     }
 }

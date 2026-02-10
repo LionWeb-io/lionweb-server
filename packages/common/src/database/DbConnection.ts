@@ -26,8 +26,10 @@ export type RepositoryInfo = {
 
 /**
  * Adds a SET search_path in from of the query to make it work in the context of the schema of the repository requested.
+ * Also checks whether the required schema exists by calling the PSQL `existsschema` function.
  * @param query             The query to adapt
  * @param repositoryData    The data of the repository on which the query should work
+ * @returns                 The original query preceded by the set path and exits schema queries
  */
 export function addRepositorySchema(query: string, repositoryData: RepositoryData) {
     if (!query.startsWith("SET search_path TO")) {
@@ -121,6 +123,18 @@ export class DbConnection {
         query = addRepositorySchema(query, repositoryData)
         dbLogger.debug({ query: query.split("\n", 500) })
         return await this.pgDatabaseConnection.one(query)
+    }
+
+    /**
+     * @see  pgPromise.IDatabase.one
+     * @param repositoryData
+     * @param query
+     */
+    async manyOrNone(repositoryData: RepositoryData, query: string) {
+        traceLogger.info("DbConnection.one")
+        query = addRepositorySchema(query, repositoryData)
+        dbLogger.debug({ query: query.split("\n", 500) })
+        return await this.pgDatabaseConnection.manyOrNone(query)
     }
 
     /**

@@ -1,31 +1,39 @@
-import { deltaLogger, isInternalQueryError, DB } from "@lionweb/server-common";
+import { deltaLogger, isInternalQueryError, DB, notNullOrUndefined } from "@lionweb/server-common";
+import { NodeWithParent } from "@lionweb/server-common/dist/queries/RetrieveNodes.js"
 import { DeltaValidator } from "@lionweb/server-delta-definitions"
-import { ErrorEvent, DeltaRequest, isDeltaResponse, DeltaCommand } from "@lionweb/server-delta-shared"
+import {
+    ErrorEvent,
+    DeltaRequest,
+    isDeltaResponse,
+    DeltaCommand,
+    isDeltaAdminResponse,
+    isDeltaAdminRequest,
+    DeltaAdminRequest,
+    isDeltaEvent,
+    isDeltaCommand,
+    isDeltaRequest,
+    findDistributableInfos,
+    MessageToClient,
+    ErrorResponse
+} from "@lionweb/server-delta-shared"
+import { MessageFromClient } from "@lionweb/server-delta-shared"
 import { ValidationResult } from "@lionweb/validation"
 import WebSocket from 'ws';
+import { adminRequestFunctions } from "./adminrequests/AdminFunctions.js"
 import { DeltaContext } from "./DeltaContext.js"
 import {
     annotationFunctions,
     childFunctions,
     DeltaFunction,
     issuesToProtocolNessages,
-    MessageFromClient,
     MessageFunction,
     partitionFunctions,
     propertyFunctions,
     referenceFunctions
 } from "./commands/index.js"
 import { activeSockets } from "./DeltaClientAdmin.js"
-import { affectedNodeMessage, affectedPartitionMessage, isErrorEvent, newErrorEvent } from "./events.js"
+import { affectedPartitionMessage, isErrorEvent, isErrorResponse, newErrorDelta } from "./events.js"
 import { ParticipationInfo, requestFunctions } from "./queries/index.js"
-
-export function isQueryRequestType(object: MessageFromClient): object is DeltaRequest {
-    const messageKind = object.messageKind
-    return [
-        "ReconnectRequest", "ListPartitionsRequest", "GetAvailableIdsRequest", "SignOffRequest",
-        "SignOnRequest", "UnsubscribeFromPartitionContentsRequest", "SubscribeToPartitionContentsRequest", "SubscribeToChangingPartitionsRequest"
-    ].includes(messageKind)
-}
 
 class DeltaProcessor {
     processingFunctions: Map<string, MessageFunction> = new Map<string, MessageFunction>() 
@@ -52,6 +60,7 @@ class DeltaProcessor {
     processDelta = async (socket: WebSocket, delta: MessageFromClient): Promise<void> => {
         // first try to get the `messageKind`
         deltaLogger.debug(`processDelta messageKind ${delta?.messageKind}`)
+        const participation = activeSockets.get(socket)
         const messageKind = delta.messageKind
         if (typeof messageKind !== "string") {
             deltaLogger.error(`processDelta 1: messageKind should be a string but is a '${typeof messageKind}'`)
@@ -61,18 +70,9 @@ class DeltaProcessor {
         const func = this.processingFunctions.get(messageKind)
         if (func === undefined) {
             deltaLogger.error(`processDelta 2: no processor function found for ${messageKind}`)
-            const response: ErrorEvent = {
-                errorCode: "MessageKindUnknown",
-                messageKind: "ErrorEvent",
-                message: `Cannot perform delta request: message of kind '${messageKind}' is unknown`,
-                sequenceNumber: 0,
-                originCommands: [{
-                    participationId: activeSockets.get(socket)?.participationId ?? "<unknown-participation-id>",
-                    commandId: (delta as DeltaCommand).commandId ?? (delta as DeltaRequest).queryId ?? "<unknown-command-or-query>"
-                }],
-                protocolMessages: []
-            }
-            socket.send(JSON.stringify(response))
+            const response = newErrorDelta("MessageKindUnknown", `Cannot perform delta request: message of kind '${messageKind}' is unknown`,
+                delta, participation)
+            this.sendDelta(socket, participation, delta, response)
             return
         }
         // Now validate the all the properties of the full JSON message
@@ -83,26 +83,16 @@ class DeltaProcessor {
             this.deltaValidator.validationResult.issues.forEach(issue => {
                 deltaLogger.error(issue.errorMsg())
             })
-            const response: ErrorEvent = {
-                errorCode: "MessageSyntaxError",
-                messageKind: "ErrorEvent",
-                message: "Validation errors",
-                sequenceNumber: 0,
-                originCommands: [{
-                    participationId: "none",
-                    commandId: (delta as DeltaCommand).commandId ?? (delta as DeltaRequest).queryId ?? "<unknown-command-or-query>"
-                }],
-                protocolMessages: issuesToProtocolNessages(this.deltaValidator.validationResult.issues)
-            }
-            socket.send(JSON.stringify(response))
+            const response = newErrorDelta("MessageSyntaxError","Validation errors", delta, participation,
+                { additionalInfo: issuesToProtocolNessages(this.deltaValidator.validationResult.issues) })
+            this.sendDelta(socket, participation, delta, response)
             return
         }
         // Check participation status
-        const participation = activeSockets.get(socket)
-        const errorEvent = this.validateParticipation(delta, participation)
-        if (errorEvent !== undefined) {
-            deltaLogger.error(`error event ${JSON.stringify(errorEvent)}`)
-            socket.send(JSON.stringify(errorEvent))
+        const errorDelta = this.validateParticipation(delta, participation)
+        if (errorDelta !== undefined) {
+            deltaLogger.error(`error event/response ${JSON.stringify(errorDelta)}`)
+            this.sendDelta(socket, participation, delta, errorDelta)
             return
         }
 
@@ -110,15 +100,15 @@ class DeltaProcessor {
         try {
             const response = await func(participation!, delta, this.context!)
             // Errors and responses to requests only need to be sent to the client that sent the message
-            if (response.messageKind === "ErrorEvent" || isDeltaResponse(response)) {
+            if (response.messageKind === "ErrorEvent" || isDeltaResponse(response) || isDeltaAdminResponse(response)) {
                 deltaLogger.info(`Sending Error Event or response ${JSON.stringify(response)}`)
-                socket.send(JSON.stringify(response))
+                this.sendDelta(socket, participation, delta, response)
             } else {
                 // To whom needs this Event (yes, it's an Event now) need to be sent.
                 // For most/all events, we need to know whether the others are subscribed to the partition wjhre changes took place
                 // TODO: Add the changed partitions to the result of the processing function, so we know to whom to send.
-                deltaLogger.debug(`looking foir affected nodes in ${response}`)
-                const affectedNodeData = response.protocolMessages.find(m => m.kind == "AffectedNode")
+                deltaLogger.debug(`looking for affected nodes in ${response}`)
+                const affectedNodeData = response.additionalInfo.find(m => m.kind == "AffectedNode")
                 const affectedNode = affectedNodeData?.data?.find(kv => kv.key === "node")
                 if (affectedNode === undefined) {
                     deltaLogger.debug("No affected node found, not sending delta's")
@@ -128,20 +118,19 @@ class DeltaProcessor {
                     if (parentChain === undefined) {
                         throw new Error("PARENT CHAIN UNDEFINED")
                     } else {
-                        deltaLogger.debug(`PARENT CHAIN IS ${parentChain.map(p => `${p.id} parent ${p.parent} | `)}`)
+                        deltaLogger.info(`PARENT CHAIN IS ${JSON.stringify(parentChain)}`)
                     }
-                    const affectedPartition = parentChain[parentChain.length-1]
+                    const affectedPartition = parentChain[parentChain.length-1] ?? { id: affectedNode.value, parent: null } as NodeWithParent
                     if (affectedPartition !== undefined) {
-                        response.protocolMessages.push(affectedPartitionMessage(affectedPartition.id))
+                        deltaLogger.info(`affectedPartition ${JSON.stringify(affectedPartition)}`)
+                        response.additionalInfo.push(affectedPartitionMessage(affectedPartition.id))
                         for (const participationInfo of activeSockets.values()) {
+                            deltaLogger.info(`Participant ${participationInfo.repositoryData?.clientId} subscribed to '${JSON.stringify(participationInfo.subscribedPartitions)}'`)
                             if (participationInfo.subscribedPartitions.includes(affectedPartition.id)) {
-                                response.sequenceNumber = participationInfo.eventSequenceNumber++
                                 deltaLogger.info(`Subscribed Sending ${JSON.stringify(response)} to ${participationInfo.repositoryData!.clientId}`)
-                                deltaLogger.info(`Subscribed Sending active sockets number is ${activeSockets.size}`)
-                                participationInfo.socket.send(JSON.stringify(response))
+                                this.sendDelta(participationInfo.socket, participationInfo, delta, response)
                             } else {
                                 deltaLogger.info(`NOT Subscribed ${participationInfo.repositoryData!.clientId}`)
-
                             }
                         }
                     } else {
@@ -150,75 +139,45 @@ class DeltaProcessor {
                 }
             }
         } catch (e: unknown) {
-            if (isErrorEvent(e)) {
-                socket.send(JSON.stringify(e))
+            if (isErrorEvent(e) || isErrorResponse(e)) {
+                this.sendDelta(socket, participation, delta, e)
             } else if (isInternalQueryError(e)) {
-                const errorEvent: ErrorEvent = newErrorEvent('query error' + e.name, e.message, delta, participation!, {
-                    originCommands: [
-                        {
-                            commandId: (delta as DeltaCommand).commandId ?? (delta as DeltaRequest).queryId ?? "<unknown-command-or-query>",
-                            participationId: participation!.participationId
-                        }
-                    ],
-                    protocolMessages: [ {
+                const errorDelta = newErrorDelta('query error' + e.name, e.message, delta, participation!, {
+                    additionalInfo: [ {
                         data: e.data,
-                        kind: "Internal",
+                        kind: "InternalQueryError",
                         message:"Additional data"
                     }]
                 })
-                socket.send(JSON.stringify(errorEvent))
+                this.sendDelta(socket, participation, delta, errorDelta)
             } else if (e instanceof Error) {
                 console.log(e.stack)
-                const errorEvent: ErrorEvent = newErrorEvent("Exception", e.message, delta, participation!,
-                    { originCommands: [
-                            {
-                                commandId: (delta as DeltaCommand).commandId ?? (delta as DeltaRequest).queryId ?? "<unknown-command-or-query>",
-                                participationId: participation!.participationId
-                            }
-                        ],
-                        protocolMessages: [{
+                const errorDelta = newErrorDelta("Exception", e.message, delta, participation!,
+                    { 
+                        additionalInfo: [{
                             kind: "Extra",
                             message: "stacktrace",
-                            data: [{
-                                key: "TRACE",
-                                value: e.stack ?? "NO TRACE"
-                            }]
+                            data: [{key: "TRACE", value: e.stack ?? "NO TRACE"}]
                         }]
                     })
-                socket.send(JSON.stringify(errorEvent))
+                this.sendDelta(socket, participation, delta, errorDelta)
             }
         }
     }
 
-    validateParticipation = (delta: MessageFromClient, participation: ParticipationInfo | undefined): ErrorEvent | undefined => {
-        if (delta.messageKind === "SignOn") {
+    validateParticipation = (delta: MessageFromClient, participation: ParticipationInfo | undefined): ErrorEvent | ErrorResponse | undefined => {
+        if (delta.messageKind === "SignOnRequest") {
             return undefined
         }
         if (participation === undefined) {
-            const response: ErrorEvent = {
-                errorCode: "invalidParticipation",
-                messageKind: "ErrorEvent",
-                message: "Cannot perform delta request because there is no participation",
-                sequenceNumber: 0,
-                originCommands: [{
-                    participationId: "<unknown-participation-id>",
-                    commandId: (delta as DeltaCommand).commandId ?? (delta as DeltaRequest).queryId ?? "<unknown-command-or-query>"
-                }],
-                protocolMessages: []
-            }
-            return response
-        }
-        if (participation.participationStatus !== "signedOn") {
-            const response: ErrorEvent = {
-                errorCode: "invalidParticipation",
-                messageKind: "ErrorEvent",
-                message: `Cannot perform ListPartitions request because participation status is ${participation.participationStatus}`,
-                sequenceNumber: participation.eventSequenceNumber++,
-                originCommands: [{
-                    participationId: participation.participationId,
-                    commandId: (delta as DeltaCommand).commandId ?? (delta as DeltaRequest).queryId ?? "<unknown-command-or-query>"
-                }],
-                protocolMessages: [ {
+            return newErrorDelta("invalidParticipation", "Cannot perform delta request because there is no participation", delta, participation)
+        } else if ( isDeltaAdminRequest(delta)) {
+            // Always ok, does not have tom be signedOn
+            return undefined
+        } else if (participation.participationStatus !== "signedOn") {
+            return newErrorDelta("invalidParticipation",`Cannot perform ListPartitions request because participation status is ${participation.participationStatus}`,
+                delta, participation, {
+                additionalInfo: [ {
                     kind: "reason",
                     message: "Participation status incorrect, should be SignedOn",
                     data: [{
@@ -226,14 +185,36 @@ class DeltaProcessor {
                         value: participation.participationStatus
                     }]
                 }]
-            }
-            return response
+            })
         }
         return undefined
+    }
+    
+    sendDelta(socket: WebSocket, participation: ParticipationInfo | undefined, originalMessage: MessageFromClient, responseOrEvent: MessageToClient) {
+        if (isDeltaEvent(responseOrEvent) && isDeltaCommand(originalMessage)) {
+            responseOrEvent.originCommands.forEach(cmd => cmd.commandId = originalMessage.commandId)
+            responseOrEvent.additionalInfo.push(...findDistributableInfos(originalMessage))
+            if (notNullOrUndefined(participation)) {
+                responseOrEvent.sequenceNumber = participation.nextSequenceNumber()
+            }
+        } else if (isDeltaRequest(originalMessage) && isDeltaResponse(responseOrEvent)) {
+            responseOrEvent.queryId = originalMessage.queryId
+        } else {
+            // TODO INTERNAL ERROR
+        }
+        socket.send(JSON.stringify(responseOrEvent))
     }
 }
 
 // Status: connected + activeParticipation(s)
 //         connected + noParticipation
 
-export const deltaProcessor = new DeltaProcessor([childFunctions, requestFunctions, referenceFunctions, annotationFunctions, partitionFunctions, propertyFunctions, requestFunctions])
+export const deltaProcessor = new DeltaProcessor([
+    childFunctions,
+    requestFunctions,
+    referenceFunctions,
+    annotationFunctions,
+    partitionFunctions,
+    propertyFunctions,
+    adminRequestFunctions
+])

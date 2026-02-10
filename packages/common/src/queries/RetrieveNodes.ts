@@ -1,6 +1,6 @@
 import { LionWebJsonNode } from "@lionweb/json"
 import { KeyValuePair } from "@lionweb/server-delta-shared"
-import { asError, dbLogger } from "../apiutil/index.js"
+import { asError, dbLogger, deltaLogger } from "../apiutil/index.js"
 import {
     InternalQueryError,
     SQL,
@@ -39,13 +39,13 @@ const retrieveFullNodesRecursiveSQL = (nodeid: string[], depthLimit: number): st
  *
  */
 const retrieveFullNodesRecursiveDB = async (
-    con: DbConnection | LionWebTask,
+    task: LionWebTask,
     repoData: RepositoryData,
     nodeid: string[],
     depthLimit: number
 ): Promise<LionWebJsonNode[]> => {
     const query = retrieveFullNodesRecursiveSQL(nodeid, depthLimit)
-    const result = await con.multi(repoData, query)
+    const result = await task.multi(repoData, query)
     if (!SQL.is_NodesForQueryQuery_ResultType(result[0])) {
         const data: KeyValuePair[] = [
             {
@@ -64,7 +64,7 @@ const retrieveFullNodesRecursiveDB = async (
 
 export type NodeWithParent = {
     id: string
-    parent: string
+    parent: string | null
 }
 
 function isNodeWithParent(o: unknown): o is NodeWithParent {
@@ -100,10 +100,11 @@ const retrieveParentsSQL = (nodeid: string): string => {
  * @returns Nodes-table rows: {id, classifier, parent}[] 
  */
 const retrieveParentsDB = async (db: DbConnection, repoData: RepositoryData, nodeid: string): Promise<NodeWithParent[]> => {
-    const result = await db.multi(repoData, retrieveParentsSQL(nodeid))
-    dbLogger.info(`Parents of '${nodeid} are '${JSON.stringify(result)}'`)
-    if (Array.isArray(result[0]) && result[0].every(n => isNodeWithParent(n))) {
-        return result[0] as NodeWithParent[]
+    const result = await db.manyOrNone(repoData, retrieveParentsSQL(nodeid))
+    deltaLogger.info(`Parents of '${nodeid} are '${JSON.stringify(result)}'`)
+    if (Array.isArray(result) && result.every(n => isNodeWithParent(n))) {
+        deltaLogger.info(`found parent`)
+        return result as NodeWithParent[]
     }  else {
         return []
     } 

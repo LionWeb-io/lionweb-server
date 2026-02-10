@@ -1,6 +1,6 @@
 {
   "name": "@lionweb/server-inspection",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": false,
   "description": "Inspection routes for the lionweb server",
   "main": "dist/index.js",
@@ -22,8 +22,8 @@
     "test": "echo No tests in server-inspection"
   },
   "dependencies": {
-    "@lionweb/server-dbadmin": "0.3.0",
-    "@lionweb/server-common": "0.3.0",
+    "@lionweb/server-dbadmin": "0.4.0",
+    "@lionweb/server-common": "0.4.0",
     "express": "4.21.2",
     "@types/express": "4.17.21"
   }

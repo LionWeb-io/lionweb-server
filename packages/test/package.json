@@ -1,6 +1,6 @@
 {
   "name": "@lionweb/server-test",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "main": "src/server.ts",
   "types": "./dist/index.d.ts",
@@ -23,8 +23,11 @@
     "setup": "npm run install-bulk-data && npm run install-delta-data",
     "install-bulk-data": "npx degit https://github.com/LionWeb-io/lionweb-integration-testing/testchanges/data/ data",
     "install-delta-data": "npx degit https://github.com/LionWeb-io/lionweb-integration-testing/delta/ delta",
-      "test1": "mocha ./dist/test/tests.js ./dist/test/inspectionTests.js ./dist/test/tests-issue19.js ./dist/test/history-test.js ./dist/test/sequentialize-requests-test.js",
-      "test": "vitest ./dist/test/tests.js"
+      "test": "vitest --run --fileParallelism=false  --silent=false ./src/test/test.test.ts ./src/test/inspectionTests.test.ts ./dist/test/tests-issue19.test.ts ./src/test/history.test.ts ./src/test/sequentialize-requests.test.ts",
+      "test-logo": "vitest --run --open --fileParallelism=false  --silent=false ./src/test/delta/test-logo-deltas.test.ts",
+      "test2": "vitest --fileParallelism=false ./src/test/test.test.ts",
+      "test1": "vitest --fileParallelism=false ./src/test/*.test.js",
+      "test3": "vitest --run --fileParallelism=false ./src/test/test.test.ts && vitest --run ./src/test/inspectionTests.test.ts  && vitest --run ./src/test/history.test.ts && vitest --run ./src/test/sequentialize-requests.test.ts && vitest --run ./src/test/tests-issue19.test.ts"
   },
   "devDependencies": {
     "prettier": "3.1.0",
@@ -39,13 +42,13 @@
     "@vitest/ui": "3.2.4"
   },
   "dependencies": {
-    "@lionweb/validation": "0.7.2",
-    "@lionweb/json": "0.7.2",
-    "@lionweb/json-diff": "0.7.2",
-    "@lionweb/json-utils": "0.7.2",
-    "@lionweb/server-delta-client": "0.3.0",
-    "@lionweb/server-delta-shared": "0.3.0",
-    "@lionweb/server-client": "0.3.0",
+    "@lionweb/validation": "0.7.3",
+    "@lionweb/json": "0.7.3",
+    "@lionweb/json-diff": "0.7.3",
+    "@lionweb/json-utils": "0.7.3",
+    "@lionweb/server-delta-client": "0.4.0",
+    "@lionweb/server-delta-shared": "0.4.0",
+    "@lionweb/server-client": "0.4.0",
     "@types/express": "4.17.21",
     "@types/source-map-support": "0.5.10",
     "body-parser": "2.0.2",

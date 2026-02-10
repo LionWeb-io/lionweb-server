@@ -1,43 +1,49 @@
 {
-  "name": "@lionweb/server-common",
-  "version": "0.3.0",
-  "private": false,
-  "description": "Common code for the lionweb server",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "typings": "dist/index.d.ts",
-  "type": "module",
-  "license": "Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/LionWeb-io/lionweb-server.git"
-  },
-  "bugs": {
-    "url": "https://github.com/LionWeb-io/lionweb-server/issues"
-  },
-  "scripts": {
-    "clean": "rm -rf node_modules/ && rm -rf dist/",
-    "build": "tsc",
-    "lint": "eslint src"
-  },
-  "devDependencies": {
-    "@types/pg": "^8.11.6",
-    "@types/uuid": "^10.0.0"
-  },
-  "dependencies": {
-      "@lionweb/json": "0.7.2",
-      "@lionweb/json-utils": "0.7.2",
-      "@lionweb/server-delta-shared": "~0.3.0",
-      "@lionweb/server-dbadmin": "0.3.0",
-    "@types/express": "4.17.21",
-    "json-stream-stringify": "^3.1.4",
-    "pg": "8.11.3",
-    "pg-promise": "11.7.8",
-    "pino": "9.6.0",
-    "pino-http": "10.1.0",
-    "pino-pretty": "11.2.1",
-    "source-map-support": "0.5.21",
-    "uuid": "9.0.1"
-  },
-    "files": ["dist", "src"]
+    "name": "@lionweb/server-common",
+    "version": "0.4.0",
+    "private": false,
+    "description": "Common code for the lionweb server",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "typings": "dist/index.d.ts",
+    "type": "module",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/LionWeb-io/lionweb-server.git"
+    },
+    "bugs": {
+        "url": "https://github.com/LionWeb-io/lionweb-server/issues"
+    },
+    "scripts": {
+        "clean": "rm -rf node_modules/ && rm -rf dist/",
+        "build": "tsc",
+        "lint": "eslint src",
+        "publish-local": "npm publish --registry http://localhost:4873 --tag beta",
+        "unpublish-local": "npm unpublish --force --registry http://localhost:4873",
+        "republish-local": "npm run unpublish-local && npm run publish-local"
+    },
+    "devDependencies": {
+        "@types/pg": "^8.11.6",
+        "@types/uuid": "^10.0.0"
+    },
+    "dependencies": {
+        "@lionweb/json": "0.7.3",
+        "@lionweb/json-utils": "0.7.3",
+        "@lionweb/server-delta-shared": "~0.4.0",
+        "@lionweb/server-dbadmin": "0.4.0",
+        "@types/express": "4.17.21",
+        "json-stream-stringify": "^3.1.4",
+        "pg": "8.11.3",
+        "pg-promise": "11.7.8",
+        "pino": "9.6.0",
+        "pino-http": "10.1.0",
+        "pino-pretty": "11.2.1",
+        "source-map-support": "0.5.21",
+        "uuid": "9.0.1"
+    },
+    "files": [
+        "dist",
+        "src"
+    ]
 }

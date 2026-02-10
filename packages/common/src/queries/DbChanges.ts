@@ -21,7 +21,7 @@ import { sqlArrayFromNodeIdArray } from "./PgHelpers.js"
 
 export type DbNodeUpdate = {
     id: string
-    column: "annotations" | "parent" | "classifier_language" | "classifier_version" | "classifier_key"
+    column: "annotations" | "parent" 
     newValue: unknown
 }
 

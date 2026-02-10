@@ -1,5 +1,5 @@
 import { RepositoryClient } from "@lionweb/server-client"
-import { DeltaClient } from "@lionweb/server-delta-client"
+import { DeltaClient, eventFunctions } from "@lionweb/server-delta-client"
 import { HttpSuccessCodes } from "@lionweb/server-shared"
 import { LionWebJsonChunk } from "@lionweb/json"
 import {
@@ -27,7 +27,9 @@ collection.forEach(withoutHistory => {
     const repository = withoutHistory ? "MyFirstRepo" : "MyFirstHistoryRepo"
     describe("Repository tests " + (withoutHistory ? "without history" : "with history"), async () => {
         const bulkApiClient = new RepositoryClient("TestClient", repository)
-        const deltaApiClient = new DeltaClient("TestClient", repository)
+        const deltaApiClient = new DeltaClient({}, [eventFunctions])
+        deltaApiClient.clientId = "TestClient"
+        deltaApiClient.repository = repository
         // client.loggingOn = true
         let initialPartition: LionWebJsonChunk
         // let initialPartitionVersion: number = 0
@@ -79,7 +81,7 @@ collection.forEach(withoutHistory => {
                 // return
             }
 
-            await deltaApiClient.sendRequest(newSubscribeToPartitionRequest(repository, "TestClient", "ID-2"))
+            await deltaApiClient.sendRequest(newSubscribeToPartitionRequest("ID-2"))
             await deltaApiClient.sendCommand(newAddPropertyCommand("node-122", "value-1", "-key-Concept-name"))
             await deltaApiClient.sendCommand(newChangePropertyCommand("node-124", "value-2", "-key-Concept-name"))
             // await delay(200)
@@ -95,10 +97,10 @@ collection.forEach(withoutHistory => {
         describe("Simple Delta tests", () => {
             test("AddPartition", async () => {
                 assert(initError === "", initError)
-                deltaApiClient.sendCommand(newAddPartitionCommand("ID-NewPartition20","key"))
+                deltaApiClient.sendCommand(newAddPartitionCommand({ id: "ID-NewPartition20", classifier: {key: "key", language: "l", version: "`1.0"}}))
                 await delay(200)
 
-                deltaApiClient.sendRequest(newSubscribeToPartitionRequest(repository, "TestClient", "ID-NewPartition20",))
+                deltaApiClient.sendRequest(newSubscribeToPartitionRequest("ID-NewPartition20",))
                 deltaApiClient.sendCommand(newDeletePropertyCommand("ID-NewPartition20", "-key-Partition-name"))
                 deltaApiClient.sendCommand(newDeletePropertyCommand("ID-2", "-key-Partition-name"))
                 // deltaApiClient.sendCommand(newDeletePropertyCommand("ID-2", "LionCore-builtins-INamed-name"))

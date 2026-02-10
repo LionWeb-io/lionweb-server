@@ -7,13 +7,12 @@ import {
     ChangePropertyCommand,
     DeletePropertyCommand,
     DeltaEvent,
-    ErrorEvent,
     PropertyAddedEvent,
     PropertyChangedEvent,
     PropertyDeletedEvent
 } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
-import { affectedNodeMessage, newErrorEvent } from "../events.js"
+import { affectedNodeMessage, newErrorDelta, ErrorDelta } from "../events.js"
 import { ParticipationInfo } from "../queries/index.js"
 import { DeltaFunction, retrieveNodeFromDB } from "./DeltaUtil.js"
 
@@ -21,13 +20,13 @@ const AddPropertyFunction = async (
     participation: ParticipationInfo,
     msg: AddPropertyCommand,
     _ctx: DeltaContext
-): Promise<PropertyAddedEvent | ErrorEvent> => {
+): Promise<PropertyAddedEvent | ErrorDelta> => {
     deltaLogger.info(`Called AddPropertyFunction command id ${msg.commandId}`)
     const result = await _ctx.dbConnection.tx(async (task: LionWebTask) => {
         const node = await retrieveNodeFromDB(msg.node, msg, participation, task)
         const oldProperty = node.properties.find(prop => isEqualMetaPointer(prop.property, msg.property))
         if (oldProperty !== undefined && oldProperty.value !== null && oldProperty.value !== undefined) {
-            return newErrorEvent("PropertyAlreadyExist", `The property with key '${msg.property.key}' already exist`, msg, participation)
+            return newErrorDelta("PropertyAlreadyExist", `The property with key '${msg.property.key}' already exist`, msg, participation)
         }
     
         // OKI, now store the new value
@@ -52,7 +51,7 @@ const AddPropertyFunction = async (
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             property: msg.property,
             sequenceNumber: 0, // dummy, will be changed for each participation before sending
-            protocolMessages: [affectedNodeMessage(node.id)]
+            additionalInfo: [affectedNodeMessage(node.id)]
         } as PropertyAddedEvent
     })
     return result
@@ -62,13 +61,13 @@ const DeletePropertyFunction = async (
     participation: ParticipationInfo,
     msg: DeletePropertyCommand,
     _ctx: DeltaContext
-): Promise<PropertyDeletedEvent | ErrorEvent> => {
+): Promise<PropertyDeletedEvent | ErrorDelta> => {
     deltaLogger.info(`Called DeletePropertyFunction command id ${msg.commandId}`)
     const result = await _ctx.dbConnection.tx(async (task: LionWebTask) => {
         const node = await retrieveNodeFromDB(msg.node, msg, participation, task)
         const oldProperty = node.properties.find(prop => isEqualMetaPointer(prop.property, msg.property))
         if (oldProperty === undefined || oldProperty.value === null || oldProperty.value === undefined) {
-            return newErrorEvent("PropertyDoesNotExist", `The property with key '${msg.property.key}' does not exist`, msg, participation)
+            return newErrorDelta("PropertyDoesNotExist", `The property with key '${msg.property.key}' does not exist`, msg, participation)
         }
         // OKI, now store the new value
         const change = new PropertyValueChanged(
@@ -92,7 +91,7 @@ const DeletePropertyFunction = async (
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             property: msg.property,
             sequenceNumber: 0, // dummy, will be changed for each participation before sending
-            protocolMessages: [affectedNodeMessage(node.id)],
+            additionalInfo: [affectedNodeMessage(node.id)],
             oldValue: oldProperty.value
         } as PropertyDeletedEvent
     })
@@ -103,7 +102,7 @@ const ChangePropertyFunction = async (
     participation: ParticipationInfo,
     msg: ChangePropertyCommand,
     _ctx: DeltaContext
-): Promise<DeltaEvent> => {
+): Promise<DeltaEvent | ErrorDelta> => {
     deltaLogger.info(
         `Called ChangePropertyFunction ${msg.node} pinfo ${JSON.stringify(participation.repositoryData)} command id ${msg.commandId}`
     )
@@ -111,10 +110,10 @@ const ChangePropertyFunction = async (
         const node = await retrieveNodeFromDB(msg.node, msg, participation, task)
         const oldProperty = node.properties.find(prop => isEqualMetaPointer(prop.property, msg.property))
         if (oldProperty === undefined || oldProperty.value === null || oldProperty.value === undefined) {
-            return newErrorEvent("PropertyDoesNotExist", `The property with key '${msg.property.key}' does not exist`, msg, participation)
+            return newErrorDelta("PropertyDoesNotExist", `The property with key '${msg.property.key}' does not exist`, msg, participation)
         }
         if (oldProperty.value === msg.newValue) {
-            return newErrorEvent(
+            return newErrorDelta(
                 "PropertyAlreadyHasNewValue",
                 `The property with key '${msg.property.key}' already has value ${msg.newValue}`,
                 msg,
@@ -144,7 +143,7 @@ const ChangePropertyFunction = async (
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             property: msg.property,
             sequenceNumber: 0, // dummy, will be changed for each participation before sending
-            protocolMessages: [affectedNodeMessage(node.id)],
+            additionalInfo: [affectedNodeMessage(node.id)],
             oldValue: oldProperty.value
         } as PropertyChangedEvent
     })

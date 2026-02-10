@@ -1,5 +1,6 @@
 import { deltaLogger, RepositoryData } from "@lionweb/server-common"
 import { repositoryStore } from "@lionweb/server-dbadmin"
+import { DeltaAdminResponse, DeltaEvent, DeltaResponse, isDeltaEvent } from "@lionweb/server-delta-shared"
 import WebSocket from "ws"
 
 /**
@@ -35,7 +36,7 @@ export class ParticipationInfo {
     /**
      * The first available number for the next event.
      */
-    eventSequenceNumber: number = 0
+    private eventSequenceNumber: number = 0
     /**
      * The state of this participation.
      */
@@ -59,7 +60,17 @@ export class ParticipationInfo {
         deltaLogger.info(`startParticipation repo '${repositoryId}' schema ${JSON.stringify(this.repositoryData)}`)
     }
     
+    nextSequenceNumber(): number {
+        return this.eventSequenceNumber++
+    }
     private nextParticipationId(): string {
         return "participation-" + ParticipationInfo.nextIdNumber++
+    }
+    
+    send(msg: DeltaEvent | DeltaResponse | DeltaAdminResponse): void {
+        if (isDeltaEvent(msg)) {
+            msg.sequenceNumber = this.eventSequenceNumber++
+        }
+        this.socket.send(JSON.stringify(msg))
     }
 }

@@ -1,6 +1,7 @@
 import { HttpSuccessCodes } from "@lionweb/server-shared"
 import { RepositoryClient } from "@lionweb/server-client"
 import { LionWebJsonChunk } from "@lionweb/json"
+import { afterAll } from "vitest"
 import { readModel } from "./utils.js"
 
 import { assert } from "chai"
@@ -23,14 +24,25 @@ describe("Repository tests for inspection APIs", () => {
             console.log("database created: " + JSON.stringify(initResponse.body))
         }
     })
+    
+    afterAll(async function () {
+        const deleteResponse = await client.dbAdmin.deleteRepository("default")
+        if (deleteResponse.status !== HttpSuccessCodes.Ok) {
+            console.log("Cannot delete repository: " + JSON.stringify(deleteResponse.body))
+        } else {
+            console.log("Repository deleted: " + JSON.stringify(deleteResponse.body))
+        }
+    })
 
     beforeEach(async function () {
-        await client.dbAdmin.deleteRepository("default")
+        const deleteResponse = await client.dbAdmin.deleteRepository("default")
+        console.log("delete reposiotry result: " + JSON.stringify(deleteResponse.body))
+        
         const initResponse = await client.dbAdmin.createRepository("default", true, "2023.1")
         if (initResponse.status !== HttpSuccessCodes.Ok) {
-            console.log("Cannot initialize database: " + JSON.stringify(initResponse.body))
+            console.log("Cannot create repository: " + JSON.stringify(initResponse.body))
         } else {
-            console.log("initialized database: " + JSON.stringify(initResponse.body))
+            console.log("Repository created: " + JSON.stringify(initResponse.body))
         }
         jsonModel = readModel(DATA + "Disk_A.json") as LionWebJsonChunk
         const initialPartition = readModel(DATA + "Disk_A_partition.json") as LionWebJsonChunk

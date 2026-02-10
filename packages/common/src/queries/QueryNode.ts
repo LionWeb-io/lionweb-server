@@ -20,6 +20,14 @@ export function versionResultToResponse(versionResult: object): ResponseMessage 
     }
 }
 
+export function versiontToHttpResponseMessage(version: number): ResponseMessage {
+    return {
+        kind: "RepoVersion",
+        message: "RepositoryVersion at end of Transaction",
+        data: { version: `${version}` }
+    }
+}
+
 export type NodesForQueryQuery_ResultType = LionWebJsonNode[]
 
 export function is_NodesForQueryQuery_ResultType(o: unknown): o is NodesForQueryQuery_ResultType {
@@ -53,6 +61,7 @@ export const retrieveFullNodesFromQueryDB = async (dbConnection: DbConnection, r
 
 /**
  * Query to retrieve the full LionWeb nodes from the database.
+ * Will **not** retrieve child nodes (containments or annotations)
  * @param nodesQuery string SQL query to select the set of nodes to retrieve.
  *                   Must have an `id` property.
  */

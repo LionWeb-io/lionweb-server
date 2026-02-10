@@ -4,6 +4,7 @@ import { LionWebJsonChunk } from "@lionweb/json"
 import { assert } from "chai"
 
 import sm from "source-map-support"
+import { afterEach } from "vitest"
 import { readModel } from "./utils.js"
 
 sm.install()
@@ -16,6 +17,11 @@ describe("Transaction isolation tests", () => {
         await t.dbAdmin.deleteRepository("isolation")
         await t.dbAdmin.createRepository("isolation", true, "2023.1")
         await t.bulk.createPartitions(readModel("./data/Disk_A_partition.json") as LionWebJsonChunk)
+    })
+
+    afterEach( async function()  {
+        const reply = await t.dbAdmin.deleteRepository("isolation")
+        console.log(`afterEach.deleteRepository ${JSON.stringify(reply.body)}`)
     })
 
     describe("Nowait", () => {

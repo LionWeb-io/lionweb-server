@@ -1,3 +1,5 @@
+import { retrievePartitionsFromDB } from "@lionweb/server-common/dist/queries/PartitionQueries.js"
+import { versiontToHttpResponseMessage } from "@lionweb/server-common/dist/queries/QueryNode.js"
 import {
     CreatePartitionsResponse,
     DeletePartitionsResponse,
@@ -35,8 +37,16 @@ export class BulkApiWorker {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async bulkPartitions(task: LionWebTask, repositoryData: RepositoryData): Promise<QueryReturnType<ListPartitionsResponse>> {
-        const result = await this.context.queries.retrievePartitionsFromDB(task, repositoryData)
-        return result
+        const result = await retrievePartitionsFromDB(task, repositoryData)
+        return {
+            status: HttpSuccessCodes.Ok,
+            query: "query",
+            queryResult: {
+                chunk: nodesToChunk(result.nodes, repositoryData.repository.lionweb_version),
+                success: true,
+                messages: [versiontToHttpResponseMessage(result.version)]
+            }
+        }
     }
 
     /**
@@ -161,42 +171,13 @@ export class BulkApiWorker {
      */
     ids = async (task: LionWebTask, repositoryData: RepositoryData, count: number): Promise<QueryReturnType<IdsResponse>> => {
         requestLogger.info("Reserve Count ids " + count + " for " + repositoryData.clientId)
-        const result: string[] = []
-        // Create a bunch of ids, they are probably all free
-        let done = false
-        while (!done) {
-            for (let i = 0; i < count; i++) {
-                const id = createId(repositoryData.clientId)
-                result.push(createId(id))
-            }
-            // Check for already used or reserved ids and remove them if needed
-            const reservedByOtherClient = await DB.reservedNodeIdsByOtherClientDB(task, repositoryData, result)
-            if (reservedByOtherClient.length > 0) {
-                reservedByOtherClient.forEach(reservedId => {
-                    const index = result.indexOf(reservedId.node_id)
-                    result.splice(index, 1)
-                })
-            }
-            // Remove ids that are already in use
-            const usedIds = await DB.nodeIdsInUseDB(task, repositoryData, result)
-            if (usedIds.length > 0) {
-                usedIds.forEach(usedId => {
-                    const index = result.indexOf(usedId.id)
-                    result.splice(index, 1)
-                })
-            }
-            if (result.length > 0) {
-                done = true
-            }
-        }
-        const returnValue = await this.context.queries.makeNodeIdsReservation(task, repositoryData, result)
-
+        const result: string[] = await DB.getAvailableIds(task, repositoryData, count)
         return {
             status: HttpSuccessCodes.Ok,
             query: "",
             queryResult: {
-                success: returnValue.queryResult.success,
-                messages: returnValue.queryResult.messages,
+                success: true,
+                messages: [],
                 ids: result
             }
         }

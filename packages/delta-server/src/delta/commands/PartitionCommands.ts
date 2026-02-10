@@ -14,7 +14,7 @@ import {
     PartitionDeletedEvent
 } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
-import { affectedNodeMessage, newErrorEvent } from "../events.js"
+import { affectedNodeMessage, newErrorDelta, ErrorDelta } from "../events.js"
 import { ParticipationInfo } from "../queries/index.js"
 import { DeltaFunction } from "./DeltaUtil.js"
 import { validateProperTree } from "./Validations.js"
@@ -23,8 +23,8 @@ const AddPartitionFunction = async (
     participation: ParticipationInfo,
     msg: AddPartitionCommand,
     _ctx: DeltaContext
-): Promise<DeltaEvent> => {
-    deltaLogger.info("Called AddPartitionFunction " + msg.messageKind + " nodes ") // + msg.newPartition?.nodes?.length)
+): Promise<DeltaEvent | ErrorDelta> => {
+    deltaLogger.info(`Called AddPartitionFunction ${msg.messageKind}`) // + msg.newPartition?.nodes?.length)
     validateProperTree(msg.newPartition, null, msg, participation)
 
     const result = await _ctx.dbConnection.tx(async (task: LionWebTask) => {
@@ -34,8 +34,8 @@ const AddPartitionFunction = async (
             msg.newPartition.nodes.map(n => n.id)
         )
         if (existingNodes.length > 0) {
-            console.log(`Cannot add partition, node ids ${existingNodes.map(n => n.id)} already in use`)
-            return newErrorEvent(
+            console.error(`Cannot add partition, node ids ${existingNodes.map(n => n.id)} already in use`)
+            return newErrorDelta(
                 "IdsAlreadyInUse",
                 `Cannot add partition, node ids ${existingNodes.map(n => n.id)} already in use`,
                 msg,
@@ -53,24 +53,24 @@ const AddPartitionFunction = async (
         // We have checked that there is exactly one partition node, now select it as affected node
         const partitionNode = msg.newPartition.nodes.find(n => n.parent === null)!
         participation.subscribedPartitions.push(partitionNode.id)
-        deltaLogger.debug(`Adding partition ${partitionNode.id} to subscribed partitions`)
+        deltaLogger.info(`Adding partition ${partitionNode.id} to subscribed partitions`)
         return {
             messageKind: "PartitionAdded",
             newPartition: { nodes: [] },
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,
-            protocolMessages: [ affectedNodeMessage(partitionNode.id) ]
+            additionalInfo: [ affectedNodeMessage(partitionNode.id) ]
         } as PartitionAddedEvent
     })
     return result
 }
 
-const DeletePartitionFunction = async (participation: ParticipationInfo, msg: DeletePartitionCommand, _ctx: DeltaContext): Promise<DeltaEvent | ErrorEvent> => {
+const DeletePartitionFunction = async (participation: ParticipationInfo, msg: DeletePartitionCommand, _ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
     deltaLogger.info("Called DeletePartitionFunction " + msg.messageKind)
     const result = await _ctx.dbConnection.tx(async (task: LionWebTask) => {
         const queryResult = await DB.retrieveNodeTreeDB(task, participation.repositoryData!, [msg.deletedPartition], Number.MAX_SAFE_INTEGER)
         if (queryResult.length === 0) {
-            return newErrorEvent("err-unknownNode", `Partition node with id ${msg.deletedPartition} does not exist`, msg, participation)
+            return newErrorDelta("err-unknownNode", `Partition node with id ${msg.deletedPartition} does not exist`, msg, participation)
         }
         const nodesToDelete = queryResult.map(qr => qr.id)
         const query = SQL.deleteFullNodesSQL(nodesToDelete)
@@ -81,7 +81,7 @@ const DeletePartitionFunction = async (participation: ParticipationInfo, msg: De
             deletedDescendants: nodesToDelete,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,
-            protocolMessages: [
+            additionalInfo: [
                 {
                     kind: "AffectedNode",
                     message: `Node ${msg.deletedPartition} has been changed`,

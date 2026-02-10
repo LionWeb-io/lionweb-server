@@ -1,46 +1,61 @@
 import {
     ErrorEvent,
-    DeltaCommand,
-    DeltaRequest,
-    ProtocolMessage,
-    LionWebId
+    LionWebId,
+    AdditionalInfo,
+    ErrorResponse,
+    MessageFromClient, isDeltaCommand
 } from "@lionweb/server-delta-shared"
 import { ParticipationInfo } from "./queries/index.js"
+
+export type ErrorDelta = ErrorEvent | ErrorResponse
 
 export function isErrorEvent(object: unknown): object is ErrorEvent {
     return (object as ErrorEvent).messageKind === "ErrorEvent"
 }
+export function isErrorResponse(object: unknown): object is ErrorResponse {
+    return (object as ErrorResponse).messageKind === "ErrorResponse"
+}
 
-export const newErrorEvent = (
+export const newErrorDelta = (
     errorCode: string,
     message: string,
-    delta: DeltaCommand | DeltaRequest,
-    participation: ParticipationInfo,
+    delta: MessageFromClient,
+    participation: ParticipationInfo | undefined,
     data?: Partial<ErrorEvent>
-): ErrorEvent => {
-    return {
-        messageKind: "ErrorEvent",
-        errorCode: errorCode,
-        message: message,
-        protocolMessages: data?.protocolMessages ?? [],
-        originCommands: [
-            {
-                commandId: (delta as DeltaCommand).commandId ?? (delta as DeltaRequest).queryId ?? "<unknown-command-or-query>",
-                participationId: participation.participationId
-            }
-        ],
-        sequenceNumber: participation.eventSequenceNumber
+): ErrorEvent | ErrorResponse => {
+    if (isDeltaCommand(delta)) {
+        return {
+            messageKind: "ErrorEvent",
+            errorCode: errorCode,
+            message: message,
+            additionalInfo: data?.additionalInfo ?? [],
+            originCommands: [
+                {
+                    commandId: delta.commandId,
+                    participationId: participation?.participationId ?? "<no-participation>"
+                }
+            ],
+            sequenceNumber: 0
+        } as ErrorEvent
+    } else {
+        return {
+            messageKind: "ErrorResponse",
+            errorCode: errorCode,
+            message: message,
+            additionalInfo: data?.additionalInfo ?? [],
+            queryId: delta.queryId
+        } as ErrorResponse
     }
 }
 
-export function affectedNodeMessage(nodeid: LionWebId): ProtocolMessage {
+export function affectedNodeMessage(nodeid: LionWebId): AdditionalInfo {
     return {
         kind: "AffectedNode",
         message: `Node ${nodeid} has been changed`,
         data: [ { key: "node", value: nodeid}]
     }
 }
-export function affectedPartitionMessage(nodeid: LionWebId): ProtocolMessage {
+export function affectedPartitionMessage(nodeid: LionWebId): AdditionalInfo {
     return {
         kind: "AffectedPartition",
         message: `Partition ${nodeid} has a delta change`,
@@ -48,7 +63,7 @@ export function affectedPartitionMessage(nodeid: LionWebId): ProtocolMessage {
     }
 }
 
-export function queryData(query: string, queryResult: unknown): ProtocolMessage[] {
+export function queryData(query: string, queryResult: unknown): AdditionalInfo[] {
     return [
         {
             kind: "QueryInfo",

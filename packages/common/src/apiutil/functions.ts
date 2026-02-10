@@ -292,6 +292,15 @@ export function assertIsDefined<T>(value: T): asserts value is NonNullable<T> {
     }
 }
 
+export function isNullOrUndefined<T>(obj: T | null | undefined): obj is null | undefined {
+    return obj == null; // catches both null and undefined
+}
+
+
+export function notNullOrUndefined<T>(obj: T | null | undefined): obj is NonNullable<T> {
+    return obj != null; // catches both null and undefined
+}
+
 /**
  * Create a chunk around _nodes_.
  * @param nodes nodes to insert in the chunk

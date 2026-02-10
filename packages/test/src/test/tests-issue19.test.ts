@@ -1,6 +1,8 @@
 import { HttpSuccessCodes } from "@lionweb/server-shared"
 import { RepositoryClient } from "@lionweb/server-client"
 import { LionWebJsonChunk } from "@lionweb/json"
+import * as string_decoder from "node:string_decoder"
+import { afterEach } from "vitest"
 import { readModel } from "./utils.js"
 
 import { assert } from "chai"
@@ -24,6 +26,11 @@ describe("Repository tests", () => {
         await t.bulk.createPartitions(readModel(DATA + "Disk_A_partition.json") as LionWebJsonChunk)
     })
 
+    afterEach( async function()  {
+        const reply = await t.dbAdmin.deleteRepository("default")
+        console.log(`afterEach.deleteReposigtory ${JSON.stringify(reply.body)}`)
+    })
+    
     describe("Add new node", async () => {
         it("test update single node", async () => {
             await storeFiles(["./data/Disk_A.json", "./data/add-new-nodes/Disk-add-new-nodes-single-node.json", "./data/Disk_A.json"])

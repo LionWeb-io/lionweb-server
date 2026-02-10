@@ -27,12 +27,12 @@ import {
     ReplaceChildCommand
 } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
-import { affectedNodeMessage, newErrorEvent } from "../events.js"
+import { affectedNodeMessage, newErrorDelta, type ErrorDelta } from "../events.js"
 import { ParticipationInfo } from "../queries/index.js"
 import { DeltaFunction, errorEvent } from "./DeltaUtil.js"
 import { findAndValidateNodeExists, validateContainment, validateProperTree } from "./Validations.js"
 
-const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorEvent> => {
+const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
     deltaLogger.info("Called AddChild command id: " + msg.commandId)
     const newChildNode = validateProperTree(msg.newChild, msg.parent, msg, participation)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
@@ -45,7 +45,7 @@ const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, 
         // node alreadyExists
         if (existingChildNodes.length > 0) {
             const existingIds = existingChildNodes.map(n => n.id)
-            return newErrorEvent("err-nodeAlreadyExists", `Nodes '${existingIds}' already exist`, msg, participation)
+            return newErrorDelta("err-nodeAlreadyExists", `Nodes '${existingIds}' already exist`, msg, participation)
         }
         // Find the new child node
         // find the containment, create a new one if it isn't there
@@ -78,7 +78,7 @@ const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, 
             newChild: msg.newChild,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,          // dummy, will be changed for each participation before sending
-            protocolMessages: [affectedNodeMessage(parentNode!.id)]
+            additionalInfo: [affectedNodeMessage(parentNode!.id)]
         } as ChildAddedEvent
     })
     return result
@@ -88,7 +88,7 @@ const DeleteChild = async (
     participation: ParticipationInfo,
     msg: DeleteChildCommand,
     ctx: DeltaContext
-): Promise<DeltaEvent | ErrorEvent> => {
+): Promise<DeltaEvent | ErrorDelta> => {
     deltaLogger.info("Called DeleteChild " + msg.messageKind)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
@@ -98,25 +98,25 @@ const DeleteChild = async (
 
         // Check whether parent exists
         if (parentNode === undefined) {
-            return newErrorEvent("err-unknownNode", `Parent '${msg.parent}' does not exist`, msg, participation)
+            return newErrorDelta("err-unknownNode", `Parent '${msg.parent}' does not exist`, msg, participation)
         }
         // Check whether child exists
         const childNode = nodesFromDB.find(n => n.id === msg.deletedChild)
         // validateExists(childNode, "err-unknownNode", `Child '${msg.deletedChild}' does not exist`, msg, participation)
         if (childNode === undefined) {
-            return newErrorEvent("err-unknownNode", `Child '${msg.deletedChild}' does not exist`, msg, participation)
+            return newErrorDelta("err-unknownNode", `Child '${msg.deletedChild}' does not exist`, msg, participation)
         }
 
         // Check whether containment exists in the parent
         const containment = parentNode.containments.find(c => isEqualMetaPointer(c.containment, msg.containment))
         if (containment === undefined) {
-            return newErrorEvent("unknownContainment", `Containment '${JSON.stringify(msg.containment)}' does not exists in parent '${msg.parent}'`, msg, participation)
+            return newErrorDelta("unknownContainment", `Containment '${JSON.stringify(msg.containment)}' does not exists in parent '${msg.parent}'`, msg, participation)
         }
         if (msg.index > containment.children.length - 1) {
-            return newErrorEvent("unknownIndex", "TODO", msg, participation)
+            return newErrorDelta("unknownIndex", "TODO", msg, participation)
         }
         if (containment.children[msg.index] !== msg.deletedChild) {
-            return newErrorEvent("indexEntryMismatch", "TODO", msg, participation)
+            return newErrorDelta("indexEntryMismatch", "TODO", msg, participation)
         }
 
         // All ok, now prepare the deletion query
@@ -138,7 +138,7 @@ const DeleteChild = async (
             parent: msg.parent,
             containment: msg.containment,
             deletedDescendants: subtreeNodes.filter(node => node.id !== msg.deletedChild).map(node => node.id),
-            protocolMessages: [affectedNodeMessage(parentNode.id)],
+            additionalInfo: [affectedNodeMessage(parentNode.id)],
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0
         } as ChildDeletedEvent
@@ -150,7 +150,7 @@ const ReplaceChild = async (
     participation: ParticipationInfo,
     msg: ReplaceChildCommand,
     ctx: DeltaContext
-): Promise<DeltaEvent | ErrorEvent> => {
+): Promise<DeltaEvent | ErrorDelta> => {
     deltaLogger.info("Called ReplaceChild " + msg.messageKind)
     validateProperTree(msg.newChild, msg.parent, msg, participation)
     
@@ -165,20 +165,20 @@ const ReplaceChild = async (
         // node alreadyExists
         if (existingChildNodes.length > 0) {
             const existingIds = existingChildNodes.map(n => n.id)
-            return newErrorEvent("err-nodeAlreadyExists", `Nodes '${existingIds}' already exist`, msg, participation)
+            return newErrorDelta("err-nodeAlreadyExists", `Nodes '${existingIds}' already exist`, msg, participation)
         }
         
         // Find the new child node
         const newChildNode = msg.newChild.nodes.find(node => node.parent === msg.parent)
         if (newChildNode === undefined) {
             // TODO this check can be moved to the ReferenceValidator by giving the `parent` as parameter
-            return newErrorEvent("NoChildFound", `The newChild chunk does not contain a node with parent ${msg.parent}`, msg, participation)
+            return newErrorDelta("NoChildFound", `The newChild chunk does not contain a node with parent ${msg.parent}`, msg, participation)
         }
         
         // Check whether child exists
         const childNode = nodesFromDB.find(n => n.id === msg.replacedChild)
         if (childNode === undefined) {
-            return newErrorEvent("err-unknownNode", `Child '${msg.replacedChild}' does not exist`, msg, participation)
+            return newErrorDelta("err-unknownNode", `Child '${msg.replacedChild}' does not exist`, msg, participation)
         }
 
         const containment = validateContainment(parentNode, msg.containment, msg.index, "Replace", msg.replacedChild, msg, participation)
@@ -209,7 +209,7 @@ const ReplaceChild = async (
             replacedChild: msg.replacedChild,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,          // dummy, will be changed for each participation before sending
-            protocolMessages: [affectedNodeMessage(parentNode.id)]
+            additionalInfo: [affectedNodeMessage(parentNode.id)]
         } as ChildReplacedEvent
     })
 
@@ -233,12 +233,12 @@ const MoveChildFromOtherContainment = async (
         ])
         const oldParentNode = findAndValidateNodeExists(movedChildNode.parent!, oldParentFromDB, msg, participation)
         if (newParentNode.id === oldParentNode.id) {
-            throw newErrorEvent("SameParents", `Old and new parent are the same (${newParentNode.id}, not allowed for MoveChildFromOtherContainment command`, msg, participation)
+            throw newErrorDelta("SameParents", `Old and new parent are the same (${newParentNode.id}, not allowed for MoveChildFromOtherContainment command`, msg, participation)
         }
         const newContainment = validateContainment(newParentNode, msg.newContainment, msg.newIndex, "Add", undefined, msg, participation)
         const oldContainment = oldParentNode.containments.find(cont => cont.children.includes(msg.movedChild))
         if (oldContainment === undefined) {
-            throw newErrorEvent("ParentError", `Internal error: (old) parent of ${msg.movedChild} does not have a containmennt with this node.`, msg, participation)
+            throw newErrorDelta("ParentError", `Internal error: (old) parent of ${msg.movedChild} does not have a containmennt with this node.`, msg, participation)
         }
         const oldIndex = oldContainment.children.indexOf(movedChildNode.id)
         
@@ -271,7 +271,7 @@ const MoveChildFromOtherContainment = async (
             movedChild: "",
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,          // dummy, will be changed for each participation before sending
-            protocolMessages: [affectedNodeMessage(msg.newParent)]
+            additionalInfo: [affectedNodeMessage(msg.newParent)]
         } as ChildMovedFromOtherContainmentEvent
     })
     return errorEvent(msg)

@@ -24,15 +24,10 @@ addPropertyTests.tests.forEach((propTest: unknown, index: number) => {
 
         test(`test addProperty ${index}`, async () => {
             validator.validationResult.issues = []
-            // console.log("-----")
-            // console.log(JSON.stringify(propTest, null, 2))
-            // console.log("=====")
-            console.log("====================")
             console.log(JSON.stringify(propTest))
             // @ts-expect-error TS2339
             const kind = propTest?.command?.messageKind
             console.log(`kind ${kind}`)
-            // assert(kind === "AddProperty", `Expected addPropertyCommand at index ${index}`)
 
             // @ts-expect-error TS2339
             const command = propTest.command

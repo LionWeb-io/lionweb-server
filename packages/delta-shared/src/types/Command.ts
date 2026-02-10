@@ -1,6 +1,6 @@
 import { CommandId } from "./DeltaTypes.js";
 import { String } from "./DeltaTypes.js";
-import { ProtocolMessage } from "./DeltaTypes.js";
+import { AdditionalInfo } from "./DeltaTypes.js";
 import { LionWebDeltaJsonChunk } from "./DeltaTypes.js";
 import { LionWebId } from "./Chunks.js";
 import { LionWebJsonMetaPointer } from "./Chunks.js";
@@ -11,7 +11,7 @@ import { Number } from "./DeltaTypes.js";
 export type DeltaCommand = {
     commandId: CommandId;
     messageKind: CommandMessageKind;
-    protocolMessages: ProtocolMessage[];
+    additionalInfo: AdditionalInfo[];
 };
 
 /**
@@ -243,8 +243,8 @@ export type AddReferenceCommand = DeltaCommand & {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: Number;
-    newTarget: LionWebId | null;
-    newResolveInfo: String | null;
+    newTarget?: LionWebId | null;
+    newResolveInfo?: String | null;
     messageKind: "AddReference";
 };
 
@@ -255,8 +255,8 @@ export type DeleteReferenceCommand = DeltaCommand & {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: Number;
-    deletedTarget: LionWebId | null;
-    deletedResolveInfo: String | null;
+    deletedTarget?: LionWebId | null;
+    deletedResolveInfo?: String | null;
     messageKind: "DeleteReference";
 };
 
@@ -267,169 +267,11 @@ export type ChangeReferenceCommand = DeltaCommand & {
     parent: LionWebId;
     reference: LionWebJsonMetaPointer;
     index: Number;
-    oldTarget: LionWebId | null;
-    oldResolveInfo: String | null;
-    newTarget: LionWebId | null;
-    newResolveInfo: String | null;
+    oldTarget?: LionWebId | null;
+    oldResolveInfo?: String | null;
+    newTarget?: LionWebId | null;
+    newResolveInfo?: String | null;
     messageKind: "ChangeReference";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-MoveEntryFromOtherReference
- */
-export type MoveEntryFromOtherReferenceCommand = DeltaCommand & {
-    newParent: LionWebId;
-    newReference: LionWebJsonMetaPointer;
-    newIndex: Number;
-    oldParent: LionWebId;
-    oldReference: LionWebJsonMetaPointer;
-    oldIndex: Number;
-    movedResolveInfo: String | null;
-    movedTarget: LionWebId | null;
-    messageKind: "MoveEntryFromOtherReference";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-MoveEntryFromOtherReferenceInSameParent
- */
-export type MoveEntryFromOtherReferenceInSameParentCommand = DeltaCommand & {
-    parent: LionWebId;
-    newReference: LionWebJsonMetaPointer;
-    newIndex: Number;
-    oldReference: LionWebJsonMetaPointer;
-    oldIndex: Number;
-    movedResolveInfo: String | null;
-    movedTarget: LionWebId | null;
-    messageKind: "MoveEntryFromOtherReferenceInSameParent";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-MoveEntryInSameReference
- */
-export type MoveEntryInSameReferenceCommand = DeltaCommand & {
-    parent: LionWebId;
-    reference: LionWebJsonMetaPointer;
-    newIndex: Number;
-    oldIndex: Number;
-    movedResolveInfo: String | null;
-    movedTarget: LionWebId | null;
-    messageKind: "MoveEntryInSameReference";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-MoveAndReplaceEntryFromOtherReference
- */
-export type MoveAndReplaceEntryFromOtherReferenceCommand = DeltaCommand & {
-    newParent: LionWebId;
-    newReference: LionWebJsonMetaPointer;
-    newIndex: Number;
-    oldParent: LionWebId;
-    oldReference: LionWebJsonMetaPointer;
-    oldIndex: Number;
-    replacedResolveInfo: String | null;
-    replacedTarget: LionWebId | null;
-    movedResolveInfo: String | null;
-    movedTarget: LionWebId | null;
-    messageKind: "MoveAndReplaceEntryFromOtherReference";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-MoveAndReplaceEntryFromOtherReferenceInSameParent
- */
-export type MoveAndReplaceEntryFromOtherReferenceInSameParentCommand = DeltaCommand & {
-    parent: LionWebId;
-    newReference: LionWebJsonMetaPointer;
-    newIndex: Number;
-    oldReference: LionWebJsonMetaPointer;
-    oldIndex: Number;
-    replacedResolveInfo: String | null;
-    replacedTarget: LionWebId | null;
-    movedResolveInfo: String | null;
-    movedTarget: LionWebId | null;
-    messageKind: "MoveAndReplaceEntryFromOtherReferenceInSameParent";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-MoveAndReplaceEntryInSameReference
- */
-export type MoveAndReplaceEntryInSameReferenceCommand = DeltaCommand & {
-    parent: LionWebId;
-    reference: LionWebJsonMetaPointer;
-    newIndex: Number;
-    oldIndex: Number;
-    replacedResolveInfo: String | null;
-    replacedTarget: LionWebId | null;
-    movedResolveInfo: String | null;
-    movedTarget: LionWebId | null;
-    messageKind: "MoveAndReplaceEntryInSameReference";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-AddReferenceResolveInfo
- */
-export type AddReferenceResolveInfoCommand = DeltaCommand & {
-    parent: LionWebId;
-    reference: LionWebJsonMetaPointer;
-    index: Number;
-    newResolveInfo: String;
-    messageKind: "AddReferenceResolveInfo";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-DeleteReferenceResolveInfo
- */
-export type DeleteReferenceResolveInfoCommand = DeltaCommand & {
-    parent: LionWebId;
-    reference: LionWebJsonMetaPointer;
-    index: Number;
-    deletedResolveInfo: String;
-    messageKind: "DeleteReferenceResolveInfo";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-ChangeReferenceResolveInfo
- */
-export type ChangeReferenceResolveInfoCommand = DeltaCommand & {
-    parent: LionWebId;
-    reference: LionWebJsonMetaPointer;
-    index: Number;
-    newResolveInfo: String;
-    oldResolveInfo: String;
-    messageKind: "ChangeReferenceResolveInfo";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-AddReferenceTarget
- */
-export type AddReferenceTargetCommand = DeltaCommand & {
-    parent: LionWebId;
-    reference: LionWebJsonMetaPointer;
-    index: Number;
-    newTarget: LionWebId;
-    messageKind: "AddReferenceTarget";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-DeleteReferenceTarget
- */
-export type DeleteReferenceTargetCommand = DeltaCommand & {
-    parent: LionWebId;
-    reference: LionWebJsonMetaPointer;
-    index: Number;
-    deletedTarget: LionWebId;
-    messageKind: "DeleteReferenceTarget";
-};
-
-/**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-ChangeReferenceTarget
- */
-export type ChangeReferenceTargetCommand = DeltaCommand & {
-    parent: LionWebId;
-    reference: LionWebJsonMetaPointer;
-    index: Number;
-    newTarget: LionWebId;
-    oldTarget: LionWebId;
-    messageKind: "ChangeReferenceTarget";
 };
 
 /**
@@ -467,18 +309,6 @@ export type CommandMessageKind =
     | "AddReference"
     | "DeleteReference"
     | "ChangeReference"
-    | "MoveEntryFromOtherReference"
-    | "MoveEntryFromOtherReferenceInSameParent"
-    | "MoveEntryInSameReference"
-    | "MoveAndReplaceEntryFromOtherReference"
-    | "MoveAndReplaceEntryFromOtherReferenceInSameParent"
-    | "MoveAndReplaceEntryInSameReference"
-    | "AddReferenceResolveInfo"
-    | "DeleteReferenceResolveInfo"
-    | "ChangeReferenceResolveInfo"
-    | "AddReferenceTarget"
-    | "DeleteReferenceTarget"
-    | "ChangeReferenceTarget"
     | "CompositeCommand";
 
 // Type Guard function
@@ -512,18 +342,6 @@ export function isDeltaCommand(object: unknown): object is DeltaCommand {
             "AddReference",
             "DeleteReference",
             "ChangeReference",
-            "MoveEntryFromOtherReference",
-            "MoveEntryFromOtherReferenceInSameParent",
-            "MoveEntryInSameReference",
-            "MoveAndReplaceEntryFromOtherReference",
-            "MoveAndReplaceEntryFromOtherReferenceInSameParent",
-            "MoveAndReplaceEntryInSameReference",
-            "AddReferenceResolveInfo",
-            "DeleteReferenceResolveInfo",
-            "ChangeReferenceResolveInfo",
-            "AddReferenceTarget",
-            "DeleteReferenceTarget",
-            "ChangeReferenceTarget",
             "CompositeCommand",
         ].includes(castObject.messageKind)
     );

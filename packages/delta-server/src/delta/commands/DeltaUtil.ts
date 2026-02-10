@@ -1,29 +1,27 @@
-
 import { LionWebJsonNode } from "@lionweb/json"
 import { ValidationIssue } from "@lionweb/validation"
 import { dbLogger, SQL, DB, LionWebTask } from "@lionweb/server-common"
 import {
+    AdditionalInfo,
     CommandId,
     DeltaCommand,
-    DeltaEvent,
     DeltaRequest,
-    DeltaResponse,
     ErrorEvent,
-    ProtocolMessage
+    MessageFromClient,
+    MessageToClient
 } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
-import { newErrorEvent, queryData } from "../events.js"
+import { newErrorDelta, queryData } from "../events.js"
 import { ParticipationInfo } from "../queries/index.js"
 
-export type MessageFromClient = DeltaCommand | DeltaRequest
 
 export type CommandOrRequest = {
     commandId: CommandId;
     messageKind: string;
-    protocolMessages: ProtocolMessage[];
+    additionalInfo: AdditionalInfo[];
 
 }
-export type MessageFunction =  (participation: ParticipationInfo, msg: MessageFromClient, ctx: DeltaContext) => (DeltaEvent | DeltaResponse)
+export type MessageFunction =  (participation: ParticipationInfo, msg: MessageFromClient, ctx: DeltaContext) => (MessageToClient)
 
 export type DeltaFunction = {
     messageKind: string;
@@ -36,7 +34,7 @@ export const errorEvent = (msg: DeltaCommand): ErrorEvent => ({
     originCommands: [{ commandId: msg.commandId, participationId: "error" }],
     errorCode: "generic",
     messageKind: "ErrorEvent",
-    protocolMessages: []
+    additionalInfo: []
 })
 
 export const errorNotImplementedEvent = (msg: DeltaRequest): ErrorEvent => (
@@ -46,11 +44,11 @@ export const errorNotImplementedEvent = (msg: DeltaRequest): ErrorEvent => (
         originCommands: [ { commandId: msg.queryId, participationId: "error"}],
         errorCode: "generic",
         messageKind: "ErrorEvent",
-        protocolMessages: []
+        additionalInfo: []
     }
 )
 
-export const issuesToProtocolNessages = (issues: ValidationIssue[]): ProtocolMessage[] => {
+export const issuesToProtocolNessages = (issues: ValidationIssue[]): AdditionalInfo[] => {
     return issues.map(issue => {
         return {
             kind: issue.issueType,
@@ -107,16 +105,16 @@ export const retrieveNodeFromDB = async(id: string, delta: DeltaCommand | DeltaR
 
     // Validate return type
     if (!SQL.is_NodesForQueryQuery_ResultType(queryResult)) {
-        throw newErrorEvent("InternalError", "Query result has incorrect type", delta, participation, {
-            protocolMessages: queryData("empty", queryResult)
+        throw newErrorDelta("InternalError", "Query result has incorrect type", delta, participation, {
+            additionalInfo: queryData("empty", queryResult)
         })
     }
     if (queryResult === undefined || queryResult.length === 0) {
-        throw newErrorEvent("NodeDoesNotExist", `The node with id '${id}' does not exist result ${queryResult}`, delta, participation)
+        throw newErrorDelta("NodeDoesNotExist", `The node with id '${id}' does not exist result ${queryResult}`, delta, participation)
     }
     if (queryResult.length > 1) {
-        throw newErrorEvent("TwoNodesWithSameId", `There are two nodes with id '${id}' in the repository`, delta, participation, {
-            protocolMessages: queryData("query", queryResult)
+        throw newErrorDelta("TwoNodesWithSameId", `There are two nodes with id '${id}' in the repository`, delta, participation, {
+            additionalInfo: queryData("query", queryResult)
         })
     }
     return queryResult[0]

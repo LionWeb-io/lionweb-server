@@ -20,30 +20,30 @@ let queryId = 1
 
 export const newSignOnRequest = (repo: string, clientId: string): SignOnRequest => {
     return {
-        messageKind: "SignOn",
+        messageKind: "SignOnRequest",
         repositoryId: repo,
         deltaProtocolVersion: "2023.1",
         clientId: clientId,
         queryId: `query-id-${queryId++}`,
-        protocolMessages: []
+        additionalInfo: []
     }
 }
 
-export const newSubscribeToPartitionRequest = (repo: string, clientId: string, partition: string): SubscribeToPartitionContentsRequest => {
+export const newSubscribeToPartitionRequest = (partition: string): SubscribeToPartitionContentsRequest => {
     return {
-        messageKind: "SubscribeToPartitionContents",
+        messageKind: "SubscribeToPartitionContentsRequest",
         partition: partition,
         queryId: `query-id-${queryId++}`,
-        protocolMessages: []
+        additionalInfo: []
     }
 }
 
 export const newUnSubscribeToPartitionRequest = (repo: string, clientId: string, partition: string): UnsubscribeFromPartitionContentsRequest => {
     return {
-        messageKind: "UnsubscribeFromPartitionContents",
+        messageKind: "UnsubscribeFromPartitionContentsRequest",
         partition: partition,
         queryId: `query-id-${queryId++}`,
-        protocolMessages: []
+        additionalInfo: []
     }
 }
 
@@ -58,7 +58,7 @@ export const newAddPropertyCommand = (nodeid: string, newValue: string, property
             key: propertyKey,
             version: "2023.1"
         },
-        protocolMessages: []
+        additionalInfo: []
     }
 }
 
@@ -73,7 +73,7 @@ export const newChangePropertyCommand = (nodeid: string, newValue: string, prope
             key: propertyKey,
             version: "2023.1"
         },
-        protocolMessages: []
+        additionalInfo: []
     }
 }
 
@@ -87,7 +87,7 @@ export const newDeletePropertyCommand = (nodeid: string, propertyKey: string): D
             key: propertyKey,
             version: "2023.1"
         },
-        protocolMessages: []
+        additionalInfo: []
     }
 }
 
@@ -111,11 +111,11 @@ export const newAddPartitionCommand = (partition: PartitionType): AddPartitionCo
                 annotations: []
             }]
         },
-        protocolMessages: []
+        additionalInfo: []
     }
 }
 
-type NewChild = {
+export type NewChild = {
     id: LionWebId,
     cls: LionWebJsonMetaPointer,
     parent: LionWebId,
@@ -144,7 +144,7 @@ export const newAddChild = (child: NewChild): AddChildCommand => {
                 annotations: []
             }]
         },
-        protocolMessages: []
+        additionalInfo: []
     }
 }
 
@@ -172,7 +172,7 @@ export const newAddChildCommand = (nodeid: string, clsKey: LionWebJsonMetaPointe
                 annotations: []
             }]
         },
-        protocolMessages: []
+        additionalInfo: []
     }
 }
 
@@ -183,7 +183,7 @@ export type DeleteChildType = {
     containment: LionWebJsonMetaPointer
 }
 
-export const deleteChild = (deleteChild: DeleteChildType): DeleteChildCommand => {
+export const newDeleteChild = (deleteChild: DeleteChildType): DeleteChildCommand => {
     return {
         messageKind: "DeleteChild",
         commandId: `command-id-${queryId++}`,
@@ -191,7 +191,7 @@ export const deleteChild = (deleteChild: DeleteChildType): DeleteChildCommand =>
         index: deleteChild.index,
         parent: deleteChild.parent,
         deletedChild: deleteChild.id,
-        protocolMessages: []
+        additionalInfo: []
     }
 }
 
@@ -203,7 +203,7 @@ export type AddReferenceType = {
     reference: LionWebJsonMetaPointer
 }
 
-export const addReference = (addRef: AddReferenceType):  AddReferenceCommand =>
+export const addReference = (addRef: AddReferenceType, marker?: string):  AddReferenceCommand =>
 {
     return {
         messageKind: "AddReference",
@@ -213,7 +213,15 @@ export const addReference = (addRef: AddReferenceType):  AddReferenceCommand =>
         index: addRef.index,
         newTarget: addRef.target,
         newResolveInfo: addRef.resolveInfo,
-        protocolMessages: []
+        additionalInfo: (marker ? [{
+            kind: "TestMarker",
+            message: "Marker to tell test client that all evebt should be received.",
+            data: [{
+                key: "TestReady",
+                value: marker
+            }],
+            distribute: true
+        }] : [])
     }
 }
 
@@ -227,7 +235,7 @@ export const deleteReference = (ref: AddReferenceType):  DeleteReferenceCommand 
         deletedTarget: ref.target,
         deletedResolveInfo: ref.resolveInfo,
         index: ref.index,
-        protocolMessages: []
+        additionalInfo: []
     }
 }
 

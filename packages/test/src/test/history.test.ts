@@ -2,6 +2,7 @@ import { CreatePartitionsResponse, HttpSuccessCodes, ListPartitionsResponse } fr
 import { ClientResponse, RepositoryClient } from "@lionweb/server-client"
 import { LionWebJsonChunk, LionWebJsonNode } from "@lionweb/json"
 import { LanguageChange, LionWebJsonDiff } from "@lionweb/json-diff"
+import { afterAll } from "vitest"
 import { readModel } from "./utils.js"
 
 import { assert, expect } from "chai"
@@ -45,6 +46,15 @@ describe("Repository tests", () => {
         const result = await client.bulk.store(baseFullChunk)
         if (result.status !== HttpSuccessCodes.Ok) {
             console.log("Cannot store initial chunk: " + JSON.stringify(result.body))
+        }
+    })
+
+    afterAll(async function () {
+        const deleteResponse = await client.dbAdmin.deleteRepository("history")
+        if (deleteResponse.status !== HttpSuccessCodes.Ok) {
+            console.log("Cannot delete repository: " + JSON.stringify(deleteResponse.body))
+        } else {
+            console.log("Repository deleted: " + JSON.stringify(deleteResponse.body))
         }
     })
 

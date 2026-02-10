@@ -1,4 +1,4 @@
-import { DeltaClient } from "@lionweb/server-delta-client"
+import { DeltaClient, eventFunctions } from "@lionweb/server-delta-client"
 import { HttpSuccessCodes } from "@lionweb/server-shared"
 import { getVersionFromResponse, RepositoryClient } from "@lionweb/server-client"
 import { LionWebJsonChunk } from "@lionweb/json"
@@ -16,7 +16,9 @@ const DATA: string = "./data/"
 
     const repository = "MyFirstRepo"
     const bulkApiClient = new RepositoryClient("TestClient", repository)
-    const deltaApiClient = new DeltaClient("TestClient", repository)
+    const deltaApiClient = new DeltaClient({}, [eventFunctions])
+    deltaApiClient.repository = repository
+    deltaApiClient.clientId = "TestClient"
         // client.loggingOn = true
     let initialPartition: LionWebJsonChunk
     let initialPartitionVersion: number = 0
@@ -40,9 +42,9 @@ const DATA: string = "./data/"
         clientId: "cli",
         repositoryId: "1",
         deltaProtocolVersion: "1",
-        messageKind: "SignOn",
+        messageKind: "SignOnRequest",
         queryId: "12",
-        protocolMessages: []
+        additionalInfo: []
     }
     console.log("BEFORE ALL 3")
     deltaApiClient.sendRequest(signOn)
@@ -54,7 +56,7 @@ const DATA: string = "./data/"
             version: "version"
         },
         commandId: "C1",
-        protocolMessages: []
+        additionalInfo: []
     }  as DeltaCommand)
     console.log("VEFORE ALL 5")
 
@@ -115,7 +117,7 @@ const DATA: string = "./data/"
             ]
         },
         commandId: "0",
-        protocolMessages: [
+        additionalInfo: [
             {
                 kind: "Info",
                 message: "Add a new partition",

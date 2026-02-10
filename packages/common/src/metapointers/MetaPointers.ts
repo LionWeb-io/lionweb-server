@@ -84,13 +84,13 @@ export class MetaPointersCollector {
 
     considerAddingMetaPointer(metaPointer: LionWebJsonMetaPointer) {
         const key = `${metaPointer.language}@${metaPointer.version}@${metaPointer.key}`
-        deltaLogger.info(`considerAddingMetaPointer ${key}`)
+        // deltaLogger.info(`considerAddingMetaPointer ${key}`)
 
         if (hasInGlobalMetaPointersMap(this.repositoryData.repository.repository_name, key) || this.keysOfMetaPointers.has(key)) {
-            deltaLogger.info(`considerAddingMetaPointer ${key} already there`)
+            // deltaLogger.info(`considerAddingMetaPointer ${key} already there`)
             return
         } else {
-            deltaLogger.info(`considerAddingMetaPointer ${key} added to liost`)
+            // deltaLogger.info(`considerAddingMetaPointer ${key} added to liost`)
             this.keysOfMetaPointers.add(key)
             this.metaPointers.add(metaPointer)
         }
