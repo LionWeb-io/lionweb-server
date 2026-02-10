@@ -1,4 +1,3 @@
-import { notNullOrUndefined } from "@lionweb/server-common"
 import {
     CommandSource,
     DeltaAdminRequest,
@@ -16,6 +15,7 @@ import {
     type SignOnResponse
 } from "@lionweb/server-delta-shared"
 import { LionWebDeltaClientProcessor, ReceivingDelta } from "./delta/index.js"
+import { notNullOrUndefined } from "./util.js"
 
 export type DeltaConfiguration = {
     port?: number
@@ -318,8 +318,4 @@ export class DeltaClient {
         console.log("Called ReconnectResponseFunction " + msg.messageKind)
         this.state = "Connected"
     }
-}
-
-const sleep = async (ms: number) => {
-    return new Promise(resolve => setTimeout(resolve, ms))
 }

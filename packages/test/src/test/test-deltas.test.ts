@@ -84,7 +84,6 @@ collection.forEach(withoutHistory => {
             await deltaApiClient.sendRequest(newSubscribeToPartitionRequest("ID-2"))
             await deltaApiClient.sendCommand(newAddPropertyCommand("node-122", "value-1", "-key-Concept-name"))
             await deltaApiClient.sendCommand(newChangePropertyCommand("node-124", "value-2", "-key-Concept-name"))
-            // await delay(200)
 
             const repositories = await bulkApiClient.dbAdmin.listRepositories()
             console.log("repositories: " + JSON.stringify(repositories.body.repositories))

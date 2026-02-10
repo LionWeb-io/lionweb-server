@@ -43,6 +43,8 @@
     },
     "workspaces": [
         "./packages/shared",
+        "./packages/delta-shared",
+        "./packages/server-delta-definitions",
         "./packages/common",
         "./packages/dbadmin",
         "./packages/languages",
@@ -51,8 +53,6 @@
         "./packages/history",
         "./packages/additionalapi",
         "./packages/client",
-        "./packages/delta-shared",
-        "./packages/server-delta-definitions",
         "./packages/delta-client",
         "./packages/delta-server",
         "./packages/server",

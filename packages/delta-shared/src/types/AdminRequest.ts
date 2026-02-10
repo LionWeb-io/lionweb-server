@@ -32,14 +32,28 @@ export type DeleteRepositoryAdminRequest = DeltaAdminRequest & {
     messageKind: "DeleteRepositoryAdminRequest";
 };
 
+/**
+ *  @see unknown-RenameRepository
+ */
+export type RenameRepositoryAdminRequest = DeltaAdminRequest & {
+    repositoryName: String;
+    messageKind: "RenameRepositoryAdminRequest";
+};
+
 // The type for the tagged union property
-export type AdminRequestMessageKind = "ListRepositoriesAdminRequest" | "CreateRepositoryAdminRequest" | "DeleteRepositoryAdminRequest";
+export type AdminRequestMessageKind =
+    | "ListRepositoriesAdminRequest"
+    | "CreateRepositoryAdminRequest"
+    | "DeleteRepositoryAdminRequest"
+    | "RenameRepositoryAdminRequest";
 
 // Type Guard function
 export function isDeltaAdminRequest(object: unknown): object is DeltaAdminRequest {
     const castObject = object as DeltaAdminRequest;
     return (
         castObject.messageKind !== undefined &&
-        ["ListRepositoriesAdminRequest", "CreateRepositoryAdminRequest", "DeleteRepositoryAdminRequest"].includes(castObject.messageKind)
+        ["ListRepositoriesAdminRequest", "CreateRepositoryAdminRequest", "DeleteRepositoryAdminRequest", "RenameRepositoryAdminRequest"].includes(
+            castObject.messageKind,
+        )
     );
 }

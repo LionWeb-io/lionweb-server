@@ -42,6 +42,7 @@ const AddPropertyFunction = async (
         changes.addChanges([change])
         const metaPointersTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointersTracker, [], task)
+        deltaLogger.info(`query: ${changes.createPostgresQuery(metaPointersTracker)}`)
         const dbResult = await task.query(participation.repositoryData!, changes.createPostgresQuery(metaPointersTracker))
         deltaLogger.info(`db delete is ${JSON.stringify(dbResult)}`)
         return {

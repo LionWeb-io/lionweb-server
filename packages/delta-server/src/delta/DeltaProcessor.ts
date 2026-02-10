@@ -27,6 +27,7 @@ import {
     DeltaFunction,
     issuesToProtocolNessages,
     MessageFunction,
+    miscFunctions,
     partitionFunctions,
     propertyFunctions,
     referenceFunctions
@@ -216,5 +217,6 @@ export const deltaProcessor = new DeltaProcessor([
     annotationFunctions,
     partitionFunctions,
     propertyFunctions,
-    adminRequestFunctions
+    adminRequestFunctions,
+    miscFunctions
 ])

@@ -10,7 +10,8 @@ import {
     DeltaAdminResponse,
     ErrorEvent,
     ListRepositoriesAdminRequest,
-    ListRepositoriesAdminResponse
+    ListRepositoriesAdminResponse,
+    RenameRepositoryAdminResponse
 } from "@lionweb/server-delta-shared"
 import { DeltaFunction } from "../commands/index.js"
 import { DeltaContext } from "../DeltaContext.js"
@@ -39,6 +40,7 @@ const CreateRepository = async (participation: ParticipationInfo, msg: CreateRep
     return {
         messageKind: "CreateRepositoryAdminResponse",
         queryId: msg.queryId,
+        newRepositoryName: msg.repositoryName,
         additionalInfo: [ {
             kind: "Info",
             message: "NOT IMPLEMENTED YET",
@@ -52,12 +54,28 @@ const DeleteRepository = async (participation: ParticipationInfo, msg: DeleteRep
     return {
         messageKind: "DeleteRepositoryAdminResponse",
         queryId: msg.queryId,
+        deletedRepositoryName: msg.repositoryName,
         additionalInfo: [ {
             kind: "Info",
             message: "NOT IMPLEMENTED YET",
             data: []
         }]
     } as DeleteRepositoryAdminResponse
+}
+
+const RenameRepository = async (participation: ParticipationInfo, msg: DeleteRepositoryAdminRequest, _ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
+    deltaLogger.info("Called RenameRepository request id: " + msg.queryId)
+    return {
+        messageKind: "RenameRepositoryAdminResponse",
+        queryId: msg.queryId,
+        oldRepositoryName: msg.repositoryName,
+        newRepositoryName: msg.repositoryName,
+        additionalInfo: [ {
+            kind: "Info",
+            message: "NOT IMPLEMENTED YET",
+            data: []
+        }]
+    } as RenameRepositoryAdminResponse
 }
 
 export const adminRequestFunctions: DeltaFunction[] = [
@@ -75,5 +93,10 @@ export const adminRequestFunctions: DeltaFunction[] = [
         messageKind: "DeleteRepositoryAdminRequest",
         // @ts-expect-error TS2332
         processor: DeleteRepository
+    },
+    {
+        messageKind: "RenameRepositoryAdminRequest",
+        // @ts-expect-error TS2332
+        processor: RenameRepository
     }
 ]

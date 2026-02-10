@@ -241,20 +241,20 @@ async function startServer() {
         deltaLogger.info(`Client connected`);
         activeSockets.set(socket, new ParticipationInfo(socket))
         
-        socket.on('message', (message: RawData) => {
-            deltaLogger.info(`Server Received: ${message.toString()}`);
-            const msg = JSON.parse(message.toString()) as unknown as (DeltaCommand | DeltaRequest)
+        socket.onmessage = message => {
+            deltaLogger.info(`Server Received: ${message.data.toString()}`);
+            const msg = JSON.parse(message.data.toString()) as unknown as (DeltaCommand | DeltaRequest)
             runWithTryDelta(socket, msg)
-        });
+        };
 
-        socket.on('close', () => {
+        socket.onclose = _ev => {
             deltaLogger.info('Client disconnected');
             activeSockets.delete(socket)
-        });
-        socket.on('error', () => {
-            deltaLogger.info('Error message on socket');
+        };
+        socket.onerror = ev => {
+            deltaLogger.info(`Error message on socket: ${ev.toString()}`);
             // activeSockets.delete(socket)
-        });
+        };
         socket.on('ping', () => {
             deltaLogger.info('Ping message on socket');
             // activeSockets.delete(socket)
