@@ -108,7 +108,7 @@ export function getIntegerParam(request: Request, paramName: string, defaultValu
             return {
                 success: false,
                 error: {
-                    kind: `${toFirstUpper(paramName)}Incorrect`,
+                    kind: `${toFirstUpper(paramName)}-ParameterIncorrect`,
                     message: `Parameter ${paramName} must be an integer, but it is ${result}`
                 }
             }

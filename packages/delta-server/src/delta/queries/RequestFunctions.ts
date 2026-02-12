@@ -1,12 +1,11 @@
-import { deltaLogger, LionWebTask, DB, lionwebResponse } from "@lionweb/server-common"
-import { getAvailableIds } from "@lionweb/server-common/dist/queries/getAvailableIds.js"
-import { retrievePartitionsFromDB } from "@lionweb/server-common/dist/queries/PartitionQueries.js"
+import { deltaLogger, LionWebTask, DB } from "@lionweb/server-common"
 import {
     DeltaEvent,
     DeltaResponse,
-    ErrorEvent,
     GetAvailableIdsRequest,
     GetAvailableIdsResponse,
+    InformAboutChangingPartitionsRequest,
+    InformAboutChangingPartitionsResponse,
     ListPartitionsRequest,
     ListPartitionsResponse,
     ReconnectRequest,
@@ -15,6 +14,7 @@ import {
     SignOnRequest,
     SignOnResponse,
     SubscribeToChangingPartitionsRequest,
+    SubscribeToChangingPartitionsResponse,
     SubscribeToPartitionContentsRequest,
     SubscribeToPartitionContentsResponse,
     UnsubscribeFromPartitionContentsRequest,
@@ -23,7 +23,7 @@ import {
 import { DeltaFunction, errorNotImplementedEvent } from "../commands/index.js"
 import { DeltaContext } from "../DeltaContext.js"
 import { newErrorDelta, ErrorDelta } from "../events.js"
-import { ParticipationInfo } from "./Participation.js"
+import { ParticipationInfo, ChangingPartitionsSubscription } from "./Participation.js"
 
 /**
  * Allowed state transitions:
@@ -42,7 +42,34 @@ const SubscribeToChangingPartitionsRequestFunction = (
     msg: SubscribeToChangingPartitionsRequest
 ): DeltaEvent | DeltaResponse | ErrorDelta => {
     deltaLogger.info("Called SubscribeToChangingPartitionsRequestFunction " + msg.messageKind)
-    return errorNotImplementedEvent(msg)
+    const subscription= new ChangingPartitionsSubscription()
+    subscription.deletion = msg.deletion
+    subscription.creation = msg.creation
+    subscription.autoSubscribe = true
+    participation.partitionChangesSubscription = subscription
+    return {
+        messageKind: "SubscribeToChangingPartitionsResponse",
+        queryId: msg.queryId,
+        additionalInfo: []
+    } as SubscribeToChangingPartitionsResponse
+}
+
+const InformAboutChangingPartitionsRequestFunction = (
+    participation: ParticipationInfo,
+    msg: InformAboutChangingPartitionsRequest
+): DeltaEvent | DeltaResponse | ErrorDelta => {
+    deltaLogger.info("Called InformAboutChangingPartitionsRequestFunction " + msg.messageKind)
+    const subscription= new ChangingPartitionsSubscription()
+    subscription.deletion = msg.deletion
+    subscription.creation = msg.creation
+    subscription.depth = msg.depthLimit
+    subscription.autoSubscribe = false
+    participation.partitionChangesSubscription = subscription
+    return {
+        messageKind: "InformAboutChangingPartitionsResponse",
+        queryId: msg.queryId,
+        additionalInfo: []
+    } as InformAboutChangingPartitionsResponse
 }
 
 const SubscribeToPartitionContentsRequestFunction = async (
@@ -135,7 +162,7 @@ const ListPartitionsRequestFunction = async (
 ): Promise<DeltaEvent | DeltaResponse> => {
     deltaLogger.info("Called ListPartitionsRequestFunction " + msg.messageKind)
     const partitions = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const result = await retrievePartitionsFromDB(task, participation.repositoryData!)
+        const result = await DB.retrievePartitionsFromDB(task, participation.repositoryData!)
         return result
     })
 
@@ -162,7 +189,7 @@ const GetAvailableIdsRequestFunction = async (
 ): Promise<DeltaEvent | DeltaResponse> => {
     deltaLogger.info("Called GetAvailableIdsRequestFunction " + msg.messageKind)
     const ids = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const result = await getAvailableIds(task, participation.repositoryData!, msg.count)
+        const result = await DB.getAvailableIds(task, participation.repositoryData!, msg.count)
         return result
     })
     const response: GetAvailableIdsResponse = {
@@ -213,6 +240,11 @@ export const requestFunctions: DeltaFunction[] = [
         messageKind: "SubscribeToChangingPartitionsRequest",
         // @ts-expect-error TS2322
         processor: SubscribeToChangingPartitionsRequestFunction
+    },
+    {
+        messageKind: "InformAboutChangingPartitionsRequest",
+        // @ts-expect-error TS2322
+        processor: InformAboutChangingPartitionsRequestFunction
     },
     {
         messageKind: "SubscribeToPartitionContentsRequest",

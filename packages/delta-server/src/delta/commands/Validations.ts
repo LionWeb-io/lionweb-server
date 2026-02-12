@@ -126,7 +126,7 @@ export function validateReference(
             }
         } else {
             throw newErrorDelta(
-                "unknownContainment",
+                "unknownReference",
                 `Reference '${JSON.stringify(reference)}' does not exists in node '${parentNode.id}'`,
                 msg,
                 participation

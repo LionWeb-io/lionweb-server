@@ -1,3 +1,4 @@
+import { LionWebJsonNode } from "@lionweb/json"
 import { deltaLogger, isInternalQueryError, DB, notNullOrUndefined } from "@lionweb/server-common";
 import { NodeWithParent } from "@lionweb/server-common/dist/queries/RetrieveNodes.js"
 import { DeltaValidator } from "@lionweb/server-delta-definitions"
@@ -14,7 +15,8 @@ import {
     isDeltaRequest,
     findDistributableInfos,
     MessageToClient,
-    ErrorResponse
+    ErrorResponse,
+    AddPartitionCommand
 } from "@lionweb/server-delta-shared"
 import { MessageFromClient } from "@lionweb/server-delta-shared"
 import { ValidationResult } from "@lionweb/validation"
@@ -114,28 +116,59 @@ class DeltaProcessor {
                 if (affectedNode === undefined) {
                     deltaLogger.debug("No affected node found, not sending delta's")
                 } else {
-                    // TODO The parent is retrieved outside the transaction, could already be changed by another delta.
-                    const parentChain = await DB.retrieveParentsDB(this.context!.dbConnection, participation!.repositoryData!, affectedNode.value)
-                    if (parentChain === undefined) {
-                        throw new Error("PARENT CHAIN UNDEFINED")
-                    } else {
-                        deltaLogger.info(`PARENT CHAIN IS ${JSON.stringify(parentChain)}`)
-                    }
-                    const affectedPartition = parentChain[parentChain.length-1] ?? { id: affectedNode.value, parent: null } as NodeWithParent
-                    if (affectedPartition !== undefined) {
-                        deltaLogger.info(`affectedPartition ${JSON.stringify(affectedPartition)}`)
-                        response.additionalInfo.push(affectedPartitionMessage(affectedPartition.id))
+                    // First check for new/deleted partitions
+                    if ( ["PartitionAdded", "PartitionDeleted"].includes(response.messageKind)) {
+                        console.log("DeltaProcessor.Partition added/deleted")
+                        // Find out which nodes to send to whom
                         for (const participationInfo of activeSockets.values()) {
-                            deltaLogger.info(`Participant ${participationInfo.repositoryData?.clientId} subscribed to '${JSON.stringify(participationInfo.subscribedPartitions)}'`)
-                            if (participationInfo.subscribedPartitions.includes(affectedPartition.id)) {
-                                deltaLogger.info(`Subscribed Sending ${JSON.stringify(response)} to ${participationInfo.repositoryData!.clientId}`)
-                                this.sendDelta(participationInfo.socket, participationInfo, delta, response)
-                            } else {
-                                deltaLogger.info(`NOT Subscribed ${participationInfo.repositoryData!.clientId}`)
+                            let nodesToSend: LionWebJsonNode[] = []
+                            if (participationInfo.partitionChangesSubscription !== undefined) {
+                                if (participationInfo.partitionChangesSubscription.creation) {
+                                    if (delta.messageKind === "AddPartition") {
+                                        if (participationInfo.partitionChangesSubscription.autoSubscribe) {
+                                            nodesToSend = (delta as AddPartitionCommand).newPartition.nodes
+                                        } else {
+                                            // TODO retrieve until depthLimit
+                                        }
+                                    }
+                                }
                             }
                         }
                     } else {
-                        deltaLogger.info(`NO Subscribed no affected node`)
+                        // TODO The parent is retrieved outside the transaction, could already be changed by another delta.
+                        const parentChain = await DB.retrieveParentsDB(
+                            this.context!.dbConnection,
+                            participation!.repositoryData!,
+                            affectedNode.value
+                        )
+                        if (parentChain === undefined) {
+                            throw new Error("PARENT CHAIN UNDEFINED")
+                        } else {
+                            deltaLogger.info(`PARENT CHAIN IS ${JSON.stringify(parentChain)}`)
+                        }
+                        const affectedPartition =
+                            parentChain[parentChain.length - 1] ?? ({ id: affectedNode.value, parent: null } as NodeWithParent)
+                        if (affectedPartition !== undefined) {
+                            deltaLogger.info(`affectedPartition ${JSON.stringify(affectedPartition)}`)
+                            response.additionalInfo.push(affectedPartitionMessage(affectedPartition.id))
+                            for (const participationInfo of activeSockets.values()) {
+                                deltaLogger.info(
+                                    `Participant ${participationInfo.repositoryData?.clientId} subscribed to '${JSON.stringify(
+                                        participationInfo.subscribedPartitions
+                                    )}'`
+                                )
+                                if (participationInfo.subscribedPartitions.includes(affectedPartition.id)) {
+                                    deltaLogger.info(
+                                        `Subscribed Sending ${JSON.stringify(response)} to ${participationInfo.repositoryData?.clientId}`
+                                    )
+                                    this.sendDelta(participationInfo.socket, participationInfo, delta, response)
+                                } else {
+                                    deltaLogger.info(`NOT Subscribed ${participationInfo.repositoryData?.clientId}`)
+                                }
+                            }
+                        } else {
+                            deltaLogger.info(`NO Subscribed no affected node`)
+                        }
                     }
                 }
             }

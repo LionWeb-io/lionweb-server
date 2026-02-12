@@ -2,11 +2,11 @@ import { QueryId } from "./DeltaTypes.js";
 import { String } from "./DeltaTypes.js";
 import { AdditionalInfo } from "./DeltaTypes.js";
 import { Boolean } from "./DeltaTypes.js";
+import { Number } from "./DeltaTypes.js";
 import { LionWebId } from "./Chunks.js";
 import { ClientId } from "./DeltaTypes.js";
 import { ParticipationId } from "./DeltaTypes.js";
 import { SequenceNumber } from "./DeltaTypes.js";
-import { Number } from "./DeltaTypes.js";
 
 // The overall "super-type"
 export type DeltaRequest = {
@@ -16,12 +16,21 @@ export type DeltaRequest = {
 };
 
 /**
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-InformAboutChangingPartitions
+ */
+export type InformAboutChangingPartitionsRequest = DeltaRequest & {
+    creation: Boolean;
+    deletion: Boolean;
+    depthLimit: Number;
+    messageKind: "InformAboutChangingPartitionsRequest";
+};
+
+/**
  *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-SubscribeToChangingPartitions
  */
 export type SubscribeToChangingPartitionsRequest = DeltaRequest & {
     creation: Boolean;
     deletion: Boolean;
-    partitions: Boolean;
     messageKind: "SubscribeToChangingPartitionsRequest";
 };
 
@@ -84,6 +93,7 @@ export type ListPartitionsRequest = DeltaRequest & {
 
 // The type for the tagged union property
 export type RequestMessageKind =
+    | "InformAboutChangingPartitionsRequest"
     | "SubscribeToChangingPartitionsRequest"
     | "SubscribeToPartitionContentsRequest"
     | "UnsubscribeFromPartitionContentsRequest"
@@ -99,6 +109,7 @@ export function isDeltaRequest(object: unknown): object is DeltaRequest {
     return (
         castObject.messageKind !== undefined &&
         [
+            "InformAboutChangingPartitionsRequest",
             "SubscribeToChangingPartitionsRequest",
             "SubscribeToPartitionContentsRequest",
             "UnsubscribeFromPartitionContentsRequest",

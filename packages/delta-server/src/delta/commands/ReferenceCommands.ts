@@ -81,7 +81,7 @@ const DeleteReference = async (participation: ParticipationInfo, msg: DeleteRefe
 }
 
 const ChangeReference = async (participation: ParticipationInfo, msg: ChangeReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
-    deltaLogger.info("Called ChangeReference " + msg.messageKind)
+    deltaLogger.info("Called ChangeReference " + msg.reference.key)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [msg.parent])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
@@ -100,6 +100,7 @@ const ChangeReference = async (participation: ParticipationInfo, msg: ChangeRefe
         )
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [], task)
+        await task.query(participation!.repositoryData!, changes.createPostgresQuery(metaPointerTracker))
         return {
             messageKind: "ReferenceChanged",
             parent: msg.parent,

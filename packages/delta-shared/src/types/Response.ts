@@ -21,6 +21,13 @@ export type SubscribeToChangingPartitionsResponse = DeltaResponse & {
 };
 
 /**
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-InformAboutChangingPartitions
+ */
+export type InformAboutChangingPartitionsResponse = DeltaResponse & {
+    messageKind: "InformAboutChangingPartitionsResponse";
+};
+
+/**
  *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-SubscribeToPartitionContents
  */
 export type SubscribeToPartitionContentsResponse = DeltaResponse & {
@@ -86,6 +93,7 @@ export type ErrorResponse = DeltaResponse & {
 // The type for the tagged union property
 export type ResponseMessageKind =
     | "SubscribeToChangingPartitionsResponse"
+    | "InformAboutChangingPartitionsResponse"
     | "SubscribeToPartitionContentsResponse"
     | "UnsubscribeFromPartitionContentsResponse"
     | "SignOnResponse"
@@ -102,6 +110,7 @@ export function isDeltaResponse(object: unknown): object is DeltaResponse {
         castObject.messageKind !== undefined &&
         [
             "SubscribeToChangingPartitionsResponse",
+            "InformAboutChangingPartitionsResponse",
             "SubscribeToPartitionContentsResponse",
             "UnsubscribeFromPartitionContentsResponse",
             "SignOnResponse",

@@ -1,3 +1,4 @@
+import { LionWebJsonNode } from "@lionweb/json"
 import {
     deltaLogger,
     LionWebTask,
@@ -24,7 +25,7 @@ const AddPartitionFunction = async (
     msg: AddPartitionCommand,
     _ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorDelta> => {
-    deltaLogger.info(`Called AddPartitionFunction ${msg.messageKind}`) // + msg.newPartition?.nodes?.length)
+    deltaLogger.info(`Called AddPartitionFunction ${msg.messageKind}`)
     validateProperTree(msg.newPartition, null, msg, participation)
 
     const result = await _ctx.dbConnection.tx(async (task: LionWebTask) => {
@@ -54,9 +55,11 @@ const AddPartitionFunction = async (
         const partitionNode = msg.newPartition.nodes.find(n => n.parent === null)!
         participation.subscribedPartitions.push(partitionNode.id)
         deltaLogger.info(`Adding partition ${partitionNode.id} to subscribed partitions`)
+
         return {
             messageKind: "PartitionAdded",
-            newPartition: { nodes: [] },
+            //  TODO Send the partitions or part of it, depending on subscription
+            newPartition: { nodes: msg.newPartition.nodes },
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,
             additionalInfo: [ affectedNodeMessage(partitionNode.id) ]

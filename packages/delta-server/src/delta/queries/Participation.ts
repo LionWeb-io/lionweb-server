@@ -15,6 +15,17 @@ import WebSocket from "ws"
  * signedOff => disconnected */
 export type ParticipationStatus = "connected" | "signedOn" | "signedOff" | "disconnected"
 
+export class ChangingPartitionsSubscription {
+    creation: boolean = false
+    deletion: boolean = false
+    depth: number = 0
+    
+    autoSubscribe: boolean = false
+    constructor() {
+        
+    }
+}
+
 export class ParticipationInfo {
     static nextIdNumber = 0
     /**
@@ -45,7 +56,14 @@ export class ParticipationInfo {
      * The partitions that this client is subscribed to
      */
     subscribedPartitions: string[] = []
-
+    /**
+     * Whether subscribed to adding and deleting partitions.
+     */
+    partitionChangesSubscription: ChangingPartitionsSubscription | undefined
+    /**
+     *
+     * @param socket
+     */
     constructor(socket: WebSocket) {
         this.socket = socket
     }
