@@ -2,14 +2,7 @@ import { RepositoryClient } from "@lionweb/server-client"
 import { DeltaClient, eventFunctions } from "@lionweb/server-delta-client"
 import { HttpSuccessCodes } from "@lionweb/server-shared"
 import { LionWebJsonChunk } from "@lionweb/json"
-import {
-    newAddPartitionCommand,
-    newAddPropertyCommand,
-    newChangePropertyCommand,
-    newDeletePropertyCommand,
-    newSignOnRequest,
-    newSubscribeToPartitionRequest
-} from "./commands.js"
+import { Commands } from "./commands.js"
 import { printChunk, readModel } from "./utils.js"
 
 import { test, assert, describe, beforeAll, beforeEach, afterEach } from "vitest"
@@ -30,6 +23,7 @@ collection.forEach(withoutHistory => {
         const deltaApiClient = new DeltaClient({}, [eventFunctions])
         deltaApiClient.clientId = "TestClient"
         deltaApiClient.repository = repository
+        const cmd = new Commands(deltaApiClient)
         // client.loggingOn = true
         let initialPartition: LionWebJsonChunk
         // let initialPartitionVersion: number = 0
@@ -56,8 +50,9 @@ collection.forEach(withoutHistory => {
             console.log("repositories: " + JSON.stringify(repositories.body.repositories))
 
             await deltaApiClient.connect()
-            await delay(200)
-            await deltaApiClient.sendRequest(newSignOnRequest(repository, "TestClient"))
+            const signOn = cmd.signOnRequest(repository, "TestClient")
+            expect((await cmd.responseFor(signOn)).messageKind).toEqual("SignOnResponse")
+
             // await deltaApiClient.sendRequest(newSubscribeToPartitionRequest(repository, "TestClient", "ID-2"))
             // await delay(200)
         })
@@ -80,10 +75,14 @@ collection.forEach(withoutHistory => {
                 // initError = JSON.stringify(result.body)
                 // return
             }
+            
+            const sub = cmd.subscribeToPartitionRequest("ID-2")
+            const addProp = cmd.addProperty("node-122", "value-1", "-key-Concept-name")
+            const changeProp = cmd.changeProperty("node-124", "value-2", "-key-Concept-name")
 
-            await deltaApiClient.sendRequest(newSubscribeToPartitionRequest("ID-2"))
-            await deltaApiClient.sendCommand(newAddPropertyCommand("node-122", "value-1", "-key-Concept-name"))
-            await deltaApiClient.sendCommand(newChangePropertyCommand("node-124", "value-2", "-key-Concept-name"))
+            expect((await cmd.responseFor(sub)).messageKind).toEqual("SubscribeToPartitionResponse")
+            expect((await cmd.eventFor(addProp)).messageKind).toEqual("PropertyAdded")
+            expect((await cmd.eventFor(changeProp)).messageKind).toEqual("PropertyChanged")
 
             const repositories = await bulkApiClient.dbAdmin.listRepositories()
             console.log("repositories: " + JSON.stringify(repositories.body.repositories))
@@ -96,15 +95,14 @@ collection.forEach(withoutHistory => {
         describe("Simple Delta tests", () => {
             test("AddPartition", async () => {
                 assert(initError === "", initError)
-                deltaApiClient.sendCommand(newAddPartitionCommand({ id: "ID-NewPartition20", classifier: {key: "key", language: "l", version: "`1.0"}}))
-                await delay(200)
+                cmd.addPartition({ id: "ID-NewPartition20", classifier: {key: "key", language: "l", version: "`1.0"}})
 
-                deltaApiClient.sendRequest(newSubscribeToPartitionRequest("ID-NewPartition20",))
-                deltaApiClient.sendCommand(newDeletePropertyCommand("ID-NewPartition20", "-key-Partition-name"))
-                deltaApiClient.sendCommand(newDeletePropertyCommand("ID-2", "-key-Partition-name"))
+                cmd.subscribeToPartitionRequest("ID-NewPartition20",)
+                cmd.deleteProperty("ID-NewPartition20", "-key-Partition-name")
+                cmd.deleteProperty("ID-2", "-key-Partition-name")
                 // deltaApiClient.sendCommand(newDeletePropertyCommand("ID-2", "LionCore-builtins-INamed-name"))
-                deltaApiClient.sendCommand(newChangePropertyCommand("ID-12", "NEW value", "LionCore-builtins-INamed-name"))
-                deltaApiClient.sendCommand(newAddPropertyCommand("ID-NewPartition20", "value-1", "Lione-builtins-INamed-name"))
+                cmd.changeProperty("ID-12", "NEW value", "LionCore-builtins-INamed-name")
+                cmd.addProperty("ID-NewPartition20", "value-1", "Lione-builtins-INamed-name")
 
                 await delay(200)
                 console.log("SentMessages")

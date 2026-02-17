@@ -18,7 +18,7 @@ import { DeltaFunction } from "./DeltaUtil.js"
 import { findAndValidateNodeExists, validateReference } from "./Validations.js"
 
 const AddReference = async (participation: ParticipationInfo, msg: AddReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorEvent> => {
-    deltaLogger.info("Called AddReference " + msg.messageKind)
+    deltaLogger.debug("Called AddReference " + msg.messageKind)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [msg.parent])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
@@ -45,14 +45,14 @@ const AddReference = async (participation: ParticipationInfo, msg: AddReferenceC
             parent: msg.parent,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,          // dummy, will be changed for each participation before sending
-            additionalInfo: [affectedNodeMessage(parentNode!.id)]
+            additionalInfos: [affectedNodeMessage(parentNode!.id)]
         } as ReferenceAddedEvent
     })
     return result
 }
 
 const DeleteReference = async (participation: ParticipationInfo, msg: DeleteReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent> => {
-    deltaLogger.info("Called DeleteReference " + msg.messageKind)
+    deltaLogger.debug("Called DeleteReference " + msg.messageKind)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [msg.parent])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
@@ -74,14 +74,14 @@ const DeleteReference = async (participation: ParticipationInfo, msg: DeleteRefe
             deletedTarget: msg.deletedTarget,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,          // dummy, will be changed for each participation before sending
-            additionalInfo: [affectedNodeMessage(msg.parent)]
+            additionalInfos: [affectedNodeMessage(msg.parent)]
         } as ReferenceDeletedEvent
     })
     return result
 }
 
 const ChangeReference = async (participation: ParticipationInfo, msg: ChangeReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
-    deltaLogger.info("Called ChangeReference " + msg.reference.key)
+    deltaLogger.debug("Called ChangeReference " + msg.reference.key)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [msg.parent])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
@@ -112,7 +112,7 @@ const ChangeReference = async (participation: ParticipationInfo, msg: ChangeRefe
             newTarget: msg.newTarget,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,          // dummy, will be changed for each participation before sending
-            additionalInfo: [affectedNodeMessage(msg.parent)]
+            additionalInfos: [affectedNodeMessage(msg.parent)]
         } as ReferenceChangedEvent
     })
     return result

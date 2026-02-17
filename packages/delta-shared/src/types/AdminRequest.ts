@@ -1,12 +1,12 @@
-import { QueryId } from "./DeltaTypes.js";
-import { String } from "./DeltaTypes.js";
-import { AdditionalInfo } from "./DeltaTypes.js";
+import type { QueryId } from "./DeltaTypes.js";
+import type { String } from "./DeltaTypes.js";
+import type { AdditionalInfo } from "./DeltaTypes.js";
 
 // The overall "super-type"
 export type DeltaAdminRequest = {
     queryId: QueryId;
     messageKind: AdminRequestMessageKind;
-    additionalInfo: AdditionalInfo[];
+    additionalInfos: AdditionalInfo[];
 };
 
 /**

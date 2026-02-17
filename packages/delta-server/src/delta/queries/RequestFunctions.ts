@@ -50,7 +50,7 @@ const SubscribeToChangingPartitionsRequestFunction = (
     return {
         messageKind: "SubscribeToChangingPartitionsResponse",
         queryId: msg.queryId,
-        additionalInfo: []
+        additionalInfos: []
     } as SubscribeToChangingPartitionsResponse
 }
 
@@ -68,7 +68,7 @@ const InformAboutChangingPartitionsRequestFunction = (
     return {
         messageKind: "InformAboutChangingPartitionsResponse",
         queryId: msg.queryId,
-        additionalInfo: []
+        additionalInfos: []
     } as InformAboutChangingPartitionsResponse
 }
 
@@ -80,14 +80,14 @@ const SubscribeToPartitionContentsRequestFunction = async (
     deltaLogger.info("Called SubscribeToPartitionContentsRequestFunction " + msg.messageKind)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         if (participation.subscribedPartitions.includes(msg.partition)) {
-            return newErrorDelta("AlreadySubscribed", `Already subscribed to partition ${msg.partition}`, msg, participation)
+            return newErrorDelta("alreadySubscribed", `Already subscribed to partition ${msg.partition}`, msg, participation)
         }
         participation.subscribedPartitions.push(msg.partition)
         const queryResult = await DB.retrieveFullNodesRecursiveDB(task, participation.repositoryData!, [msg.partition], Number.MAX_SAFE_INTEGER)
         return {
             messageKind: "SubscribeToPartitionContentsResponse",
             contents: { nodes: queryResult },
-            additionalInfo: [],
+            additionalInfos: [],
             queryId: msg.queryId
         } as SubscribeToPartitionContentsResponse
     })
@@ -101,14 +101,14 @@ const UnsubscribeFromPartitionContentsRequestFunction = (
 ): DeltaEvent | DeltaResponse | ErrorDelta => {
     deltaLogger.info("Called UnsubscribeFromPartitionContentsRequestFunction " + msg.messageKind)
     if (!participation.subscribedPartitions.includes(msg.partition)) {
-        return newErrorDelta("NotSubscribed", `Not subscribed to partition ${msg.partition}, cannot unsubscribe`, msg, participation)
+        return newErrorDelta("notSubscribed", `Not subscribed to partition ${msg.partition}, cannot unsubscribe`, msg, participation)
     }
     const index = participation.subscribedPartitions.findIndex(p => p === msg.partition)
     participation.subscribedPartitions.splice(index, 1)
     return {
         queryId: msg.queryId,
         messageKind: "UnsubscribeFromPartitionContentsResponse",
-        additionalInfo: []
+        additionalInfos: []
     } as UnsubscribeFromPartitionContentsResponse
 }
 
@@ -128,30 +128,30 @@ const SignOnRequestFunction = async (
         messageKind: "SignOnResponse",
         participationId: participation.participationId,
         queryId: msg.queryId,
-        additionalInfo: [{ data: [], kind: "Info", message: "SignOnRequest received ok" }]
+        additionalInfos: [{ data: [], kind: "Info", message: "SignOnRequest received ok" }]
     } as SignOnResponse
 }
 
 const validateSignOnRequest = (participation: ParticipationInfo | undefined, msg: SignOnRequest): ErrorDelta | undefined => {
     if (msg.repositoryId === undefined) {
-        return newErrorDelta("RepositoryIdMissing", `Repository id missing in request`, msg, participation!)
+        return newErrorDelta("repositoryIdMissing", `Repository id missing in request`, msg, participation!)
     }
     if (participation === undefined) {
         // no participation info found for this socket, something unknown went wrong.
-        return newErrorDelta("ParticipationMissing", `Repository '${msg.repositoryId}' unknown`, msg, participation!)
+        return newErrorDelta("participationMissing", `Repository '${msg.repositoryId}' unknown`, msg, participation!)
     }
 }
 
 const SignOffRequestFunction = (participation: ParticipationInfo, msg: SignOffRequest, _ctx: DeltaContext): DeltaEvent | DeltaResponse => {
     deltaLogger.info("Called SignOffRequestFunction " + msg.messageKind)
     if (participation.participationStatus !== "signedOn") {
-        return newErrorDelta("NotSignedOn", "Cannot SignOff a participation, because you are not signed on.", msg, participation)
+        return newErrorDelta("notSignedOn", "Cannot SignOff a participation, because you are not signed on.", msg, participation)
     }
     participation.participationStatus = "signedOff"
     return {
         messageKind: "SignOffResponse",
         queryId: msg.queryId,
-        additionalInfo: []
+        additionalInfos: []
     } as SignOffResponse
 }
 
@@ -171,7 +171,7 @@ const ListPartitionsRequestFunction = async (
         messageKind: "ListPartitionsResponse",
         partitions: { nodes: partitions.nodes },
         queryId: msg.queryId,
-        additionalInfo: [
+        additionalInfos: [
             {
                 kind: "repoVersion",
                 message: "The current version of the repository",
@@ -196,7 +196,7 @@ const GetAvailableIdsRequestFunction = async (
         messageKind: "GetAvailableIdsResponse",
         queryId: msg.queryId,
         ids: ids,
-        additionalInfo:[]
+        additionalInfos:[]
     }
     return response
 }

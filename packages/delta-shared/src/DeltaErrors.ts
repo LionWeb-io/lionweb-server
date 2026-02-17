@@ -1,14 +1,31 @@
-export type DeltaErrorCode  = 
-    "invalidParticipation" |
-    "nodeAlreadyExists"     |
-    "unknownNode"           |
-    "unknownIndex"          |
-    "indexNodeMismatch"     |
-    "moveWithoutParent"     |
-    "invalidMove"           |
-    "RepositoryMissing"     |
-    "undefinedReferenceTarget"  |
-    "generic"
-    
-    
-    
+export type DeltaErrorCode =
+    | "invalidParticipation"
+    | "nodeAlreadyExists"
+    | "propertyAlreadyExists"
+    | "unknownNode"
+    | "unknownIndex"
+    | "indexEntryMismatch"
+    | "indexNodeMismatch"
+    | "childNotFound"
+    | "moveWithoutParent"
+    | "invalidMove"
+    | "repositoryMissing"
+    | "undefinedReferenceTarget"
+    | "unknownNode"
+    | "haveTheSameParents"
+    | "idsAlreadyInUse"
+    | "nodeDoesNotExist"
+    | "TwoNodesWithSameId"
+    | "chunkIsNotATree"
+    | "unknownReference"
+    | "unknownProperty"
+    | "unknownContainment"
+    | "repositoryIdMissing"
+    | "notSubscribed"
+    | "alreadySubscribed"
+    | "participationMissing"
+    | "notSignedOn"
+    | "queryError"
+    | "messageSyntaxIncorrect"
+    | "messageKindUnknown"
+    | "generic"

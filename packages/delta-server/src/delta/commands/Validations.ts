@@ -24,19 +24,19 @@ export type Change = "Add" | "Replace" | "Delete"
  * @returns             The parent of the root node of the tree built from `nodes`
  */
 export function validateProperTree(nodes: LionWebDeltaJsonChunk, parent: LionWebId | null, msg: DeltaCommand, participation: ParticipationInfo): LionWebJsonNode | undefined {
-    // - There is exactly one node with parent `parentNode`, called `childNode`
-    // - All nodes together form a proper tree with root `childNode`, i.e. no orphans allowed
+    // - There is exactly one node with parent `parentNode`, called `rootNode`
+    // - All nodes together form a proper tree with root `rootNode`, i.e. no orphans allowed
     //   This can be done through the LionwebReferenceValidator.
     const issues = isProperTree(nodes)
     if (issues.length > 0) {
-        throw newErrorDelta("NotATree", `the newChild chunk is not a proper tree`, msg, participation, {
-            additionalInfo: issuesToProtocolNessages(issues)
+        throw newErrorDelta("chunkIsNotATree", `the newChild chunk is not a proper tree`, msg, participation, {
+            additionalInfos: issuesToProtocolNessages(issues)
         })
     }
     const rootNode = nodes.nodes.find(node => node.parent === parent )
     if (rootNode === undefined) {
         // TODO this check can be moved to the ReferenceValidator by giving the `parent` as parameter
-        throw newErrorDelta("NoChildFound", `The newChild chunk does not contain a node with parent ${parent}`, msg, participation)
+        throw newErrorDelta("childNotFound", `The newChild chunk does not contain a node with parent ${parent}`, msg, participation)
     }
     return rootNode
 }
@@ -64,7 +64,7 @@ export function validateContainment(
     let foundContainment = parentNode.containments.find(c => isEqualMetaPointer(c.containment, containment))
     if (foundContainment === undefined) {
         if (index !== 0) {
-            throw newErrorDelta("err-unknownIndex", `Index '${index}' is out of bounds`, msg, participation)
+            throw newErrorDelta("unknownIndex", `Index '${index}' is out of bounds`, msg, participation)
         } else if (change === "Add") {
             // create new containment with one child
             foundContainment = {
@@ -117,7 +117,7 @@ export function validateReference(
     let foundReference = parentNode.references.find(c => isEqualMetaPointer(c.reference, reference))
     if (foundReference === undefined) {
         if (index !== 0) {
-            throw newErrorDelta("err-unknownIndex", `Index '${index}' is out of bounds`, msg, participation)
+            throw newErrorDelta("unknownIndex", `Index '${index}' is out of bounds`, msg, participation)
         } else if (change === "Add") {
             // create new containment with one child
             foundReference = {
@@ -153,9 +153,13 @@ export function findAndValidateNodeExists(
     msg: DeltaCommand,
     participation: ParticipationInfo
 ): LionWebJsonNode {
-    const result = nodes.find(n => n.id = id)
+    console.log(`IN1 ${nodes.map(node => node.id)}`)
+    const result = nodes.find(n => n.id === id)
+    console.log(`IN2 ${nodes.map(node => node.id)}`)
     if (result === undefined) {
-        throw newErrorDelta("err-unknownNode", `Node ${id} does not exist`, msg, participation)
+        console.log(`OUT1 ${nodes.map(node => node.id)}`)
+        throw newErrorDelta("unknownNode", `Node ${id} does not exist`, msg, participation)
     }
+    console.log(`OUT2 ${nodes.map(node => node.id)}`)
     return result
 }

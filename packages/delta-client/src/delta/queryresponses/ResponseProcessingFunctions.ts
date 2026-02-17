@@ -3,7 +3,7 @@ import type {
     SubscribeToPartitionContentsResponse,
     UnsubscribeFromPartitionContentsResponse,
     ListPartitionsResponse,
-    GetAvailableIdsResponse
+    GetAvailableIdsResponse, ErrorResponse
 } from "@lionweb/server-delta-shared"
 import { type ReceivingDelta } from "@lionweb/server-delta-client"
 
@@ -23,8 +23,12 @@ const ListPartitionsResponseFunction = (msg: ListPartitionsResponse): void => {
     console.log("Called ListPartitionsResponseFunction " + msg.messageKind)
 }
 
-const GetAvailableIdsResponseFunction = (msg: GetAvailableIdsResponse): void => {
-    console.log("Called GetAvailableIdsResponseFunction " + msg.messageKind)
+const GetAvailableIdsResponseFunction = (_msg: GetAvailableIdsResponse): void => {
+    console.log("Called GetAvailableIdsResponseFunction " )
+}
+
+const ErrorResponseFunction = (_msg: ErrorResponse): void => {
+    console.log("Called ErrorResponseFunction ")
 }
 
 export const responseFunctions: ReceivingDelta[] = [
@@ -52,5 +56,10 @@ export const responseFunctions: ReceivingDelta[] = [
         messageKind: "UnsubscribeFromPartitionContentsResponse",
         // @ts-expect-error TS2322
         processor: UnsubscribeFromPartitionContentsResponseFunction
+    },
+    {
+        messageKind: "ErrorResponse",
+        // @ts-expect-error TS2322
+        processor: ErrorResponseFunction
     }
 ]

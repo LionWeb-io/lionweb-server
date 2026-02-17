@@ -33,19 +33,24 @@ import { DeltaFunction, errorEvent } from "./DeltaUtil.js"
 import { findAndValidateNodeExists, validateContainment, validateProperTree } from "./Validations.js"
 
 const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
-    deltaLogger.info("Called AddChild command id: " + msg.commandId)
+    console.log(`Called AddChild ${msg.newChild.nodes.map(n => n.id)}`)
     const newChildNode = validateProperTree(msg.newChild, msg.parent, msg, participation)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
-            msg.parent,
-            ...msg.newChild.nodes.map(n => n.id)
+            ...(msg.newChild.nodes.map(n => n.id)), msg.parent
         ])
+        console.log("BEFORE EXISTING nodses form db " + nodesFromDB.map(n => n.id))
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
-        const existingChildNodes = nodesFromDB.filter(n => n.id !== msg.parent)
+        console.log("AFTER EXISTING nodses form db " + nodesFromDB.map(n => n.id))
+        const existingChildNodes = nodesFromDB.filter(nn => {
+            console.log(`nn.id ${nn.id} parent ${msg.parent}`)
+            return nn.id !== msg.parent
+        })
         // node alreadyExists
+        console.log("EXISTING child nodes " + existingChildNodes.map(n => n.id))
         if (existingChildNodes.length > 0) {
             const existingIds = existingChildNodes.map(n => n.id)
-            return newErrorDelta("err-nodeAlreadyExists", `Nodes '${existingIds}' already exist`, msg, participation)
+            throw newErrorDelta("nodeAlreadyExists", `Nodes '${existingIds}' already exist`, msg, participation)
         }
         // Find the new child node
         // find the containment, create a new one if it isn't there
@@ -57,7 +62,7 @@ const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, 
         const changes = new DbChanges(TableHelpers.pgp)
         // Add child to parent
         const missing: Missing = (parentNode.containments.find(c => isEqualMetaPointer(c.containment, msg.containment)) === undefined ? Missing.MissingBefore : Missing.NotMissing)
-        deltaLogger.info(`Missing is ${missing} ================================ ${JSON.stringify(msg.containment)}`)
+        deltaLogger.debug(`Missing is ${missing} ================================ ${JSON.stringify(msg.containment)}`)
         changes.addChanges(
             [new ChildAdded(new JsonContext(null, ["delta"]), parentNode!, msg.containment, containment, newChildNode!.id, missing)]
         )
@@ -67,8 +72,8 @@ const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, 
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, msg.newChild.nodes, task)
         const addNodesquery = SQL.insertNodeArraySQL(msg.newChild.nodes, metaPointerTracker)
         const addChildQuery = changes.createPostgresQuery(metaPointerTracker)
-        deltaLogger.info(`ADD NODES QUERY '${addNodesquery}`)
-        deltaLogger.info(`ADD CHILD QUERY '${addChildQuery}`)
+        deltaLogger.debug(`ADD NODES QUERY '${addNodesquery}`)
+        deltaLogger.debug(`ADD CHILD QUERY '${addChildQuery}`)
         const queryResult = await task.query(participation.repositoryData!, addNodesquery + addChildQuery)
         return {
             messageKind: "ChildAdded",
@@ -78,7 +83,7 @@ const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, 
             newChild: msg.newChild,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,          // dummy, will be changed for each participation before sending
-            additionalInfo: [affectedNodeMessage(parentNode!.id)]
+            additionalInfos: [affectedNodeMessage(parentNode!.id)]
         } as ChildAddedEvent
     })
     return result
@@ -89,7 +94,7 @@ const DeleteChild = async (
     msg: DeleteChildCommand,
     ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorDelta> => {
-    deltaLogger.info("Called DeleteChild " + msg.messageKind)
+    deltaLogger.debug("Called DeleteChild " + msg.messageKind)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
             msg.parent, msg.deletedChild
@@ -98,13 +103,13 @@ const DeleteChild = async (
 
         // Check whether parent exists
         if (parentNode === undefined) {
-            return newErrorDelta("err-unknownNode", `Parent '${msg.parent}' does not exist`, msg, participation)
+            return newErrorDelta("unknownNode", `Parent '${msg.parent}' does not exist`, msg, participation)
         }
         // Check whether child exists
         const childNode = nodesFromDB.find(n => n.id === msg.deletedChild)
-        // validateExists(childNode, "err-unknownNode", `Child '${msg.deletedChild}' does not exist`, msg, participation)
+        // validateExists(childNode, "unknownNode", `Child '${msg.deletedChild}' does not exist`, msg, participation)
         if (childNode === undefined) {
-            return newErrorDelta("err-unknownNode", `Child '${msg.deletedChild}' does not exist`, msg, participation)
+            return newErrorDelta("unknownNode", `Child '${msg.deletedChild}' does not exist`, msg, participation)
         }
 
         // Check whether containment exists in the parent
@@ -138,7 +143,7 @@ const DeleteChild = async (
             parent: msg.parent,
             containment: msg.containment,
             deletedDescendants: subtreeNodes.filter(node => node.id !== msg.deletedChild).map(node => node.id),
-            additionalInfo: [affectedNodeMessage(parentNode.id)],
+            additionalInfos: [affectedNodeMessage(parentNode.id)],
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0
         } as ChildDeletedEvent
@@ -151,7 +156,7 @@ const ReplaceChild = async (
     msg: ReplaceChildCommand,
     ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorDelta> => {
-    deltaLogger.info("Called ReplaceChild " + msg.messageKind)
+    deltaLogger.debug("Called ReplaceChild " + msg.messageKind)
     validateProperTree(msg.newChild, msg.parent, msg, participation)
     
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
@@ -165,20 +170,20 @@ const ReplaceChild = async (
         // node alreadyExists
         if (existingChildNodes.length > 0) {
             const existingIds = existingChildNodes.map(n => n.id)
-            return newErrorDelta("err-nodeAlreadyExists", `Nodes '${existingIds}' already exist`, msg, participation)
+            return newErrorDelta("nodeAlreadyExists", `Nodes '${existingIds}' already exist`, msg, participation)
         }
         
         // Find the new child node
         const newChildNode = msg.newChild.nodes.find(node => node.parent === msg.parent)
         if (newChildNode === undefined) {
             // TODO this check can be moved to the ReferenceValidator by giving the `parent` as parameter
-            return newErrorDelta("NoChildFound", `The newChild chunk does not contain a node with parent ${msg.parent}`, msg, participation)
+            return newErrorDelta("childNotFound", `The newChild chunk does not contain a node with parent ${msg.parent}`, msg, participation)
         }
         
         // Check whether child exists
         const childNode = nodesFromDB.find(n => n.id === msg.replacedChild)
         if (childNode === undefined) {
-            return newErrorDelta("err-unknownNode", `Child '${msg.replacedChild}' does not exist`, msg, participation)
+            return newErrorDelta("unknownNode", `Child '${msg.replacedChild}' does not exist`, msg, participation)
         }
 
         const containment = validateContainment(parentNode, msg.containment, msg.index, "Replace", msg.replacedChild, msg, participation)
@@ -209,7 +214,7 @@ const ReplaceChild = async (
             replacedChild: msg.replacedChild,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,          // dummy, will be changed for each participation before sending
-            additionalInfo: [affectedNodeMessage(parentNode.id)]
+            additionalInfos: [affectedNodeMessage(parentNode.id)]
         } as ChildReplacedEvent
     })
 
@@ -221,7 +226,7 @@ const MoveChildFromOtherContainment = async (
     msg: MoveChildFromOtherContainmentCommand,
     ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorEvent> => {
-    deltaLogger.info("Called MoveChildFromOtherContainment " + msg.messageKind)
+    deltaLogger.debug("Called MoveChildFromOtherContainment " + msg.messageKind)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
             msg.newParent, msg.movedChild
@@ -233,12 +238,17 @@ const MoveChildFromOtherContainment = async (
         ])
         const oldParentNode = findAndValidateNodeExists(movedChildNode.parent!, oldParentFromDB, msg, participation)
         if (newParentNode.id === oldParentNode.id) {
-            throw newErrorDelta("SameParents", `Old and new parent are the same (${newParentNode.id}, not allowed for MoveChildFromOtherContainment command`, msg, participation)
+            throw newErrorDelta(
+                "haveTheSameParents",
+                `Old and new parent are the same (${newParentNode.id}, not allowed for MoveChildFromOtherContainment command`,
+                msg,
+                participation
+            )
         }
         const newContainment = validateContainment(newParentNode, msg.newContainment, msg.newIndex, "Add", undefined, msg, participation)
         const oldContainment = oldParentNode.containments.find(cont => cont.children.includes(msg.movedChild))
         if (oldContainment === undefined) {
-            throw newErrorDelta("ParentError", `Internal error: (old) parent of ${msg.movedChild} does not have a containmennt with this node.`, msg, participation)
+            throw newErrorDelta("moveWithoutParent", `Internal error: (old) parent of ${msg.movedChild} does not have a containment with this node.`, msg, participation)
         }
         const oldIndex = oldContainment.children.indexOf(movedChildNode.id)
         
@@ -271,7 +281,7 @@ const MoveChildFromOtherContainment = async (
             movedChild: "",
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,          // dummy, will be changed for each participation before sending
-            additionalInfo: [affectedNodeMessage(msg.newParent)]
+            additionalInfos: [affectedNodeMessage(msg.newParent)]
         } as ChildMovedFromOtherContainmentEvent
     })
     return errorEvent(msg)
@@ -282,7 +292,7 @@ const MoveChildFromOtherContainmentInSameParent = async (
     msg: MoveChildFromOtherContainmentInSameParentCommand,
     _ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorEvent> => {
-    deltaLogger.info("Called MoveChildFromOtherContainmentInSameParent " + msg.messageKind)
+    deltaLogger.debug("Called MoveChildFromOtherContainmentInSameParent " + msg.messageKind)
     return errorEvent(msg)
 }
 
@@ -291,7 +301,7 @@ const MoveChildInSameContainment = async (
     msg: MoveChildInSameContainmentCommand,
     _ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorEvent> => {
-    deltaLogger.info("Called MoveChildInSameContainment " + msg.messageKind)
+    deltaLogger.debug("Called MoveChildInSameContainment " + msg.messageKind)
     return errorEvent(msg)
 }
 
@@ -299,7 +309,7 @@ const MoveAndReplaceChildFromOtherContainment = async (
     participation: ParticipationInfo,
     msg: MoveAndReplaceChildFromOtherContainmentCommand
 ): Promise<DeltaEvent | ErrorEvent> => {
-    deltaLogger.info("Called MoveAndReplaceChildFromOtherContainment " + msg.messageKind)
+    deltaLogger.debug("Called MoveAndReplaceChildFromOtherContainment " + msg.messageKind)
     return errorEvent(msg)
 }
 
@@ -308,7 +318,7 @@ const MoveAndReplaceChildFromOtherContainmentInSameParent = async (
     msg: MoveAndReplaceChildFromOtherContainmentInSameParentCommand,
     _ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorEvent> => {
-    deltaLogger.info("Called MoveAndReplaceChildFromOtherContainmentInSameParent " + msg.messageKind)
+    deltaLogger.debug("Called MoveAndReplaceChildFromOtherContainmentInSameParent " + msg.messageKind)
     return errorEvent(msg)
 }
 
@@ -317,7 +327,7 @@ const MoveAndReplaceChildInSameContainment = async (
     msg: MoveAndReplaceChildInSameContainmentCommand,
     _ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorEvent> => {
-    deltaLogger.info("Called MoveAndReplaceChildInSameContainment " + msg.messageKind)
+    deltaLogger.debug("Called MoveAndReplaceChildInSameContainment " + msg.messageKind)
     return errorEvent(msg)
 }
 

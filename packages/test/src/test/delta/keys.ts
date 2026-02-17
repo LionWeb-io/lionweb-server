@@ -47,7 +47,7 @@ export const CLASSIFIER = {
     Parameter,
     ProcedureCall
 }
-const INamedName = { "language": "LionCore-builtins", "key": "LionCore-builtins-INamed-name", "version": "1" }
+const INamedName = { "language": "LionCore-builtins", "key": "LionCore-builtins-INamed-name", "version": "2023.1" }
 const HeadingDegrees = { "language": "-key-LogoProgram", "key": "-key-Heading-degrees", "version": "1" }
 const MoveCommandDistance = { "language": "-key-LogoProgram", "key": "-key-MoveCommand-distance", "version": "1" }
 const SetPosX = { "language": "-key-LogoProgram", "key": "-key-SetPos-x", "version": "1" }

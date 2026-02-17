@@ -1,5 +1,5 @@
-import { String } from "./DeltaTypes.js";
-import { KeyValuePair } from "./DeltaTypes.js";
+import type { String } from "./DeltaTypes.js";
+import type { KeyValuePair } from "./DeltaTypes.js";
 
 export type LionWebId = string;
 export type LionWebKey = string;
@@ -54,10 +54,13 @@ export type LionWebJsonReference = {
     targets: LionWebJsonReferenceTarget[];
 };
 
-export type LionWebJsonReferenceTarget = {
-    resolveInfo: String ;
-    reference: LionWebId | null;
-} | {
-    resolveInfo: String | null;
-    reference: LionWebId;
-};
+
+export type LionWebJsonReferenceTarget =
+    | {
+          resolveInfo: String
+          reference: LionWebId | null
+      }
+    | {
+          resolveInfo: String | null
+          reference: LionWebId
+      }

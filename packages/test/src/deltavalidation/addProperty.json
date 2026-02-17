@@ -5,7 +5,7 @@
             "command": {
                 "messageKind": "AddProperty",
                 "commandId": "command-1",
-                "additionalInfo": [],
+                "additionalInfos": [],
                 "node": "123",
                 "property": {
                     "key": "",
@@ -20,7 +20,7 @@
             "command": {
                 "messageKind": "AddProperty",
                 "commandId": "command-1",
-                "additionalInfo": [],
+                "additionalInfos": [],
                 "node": "123",
                 "property": {
                     "key": "key",
@@ -35,7 +35,7 @@
             "command": {
                 "messageKind": "AddProperty",
                 "commandId": "command-1",
-                "additionalInfo": [],
+                "additionalInfos": [],
                 "node": "%#&@%@",
                 "property": {
                     "key": "key",
@@ -50,7 +50,7 @@
             "command": {
                 "messageKind": "AddProperty",
                 "commandId": "command-1",
-                "additionalInfo": [],
+                "additionalInfos": [],
                 "node": "123",
                 "property": {
                     "key": "key",
@@ -65,7 +65,7 @@
             "command": {
                 "messageKind": "AddProperty",
                 "commandId": "command-1",
-                "additionalInfo": [],
+                "additionalInfos": [],
                 "node": "123",
                 "property": {
                     "key": "key",
@@ -79,7 +79,7 @@
             "command": {
                 "messageKind": "AddProperty",
                 "commandId": "command-1",
-                "additionalInfo": [],
+                "additionalInfos": [],
                 "property": {
                     "key": "key",
                     "language": "l1",
@@ -93,7 +93,7 @@
             "command": {
                 "messageKind": "AddProperty",
                 "commandId": "command-1",
-                "additionalInfo": [],
+                "additionalInfos": [],
                 "node": "id",
                 "property": {
                     "key": "key",
@@ -101,7 +101,7 @@
                     "version": "22"
                 },
                 "newValue": "hello",
-                "additionalInfo": [
+                "additionalInfos": [
                     {
                         "kind": "Info"
                     }
@@ -113,7 +113,7 @@
             "command": {
                 "messageKind": "AddProperty",
                 "commandId": "command-1",
-                "additionalInfo": [],
+                "additionalInfos": [],
                 "node": "id",
                 "property": {
                     "key": "key",
@@ -122,7 +122,7 @@
                 },
                 "newValue": "hello",
                 "commandId": "1",
-                "additionalInfo": [
+                "additionalInfos": [
                     {
                         "kind": "Info",
                         "message": "23",

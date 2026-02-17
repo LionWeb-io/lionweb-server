@@ -44,7 +44,7 @@ const DATA: string = "./data/"
         deltaProtocolVersion: "1",
         messageKind: "SignOnRequest",
         queryId: "12",
-        additionalInfo: []
+        additionalInfos: []
     }
     console.log("BEFORE ALL 3")
     deltaApiClient.sendRequest(signOn)
@@ -56,7 +56,7 @@ const DATA: string = "./data/"
             version: "version"
         },
         commandId: "C1",
-        additionalInfo: []
+        additionalInfos: []
     }  as DeltaCommand)
     console.log("VEFORE ALL 5")
 
@@ -117,7 +117,7 @@ const DATA: string = "./data/"
             ]
         },
         commandId: "0",
-        additionalInfo: [
+        additionalInfos: [
             {
                 kind: "Info",
                 message: "Add a new partition",

@@ -13,7 +13,7 @@ export type MessageFromClient = DeltaCommand | DeltaRequest | DeltaAdminRequest
 export type MessageToClient = DeltaEvent | DeltaResponse | DeltaAdminResponse
 
 export function findDistributableInfos(delta: MessageFromClient | MessageToClient): AdditionalInfo[] {
-    return delta.additionalInfo.filter(info => info.distribute)
+    return delta.additionalInfos.filter(info => info.distribute)
 } 
 
     

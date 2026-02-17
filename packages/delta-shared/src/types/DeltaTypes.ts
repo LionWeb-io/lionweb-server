@@ -1,4 +1,4 @@
-import { LionWebJsonNode } from "./Chunks.js";
+import type { LionWebJsonNode } from "./Chunks.js";
 
 export type String = string;
 export type SequenceNumber = number;

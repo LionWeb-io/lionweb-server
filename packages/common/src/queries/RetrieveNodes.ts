@@ -101,9 +101,9 @@ const retrieveParentsSQL = (nodeid: string): string => {
  */
 const retrieveParentsDB = async (db: DbConnection, repoData: RepositoryData, nodeid: string): Promise<NodeWithParent[]> => {
     const result = await db.manyOrNone(repoData, retrieveParentsSQL(nodeid))
-    deltaLogger.info(`Parents of '${nodeid} are '${JSON.stringify(result)}'`)
+    // deltaLogger.info(`Parents of '${nodeid} are '${JSON.stringify(result)}'`)
     if (Array.isArray(result) && result.every(n => isNodeWithParent(n))) {
-        deltaLogger.info(`found parent`)
+        // deltaLogger.info(`found parent`)
         return result as NodeWithParent[]
     }  else {
         return []

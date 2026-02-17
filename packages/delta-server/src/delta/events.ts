@@ -1,5 +1,6 @@
 import {
     ErrorEvent,
+    DeltaErrorCode,
     LionWebId,
     AdditionalInfo,
     ErrorResponse,
@@ -17,7 +18,7 @@ export function isErrorResponse(object: unknown): object is ErrorResponse {
 }
 
 export const newErrorDelta = (
-    errorCode: string,
+    errorCode: DeltaErrorCode,
     message: string,
     delta: MessageFromClient,
     participation: ParticipationInfo | undefined,
@@ -28,7 +29,7 @@ export const newErrorDelta = (
             messageKind: "ErrorEvent",
             errorCode: errorCode,
             message: message,
-            additionalInfo: data?.additionalInfo ?? [],
+            additionalInfos: data?.additionalInfos ?? [],
             originCommands: [
                 {
                     commandId: delta.commandId,
@@ -42,7 +43,7 @@ export const newErrorDelta = (
             messageKind: "ErrorResponse",
             errorCode: errorCode,
             message: message,
-            additionalInfo: data?.additionalInfo ?? [],
+            additionalInfos: data?.additionalInfos ?? [],
             queryId: delta.queryId
         } as ErrorResponse
     }

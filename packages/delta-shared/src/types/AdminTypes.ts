@@ -1,5 +1,5 @@
-import { String } from "./DeltaTypes.js";
-import { Boolean } from "./DeltaTypes.js";
+import type { String } from "./DeltaTypes.js";
+import type { Boolean } from "./DeltaTypes.js";
 
 export type RepositoryInfo = {
     name: String;

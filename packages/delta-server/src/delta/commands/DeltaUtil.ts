@@ -18,7 +18,7 @@ import { ParticipationInfo } from "../queries/index.js"
 export type CommandOrRequest = {
     commandId: CommandId;
     messageKind: string;
-    additionalInfo: AdditionalInfo[];
+    additionalInfos: AdditionalInfo[];
 
 }
 export type MessageFunction =  (participation: ParticipationInfo, msg: MessageFromClient, ctx: DeltaContext) => (MessageToClient)
@@ -34,7 +34,7 @@ export const errorEvent = (msg: DeltaCommand): ErrorEvent => ({
     originCommands: [{ commandId: msg.commandId, participationId: "error" }],
     errorCode: "generic",
     messageKind: "ErrorEvent",
-    additionalInfo: []
+    additionalInfos: []
 })
 
 export const errorNotImplementedEvent = (msg: DeltaRequest): ErrorEvent => (
@@ -44,7 +44,7 @@ export const errorNotImplementedEvent = (msg: DeltaRequest): ErrorEvent => (
         originCommands: [ { commandId: msg.queryId, participationId: "error"}],
         errorCode: "generic",
         messageKind: "ErrorEvent",
-        additionalInfo: []
+        additionalInfos: []
     }
 )
 
@@ -105,16 +105,16 @@ export const retrieveNodeFromDB = async(id: string, delta: DeltaCommand | DeltaR
 
     // Validate return type
     if (!SQL.is_NodesForQueryQuery_ResultType(queryResult)) {
-        throw newErrorDelta("InternalError", "Query result has incorrect type", delta, participation, {
-            additionalInfo: queryData("empty", queryResult)
+        throw newErrorDelta("queryError", "Query result has incorrect type", delta, participation, {
+            additionalInfos: queryData("empty", queryResult)
         })
     }
     if (queryResult === undefined || queryResult.length === 0) {
-        throw newErrorDelta("NodeDoesNotExist", `The node with id '${id}' does not exist result ${queryResult}`, delta, participation)
+        throw newErrorDelta("nodeDoesNotExist", `The node with id '${id}' does not exist result ${queryResult}`, delta, participation)
     }
     if (queryResult.length > 1) {
         throw newErrorDelta("TwoNodesWithSameId", `There are two nodes with id '${id}' in the repository`, delta, participation, {
-            additionalInfo: queryData("query", queryResult)
+            additionalInfos: queryData("query", queryResult)
         })
     }
     return queryResult[0]

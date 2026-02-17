@@ -31,7 +31,7 @@ const ListRepositories = async (participation: ParticipationInfo, msg: ListRepos
         messageKind: "ListRepositoriesAdminResponse",
         queryId: msg.queryId,
         repositories: repositories,
-        additionalInfo: []
+        additionalInfos: []
     } as ListRepositoriesAdminResponse
 }
 
@@ -41,7 +41,7 @@ const CreateRepository = async (participation: ParticipationInfo, msg: CreateRep
         messageKind: "CreateRepositoryAdminResponse",
         queryId: msg.queryId,
         newRepositoryName: msg.repositoryName,
-        additionalInfo: [ {
+        additionalInfos: [ {
             kind: "Info",
             message: "NOT IMPLEMENTED YET",
             data: []
@@ -55,7 +55,7 @@ const DeleteRepository = async (participation: ParticipationInfo, msg: DeleteRep
         messageKind: "DeleteRepositoryAdminResponse",
         queryId: msg.queryId,
         deletedRepositoryName: msg.repositoryName,
-        additionalInfo: [ {
+        additionalInfos: [ {
             kind: "Info",
             message: "NOT IMPLEMENTED YET",
             data: []
@@ -70,7 +70,7 @@ const RenameRepository = async (participation: ParticipationInfo, msg: DeleteRep
         queryId: msg.queryId,
         oldRepositoryName: msg.repositoryName,
         newRepositoryName: msg.repositoryName,
-        additionalInfo: [ {
+        additionalInfos: [ {
             kind: "Info",
             message: "NOT IMPLEMENTED YET",
             data: []

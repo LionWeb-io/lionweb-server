@@ -1,10 +1,10 @@
-import { String } from "./DeltaTypes.js";
-import { Number } from "./DeltaTypes.js";
-import { CommandSource } from "./DeltaTypes.js";
-import { AdditionalInfo } from "./DeltaTypes.js";
-import { LionWebId } from "./Chunks.js";
-import { LionWebJsonMetaPointer } from "./Chunks.js";
-import { LionWebDeltaJsonChunk } from "./DeltaTypes.js";
+import type { String } from "./DeltaTypes.js";
+import type { Number } from "./DeltaTypes.js";
+import type { CommandSource } from "./DeltaTypes.js";
+import type { AdditionalInfo } from "./DeltaTypes.js";
+import type { LionWebId } from "./Chunks.js";
+import type { LionWebJsonMetaPointer } from "./Chunks.js";
+import type { LionWebDeltaJsonChunk } from "./DeltaTypes.js";
 // cannot find import for Event
 
 // The overall "super-type"
@@ -12,7 +12,7 @@ export type DeltaEvent = {
     messageKind: EventMessageKind;
     sequenceNumber: Number;
     originCommands: CommandSource[];
-    additionalInfo: AdditionalInfo[];
+    additionalInfos: AdditionalInfo[];
 };
 
 /**

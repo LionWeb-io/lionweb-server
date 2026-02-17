@@ -1,16 +1,16 @@
-import { CommandId } from "./DeltaTypes.js";
-import { String } from "./DeltaTypes.js";
-import { AdditionalInfo } from "./DeltaTypes.js";
-import { LionWebDeltaJsonChunk } from "./DeltaTypes.js";
-import { LionWebId } from "./Chunks.js";
-import { LionWebJsonMetaPointer } from "./Chunks.js";
-import { Number } from "./DeltaTypes.js";
+import type { CommandId } from "./DeltaTypes.js";
+import type { String } from "./DeltaTypes.js";
+import type { AdditionalInfo } from "./DeltaTypes.js";
+import type { LionWebDeltaJsonChunk } from "./DeltaTypes.js";
+import type { LionWebId } from "./Chunks.js";
+import type { LionWebJsonMetaPointer } from "./Chunks.js";
+import type { Number } from "./DeltaTypes.js";
 
 // The overall "super-type"
 export type DeltaCommand = {
     commandId: CommandId;
     messageKind: CommandMessageKind;
-    additionalInfo: AdditionalInfo[];
+    additionalInfos: AdditionalInfo[];
 };
 
 /**
