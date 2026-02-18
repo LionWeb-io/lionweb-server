@@ -1,5 +1,4 @@
-import { retrievePartitionsFromDB } from "@lionweb/server-common/dist/queries/PartitionQueries.js"
-import { versiontToHttpResponseMessage } from "@lionweb/server-common/dist/queries/QueryNode.js"
+import { versiontToHttpResponseMessage } from "@lionweb/server-common"
 import {
     CreatePartitionsResponse,
     DeletePartitionsResponse,
@@ -12,7 +11,6 @@ import {
     StoreResponse
 } from "@lionweb/server-shared"
 import {
-    createId,
     EMPTY_CHUNKS,
     LionWebTask,
     nodesToChunk,
@@ -37,7 +35,7 @@ export class BulkApiWorker {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async bulkPartitions(task: LionWebTask, repositoryData: RepositoryData): Promise<QueryReturnType<ListPartitionsResponse>> {
-        const result = await retrievePartitionsFromDB(task, repositoryData)
+        const result = await DB.retrievePartitionsFromDB(task, repositoryData)
         return {
             status: HttpSuccessCodes.Ok,
             query: "query",

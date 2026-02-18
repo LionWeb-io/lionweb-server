@@ -153,6 +153,7 @@ export class DbChanges {
                     this.updatesReferenceTable.add({ nodeId: update.node_id, reference: update.reference }, update)
                     break
                 }
+                default: throw new Error("case missing", )
             }
         })
     }
@@ -173,49 +174,64 @@ export class DbChanges {
                       `
         })
         this.updatesReferenceTable.values().forEach((values: DbReferenceUpdate[]) => {
+            const tmp = `updatesReferenceTable ${values.map(v => JSON.stringify(v))}`
+            result += `-- ${tmp}
+            `
             // Just take the first from _values_, as every property except _newValue_ is identical anyway.
             // And there can only be one new _targets_ value as well.
-            const metaPointerIndex = metaPointersTracker.forMetaPointer(values[0].reference)
-            const data = {
-                node_id: values[0].node_id,
-                reference: metaPointerIndex,
-                targets: values[0].targets
+            for(const refChange of values) {
+                const metaPointerIndex = metaPointersTracker.forMetaPointer(refChange.reference)
+                const data = {
+                    node_id: refChange.node_id,
+                    reference: metaPointerIndex,
+                    targets: refChange.targets
+                }
+                result += this.createQueryForFeatures(
+                    data,
+                    "reference",
+                    REFERENCES_TABLE,
+                    TableHelpers.REFERENCES_COLUMN_SET,
+                    refChange.missing
+                )
             }
-            result += this.createQueryForFeatures(
-                data,
-                "reference",
-                REFERENCES_TABLE,
-                TableHelpers.REFERENCES_COLUMN_SET,
-                values[0].missing
-            )
         })
         this.updatesContainmentTable.values().forEach((values: DbContainmentUpdate[]) => {
             // Just take the first from _values_, as every property except _newValue_ is identical anyway.
             // And there can only be one new _targets_ value as well.
-            const metaPointerIndex = metaPointersTracker.forMetaPointer(values[0].containment)
-            const data = {
-                node_id: values[0].node_id,
-                containment: metaPointerIndex,
-                children: values[0].children
+            for(const change of values) {
+                const metaPointerIndex = metaPointersTracker.forMetaPointer(change.containment)
+                const data = {
+                    node_id: change.node_id,
+                    containment: metaPointerIndex,
+                    children: change.children
+                }
+                result += this.createQueryForFeatures(
+                    data,
+                    "containment",
+                    CONTAINMENTS_TABLE,
+                    TableHelpers.CONTAINMENTS_COLUMN_SET,
+                    change.missing
+                )
             }
-            result += this.createQueryForFeatures(
-                data,
-                "containment",
-                CONTAINMENTS_TABLE,
-                TableHelpers.CONTAINMENTS_COLUMN_SET,
-                values[0].missing
-            )
         })
         this.updatesPropertyTable.values().forEach((values: DbPropertyUpdate[]) => {
             // Just take the first from _values_, as every property except _newValue_ is identical anyway.
-            // And there can only be one newValue as well.
-            const metaPointerIndex = metaPointersTracker.forMetaPointer(values[0].property)
-            const data = {
-                node_id: values[0].node_id,
-                property: metaPointerIndex,
-                value: values[0].newValue
+            for(const change of values) {
+                // And there can only be one newValue as well.
+                const metaPointerIndex = metaPointersTracker.forMetaPointer(change.property)
+                const data = {
+                    node_id: change.node_id,
+                    property: metaPointerIndex,
+                    value: change.newValue
+                }
+                result += this.createQueryForFeatures(
+                    data,
+                    "property",
+                    PROPERTIES_TABLE,
+                    TableHelpers.PROPERTIES_COLUMN_SET,
+                    change.missing
+                )
             }
-            result += this.createQueryForFeatures(data, "property", PROPERTIES_TABLE, TableHelpers.PROPERTIES_COLUMN_SET, values[0].missing)
         })
         // Deletes at the end, so any (useles) upodates on deleted nodes don't give errors.
         const idsToDelete = this.deletedNodesTable.values().map(v => v[0].id)
@@ -281,6 +297,9 @@ export class DbChanges {
                                     tabl.${metapointerColumn} = ${data[metapointerColumn]};
                               `
                 break
+            default:
+                result += `DbChanged.createQueryForFreatures switch unknown`
+                throw new Error("DbChanged.createQueryForFreatures switch unknown")
         }
         return result
     }

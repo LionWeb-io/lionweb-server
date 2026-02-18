@@ -1,5 +1,7 @@
 import { isProperTree } from "@lionweb/server-common"
 import {
+    ChangeReferenceCommand,
+    DeleteReferenceCommand,
     DeltaCommand,
     LionWebDeltaJsonChunk,
     LionWebId,
@@ -108,37 +110,74 @@ export function validateReference(
     parentNode: LionWebJsonNode,
     reference: LionWebJsonMetaPointer,
     index: number,
-    change: Change,
     expectedReference: LionWebJsonReferenceTarget | undefined,
     msg: DeltaCommand,
     participation: ParticipationInfo
 ): LionWebJsonReference {
-    // Check whether containment exists in the parent
+    // Check whether reference exists in the parent
     let foundReference = parentNode.references.find(c => isEqualMetaPointer(c.reference, reference))
     if (foundReference === undefined) {
         if (index !== 0) {
+            // New containment, so index must be zero
             throw newErrorDelta("unknownIndex", `Index '${index}' is out of bounds`, msg, participation)
-        } else if (change === "Add") {
-            // create new containment with one child
+        } else if (msg.messageKind === "AddReference") {
+            // create new containment with one reference
             foundReference = {
                 reference: reference,
                 targets: []
             }
         } else {
+            // Change or Delete incorrect if the reference does not exist
             throw newErrorDelta(
                 "unknownReference",
                 `Reference '${JSON.stringify(reference)}' does not exists in node '${parentNode.id}'`,
                 msg,
-                participation
+                participation,
+                {additionalInfos: [{
+                    kind: msg.messageKind,
+                        message: "",
+                        data: []
+                }]}
             )
         }
     }
     // Check the index is within bounds
-    if (change === "Add" && index > foundReference.targets.length) {
+    if (msg.messageKind === "AddReference" && index > foundReference.targets.length) {
         throw newErrorDelta("unknownIndex", "TODO", msg, participation)
     }
-    if ((change === "Replace" || change === "Delete") && index > foundReference.targets.length - 1) {
-        throw newErrorDelta("unknownIndex", "TODO", msg, participation)
+    if (msg.messageKind === "ChangeReference" || msg.messageKind === "DeleteReference") { 
+        if (index > foundReference.targets.length - 1) {
+            throw newErrorDelta("unknownIndex", "TODO", msg, participation)
+        } else {
+            if (msg.messageKind === "ChangeReference") {
+                const change = msg as ChangeReferenceCommand
+                if (
+                    change.oldTarget !== foundReference.targets[change.index].reference ||
+                    change.oldResolveInfo !== foundReference.targets[change.index].resolveInfo
+                ) {
+                    throw newErrorDelta(
+                        "referenceTargetOrResolveInfoMismatch",
+                        "reference not equal to expected values",
+                        msg,
+                        participation
+                    )
+                }
+            }
+            if (msg.messageKind === "DeleteReference") {
+                const change = msg as DeleteReferenceCommand
+                if (
+                    change.deletedTarget !== foundReference.targets[change.index].reference ||
+                    change.deletedResolveInfo !== foundReference.targets[change.index].resolveInfo
+                ) {
+                    throw newErrorDelta(
+                        "referenceTargetOrResolveInfoMismatch",
+                        "reference not equal to expected values",
+                        msg,
+                        participation
+                    )
+                }
+            }
+        }
     }
     // Check whether the replaced child is at the given index
     if (expectedReference !== undefined && foundReference.targets[index] !== expectedReference) {

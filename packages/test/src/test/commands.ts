@@ -25,7 +25,12 @@ import {
     DeltaAdminRequest,
     CreateRepositoryAdminRequest,
     DeleteRepositoryAdminRequest,
-    MessageToClient
+    MessageToClient,
+    MessageFromClient,
+    ChangeReferenceCommand,
+    isDeltaCommand,
+    isDeltaAdminRequest,
+    isDeltaRequest
 } from "@lionweb/server-delta-shared"
 import { waitFor } from "./delta/helpers.js"
 import {} from "./utils.js"
@@ -61,6 +66,8 @@ export type AddReferenceType = {
     index: number
     target: LionWebId
     resolveInfo: string
+    // newTarget: LionWebId
+    // newResolveInfo: string
     reference: LionWebJsonMetaPointer
 }
 
@@ -181,7 +188,7 @@ export class Commands {
         return this.client.sendCommand(command)
     }
 
-    addChild = (child: NewChild): DeltaCommand => {
+    addChild = (child: NewChild, extra?: Partial<AddChildCommand>): DeltaCommand => {
         const command: AddChildCommand = {
             messageKind: "AddChild",
             commandId: `command-id-${queryId++}`,
@@ -205,10 +212,13 @@ export class Commands {
             },
             additionalInfos: []
         }
+        if (extra?.index) {
+            command.index = extra.index
+        }
         return this.client.sendCommand(command)
     }
 
-    addReference = (addRef: AddReferenceType, marker?: string): DeltaCommand => {
+    addReference = (addRef: AddReferenceType, extra?: Partial<AddReferenceCommand>): DeltaCommand => {
         const command: AddReferenceCommand = {
             messageKind: "AddReference",
             commandId: `command-id-${queryId++}`,
@@ -217,33 +227,38 @@ export class Commands {
             index: addRef.index,
             newTarget: addRef.target,
             newResolveInfo: addRef.resolveInfo,
-            additionalInfos: marker
-                ? [
-                      {
-                          kind: "TestMarker",
-                          message: "Marker to tell test client that all evebt should be received.",
-                          data: [
-                              {
-                                  key: "TestReady",
-                                  value: marker
-                              }
-                          ],
-                          distribute: true
-                      }
-                  ]
-                : []
+            additionalInfos: []
+        }
+        if (extra?.index) {
+            command.index = extra.index
         }
         return this.client.sendCommand(command)
     }
 
-    deleteReference = (ref: AddReferenceType): DeltaCommand => {
+    changeReference = (addRef: Partial<ChangeReferenceCommand>): DeltaCommand => {
+        const command: ChangeReferenceCommand = {
+            messageKind: "ChangeReference",
+            commandId: `command-id-${queryId++}`,
+            parent: addRef.parent,
+            reference: addRef.reference,
+            index: addRef.index ?? 0,
+            oldTarget: addRef.oldTarget,
+            oldResolveInfo: addRef.oldResolveInfo,
+            newTarget: addRef.newTarget,
+            newResolveInfo: addRef.newResolveInfo,
+            additionalInfos: []
+        }
+        return this.client.sendCommand(command)
+    }
+
+    deleteReference = (ref: Partial<DeleteReferenceCommand>): DeltaCommand => {
         const command: DeleteReferenceCommand = {
             messageKind: "DeleteReference",
             commandId: `command-id-${queryId++}`,
-            parent: ref.id,
+            parent: ref.parent,
             reference: ref.reference,
-            deletedTarget: ref.target,
-            deletedResolveInfo: ref.resolveInfo,
+            deletedTarget: ref.deletedTarget,
+            deletedResolveInfo: ref.deletedResolveInfo,
             index: ref.index,
             additionalInfos: []
         }
@@ -308,6 +323,35 @@ export class Commands {
             10,
             `query ${query.queryId} ${query.messageKind}`
         )
+    }
+    errorFor = async (command: MessageFromClient): Promise<string> => {
+        if (isDeltaCommand(command)) {
+            const event = await waitFor<DeltaEvent>(
+                () => this.client.receivedEvents.get(command.commandId),
+                result => result === undefined,
+                50,
+                10,
+                `query ${command.commandId} ${command.messageKind}`
+            )
+            if (isErrorEvent(event)) {
+                return event.errorCode
+            } else {
+                return event.messageKind
+            }
+        } else if (isDeltaAdminRequest(command) || isDeltaRequest(command)) {
+            const response = await waitFor<DeltaResponse | DeltaAdminResponse>(
+                () => this.client.receivedResponses.get(command.queryId),
+                result => result === undefined,
+                50,
+                10,
+                `query ${command.queryId} ${command.messageKind}`
+            )
+            if (isErrorResponse(response)) {
+                return response.errorCode
+            } else {
+                return response.messageKind
+            }
+        }
     }
 }
 

@@ -17,6 +17,7 @@ import { QUERIES_SQL, QUERIES_DB} from "./queries.js"
 import { getAvailableIds } from "./getAvailableIds.js"
 import { retrievePartitionsFromDB } from "./PartitionQueries.js"
 
+export { versiontToHttpResponseMessage } from "./QueryNode.js"
 /**
  * All functions returning an SQL query as a string.
  */

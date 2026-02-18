@@ -6,9 +6,9 @@ import { readModel } from "./utils.js"
 
 import { assert } from "chai"
 const { deepEqual, equal } = assert
-import sm from "source-map-support"
-
-sm.install()
+// import sm from "source-map-support"
+//
+// sm.install()
 const DATA: string = "./data/"
 
 const collection = [true, false]

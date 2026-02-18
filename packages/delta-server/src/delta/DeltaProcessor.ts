@@ -1,6 +1,4 @@
-import { LionWebJsonNode } from "@lionweb/json"
-import { deltaLogger, isInternalQueryError, DB, notNullOrUndefined } from "@lionweb/server-common";
-import { NodeWithParent } from "@lionweb/server-common/dist/queries/RetrieveNodes.js"
+import { deltaLogger, NodeWithParent, isInternalQueryError, DB, notNullOrUndefined } from "@lionweb/server-common"
 import { DeltaValidator } from "@lionweb/server-delta-definitions"
 import {
     ErrorEvent,
@@ -124,7 +122,7 @@ class DeltaProcessor {
                                 if (participationInfo.partitionChangesSubscription.creation) {
                                     if (participationInfo.partitionChangesSubscription.autoSubscribe) {
                                         // autosubscribe, so send full partition nodes
-                                        ;(response as PartitionAddedEvent).newPartition = {
+                                        (response as PartitionAddedEvent).newPartition = {
                                             nodes: (delta as AddPartitionCommand).newPartition.nodes
                                         }
                                         this.sendDelta(socket, participationInfo, delta, response)

@@ -94,7 +94,7 @@ export class Logo2String {
             result += `HOME`
         } else if (isEqualMetaPointer(node.classifier, CLASSIFIER.ProcedureCall)) {
             const reference = NodeUtils.findReference(node, REFERENCE.ProcedureCallProcedure)
-            result += `CALL [${reference === undefined ? "<unknown>" : reference.targets.map(t => t.reference)}]`
+            result += `CALL [${reference === undefined ? "<unknown>" : reference.targets.map((t) => `ref ${t.reference} resolve '${t.resolveInfo}'`)}]`
         } else {
             result += `UNKNOWM COMMAND ${JSON.stringify(node.classifier)}` 
         }
