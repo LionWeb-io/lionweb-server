@@ -5,6 +5,7 @@ import type { LionWebDeltaJsonChunk } from "./DeltaTypes.js";
 import type { LionWebId } from "./Chunks.js";
 import type { LionWebJsonMetaPointer } from "./Chunks.js";
 import type { Number } from "./DeltaTypes.js";
+// cannot find import for Command
 
 // The overall "super-type"
 export type DeltaCommand = {
@@ -273,6 +274,14 @@ export type ChangeReferenceCommand = DeltaCommand & {
     messageKind: "ChangeReference";
 };
 
+/**
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-CompositeCommand
+ */
+export type CompositeCommand = DeltaCommand & {
+    parts: DeltaCommand[];
+    messageKind: "CompositeCommand";
+};
+
 // The type for the tagged union property
 export type CommandMessageKind =
     | "AddPartition"
@@ -299,7 +308,8 @@ export type CommandMessageKind =
     | "MoveAndReplaceAnnotationInSameParent"
     | "AddReference"
     | "DeleteReference"
-    | "ChangeReference";
+    | "ChangeReference"
+    | "CompositeCommand";
 
 // Type Guard function
 export function isDeltaCommand(object: unknown): object is DeltaCommand {
@@ -332,6 +342,7 @@ export function isDeltaCommand(object: unknown): object is DeltaCommand {
             "AddReference",
             "DeleteReference",
             "ChangeReference",
+            "CompositeCommand",
         ].includes(castObject.messageKind)
     );
 }
