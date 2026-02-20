@@ -515,6 +515,7 @@ collection.forEach(withoutHistory => {
             const changesChunk = readModel(changesFile) as LionWebJsonChunk
 
             const result = await client.bulk.store(changesChunk)
+            console.log(`============ ${JSON.stringify(result)}`)
             assert(result.status === HttpSuccessCodes.Ok)
 
             const jsonModelFull = readModel(originalJsonFile) as LionWebJsonChunk
@@ -545,13 +546,15 @@ collection.forEach(withoutHistory => {
             deepEqual(
                 diff.diffResult.changes.filter(ch => !(ch instanceof LanguageChange)),
                 []
+                    , "one"
             )
             const repoAt_2 = await client.history.retrieve(baseFullChunkVersion, ["ID-2"])
             const diff2 = new LionWebJsonDiff()
             diff2.diffLwChunk(baseFullChunk, repoAt_2.body.chunk)
             deepEqual(
                 diff2.diffResult.changes.filter(ch => !(ch instanceof LanguageChange)),
-                []
+                [],
+                "two"
             )
         }
     })

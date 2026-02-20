@@ -7,9 +7,9 @@ import { printChunk, readModel } from "./utils.js"
 
 import { test, assert, describe, beforeAll, beforeEach, afterEach } from "vitest"
 // const { deepEqual, equal } = assert
-import sm from "source-map-support"
+// import sm from "source-map-support"
 
-sm.install()
+// sm.install()
 const DATA: string = "./data/"
 
 const collection = [true]
@@ -76,11 +76,11 @@ collection.forEach(withoutHistory => {
                 // return
             }
             
-            const sub = cmd.subscribeToPartitionRequest("ID-2")
+            const sub = cmd.subscribeToPartitionContentsRequest("ID-2")
             const addProp = cmd.addProperty("node-122", "value-1", "-key-Concept-name")
             const changeProp = cmd.changeProperty("node-124", "value-2", "-key-Concept-name")
 
-            expect((await cmd.responseFor(sub)).messageKind).toEqual("SubscribeToPartitionResponse")
+            expect((await cmd.responseFor(sub)).messageKind).toEqual("SubscribeToPartitionContentsResponse")
             expect((await cmd.eventFor(addProp)).messageKind).toEqual("PropertyAdded")
             expect((await cmd.eventFor(changeProp)).messageKind).toEqual("PropertyChanged")
 
@@ -97,7 +97,7 @@ collection.forEach(withoutHistory => {
                 assert(initError === "", initError)
                 cmd.addPartition({ id: "ID-NewPartition20", classifier: {key: "key", language: "l", version: "`1.0"}})
 
-                cmd.subscribeToPartitionRequest("ID-NewPartition20",)
+                cmd.subscribeToPartitionContentsRequest("ID-NewPartition20",)
                 cmd.deleteProperty("ID-NewPartition20", "-key-Partition-name")
                 cmd.deleteProperty("ID-2", "-key-Partition-name")
                 // deltaApiClient.sendCommand(newDeletePropertyCommand("ID-2", "LionCore-builtins-INamed-name"))

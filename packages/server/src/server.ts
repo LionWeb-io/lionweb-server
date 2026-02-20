@@ -5,7 +5,7 @@ import express, { Express, NextFunction, Response, Request } from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
 import pgPromise from "pg-promise"
-import { WebSocketServer, RawData } from "ws"
+import { WebSocketServer } from "ws"
 import { postgresConnectionWithDatabase, pgp, postgresConnectionWithoutDatabase, postgresPool } from "./DbConnection.js"
 import {
     DbConnection,

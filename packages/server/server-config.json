@@ -24,6 +24,7 @@
         "request": "silent",
         "trace": "silent",
         "database": "silent",
+        "query": "info",
         "express": "silent",
         "delta": "info",
         "message": "silent"

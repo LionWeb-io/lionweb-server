@@ -119,7 +119,7 @@ export function validateReference(
     if (foundReference === undefined) {
         if (index !== 0) {
             // New containment, so index must be zero
-            throw newErrorDelta("unknownIndex", `Index '${index}' is out of bounds`, msg, participation)
+            throw newErrorDelta("unknownIndex", `Reference ${JSON.stringify(reference)} undefined in node ${parentNode.id}: index '${index}' is out of bounds`, msg, participation)
         } else if (msg.messageKind === "AddReference") {
             // create new containment with one reference
             foundReference = {
@@ -171,7 +171,9 @@ export function validateReference(
                 ) {
                     throw newErrorDelta(
                         "referenceTargetOrResolveInfoMismatch",
-                        "reference not equal to expected values",
+                        `reference not equal to expected values [${foundReference.targets[change.index].resolveInfo}, ${
+                            foundReference.targets[change.index].reference
+                        }]`,
                         msg,
                         participation
                     )

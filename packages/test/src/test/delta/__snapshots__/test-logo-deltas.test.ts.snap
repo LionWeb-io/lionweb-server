@@ -1,5 +1,12 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Repository tests with history > Partition tests > Children 1`] = `
+"
+Program undefined
+    FORWARD undefined
+"
+`;
+
 exports[`Repository tests without history > Partition tests > Children 1`] = `
 "
 Program draw a rectangle

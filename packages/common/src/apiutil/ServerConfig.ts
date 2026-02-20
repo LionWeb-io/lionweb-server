@@ -41,6 +41,7 @@ export type ServerConfigJson = {
         request?: LevelWithSilent
         trace?: LevelWithSilent
         database?: LevelWithSilent
+        query?: LevelWithSilent
         express?: LevelWithSilent
         delta?: LevelWithSilent
         bulk?: LevelWithSilent
@@ -156,6 +157,11 @@ export class ServerConfig {
 
     databaseLog(): LevelWithSilent {
         const result = this.config?.logging?.database
+        return verbosity(result, "error")
+    }
+
+    queryLog(): LevelWithSilent {
+        const result = this.config?.logging?.query
         return verbosity(result, "error")
     }
 

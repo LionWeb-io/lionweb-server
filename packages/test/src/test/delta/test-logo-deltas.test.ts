@@ -129,7 +129,7 @@ collection.forEach(withoutHistory => {
 
                 const deletePropertyCmd2 = cmd.deleteProperty("Program-01", "LionCore-builtins-INamed-name")
                 const deletePropertyCmd3 = cmd.deleteProperty("Program-01", "-key-Partition-name")
-                const addPropertyCmd2 = cmd.addProperty("Program-01", "draw rectangle", "LionCore-builtins-INamed-name")
+                const addPropertyCmd2 = cmd.addProperty("Program-01", "draw rectangle again", "LionCore-builtins-INamed-name")
 
                 const changePropertyCmd = cmd.changeProperty("Program-01", "draw a rectangle", "LionCore-builtins-INamed-name")
                 const changePropertyE1 = cmd.changeProperty("Program-21", "draw a line", "LionCore-builtins-INamed-name")
@@ -142,7 +142,8 @@ collection.forEach(withoutHistory => {
 
                 expect((await cmd.eventFor(deletePropertyCmd2)).messageKind).toEqual("PropertyDeleted")
                 expect(await cmd.errorFor(deletePropertyCmd3)).toHaveError("unknownProperty")
-                
+
+                expect((await cmd.eventFor(addPropertyCmd2)).messageKind).toEqual("PropertyAdded")
                 expect((await cmd.eventFor(changePropertyCmd)).messageKind).toEqual("PropertyChanged")
                 expect(await cmd.errorFor(changePropertyE1)).toHaveError("nodeDoesNotExist")
                 expect(await cmd.errorFor(changePropertyE2)).toHaveError("unknownProperty")
@@ -155,7 +156,7 @@ collection.forEach(withoutHistory => {
 
             })
             test("Children", async () => {
-                const subscribe = cmd.subscribeToPartitionRequest("Program-01")
+                const subscribe = cmd.subscribeToPartitionContentsRequest("Program-01")
                 const addChild = cmd.addChild({ id: "Move-01", cls: CLS.Forward, parent: "Program-01", containment: CON.ProgramCommands, props: [] })
                 const addChildE1 = cmd.addChild({ id: "Move-01", cls: CLS.Forward, parent: "Program-01", containment: CON.ProgramCommands, props: [] })
                 const addChildE2 = cmd.addChild({ id: "Move-02", cls: CLS.Forward, parent: "Program-02", containment: CON.ProgramCommands, props: [] })
@@ -185,7 +186,7 @@ collection.forEach(withoutHistory => {
             const addPartitionCommand = cmd.addPartition({id: "Library-01", classifier: CLS.Library,
                 properties: [{ property: PROP.INamedName, value: "Library first" }]
             })
-            const subscribeRequest = cmd.subscribeToPartitionRequest("Library-01")
+            const subscribeRequest = cmd.subscribeToPartitionContentsRequest("Library-01")
             const addPropertyCmd = cmd.addProperty("Program-01", "draw rectangle", "LionCore-builtins-INamed-name")
             const addChildCommand = cmd.addChild({id: "Procedure-01", cls: CLS.Procedure, parent: "Library-01",  containment: CON.LibraryProcedures,
                 props: [{ prop: PROP.INamedName, value: "Proc first" }]

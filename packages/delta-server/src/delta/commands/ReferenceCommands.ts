@@ -66,11 +66,13 @@ const DeleteReference = async (participation: ParticipationInfo, msg: DeleteRefe
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [msg.parent])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
         const beforeReference = validateReference(parentNode, msg.reference, msg.index, undefined, msg, participation)
-        const afterReference = { reference: beforeReference.reference, targets: [...beforeReference.targets].splice(msg.index, 1)}
-
+        const afterTargets = [...beforeReference.targets]
+        afterTargets.splice(msg.index, 1)
+        const afterReference = { reference: beforeReference.reference, targets: afterTargets}
+        console.log(`REFERENCE DEL index ${msg.index} before ${JSON.stringify(beforeReference.targets)} after ${JSON.stringify(afterReference.targets)}`)
         const changes = new DbChanges(TableHelpers.pgp)
         changes.addChanges(
-            [new TargetRemoved(new JsonContext(null, ["delta"]), parentNode!, beforeReference, afterReference, { resolveInfo: msg.deletedResolveInfo ?? null, reference: msg.deletedTarget!}, Missing.MissingAfter)]
+            [new TargetRemoved(new JsonContext(null, ["delta"]), parentNode, beforeReference, afterReference, { resolveInfo: msg.deletedResolveInfo ?? null, reference: msg.deletedTarget!}, Missing.NotMissing)]
         )
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [], task)
@@ -108,8 +110,7 @@ const ChangeReference = async (participation: ParticipationInfo, msg: ChangeRefe
         const changes = new DbChanges(TableHelpers.pgp)
         changes.addChanges(
             [
-                new TargetRemoved(new JsonContext(null, ["delta"]), parentNode, beforeReference, afterReference, { resolveInfo: msg.oldResolveInfo ?? null, reference: msg.oldTarget!}, Missing.MissingAfter),
-                new TargetAdded(new JsonContext(null, ["delta"]), parentNode, beforeReference, afterReference, { resolveInfo: msg.newResolveInfo ?? null, reference: msg.newTarget!}, Missing.MissingBefore)
+                new TargetAdded(new JsonContext(null, ["delta"]), parentNode, beforeReference, afterReference, { resolveInfo: msg.newResolveInfo ?? null, reference: msg.newTarget!}, Missing.NotMissing)
             ]
         )
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)

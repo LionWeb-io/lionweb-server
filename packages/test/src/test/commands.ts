@@ -89,7 +89,7 @@ export class Commands {
         return this.client.sendRequest(request)
     }
 
-    subscribeToPartitionRequest = (partition: string): DeltaRequest => {
+    subscribeToPartitionContentsRequest = (partition: string): DeltaRequest => {
         const request: SubscribeToPartitionContentsRequest = {
             messageKind: "SubscribeToPartitionContentsRequest",
             partition: partition,
