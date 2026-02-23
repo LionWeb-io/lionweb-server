@@ -37,7 +37,7 @@
         "typescript": "5.2.2"
     },
     "dependencies": {
-        "@lionweb/json-utils": "0.7.3",
-        "@lionweb/validation": "0.7.3"
+        "@lionweb/json-utils": "0.8.0-beta.8",
+        "@lionweb/validation": "0.8.0-beta.8"
     }
 }

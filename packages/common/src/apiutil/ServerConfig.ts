@@ -1,7 +1,7 @@
 import { LionWebVersionType } from "@lionweb/server-shared"
 import fs from "node:fs"
 import { LevelWithSilent } from "pino"
-import { expressLogger, PINO_LEVELS, verbosity } from "./logging.js"
+import { expressLogger, verbosity } from "./logging.js"
 
 // Define the possible values of database creation both as a type, and as an array of strings and a type
 const CreationValues = ["always", "never", "if-not-exists"] as const

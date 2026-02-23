@@ -1,5 +1,4 @@
 import { CONTAINMENTS_TABLE, NODES_TABLE, MetaPointersTracker, sqlArrayFromNodeIdArray } from "@lionweb/server-common"
-import { ParameterizedQuery } from "pg-promise"
 import {AttachPoint} from "./AdditionalQueries.js";
 import {FBAttachPoint} from "../io/lionweb/serialization/flatbuffers/index.js";
 import {forFBMetapointer} from "./ImportLogic.js";

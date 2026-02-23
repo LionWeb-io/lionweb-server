@@ -1,4 +1,3 @@
-import { LionWebJsonNode } from "@lionweb/json"
 import {
     deltaLogger,
     LionWebTask,

@@ -3,12 +3,12 @@ import { ValidationResult } from "@lionweb/validation"
 import { assert } from "chai"
 import fs from "fs"
 import { DirectoryWorker } from "./DirectoryWalker.js"
-import { describe, test, expect, beforeEach } from "vitest";
+import { test } from "vitest";
 
 export class TestWorker implements DirectoryWorker {
     validator =  new DeltaValidator(new ValidationResult())
 
-    visitDir(dir: string): void {
+    visitDir(_dir: string): void {
     }
 
     visitFile(file: string): void {

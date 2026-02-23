@@ -5,15 +5,15 @@ export interface DirectoryWorker {
     visitFile(file: string): void
 }
 
-export class ValidationWorker implements DirectoryWorker {
-    visitDir(dir: string): void {
-    }
-
-    visitFile(file: string): void {
-        const message = JSON.parse(fs.readFileSync(file).toString());
-        // console.log("Found file " + file)
-    }
-}
+// export class ValidationWorker implements DirectoryWorker {
+//     visitDir(_dir: string): void {
+//     }
+//
+//     visitFile(file: string): void {
+//         const message = JSON.parse(fs.readFileSync(file).toString());
+//         // console.log("Found file " + file)
+//     }
+// }
 
 export class DirectoryWalker {
     worker: DirectoryWorker

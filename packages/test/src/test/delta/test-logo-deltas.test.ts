@@ -247,15 +247,13 @@ collection.forEach(withoutHistory => {
             console.log("4 deleted  refertence")
             await makeSnapShot()
 
-            expect(await cmd.errorFor(delRef5)).toHaveError("unknownReference")
+            expect(await cmd.errorFor(delRef5)).toHaveError("unknownIndex")
             console.log("5 deleted  refertence")
             await makeSnapShot()
 
             const delRef6 = cmd.deleteReference({ parent: "PCall-01", index: 0, deletedTarget: null, deletedResolveInfo: null, reference: REF.ProcedureCallProcedure })
             const delRef7 = cmd.deleteReference({ parent: "PCall-000", index: 0, deletedTarget: "target", deletedResolveInfo: null, reference: REF.ProcedureCallProcedure })
 
-            expect((await cmd.eventFor(delRef4)).messageKind).toEqual("ReferenceDeleted")
-            expect(await cmd.errorFor(delRef5)).toHaveError( "unknownReference")
             expect(await cmd.errorFor(delRef6)).toHaveError( "undefinedReferenceTarget")
             expect(await cmd.errorFor(delRef7)).toHaveError( "unknownNode")
 

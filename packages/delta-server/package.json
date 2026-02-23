@@ -1,48 +1,48 @@
 {
-  "private": false,
-  "name": "@lionweb/delta-server",
-  "publishConfig": {
-    "access": "public"
-  },
-  "version": "0.4.0",
-  "description": "Library with types used in delta protocol between TypeScript/JavaScript client and server",
-  "main": "dist/index.js",
-  "exports": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "typings": "dist/index.d.ts",
-  "type": "module",
-  "license": "Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/LionWeb-io/lionweb-repository.git"
-  },
-  "bugs": {
-    "url": "https://github.com/LionWeb-io/lionweb-repository/issues"
-  },
-  "scripts": {
-    "clean": "rm -rf node_modules/ && rm -rf dist/",
-    "build": "tsc",
-    "lint": "eslint src"
-  },
-  "dependencies": {
-      "@lionweb/json": "0.7.3",
-      "@lionweb/json-diff": "0.7.3",
-      "@lionweb/json-utils": "0.7.3",
-    "@lionweb/validation": "0.7.3",
-      "@lionweb/server-shared": "0.4.0",
-      "@lionweb/server-common": "0.4.0",
-    "@lionweb/server-delta-shared": "0.4.0",
-      "es-toolkit": "^1.41.0"
-  },
-  "devDependencies": {
-    "prettier": "3.1.0",
-    "@typescript-eslint/eslint-plugin": "6.13.2",
-    "@typescript-eslint/parser": "6.13.2",
-    "@types/chai": "4.3.11",
-    "@types/mocha": "10.0.10",
-    "eslint": "8.56.0",
-    "chai": "4.3.10",
-    "mocha": "11.0.1",
-    "typescript": "5.2.2"
-  }
+    "private": false,
+    "name": "@lionweb/delta-server",
+    "publishConfig": {
+        "access": "public"
+    },
+    "version": "0.4.0",
+    "description": "Library with types used in delta protocol between TypeScript/JavaScript client and server",
+    "main": "dist/index.js",
+    "exports": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "typings": "dist/index.d.ts",
+    "type": "module",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/LionWeb-io/lionweb-repository.git"
+    },
+    "bugs": {
+        "url": "https://github.com/LionWeb-io/lionweb-repository/issues"
+    },
+    "scripts": {
+        "clean": "rm -rf node_modules/ && rm -rf dist/",
+        "build": "tsc",
+        "lint": "eslint src"
+    },
+    "dependencies": {
+        "@lionweb/json": "0.8.0-beta.8",
+        "@lionweb/json-diff": "0.8.0-beta.8",
+        "@lionweb/json-utils": "0.8.0-beta.8",
+        "@lionweb/validation": "0.8.0-beta.8",
+        "@lionweb/server-shared": "0.4.0",
+        "@lionweb/server-common": "0.4.0",
+        "@lionweb/server-delta-shared": "0.4.0",
+        "es-toolkit": "^1.41.0"
+    },
+    "devDependencies": {
+        "prettier": "3.1.0",
+        "@typescript-eslint/eslint-plugin": "6.13.2",
+        "@typescript-eslint/parser": "6.13.2",
+        "@types/chai": "4.3.11",
+        "@types/mocha": "10.0.10",
+        "eslint": "8.56.0",
+        "chai": "4.3.10",
+        "mocha": "11.0.1",
+        "typescript": "5.2.2"
+    }
 }

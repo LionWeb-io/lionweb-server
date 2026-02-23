@@ -1,6 +1,6 @@
 import { LionWebJsonNode } from "@lionweb/json"
 import { KeyValuePair } from "@lionweb/server-delta-shared"
-import { asError, dbLogger, deltaLogger } from "../apiutil/index.js"
+import { asError, dbLogger } from "../apiutil/index.js"
 import {
     InternalQueryError,
     SQL,

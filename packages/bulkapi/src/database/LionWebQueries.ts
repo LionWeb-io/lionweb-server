@@ -1,17 +1,13 @@
 import {
-    ListPartitionsResponse,
     CreatePartitionsResponse,
     StoreResponse,
     HttpSuccessCodes,
     HttpClientErrors,
-    LionwebResponse,
     DeletePartitionsResponse
 } from "@lionweb/server-shared"
 import {
     QueryReturnType,
-    nodesToChunk,
     UNLIMITED_DEPTH,
-    NODES_TABLE,
     LionWebTask,
     RepositoryData,
     dbLogger,
