@@ -1,6 +1,6 @@
 {
     "name": "@lionweb/server-bulkapi",
-    "version": "0.4.0",
+    "version": "0.4.0-beta.1",
     "private": false,
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -38,8 +38,8 @@
         "typescript": "5.2.2"
     },
     "dependencies": {
-        "@lionweb/server-common": "0.4.0",
-        "@lionweb/server-dbadmin": "0.4.0",
+        "@lionweb/server-common": "0.4.0-beta.1",
+        "@lionweb/server-dbadmin": "0.4.0-beta.1",
         "@lionweb/validation": "0.8.0-beta.8",
         "@lionweb/json": "0.8.0-beta.8",
         "@lionweb/json-diff": "0.8.0-beta.8",

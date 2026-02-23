@@ -1,6 +1,6 @@
 {
     "name": "@lionweb/server-shared",
-    "version": "0.4.0",
+    "version": "0.4.0-beta.1",
     "private": false,
     "description": "Shared code between client and server",
     "main": "dist/index.js",
@@ -19,6 +19,7 @@
         "clean": "rm -rf node_modules/ && rm -rf dist/",
         "build": "tsc",
         "lint": "eslint src",
+        "release-beta": "npm publish --tag beta",
         "publish-local": "npm publish --registry http://localhost:4873 --tag beta",
         "unpublish-local": "npm unpublish --force --registry http://localhost:4873",
         "republish-local": "npm run unpublish-local && npm run publish-local"

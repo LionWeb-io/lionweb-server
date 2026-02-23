@@ -4,7 +4,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "version": "0.4.0",
+    "version": "0.4.0-beta.1",
     "description": "Library with types used in delta protocol between TypeScript/JavaScript client and server",
     "main": "dist/index.js",
     "exports": "./dist/index.js",
@@ -29,9 +29,9 @@
         "@lionweb/json-diff": "0.8.0-beta.8",
         "@lionweb/json-utils": "0.8.0-beta.8",
         "@lionweb/validation": "0.8.0-beta.8",
-        "@lionweb/server-shared": "0.4.0",
-        "@lionweb/server-common": "0.4.0",
-        "@lionweb/server-delta-shared": "0.4.0",
+        "@lionweb/server-shared": "0.4.0-beta.1",
+        "@lionweb/server-common": "0.4.0-beta.1",
+        "@lionweb/server-delta-shared": "0.4.0-beta.1",
         "es-toolkit": "^1.41.0"
     },
     "devDependencies": {

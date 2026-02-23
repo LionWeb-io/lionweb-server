@@ -4,7 +4,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "version": "0.4.0",
+    "version": "0.4.0-beta.1",
     "description": "Library with types used in delta protocol between TypeScript/JavaScript client and server",
     "main": "dist/index.js",
     "exports": "./dist/index.js",
@@ -23,6 +23,7 @@
         "clean": "rm -rf node_modules/ && rm -rf dist/",
         "build": "tsc",
         "lint": "eslint src",
+        "release-beta": "npm publish --tag beta",
         "publish-local": "npm publish --registry http://localhost:4873 --tag local",
         "unpublish-local": "npm unpublish --force --registry http://localhost:4873",
         "republish-local": "npm run unpublish-local && npm run publish-local"

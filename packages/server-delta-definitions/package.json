@@ -1,6 +1,6 @@
 {
     "name": "@lionweb/server-delta-definitions",
-    "version": "0.4.0",
+    "version": "0.4.0-beta.1",
     "private": false,
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -19,6 +19,7 @@
         "build": "tsc",
         "alive": "echo I am alive",
         "lint": "eslint src",
+        "release-beta": "npm publish --tag beta",
         "publish-local": "npm publish --registry http://localhost:4873 --tag beta",
         "unpublish-local": "npm unpublish --force --registry http://localhost:4873",
         "republish-local": "npm run unpublish-local && npm run publish-local"

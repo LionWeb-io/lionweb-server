@@ -1,6 +1,6 @@
 {
     "name": "@lionweb/server",
-    "version": "0.4.0",
+    "version": "0.4.0-beta.1",
     "private": true,
     "license": "Apache-2.0",
     "repository": {
@@ -17,6 +17,7 @@
         "lint": "npm run lint -w packages --if-present",
         "setup": "npm run setup -w packages --if-present",
         "test": "npm run test -w packages --if-present",
+        "release-beta": "npm run release-beta -w packages --if-present",
         "release": "npm run release -w packages --if-present",
         "database": "node packages/dbadmin/dist/tools/database",
         "publish-local": "npm run publish-local -w packages --if-present",
