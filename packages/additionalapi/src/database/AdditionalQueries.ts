@@ -8,7 +8,6 @@ import {
     checkHowManyExistSQL
 } from "./QueryNode.js"
 import { populateFromBulkImport, storeNodes } from "./ImportLogic.js"
-import { MetaPointersTracker } from "@lionweb/server-dbadmin"
 import { AttachPoint, BulkImport } from "@lionweb/server-shared"
 
 export type NodeTreeResultType = {

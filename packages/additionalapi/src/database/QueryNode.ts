@@ -1,7 +1,6 @@
-import {CONTAINMENTS_TABLE, NODES_TABLE} from "@lionweb/server-common";
+import { MetaPointersTracker, CONTAINMENTS_TABLE, NODES_TABLE, sqlArrayFromNodeIdArray } from "@lionweb/server-common"
 import { AttachPoint, PBAttachPoint, PBLanguage, PBMetaPointer } from "@lionweb/server-shared"
-import {MetaPointersTracker} from "@lionweb/server-dbadmin";
-import {getCorrespondingMetaPointerIDOnTheDB} from "./ImportLogic.js";
+import { getCorrespondingMetaPointerIDOnTheDB } from "./ImportLogic.js"
 
 /**
  * Query that will recursively get all child (ids) of all nodes in _nodeIdList_

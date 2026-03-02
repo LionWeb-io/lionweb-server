@@ -15,14 +15,12 @@ sm.install()
 const DATA: string = "./data/"
 
     const repository = "MyFirstRepo"
-    const bulkApiClient = new RepositoryClient("TestClient", repository)
+    const bulkApiClient = new RepositoryClient({clientId: "TestClient", repository: repository})
     const deltaApiClient = new DeltaClient({}, [eventFunctions])
     deltaApiClient.repository = repository
     deltaApiClient.clientId = "TestClient"
         // client.loggingOn = true
-    let initialPartition: LionWebJsonChunk
     let initialPartitionVersion: number = 0
-    let baseFullChunk: LionWebJsonChunk
     let baseFullChunkVersion: number = 0
     let initError: string = ""
 
@@ -62,8 +60,8 @@ const DATA: string = "./data/"
 
     bulkApiClient.repository = repository
     initError = ""
-    initialPartition = readModel(DATA + "Disk_A_partition.json") as LionWebJsonChunk
-    baseFullChunk = readModel(DATA + "Disk_A.json") as LionWebJsonChunk
+    const initialPartition: LionWebJsonChunk = readModel(DATA + "Disk_A_partition.json") as LionWebJsonChunk
+    const baseFullChunk = readModel(DATA + "Disk_A.json") as LionWebJsonChunk
     initResponse = await bulkApiClient.dbAdmin.createRepository(repository, false, "2023.1")
     if (initResponse.status !== HttpSuccessCodes.Ok) {
         console.log("Cannot initialize database: " + JSON.stringify(initResponse.body))

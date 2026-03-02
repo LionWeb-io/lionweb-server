@@ -12,7 +12,7 @@ describe("Repository tests for bulkImport API", () => {
     let initError: string = ""
     const lwVersion = "2023.1"
 
-    beforeEach("a", async function () {
+    beforeEach(async function () {
         client.repository = repository
         initError = ""
         const repos = await client.dbAdmin.listRepositories()

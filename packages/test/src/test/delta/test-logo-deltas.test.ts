@@ -9,7 +9,7 @@ import { Logo2String } from "./Logo2String.js"
 // TOPO Delta : primary key exception when nohistory = false 
 const collection = [true]
 
-const bulkApiClient = new RepositoryClient("BulkClient-01")
+// const bulkApiClient = new RepositoryClient({clientId: "BulkClient-01"})
 
 expect.extend({
     toHaveError(received, expected) {
@@ -48,6 +48,8 @@ declare module "vitest" {
 // Run all, tests with and without history
 collection.forEach(withoutHistory => {
     const repository = withoutHistory ? "LogoRepo" : "LogoHistoryRepo"
+    const bulkApiClient = new RepositoryClient({clientId: "BulkClient-01", repository: repository})
+
     describe("Repository tests " + (withoutHistory ? "without history" : "with history"), async () => {
         const client = new DeltaClient({}, [eventFunctions, responseFunctions, adminResponseFunctions])
         // deltaApiClient01.deltaProcessor.
@@ -83,9 +85,9 @@ collection.forEach(withoutHistory => {
                     {
                         data: [],
                         kind: "Info",
-                        message: "SignOnRequest received ok"
-                    }
-                ]
+                        message: "SignOnRequest received ok",
+                    },
+                ],
             })
         })
 
@@ -119,7 +121,6 @@ collection.forEach(withoutHistory => {
                 console.log(client.sentMessageHistory)
                 console.log("ReceivedMessages")
                 console.log(client.receivedMessageHistory)
-
             })
             test("Properties", async () => {
                 // client.sendRequest(newSubscribeToPartitionRequest("Program-01"))
@@ -134,8 +135,8 @@ collection.forEach(withoutHistory => {
                 const changePropertyCmd = cmd.changeProperty("Program-01", "draw a rectangle", "LionCore-builtins-INamed-name")
                 const changePropertyE1 = cmd.changeProperty("Program-21", "draw a line", "LionCore-builtins-INamed-name")
                 const changePropertyE2 = cmd.changeProperty("Program-01", "draw a cricle", "-key-Program-name")
-                
-                // 
+
+                //
                 expect(hasError(await cmd.eventFor(deletePropertyCmd), "unknownProperty")).toBeTruthy()
                 expect((await cmd.eventFor(addPropertyCmd)).messageKind).toEqual("PropertyAdded")
                 expect(await cmd.errorFor(addPropertyCmdE1)).toHaveError("nodeDoesNotExist")
@@ -153,27 +154,25 @@ collection.forEach(withoutHistory => {
                 console.log("ReceivedMessages")
                 console.log(client.receivedMessageHistory)
                 await makeSnapShot()
-
             })
             test("Children", async () => {
                 const subscribe = cmd.subscribeToPartitionContentsRequest("Program-01")
                 const addChild = cmd.addChild({ id: "Move-01", cls: CLS.Forward, parent: "Program-01", containment: CON.ProgramCommands, props: [] })
                 const addChildE1 = cmd.addChild({ id: "Move-01", cls: CLS.Forward, parent: "Program-01", containment: CON.ProgramCommands, props: [] })
                 const addChildE2 = cmd.addChild({ id: "Move-02", cls: CLS.Forward, parent: "Program-02", containment: CON.ProgramCommands, props: [] })
-                const addChildE3 = cmd.addChild({ id: "Move-03", cls: CLS.Forward, parent: "Program-01", containment: CON.ProcedureParameter, props: [] }, {index: 1})
+                const addChildE3 = cmd.addChild({ id: "Move-03", cls: CLS.Forward, parent: "Program-01", containment: CON.ProcedureParameter, props: [] }, { index: 1 })
                 const deleteChildError1 = cmd.deleteChild({ id: "Move-01", index: 0, parent: "Program-01", containment: CON.IfCondition })
                 const deleteChildError2 = cmd.deleteChild({ id: "Move-01", index: 0, parent: "Program-01-A", containment: CON.ProgramCommands })
                 const deleteChildError3 = cmd.deleteChild({ id: "Move-01", index: 1, parent: "Program-01", containment: CON.ProgramCommands })
 
-
                 expect(await cmd.errorFor(subscribe)).toHaveError("alreadySubscribed")
                 expect((await cmd.eventFor(addChild)).messageKind).toEqual("ChildAdded")
                 expect(await cmd.errorFor(addChildE1)).toHaveError("nodeAlreadyExists")
-                expect(await cmd.errorFor(addChildE2)).toHaveError( "unknownNode")
-                expect(await cmd.errorFor(addChildE3)).toHaveError( "unknownIndex")
-                expect(await cmd.errorFor(deleteChildError1)).toHaveError( "unknownContainment")
-                expect(await cmd.errorFor(deleteChildError2)).toHaveError( "unknownNode")
-                expect(await cmd.errorFor(deleteChildError3)).toHaveError( "unknownIndex")
+                expect(await cmd.errorFor(addChildE2)).toHaveError("unknownNode")
+                expect(await cmd.errorFor(addChildE3)).toHaveError("unknownIndex")
+                expect(await cmd.errorFor(deleteChildError1)).toHaveError("unknownContainment")
+                expect(await cmd.errorFor(deleteChildError2)).toHaveError("unknownNode")
+                expect(await cmd.errorFor(deleteChildError3)).toHaveError("unknownIndex")
 
                 console.log("SentMessages")
                 console.log(client.sentMessageHistory)
@@ -183,17 +182,19 @@ collection.forEach(withoutHistory => {
             })
         })
         test("AddPartition Second", async () => {
-            const addPartitionCommand = cmd.addPartition({id: "Library-01", classifier: CLS.Library,
-                properties: [{ property: PROP.INamedName, value: "Library first" }]
-            })
+            const addPartitionCommand = cmd.addPartition({ id: "Library-01", classifier: CLS.Library, properties: [{ property: PROP.INamedName, value: "Library first" }] })
             const subscribeRequest = cmd.subscribeToPartitionContentsRequest("Library-01")
             const addPropertyCmd = cmd.addProperty("Program-01", "draw rectangle", "LionCore-builtins-INamed-name")
-            const addChildCommand = cmd.addChild({id: "Procedure-01", cls: CLS.Procedure, parent: "Library-01",  containment: CON.LibraryProcedures,
-                props: [{ prop: PROP.INamedName, value: "Proc first" }]
+            const addChildCommand = cmd.addChild({
+                id: "Procedure-01",
+                cls: CLS.Procedure,
+                parent: "Library-01",
+                containment: CON.LibraryProcedures,
+                props: [{ prop: PROP.INamedName, value: "Proc first" }],
             })
-            const addChildCommand1 = cmd.addChild({id: "Move-02", cls: CLS.MoveCommand, parent: "Procedure-01",containment: CON.ProcedureBody,props: []})
-            const deleteChildCommand = cmd.deleteChild({id: "Procedure-01",index: 0,parent: "Library-01",containment: CON.LibraryProcedures})
-            
+            const addChildCommand1 = cmd.addChild({ id: "Move-02", cls: CLS.MoveCommand, parent: "Procedure-01", containment: CON.ProcedureBody, props: [] })
+            const deleteChildCommand = cmd.deleteChild({ id: "Procedure-01", index: 0, parent: "Library-01", containment: CON.LibraryProcedures })
+
             expect((await cmd.eventFor(addPartitionCommand)).messageKind).toEqual("PartitionAdded")
             expect((await cmd.responseFor(subscribeRequest)).messageKind).toEqual("ErrorResponse")
             expect(await cmd.errorFor(addPropertyCmd)).toHaveError("propertyAlreadyExists")
@@ -211,10 +212,10 @@ collection.forEach(withoutHistory => {
             expect((await cmd.eventFor(addRef)).messageKind).toEqual("ReferenceAdded")
             console.log("1 add refertences")
             await makeSnapShot()
-            
+
             const addRef2 = cmd.addReference({
                 id: "PCall-01",
-                index: 2,                   // Error: Is out of bounds
+                index: 2, // Error: Is out of bounds
                 target: "Procedure-01",
                 resolveInfo: "PROC-01",
                 reference: REF.ProcedureCallProcedure,
@@ -223,7 +224,7 @@ collection.forEach(withoutHistory => {
             const addRef4 = cmd.addReference({
                 id: "PCall-01",
                 index: 1,
-                target: null,               // Error: both target and resolveReference are null
+                target: null, // Error: both target and resolveReference are null
                 resolveInfo: null,
                 reference: REF.ProcedureCallProcedure,
             })
@@ -237,7 +238,13 @@ collection.forEach(withoutHistory => {
             console.log("2 add refertences")
             await makeSnapShot()
 
-            const delRef4 = cmd.deleteReference({ parent: "PCall-01", index: 0, deletedTarget: "Procedure-01", deletedResolveInfo: "PROC-01", reference: REF.ProcedureCallProcedure })
+            const delRef4 = cmd.deleteReference({
+                parent: "PCall-01",
+                index: 0,
+                deletedTarget: "Procedure-01",
+                deletedResolveInfo: "PROC-01",
+                reference: REF.ProcedureCallProcedure,
+            })
             expect((await cmd.eventFor(delRef4)).messageKind).toEqual("ReferenceDeleted")
             console.log("3 deleted  refertence")
             await makeSnapShot()
@@ -254,8 +261,8 @@ collection.forEach(withoutHistory => {
             const delRef6 = cmd.deleteReference({ parent: "PCall-01", index: 0, deletedTarget: null, deletedResolveInfo: null, reference: REF.ProcedureCallProcedure })
             const delRef7 = cmd.deleteReference({ parent: "PCall-000", index: 0, deletedTarget: "target", deletedResolveInfo: null, reference: REF.ProcedureCallProcedure })
 
-            expect(await cmd.errorFor(delRef6)).toHaveError( "undefinedReferenceTarget")
-            expect(await cmd.errorFor(delRef7)).toHaveError( "unknownNode")
+            expect(await cmd.errorFor(delRef6)).toHaveError("undefinedReferenceTarget")
+            expect(await cmd.errorFor(delRef7)).toHaveError("unknownNode")
 
             console.log("33 deleted refertences")
             await makeSnapShot()
@@ -265,14 +272,19 @@ collection.forEach(withoutHistory => {
             console.log("add refertences")
             await makeSnapShot()
 
-            const changeRef4 = cmd.changeReference({ parent: "PCall-01", index: 0, reference: REF.ProcedureCallProcedure, 
-                oldTarget: "Procedure-01", oldResolveInfo: "PROC-01",
-                newTarget: "Procedure-00", newResolveInfo: "PROC-00"
+            const changeRef4 = cmd.changeReference({
+                parent: "PCall-01",
+                index: 0,
+                reference: REF.ProcedureCallProcedure,
+                oldTarget: "Procedure-01",
+                oldResolveInfo: "PROC-01",
+                newTarget: "Procedure-00",
+                newResolveInfo: "PROC-00",
             })
             expect((await cmd.eventFor(changeRef4)).messageKind).toEqual("ReferenceChanged")
             console.log("change refertences")
             await makeSnapShot()
-            
+
             const changeRef5 = cmd.changeReference({
                 parent: "PCall-01",
                 index: 0,
@@ -282,20 +294,30 @@ collection.forEach(withoutHistory => {
                 newTarget: "newTarget",
                 newResolveInfo: null,
             })
-            const changeRef6 = cmd.changeReference({ parent: "PCall-01", index: 0, 
-                oldTarget: null, oldResolveInfo: null,
-                newTarget: null, newResolveInfo: null,
-                reference: REF.ProcedureCallProcedure })
-            const changeRef7 = cmd.changeReference({ parent: "PCall-000", index: 0,
-                oldTarget: "target", oldResolveInfo: null,
-                newTarget: "target", newResolveInfo: null,
-                reference: REF.ProcedureCallProcedure })
+            const changeRef6 = cmd.changeReference({
+                parent: "PCall-01",
+                index: 0,
+                oldTarget: null,
+                oldResolveInfo: null,
+                newTarget: null,
+                newResolveInfo: null,
+                reference: REF.ProcedureCallProcedure,
+            })
+            const changeRef7 = cmd.changeReference({
+                parent: "PCall-000",
+                index: 0,
+                oldTarget: "target",
+                oldResolveInfo: null,
+                newTarget: "target",
+                newResolveInfo: null,
+                reference: REF.ProcedureCallProcedure,
+            })
 
             expect((await cmd.eventFor(addRef)).messageKind).toEqual("ReferenceAdded")
             expect((await cmd.eventFor(changeRef4)).messageKind).toEqual("ReferenceChanged")
-            expect(await cmd.errorFor(changeRef5)).toHaveError( "referenceTargetOrResolveInfoMismatch")
-            expect(await cmd.errorFor(changeRef6)).toHaveError( "undefinedReferenceTarget")
-            expect(await cmd.errorFor(changeRef7)).toHaveError( "unknownNode")
+            expect(await cmd.errorFor(changeRef5)).toHaveError("referenceTargetOrResolveInfoMismatch")
+            expect(await cmd.errorFor(changeRef6)).toHaveError("undefinedReferenceTarget")
+            expect(await cmd.errorFor(changeRef7)).toHaveError("unknownNode")
 
             console.log("SentMessages References")
             console.log(client.sentMessageHistory)
@@ -304,15 +326,16 @@ collection.forEach(withoutHistory => {
             const snapshot = await makeSnapShot()
             expect(snapshot).toMatchSnapshot
         })
-
     })
+
+    async function makeSnapShot(): Promise<string> {
+        const partition = await bulkApiClient.bulk.retrieve(["Library-01", "Program-01"])
+        // const string = JSON.stringify(partition.body.chunk.nodes, null, 4)
+        const string = new Logo2String(partition.body.chunk.nodes).logo2string()
+        console.log(string)
+        return string
+    }
+
 })
 
 
-async function makeSnapShot(): Promise<string> {
-    const partition = await bulkApiClient.bulk.retrieve(["Library-01", "Program-01"])
-    // const string = JSON.stringify(partition.body.chunk.nodes, null, 4)
-    const string = new Logo2String(partition.body.chunk.nodes).logo2string()
-    console.log(string)
-    return string
-}

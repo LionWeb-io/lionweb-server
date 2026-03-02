@@ -6,6 +6,7 @@ import { LionWebJsonDiff } from "@lionweb/json-diff"
 import { assert } from "chai"
 import sm from "source-map-support"
 import { BulkImport } from "@lionweb/server-shared"
+import { beforeAll } from "vitest"
 
 const { fail, strictEqual } = assert
 
@@ -16,7 +17,7 @@ describe("Client - Additional API tests", () => {
     const client = new RepositoryClient({ clientId: "TestClient", repository: repository })
     let initError: string = ""
 
-    before("create database", async function () {
+    beforeAll(async function () {
         const initResponse = await client.dbAdmin.createDatabase()
         if (initResponse.status !== HttpSuccessCodes.Ok) {
             console.log("Cannot create database: " + JSON.stringify(initResponse.body))
@@ -25,7 +26,7 @@ describe("Client - Additional API tests", () => {
         }
     })
 
-    beforeEach("a", async function () {
+    beforeEach(async function () {
         client.repository = repository
         initError = ""
         const initResponse = await client.dbAdmin.createRepository(repository, false, "2023.1")
@@ -40,7 +41,7 @@ describe("Client - Additional API tests", () => {
         console.log("repositories: " + JSON.stringify(repositories.body.repositories))
     })
 
-    afterEach("a", async function () {
+    afterEach(async function () {
         await client.dbAdmin.deleteRepository(repository)
     })
 

@@ -19,7 +19,7 @@ const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 collection.forEach(withoutHistory => {
     const repository = withoutHistory ? "MyFirstRepo" : "MyFirstHistoryRepo"
     describe("Repository tests " + (withoutHistory ? "without history" : "with history"), async () => {
-        const bulkApiClient = new RepositoryClient("TestClient", repository)
+        const bulkApiClient = new RepositoryClient({clientId: "TestClient", repository: repository})
         const deltaApiClient = new DeltaClient({}, [eventFunctions])
         deltaApiClient.clientId = "TestClient"
         deltaApiClient.repository = repository
