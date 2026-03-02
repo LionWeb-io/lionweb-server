@@ -14,12 +14,12 @@ jobs:
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-22.04
     # Docker Hub image that `container-job` executes in
-    container: node:20.10
+    container: node:24.4.1
     steps:
       - name: install node
         uses: actions/setup-node@v4.0.2
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Checkout
         uses: actions/checkout@v4

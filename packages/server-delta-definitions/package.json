@@ -9,7 +9,7 @@
     "license": "Apache-2.0",
     "repository": {
         "type": "git",
-        "url": "https://github.com/LionWeb-io/lionweb-repository.git"
+        "url": "git+https://github.com/LionWeb-io/lionweb-repository.git"
     },
     "bugs": {
         "url": "https://github.com/LionWeb-io/lionweb-repository/issues"
@@ -19,7 +19,7 @@
         "build": "tsc",
         "alive": "echo I am alive",
         "lint": "eslint src",
-        "release-beta": "npm publish --tag beta",
+        "release-beta": "npm publish --tag beta --access=public",
         "publish-local": "npm publish --registry http://localhost:4873 --tag beta",
         "unpublish-local": "npm unpublish --force --registry http://localhost:4873",
         "republish-local": "npm run unpublish-local && npm run publish-local"
