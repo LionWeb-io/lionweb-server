@@ -1,7 +1,6 @@
 import { RepositoryData, requestLogger } from "@lionweb/server-common";
 import { AdditionalApiContext } from "../main.js";
-import {BulkImport} from "../database/index.js";
-import {FBBulkImport} from "../io/lionweb/serialization/flatbuffers/index.js";
+import { BulkImport } from "@lionweb/server-shared"
 
 /**
  * Implementations of the additional non-LionWeb methods.
@@ -26,17 +25,8 @@ export class AdditionalApiWorker {
      * @param bulkImport
      */
     bulkImport = async (repositoryData: RepositoryData, bulkImport: BulkImport)=> {
-
         requestLogger.info("AdditionalApiWorker.bulkImport")
         return await this.context.queries.bulkImport(repositoryData, bulkImport)
     }
-    /**
-     * This is a variant of bulkImport that operates directly on Flatbuffers data structures, instead of converting them
-     * to the "neutral" format and invoke bulkImport. This choice has been made for performance reasons.
-     */
-    bulkImportFromFlatBuffers = async (repositoryData: RepositoryData, bulkImport: FBBulkImport)=> {
 
-        requestLogger.info("AdditionalApiWorker.bulkImportFromFlatBuffers")
-        return await this.context.queries.bulkImportFromFlatBuffers(repositoryData, bulkImport)
-    }
 }

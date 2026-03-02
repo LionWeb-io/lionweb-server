@@ -1,7 +1,7 @@
-import { CONTAINMENTS_TABLE, NODES_TABLE, MetaPointersTracker, sqlArrayFromNodeIdArray } from "@lionweb/server-common"
-import {AttachPoint} from "./AdditionalQueries.js";
-import {FBAttachPoint} from "../io/lionweb/serialization/flatbuffers/index.js";
-import {forFBMetapointer} from "./ImportLogic.js";
+import {CONTAINMENTS_TABLE, NODES_TABLE} from "@lionweb/server-common";
+import { AttachPoint, PBAttachPoint, PBLanguage, PBMetaPointer } from "@lionweb/server-shared"
+import {MetaPointersTracker} from "@lionweb/server-dbadmin";
+import {getCorrespondingMetaPointerIDOnTheDB} from "./ImportLogic.js";
 
 /**
  * Query that will recursively get all child (ids) of all nodes in _nodeIdList_
@@ -50,9 +50,17 @@ export const makeQueryToAttachNode = (attachPoint: AttachPoint, metaPointersTrac
             WHERE node_id = '${attachPoint.container}' AND containment = '${metaPointersTracker.forMetaPointer(attachPoint.containment)}';`
 }
 
-export const makeQueryToAttachNodeForFlatBuffers = (attachPoint: FBAttachPoint, metaPointersTracker: MetaPointersTracker) : string => {
-    const containment = attachPoint.containment()
+/**
+ * After we have inserted all the nodes imported through the bulk import, we need to attach the roots of the inserted trees
+ * to their attach points, if present. The attach points basically indicate where in the tree the root should be attached.
+ * They are defined by a container and a containment.
+ */
+export const makeQueryToAttachNodeForProtobuf = (attachPoint: PBAttachPoint, metaPointersTracker: MetaPointersTracker,
+                                                 internedLanguages: PBLanguage[], internedStrings: string[], internedMetaPointers: PBMetaPointer[]) : string => {
+    const containment = internedMetaPointers[attachPoint.mpiMetaPointer];
+    const container = internedStrings[attachPoint.siContainer];
+    const root = internedStrings[attachPoint.siRoot];
     return `UPDATE ${CONTAINMENTS_TABLE} 
-            SET "children"=array_append("children", '${attachPoint.root()}')
-            WHERE node_id = '${attachPoint.container()}' AND containment = ${forFBMetapointer(metaPointersTracker, containment)};`
+            SET "children"=array_append("children", '${root}')
+            WHERE node_id = '${container}' AND containment = ${getCorrespondingMetaPointerIDOnTheDB(metaPointersTracker, containment, internedLanguages, internedStrings)};`
 }

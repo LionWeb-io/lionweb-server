@@ -10,7 +10,7 @@ import { readModel } from "./utils.js"
 sm.install()
 
 describe("Transaction isolation tests", () => {
-    const t = new RepositoryClient("TestClient", "isolation")
+    const t = new RepositoryClient({ clientId: "TestClient", repository: "isolation" })
     t.loggingOn = true
 
     beforeEach(async function () {

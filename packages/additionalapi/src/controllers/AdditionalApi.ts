@@ -1,18 +1,20 @@
 import { getRepositoryData } from "@lionweb/server-dbadmin"
 import { Request, Response } from "express"
 import { AdditionalApiContext } from "../main.js"
-import { HttpClientErrors, HttpSuccessCodes } from "@lionweb/server-shared"
+import { HttpClientErrors, HttpSuccessCodes, PROTOBUF_CONTENT_TYPE } from "@lionweb/server-shared"
 import { lionwebResponse } from "@lionweb/server-common"
 import { dbLogger, getIntegerParam, isParameterError } from "@lionweb/server-common"
-import { PBBulkImport, PBMetaPointer } from "../proto/index.js"
-import { BulkImport } from "../database/index.js"
-import { LionWebJsonMetaPointer } from "@lionweb/json"
-import { ByteBuffer } from "flatbuffers"
-import { FBBulkImport } from "../io/lionweb/serialization/flatbuffers/index.js"
+import { BulkImport, PBBulkImport } from "@lionweb/server-shared"
+import {
+    LionWebId,
+    LionWebJsonContainment,
+    LionWebJsonNode,
+    LionWebJsonProperty,
+    LionWebJsonReference,
+    LionWebJsonReferenceTarget
+} from "@lionweb/json"
 
 export const JSON_CONTENT_TYPE = "application/json"
-export const PROTOBUF_CONTENT_TYPE = "application/protobuf"
-export const FLATBUFFERS_CONTENT_TYPE = "application/flatbuffers"
 
 export interface AdditionalApi {
     getNodeTree(request: Request, response: Response): void
@@ -25,8 +27,8 @@ export interface AdditionalApi {
      * a) ID of an existing node, b) containment where to attach the tree. The root of the tree will be appended
      * to that containment.
      *
-     * This operation can receive the body in JSON, protobuffer, and flatbuffers. For optimal performance,
-     * it is recommended to use flatbuffers.
+     * This operation can receive the body in JSON, and protobuf. For optimal performance,
+     * it is recommended to use protobuf.
      */
     bulkImport(request: Request, response: Response): void
 }
@@ -109,93 +111,128 @@ export class AdditionalApiImpl implements AdditionalApi {
                 messages: [],
                 data: []
             })
-        } else if (request.is(FLATBUFFERS_CONTENT_TYPE)) {
-            const data = new Uint8Array(request.body.buffer, request.body.byteOffset, request.body.byteLength)
-            const buf = new ByteBuffer(data)
-            const fbBulkImport = FBBulkImport.getRootAsFBBulkImport(buf)
-
-            const result = await this.context.additionalApiWorker.bulkImportFromFlatBuffers(repositoryData, fbBulkImport)
-            lionwebResponse(response, HttpSuccessCodes.Ok, {
-                success: result.success,
-                messages: [],
-                data: []
-            })
         } else {
-            throw new Error("Content-type not recognized")
+            throw new Error(`Content-type not recognized. Content-type: ${request.headers["content-type"]}`)
         }
     }
 
     private convertPBBulkImportToBulkImport(pbBulkImport: PBBulkImport): BulkImport {
-        const bulkImport: BulkImport = {
-            nodes: [],
-            attachPoints: []
+        const { internedStrings:tmpInternedStrings, internedLanguages, internedMetaPointers, attachPoints, nodes } = pbBulkImport
+
+        // I am not very happy with this, but I don't know how to do it better
+        // I could change how we refer this array, but I am afraid that every an extra
+        // little check for a lot of times could be worse than this
+        const internedStrings = new Array(tmpInternedStrings.length + 1);
+        internedStrings[0] = null;
+        for (let i = 0; i < tmpInternedStrings.length; i++) {
+            internedStrings[i + 1] = tmpInternedStrings[i];
         }
 
-        // In the ProtoBuf format we use a map of strings, to save space, given the node id and strings describing
-        // metapointers are always repeated
-        const stringsMap = new Map<number, string>()
-        pbBulkImport.stringValues.forEach((string: string, index: number) => {
-            stringsMap.set(index, string)
-        })
-
-        // We do the same also for metapointer, which are duplicated over and over
-        const metaPointersMap = new Map<number, LionWebJsonMetaPointer>()
-        pbBulkImport.metaPointers.forEach((pbMetaPointer: PBMetaPointer, index: number) => {
-            const metaPointer: LionWebJsonMetaPointer = {
-                language: stringsMap.get(pbMetaPointer.language),
-                version: stringsMap.get(pbMetaPointer.version),
-                key: stringsMap.get(pbMetaPointer.key)
+        // Pre-compute all language mappings
+        const languagesArray = new Array(internedLanguages.length+1)
+        languagesArray[0] = null;
+        for (let i = 0; i < internedLanguages.length; i++) {
+            const pbLanguage = internedLanguages[i]
+            languagesArray[i+1] = {
+                key: internedStrings[pbLanguage.siKey],
+                version: internedStrings[pbLanguage.siVersion]
             }
-            metaPointersMap.set(index, metaPointer)
-        })
-
-        const findMetaPointer = (metaPointerIndex: number): LionWebJsonMetaPointer => {
-            const res = metaPointersMap.get(metaPointerIndex)
-            if (res == null) {
-                throw new Error(`Metapointer with index ${metaPointerIndex} not found. Metapointer index known: ${metaPointersMap.keys()}`)
-            }
-            return res
         }
 
-        pbBulkImport.attachPoints.forEach(pbAttachPoint => {
-            bulkImport.attachPoints.push({
-                container: stringsMap.get(pbAttachPoint.container),
-                containment: findMetaPointer(pbAttachPoint.metaPointerIndex),
-                root: stringsMap.get(pbAttachPoint.rootId)
-            })
-        })
+        // Pre-compute all metapointer mappings using arrays for fast access
+        const metaPointersArray = new Array(internedMetaPointers.length)
+        for (let i = 0; i < internedMetaPointers.length; i++) {
+            const pbMetaPointer = internedMetaPointers[i]
+            const languageVersion = languagesArray[pbMetaPointer.liLanguage]
+            metaPointersArray[i] = {
+                language: languageVersion.key,
+                version: languageVersion.version,
+                key: internedStrings[pbMetaPointer.siKey]
+            }
+        }
 
-        pbBulkImport.nodes.forEach(pbNode => {
-            bulkImport.nodes.push({
-                id: stringsMap.get(pbNode.id),
-                parent: stringsMap.get(pbNode.parent),
-                classifier: findMetaPointer(pbNode.classifier),
-                annotations: [],
-                properties: pbNode.properties.map(p => {
-                    return {
-                        property: findMetaPointer(p.metaPointerIndex),
-                        value: stringsMap.get(p.value)
-                    }
-                }),
-                containments: pbNode.containments.map(c => {
-                    return {
-                        containment: findMetaPointer(c.metaPointerIndex),
-                        children: c.children.map(child => stringsMap.get(child))
-                    }
-                }),
-                references: pbNode.references.map(r => {
-                    return {
-                        reference: findMetaPointer(r.metaPointerIndex),
-                        targets: r.values.map(rv => {
-                            return {
-                                reference: stringsMap.get(rv.referred),
-                                resolveInfo: stringsMap.get(rv.resolveInfo)
-                            }
-                        })
-                    }
-                })
-            })
-        })
-        return bulkImport
+        // Convert attach points with pre-allocated array
+        const convertedAttachPoints = new Array(attachPoints.length)
+        for (let i = 0; i < attachPoints.length; i++) {
+            const pbAttachPoint = attachPoints[i]
+            convertedAttachPoints[i] = {
+                container: internedStrings[pbAttachPoint.siContainer],
+                containment: metaPointersArray[pbAttachPoint.mpiMetaPointer],
+                root: internedStrings[pbAttachPoint.siRoot]
+            }
+        }
+
+        // Convert nodes with pre-allocated array
+        const convertedNodes : LionWebJsonNode[] = new Array(nodes.length)
+        for (let i = 0; i < nodes.length; i++) {
+            const pbNode = nodes[i]
+            const { properties, containments, references, siAnnotations } = pbNode
+
+            // Pre-allocate nested arrays
+            const convertedProperties : LionWebJsonProperty[] = new Array(properties.length)
+            const convertedContainments : LionWebJsonContainment[] = new Array(containments.length)
+            const convertedReferences : LionWebJsonReference[] = new Array(references.length)
+            const convertedAnnotations : LionWebId[] = new Array(siAnnotations.length)
+
+            // Convert properties
+            for (let j = 0; j < properties.length; j++) {
+                const p = properties[j]
+                convertedProperties[j] = {
+                    property: metaPointersArray[p.mpiMetaPointer],
+                    value: internedStrings[p.siValue]
+                }
+            }
+
+            // Convert containments
+            for (let j = 0; j < containments.length; j++) {
+                const c = containments[j]
+                const convertedChildren : LionWebId[] = new Array(c.siChildren.length)
+                for (let k = 0; k < c.siChildren.length; k++) {
+                    convertedChildren[k] = internedStrings[c.siChildren[k]]
+                }
+                convertedContainments[j] = {
+                    containment: metaPointersArray[c.mpiMetaPointer],
+                    children: convertedChildren
+                } as LionWebJsonContainment
+            }
+
+            // Convert references
+            for (let j = 0; j < references.length; j++) {
+                const r = references[j]
+                const convertedTargets : LionWebJsonReferenceTarget[] = new Array(r.values.length)
+                for (let k = 0; k < r.values.length; k++) {
+                    const rv = r.values[k]
+                    convertedTargets[k] = {
+                        reference: internedStrings[rv.siReferred],
+                        resolveInfo: internedStrings[rv.siResolveInfo]
+                    } as LionWebJsonReferenceTarget
+                }
+                convertedReferences[j] = {
+                    reference: metaPointersArray[r.mpiMetaPointer],
+                    targets: convertedTargets
+                } as LionWebJsonReference
+            }
+
+            // Convert annotations
+            for (let j = 0; j < siAnnotations.length; j++) {
+                convertedAnnotations[j] = internedStrings[siAnnotations[j]];
+            }
+
+            convertedNodes[i] = {
+                id: internedStrings[pbNode.siId],
+                parent: internedStrings[pbNode.siParent],
+                classifier: metaPointersArray[pbNode.mpiClassifier],
+                annotations: convertedAnnotations,
+                properties: convertedProperties,
+                containments: convertedContainments,
+                references: convertedReferences
+            } as LionWebJsonNode
+        }
+
+        return {
+            nodes: convertedNodes,
+            attachPoints: convertedAttachPoints
+        }
     }
+
 }
