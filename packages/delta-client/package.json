@@ -29,8 +29,8 @@
         "republish-local": "npm run unpublish-local && npm run publish-local"
     },
     "dependencies": {
-        "@lionweb/json": "0.8.0-beta.8",
-        "@lionweb/validation": "0.8.0-beta.8",
+        "@lionweb/json": "0.9.0-beta.0",
+        "@lionweb/validation": "0.9.0-beta.0",
         "@lionweb/server-shared": "0.4.0-beta.1",
         "@lionweb/server-delta-shared": "0.4.0-beta.1",
         "@lionweb/server-delta-definitions": "0.4.0-beta.1"
@@ -40,10 +40,8 @@
         "@typescript-eslint/eslint-plugin": "6.13.2",
         "@typescript-eslint/parser": "6.13.2",
         "@types/chai": "4.3.11",
-        "@types/mocha": "10.0.10",
         "eslint": "8.56.0",
         "chai": "4.3.10",
-        "mocha": "11.0.1",
-        "typescript": "5.2.2"
+        "typescript": "5.9.3"
     }
 }
