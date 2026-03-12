@@ -3,6 +3,16 @@ import type { String } from "./DeltaTypes.js";
 import type { AdditionalInfo } from "./DeltaTypes.js";
 import type { RepositoryInfo } from "./AdminTypes.js";
 
+export const DeltaAdminResponseMessageKinds = [
+    "ListRepositoriesAdminResponse",
+    "CreateRepositoryAdminResponse",
+    "DeleteRepositoryAdminResponse",
+    "RenameRepositoryAdminResponse",
+] as const;
+
+// The type for the tagged union property, derived from the above array
+export type AdminResponseMessageKind = (typeof DeltaAdminResponseMessageKinds)[number];
+
 // The overall "super-type"
 export type DeltaAdminResponse = {
     queryId: QueryId;
@@ -43,20 +53,8 @@ export type RenameRepositoryAdminResponse = DeltaAdminResponse & {
     messageKind: "RenameRepositoryAdminResponse";
 };
 
-// The type for the tagged union property
-export type AdminResponseMessageKind =
-    | "ListRepositoriesAdminResponse"
-    | "CreateRepositoryAdminResponse"
-    | "DeleteRepositoryAdminResponse"
-    | "RenameRepositoryAdminResponse";
-
 // Type Guard function
 export function isDeltaAdminResponse(object: unknown): object is DeltaAdminResponse {
     const castObject = object as DeltaAdminResponse;
-    return (
-        castObject.messageKind !== undefined &&
-        ["ListRepositoriesAdminResponse", "CreateRepositoryAdminResponse", "DeleteRepositoryAdminResponse", "RenameRepositoryAdminResponse"].includes(
-            castObject.messageKind,
-        )
-    );
+    return castObject.messageKind !== undefined && DeltaAdminResponseMessageKinds.includes(castObject.messageKind);
 }

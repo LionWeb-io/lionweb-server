@@ -45,7 +45,7 @@ export class RepositoryClient {
     port: string
     hostname: string
     serverUrl: string
-    
+
     /**
      * The Client id that is used for all Api requests
      */
@@ -65,6 +65,24 @@ export class RepositoryClient {
     inspection: InspectionApi
     languages: LanguagesApi
 
+    /*
+     * CustomHeaders: headers used in all server calls, used e.g. for authorization.
+     * Has one default entry.
+     */
+    private httpHeaders: Record<string, string> = { "Content-Type": "application/json" }
+
+    /**
+     * Set http headers to include in every request.
+     * Merges with (and can overwrite) previously set headers.
+     */
+    setHttpHeaders(headers: Record<string, string>): void {
+        Object.assign(this.httpHeaders, headers)
+    }
+    
+    clearHttpHeaders() {
+        this.httpHeaders = {}
+    }
+
     /**
      * @param clientId
      * @param repository we may want to pass a null repository if we are interested only in using the APIs that list,
@@ -77,7 +95,7 @@ export class RepositoryClient {
         this.hostname = config.hostname ?? DEFAULT_SERVER_IP
         this.serverUrl = `http://${this.hostname}:${this.port}/`
         this.timeout = config.timeout ?? DEFAULT_TIMEOUT
-        
+
         this.dbAdmin = new DbAdminApi(this)
         this.bulk = new BulkApi(this)
         this.additional = new AdditionalApi(this)
@@ -86,16 +104,16 @@ export class RepositoryClient {
         this.languages = new LanguagesApi(this)
     }
 
-    loggingOn = false
-    
+    loggingOn = true
+
     logMessage(logMessage: string): string {
         return this.loggingOn && logMessage !== undefined ? `&clientLog=${logMessage}` : ""
     }
-    
+
     logMessageSolo(logMessage: string): string {
         return this.loggingOn && logMessage !== undefined ? `clientLog=${logMessage}` : ""
     }
-    
+
     withClientId(id: string): RepositoryClient {
         this.clientId = id
         return this
@@ -121,9 +139,7 @@ export class RepositoryClient {
             const promise = await fetch(`${this.serverUrl}${method}${params}`, {
                 signal: controller.signal,
                 method: "get",
-                headers: {
-                    "Content-Type": "application/json"
-                }
+                headers: this.httpHeaders
             })
             clearTimeout(timeoutId)
             return await promise.json()
@@ -151,9 +167,7 @@ export class RepositoryClient {
             const promise: Response = await fetch(`${this.serverUrl}${method}${allParams}`, {
                 signal: controller.signal,
                 method: "post",
-                headers: parameters.headers || {
-                    "Content-Type": "application/json"
-                },
+                headers: parameters.headers ?? this.httpHeaders,
                 body: stringify ? JSON.stringify(parameters.body) : (parameters.body as BodyInit | null)
             })
             clearTimeout(timeoutId)
@@ -183,9 +197,7 @@ export class RepositoryClient {
             response = await fetch(`${this.serverUrl}${method}${params}`, {
                 signal: controller.signal,
                 method: "put",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: this.httpHeaders,
                 body: JSON.stringify(data)
             })
         } catch (e) {

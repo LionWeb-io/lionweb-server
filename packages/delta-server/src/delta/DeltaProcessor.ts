@@ -1,4 +1,4 @@
-import { deltaLogger, NodeWithParent, isInternalQueryError, DB, notNullOrUndefined } from "@lionweb/server-common"
+import { deltaLogger, isInternalQueryError, notNullOrUndefined } from "@lionweb/server-common"
 import { DeltaValidator } from "@lionweb/server-delta-definitions"
 import {
     ErrorEvent,
@@ -11,7 +11,9 @@ import {
     findDistributableInfos,
     MessageToClient,
     ErrorResponse,
-    AddPartitionCommand, PartitionAddedEvent
+    AddPartitionCommand,
+    PartitionAddedEvent,
+    LionWebId, PartitionDeletedEvent
 } from "@lionweb/server-delta-shared"
 import { MessageFromClient } from "@lionweb/server-delta-shared"
 import { ValidationResult } from "@lionweb/validation"
@@ -22,7 +24,7 @@ import {
     annotationFunctions,
     childFunctions,
     DeltaFunction,
-    issuesToProtocolNessages,
+    issuesToProtocolMessages,
     MessageFunction,
     miscFunctions,
     partitionFunctions,
@@ -34,7 +36,7 @@ import { affectedPartitionMessage, isErrorEvent, isErrorResponse, newErrorDelta 
 import { ParticipationInfo, requestFunctions } from "./queries/index.js"
 
 class DeltaProcessor {
-    processingFunctions: Map<string, MessageFunction> = new Map<string, MessageFunction>() 
+    processingFunctions: Map<string, MessageFunction> = new Map<string, MessageFunction>()
     deltaValidator = new DeltaValidator(new ValidationResult())
     context: DeltaContext | undefined
 
@@ -44,7 +46,7 @@ class DeltaProcessor {
 
     initialize(pfs: DeltaFunction[][]) {
         pfs.forEach(pf => {
-            pf.forEach( f => {
+            pf.forEach(f => {
                 this.processingFunctions.set(f.messageKind, f.processor)
             })
         })
@@ -67,9 +69,13 @@ class DeltaProcessor {
         //  Next, get the processing function for the `messageKind`
         const func = this.processingFunctions.get(messageKind)
         if (func === undefined) {
-            deltaLogger.error(`processDelta 2: no processor function found for ${messageKind}`)
-            const response = newErrorDelta("messageKindUnknown", `Cannot perform delta request: message of kind '${messageKind}' is unknown`,
-                delta, participation)
+            deltaLogger.error(`DeltaProcessor.processDelta: no processing function found for ${messageKind}`)
+            const response = newErrorDelta(
+                "messageKindUnknown",
+                `Cannot perform delta request/command: message of kind '${messageKind}' is unknown`,
+                delta,
+                participation
+            )
             this.sendDelta(socket, participation, delta, response)
             return
         }
@@ -81,8 +87,9 @@ class DeltaProcessor {
             this.deltaValidator.validationResult.issues.forEach(issue => {
                 deltaLogger.error(issue.errorMsg())
             })
-            const response = newErrorDelta("messageSyntaxIncorrect","Validation errors", delta, participation,
-                { additionalInfos: issuesToProtocolNessages(this.deltaValidator.validationResult.issues) })
+            const response = newErrorDelta("messageSyntaxIncorrect", "Validation errors", delta, participation, {
+                additionalInfos: issuesToProtocolMessages(this.deltaValidator.validationResult.issues)
+            })
             this.sendDelta(socket, participation, delta, response)
             return
         }
@@ -96,95 +103,28 @@ class DeltaProcessor {
 
         // Finally ok, process the delta and send the response
         try {
-            const response = await func(participation!, delta, this.context!)
+            const response = await func(participation!, delta, this.context!, socket)
             // Errors and responses to requests only need to be sent to the client that sent the message
             if (response.messageKind === "ErrorEvent" || isDeltaResponse(response) || isDeltaAdminResponse(response)) {
                 deltaLogger.info(`Sending Error Event or response ${JSON.stringify(response)}`)
                 this.sendDelta(socket, participation, delta, response)
             } else {
                 // To whom needs this Event (yes, it's an Event now) need to be sent.
-                // For most/all events, we need to know whether the others are subscribed to the partition wjhre changes took place
-                // TODO: Add the changed partitions to the result of the processing function, so we know to whom to send.
-                deltaLogger.debug(`looking for affected nodes in ${response}`)
-                const affectedNodeData = response.additionalInfos.find(m => m.kind == "AffectedNode")
-                const affectedNode = affectedNodeData?.data?.find(kv => kv.key === "node")
-                if (affectedNode === undefined) {
-                    deltaLogger.debug("No affected node found, not sending delta's")
+                deltaLogger.debug(`looking for affected partitions in ${response}`)
+                const affectedPartitionData = response.additionalInfos.find(m => m.kind == "AffectedPartition")
+                // TODO can be more than one affected partition
+                const affectedPartition = affectedPartitionData?.data?.find(kv => kv.key === "node")?.value
+                if (affectedPartition === undefined) {
+                    deltaLogger.debug("No affected partition found, not sending delta's")
                 } else {
-                    // First check for new/deleted partitions
+                    // First check for new/deleted partitions, then for partition subscriptions
                     if (response.messageKind === "PartitionAdded") {
-                        console.log("DeltaProcessor.PartitionAdded")
-                        // Find out which nodes to send to whom
-                        for (const participationInfo of activeSockets.values()) {
-                            console.log("DeltaProcessor.PartitionAdded next socket " + participationInfo.participationId)
-                            if (participationInfo.partitionChangesSubscription !== undefined) {
-                                // Subscribed?
-                                if (participationInfo.partitionChangesSubscription.creation) {
-                                    if (participationInfo.partitionChangesSubscription.autoSubscribe) {
-                                        // autosubscribe, so send full partition nodes
-                                        (response as PartitionAddedEvent).newPartition = {
-                                            nodes: (delta as AddPartitionCommand).newPartition.nodes
-                                        }
-                                        this.sendDelta(socket, participationInfo, delta, response)
-                                    } else {
-                                        console.error(`TODO retrieve until depthLimit`)
-                                        // TODO retrieve until depthLimit
-                                    }
-                                } else if (participationInfo.socket === socket) {
-                                    // noty subscribed but send event to originating client
-                                    this.sendDelta(socket, participationInfo, delta, response)
-                                }
-                            } else {
-                                // noty subscribed but send event to originating client
-                                this.sendDelta(socket, participationInfo, delta, response)
-                            }
-                        }
+                        deltaLogger.info("DeltaProcessor.PartitionAdded")
+                        this.sendPartitionAddedEvents(socket, delta, response as PartitionAddedEvent)
                     } else if (response.messageKind === "PartitionDeleted") {
-                        // Find out which nodes to send to whom
-                        for (const participationInfo of activeSockets.values()) {
-                            console.log("DeltaProcessor.PartitionAdded next socket " + participationInfo.participationId)
-                            if (participationInfo.partitionChangesSubscription !== undefined) {
-                                // Subscribed?
-                                if (participationInfo.partitionChangesSubscription.deletion) {
-                                    this.sendDelta(socket, participationInfo, delta, response)
-                                }
-                            }
-                        }
+                        this.sendPartitionDeletedEvents(delta, response as PartitionDeletedEvent)
                     } else {
-                        // TODO The parent is retrieved outside the transaction, could already be changed by another delta.
-                        const parentChain = await DB.retrieveParentsDB(
-                            this.context!.dbConnection,
-                            participation!.repositoryData!,
-                            affectedNode.value
-                        )
-                        if (parentChain === undefined) {
-                            throw new Error("Internal Error: PARENT CHAIN UNDEFINED")
-                        } else {
-                            deltaLogger.debug(`PARENT CHAIN IS ${JSON.stringify(parentChain)}`)
-                        }
-                        const affectedPartition =
-                            parentChain[parentChain.length - 1] ?? ({ id: affectedNode.value, parent: null } as NodeWithParent)
-                        if (affectedPartition !== undefined) {
-                            deltaLogger.debug(`affectedPartition ${JSON.stringify(affectedPartition)}`)
-                            response.additionalInfos.push(affectedPartitionMessage(affectedPartition.id))
-                            for (const participationInfo of activeSockets.values()) {
-                                deltaLogger.info(
-                                    `Participant ${participationInfo.repositoryData?.clientId} subscribed to '${JSON.stringify(
-                                        participationInfo.subscribedPartitions
-                                    )}'`
-                                )
-                                if (participationInfo.subscribedPartitions.includes(affectedPartition.id)) {
-                                    deltaLogger.info(
-                                        `Subscribed Sending ${JSON.stringify(response)} to ${participationInfo.repositoryData?.clientId}`
-                                    )
-                                    this.sendDelta(participationInfo.socket, participationInfo, delta, response)
-                                } else {
-                                    // deltaLogger.info(`NOT Subscribed ${participationInfo.repositoryData?.clientId}`)
-                                }
-                            }
-                        } else {
-                            deltaLogger.info(`NO Subscribed no affected node`)
-                        }
+                        this.sendToSubscribers(delta, response, affectedPartition)
                     }
                 }
             }
@@ -192,58 +132,85 @@ class DeltaProcessor {
             if (isErrorEvent(e) || isErrorResponse(e)) {
                 this.sendDelta(socket, participation, delta, e)
             } else if (isInternalQueryError(e)) {
-                throw (e)
-                // const errorDelta = newErrorDelta('queryError', e.message, delta, participation!, {
-                //     additionalInfos: [ {
-                //         data: e.data,
-                //         kind: e.name,
-                //         message:"Additional data"
-                //     }]
-                // })
-                // this.sendDelta(socket, participation, delta, errorDelta)
+                const errorDelta = newErrorDelta('queryError', e.message, delta, participation!, {
+                    additionalInfos: [ {
+                        data: e.data,
+                        kind: e.name,
+                        message:"Additional data"
+                    }]
+                })
+                this.sendDelta(socket, participation, delta, errorDelta)
             } else if (e instanceof Error) {
                 console.log(e.stack)
-                const errorDelta = newErrorDelta("generic", e.message, delta, participation!,
-                    { 
-                        additionalInfos: [{
+                const errorDelta = newErrorDelta("generic", e.message, delta, participation!, {
+                    additionalInfos: [
+                        {
                             kind: "Extra",
                             message: "stacktrace",
-                            data: [{key: "TRACE", value: e.stack ?? "NO TRACE"}]
-                        }]
-                    })
+                            data: [{ key: "TRACE", value: e.stack ?? "NO TRACE" }]
+                        }
+                    ]
+                })
                 this.sendDelta(socket, participation, delta, errorDelta)
             }
         }
     }
 
-    validateParticipation = (delta: MessageFromClient, participation: ParticipationInfo | undefined): ErrorEvent | ErrorResponse | undefined => {
+    /**
+     * Check whether the `participation` is correct for executing the `delta` command/request.
+     * @param delta
+     * @param participation
+     */
+    validateParticipation = (
+        delta: MessageFromClient,
+        participation: ParticipationInfo | undefined
+    ): ErrorEvent | ErrorResponse | undefined => {
         if (delta.messageKind === "SignOnRequest") {
             return undefined
         }
         if (participation === undefined) {
-            return newErrorDelta("invalidParticipation", "Cannot perform delta request because there is no participation", delta, participation)
-        } else if ( isDeltaAdminRequest(delta)) {
+            return newErrorDelta(
+                "invalidParticipation",
+                "Cannot perform delta request because there is no participation",
+                delta,
+                participation
+            )
+        } else if (isDeltaAdminRequest(delta)) {
             // Always ok, does not have tom be signedOn
             return undefined
-        } else if (participation.participationStatus !== "signedOn") {
-            return newErrorDelta("invalidParticipation",`Cannot perform ListPartitions request because participation status is ${participation.participationStatus}`,
-                delta, participation, {
-                additionalInfos: [ {
-                    kind: "reason",
-                    message: "Participation status incorrect, should be SignedOn",
-                    data: [{
-                        key: "participationStatus",
-                        value: participation.participationStatus
-                    }]
-                }]
-            })
+        } else if (participation.participationStatus !== "signedOn" && delta.messageKind !== "SignOffRequest") {
+            return newErrorDelta(
+                "invalidParticipation",
+                `Cannot perform ${delta.messageKind} command/request because participation status is ${participation.participationStatus}`,
+                delta,
+                participation,
+                {
+                    additionalInfos: [
+                        {
+                            kind: "reason",
+                            message: "Participation status incorrect, should be SignedOn",
+                            data: [
+                                {
+                                    key: "participationStatus",
+                                    value: participation.participationStatus
+                                }
+                            ]
+                        }
+                    ]
+                }
+            )
         }
         return undefined
     }
-    
-    sendDelta(socket: WebSocket, participation: ParticipationInfo | undefined, originalMessage: MessageFromClient, responseOrEvent: MessageToClient) {
+
+    sendDelta(
+        socket: WebSocket,
+        participation: ParticipationInfo | undefined,
+        originalMessage: MessageFromClient,
+        responseOrEvent: MessageToClient
+    ) {
         if (isDeltaEvent(responseOrEvent) && isDeltaCommand(originalMessage)) {
-            responseOrEvent.originCommands.forEach(cmd => cmd.commandId = originalMessage.commandId)
+            responseOrEvent.originCommands.forEach(cmd => (cmd.commandId = originalMessage.commandId))
             responseOrEvent.additionalInfos.push(...findDistributableInfos(originalMessage))
             if (notNullOrUndefined(participation)) {
                 responseOrEvent.sequenceNumber = participation.nextSequenceNumber()
@@ -254,6 +221,65 @@ class DeltaProcessor {
             // TODO INTERNAL ERROR
         }
         socket.send(JSON.stringify(responseOrEvent))
+    }
+
+    sendPartitionAddedEvents(socket: WebSocket, delta: MessageFromClient, response: PartitionAddedEvent): void {
+        for (const participationInfo of activeSockets.values()) {
+            console.log("DeltaProcessor.PartitionAdded next socket " + participationInfo.participationId)
+            if (participationInfo.partitionChangesSubscription !== undefined) {
+                // Subscribed?
+                if (participationInfo.partitionChangesSubscription.creation) {
+                    if (participationInfo.partitionChangesSubscription.autoSubscribe) {
+                        // autosubscribe, so send full partition nodes
+                        response.newPartition = {
+                            nodes: (delta as AddPartitionCommand).newPartition.nodes
+                        }
+                        this.sendDelta(participationInfo.socket, participationInfo, delta, response)
+                    } else {
+                        console.error(`TODO retrieve until depthLimit`)
+                        // TODO retrieve until depthLimit
+                    }
+                } else if (participationInfo.socket === socket) {
+                    // not subscribed but send event to originating client
+                    this.sendDelta(socket, participationInfo, delta, response)
+                }
+            } else {
+                // noty subscribed but send event to originating client
+                this.sendDelta(socket, participationInfo, delta, response)
+            }
+        }
+    }
+
+    sendPartitionDeletedEvents(delta: MessageFromClient, response: PartitionDeletedEvent): void {
+        // Find out which nodes to send to whom
+        for (const participationInfo of activeSockets.values()) {
+            console.log("DeltaProcessor.PartitionDeleted next socket " + participationInfo.participationId)
+            const needsToSend: boolean = 
+                (participationInfo.partitionChangesSubscription !== undefined && participationInfo.partitionChangesSubscription.deletion) 
+                ||
+                participationInfo.subscribedPartitions.has(response.deletedPartition)
+            if (needsToSend) {
+                this.sendDelta(participationInfo.socket, participationInfo, delta, response)
+            }
+        }
+    }
+    
+    sendToSubscribers(delta: MessageFromClient, response: MessageToClient, partition: LionWebId): void {
+        deltaLogger.debug(`affectedPartition ${partition}`)
+        response.additionalInfos.push(affectedPartitionMessage(partition))
+        for (const participationInfo of activeSockets.values()) {
+            deltaLogger.info(
+                `Participant ${participationInfo.repositoryData?.clientId} subscribed to '${JSON.stringify(
+                    participationInfo.subscribedPartitions
+                )}'`
+            )
+            if (participationInfo.subscribedPartitions.has(partition)) {
+                deltaLogger.info(`Subscribed Sending ${JSON.stringify(response)} to ${participationInfo.repositoryData?.clientId}`)
+                this.sendDelta(participationInfo.socket, participationInfo, delta, response)
+            } else {
+                // deltaLogger.info(`NOT Subscribed ${participationInfo.repositoryData?.clientId}`)
+            }
+        }
     }
 }
 

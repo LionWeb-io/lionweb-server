@@ -27,6 +27,9 @@ export class ChangingPartitionsSubscription {
 }
 
 export class ParticipationInfo {
+    /**
+     * Just a number to ensure partitipation id's are uniquely numbered
+     */
     static nextIdNumber = 0
     /**
      * The socket which created this participation
@@ -55,7 +58,7 @@ export class ParticipationInfo {
     /**
      * The partitions that this client is subscribed to
      */
-    subscribedPartitions: string[] = []
+    subscribedPartitions: Set<string> = new Set<string>()
     /**
      * Whether subscribed to adding and deleting partitions.
      */
@@ -69,7 +72,7 @@ export class ParticipationInfo {
     }
 
     async startParticipation(clientId: string, repositoryId: string): Promise<void> {
-        this.participationId = "participation-" + ParticipationInfo.nextIdNumber++
+        this.participationId = this.nextParticipationId()
         this.participationStatus = "signedOn"
         this.repositoryData = {
             clientId: clientId,

@@ -16,7 +16,7 @@ export const getAvailableIds = async (task: LionWebTask, repositoryData: Reposit
     while (!done) {
         for (let i = 0; i < count; i++) {
             const id = createId(repositoryData.clientId)
-            result.push(createId(id))
+            result.push(id)
         }
         // Check for already used or reserved ids and remove them if needed
         const reservedByOtherClient = await DB.reservedNodeIdsByOtherClientDB(task, repositoryData, result)

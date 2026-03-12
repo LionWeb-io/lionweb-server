@@ -28,7 +28,7 @@ export class LionWebDeltaClientProcessor {
         }
         const func = this.processingFunctions.get(type)
         if (func === undefined) {
-            console.error(`LionWebDeltaClientProcessor.processDelta(): processing function not found for '${type}'`)
+            console.error(`LionWebDeltaClientProcessor.processDelta(): processing function not found for '${JSON.stringify(delta)}'`)
             return
         }
         // Now validate the JSON message

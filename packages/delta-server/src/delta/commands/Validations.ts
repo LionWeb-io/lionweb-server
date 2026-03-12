@@ -13,7 +13,7 @@ import {
 import { isEqualMetaPointer, LionWebJsonNode } from "@lionweb/json"
 import { newErrorDelta } from "../events.js"
 import { ParticipationInfo } from "../queries/index.js"
-import { issuesToProtocolNessages } from "./DeltaUtil.js"
+import { issuesToProtocolMessages } from "./DeltaUtil.js"
 
 export type Change = "Add" | "Replace" | "Delete"
 
@@ -32,7 +32,7 @@ export function validateProperTree(nodes: LionWebDeltaJsonChunk, parent: LionWeb
     const issues = isProperTree(nodes)
     if (issues.length > 0) {
         throw newErrorDelta("chunkIsNotATree", `the newChild chunk is not a proper tree`, msg, participation, {
-            additionalInfos: issuesToProtocolNessages(issues)
+            additionalInfos: issuesToProtocolMessages(issues)
         })
     }
     const rootNode = nodes.nodes.find(node => node.parent === parent )

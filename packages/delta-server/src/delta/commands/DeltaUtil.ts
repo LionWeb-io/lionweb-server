@@ -1,19 +1,19 @@
 import { LionWebJsonNode } from "@lionweb/json"
 import { ValidationIssue } from "@lionweb/validation"
-import { dbLogger, SQL, DB, LionWebTask } from "@lionweb/server-common"
+import { dbLogger, SQL, DB, LionWebTask, deltaLogger, NodeWithParent } from "@lionweb/server-common"
 import {
     AdditionalInfo,
     CommandId,
     DeltaCommand,
     DeltaRequest,
-    ErrorEvent,
+    ErrorEvent, LionWebId,
     MessageFromClient,
     MessageToClient
 } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
 import { newErrorDelta, queryData } from "../events.js"
 import { ParticipationInfo } from "../queries/index.js"
-
+import WebSocket from "ws"
 
 export type CommandOrRequest = {
     commandId: CommandId;
@@ -21,7 +21,7 @@ export type CommandOrRequest = {
     additionalInfos: AdditionalInfo[];
 
 }
-export type MessageFunction =  (participation: ParticipationInfo, msg: MessageFromClient, ctx: DeltaContext) => (MessageToClient)
+export type MessageFunction =  (participation: ParticipationInfo, msg: MessageFromClient, ctx: DeltaContext, socket?: WebSocket) => (MessageToClient)
 
 export type DeltaFunction = {
     messageKind: string;
@@ -48,7 +48,7 @@ export const errorNotImplementedEvent = (msg: DeltaRequest): ErrorEvent => (
     }
 )
 
-export const issuesToProtocolNessages = (issues: ValidationIssue[]): AdditionalInfo[] => {
+export const issuesToProtocolMessages = (issues: ValidationIssue[]): AdditionalInfo[] => {
     return issues.map(issue => {
         return {
             kind: issue.issueType,
@@ -58,39 +58,6 @@ export const issuesToProtocolNessages = (issues: ValidationIssue[]): AdditionalI
     })
 }
 
-// To whom needs this Event (yes, it's an Event now) need to be sent.
-// For most/all events, we need to know whether the others are subscribed to the partition wjhre changes took place
-// export async function getAffectedPartitions(task: LionWebTask, response: DeltaEvent | DeltaResponse) {
-//     // TODO: Add the changed partitions to the result of the processing function, so we know to whom to send.
-//     deltaLogger.debug(`looking foir affected nodes in ${response}`)
-//     const affectedNodeData = response.protocolMessages.find(m => m.kind == "AffectedNode")
-//     const affectedNode = affectedNodeData?.data?.find(kv => kv.key === "node")
-//     if (affectedNode === undefined) {
-//         deltaLogger.debug("No affected node found, not sending delta's")
-//     } else {
-//         // TODO The parent is retrieved outside the transaction, could already be changed by another delta.
-//         const parentChain = await retrieveParentsDB(this.context!.dbConnection, participation!.repositoryData!, affectedNode.value)
-//         if (parentChain === undefined) {
-//             throw new Error("PARENTCHAIN UNDEFINED")
-//         } else {
-//             deltaLogger.debug(`PARENT CHAIN IS ${parentChain.map(p => `${p.id} parent ${p.parent} | `)}`)
-//         }
-//         const affectedPartition = parentChain[parentChain.length - 1]
-//         if (affectedPartition !== undefined) {
-//             for (const participationInfo of activeSockets.values()) {
-//                 if (participationInfo.subscribedPartitions.includes(affectedPartition.id)) {
-//                     response.sequenceNumber = participationInfo.eventSequenceNumber++
-//                     deltaLogger.info(`Subscribed Sending ${JSON.stringify(response)} to ${participationInfo.repositoryData!.clientId}`)
-//                     participationInfo.socket.send(JSON.stringify(response))
-//                 } else {
-//                     deltaLogger.info(`NOT Subscribed ${participationInfo.repositoryData!.clientId}`)
-//                 }
-//             }
-//         } else {
-//             deltaLogger.info(`NO Subscribed no affected node`)
-//         }
-//     }
-// }
 /**
  * Retrieve full node, (without children) with `id` from the database.
  * Throw an exception of type `ErrorEvent` if the node does not exist, or there is more than one node with `id`.
@@ -118,4 +85,20 @@ export const retrieveNodeFromDB = async(id: string, delta: DeltaCommand | DeltaR
         })
     }
     return queryResult[0]
+}
+
+/**
+ * Find the Partition to which the node with `nodeid` belongs.
+ * @param nodeid
+ * @param participation
+ * @param ctx
+ */
+export async function affectedPartition(nodeid: LionWebId, participation: ParticipationInfo, ctx: DeltaContext): Promise<LionWebId> {
+    const parentChain = await DB.retrieveParentsDB(ctx!.dbConnection, participation!.repositoryData!, nodeid)
+    if (parentChain === undefined) {
+        throw new Error("affectedPartition: Internal Error: PARENT CHAIN UNDEFINED")
+    }
+    deltaLogger.debug(`affectedPartition: PARENT CHAIN IS ${JSON.stringify(parentChain)}`)
+    const affectedPartition = parentChain[parentChain.length - 1] ?? ({ id: nodeid, parent: null } as NodeWithParent)
+    return affectedPartition.id
 }

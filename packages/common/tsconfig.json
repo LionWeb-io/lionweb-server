@@ -3,9 +3,10 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-//    "resolveJsonModule": true,
+    "resolveJsonModule": true,
     /* Enable importing .json files */
-    "sourceRoot": "./src"
+//    "sourceRoot": "./src",
+//    "strict": true
   },
     "include": ["./src/**/*.ts"]
 }

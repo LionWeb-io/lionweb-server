@@ -303,6 +303,14 @@ export class DbChanges {
             case Missing.MissingBefore:
                 result += `-- insert new feature for existing node
                                 ${this.pgp.helpers.insert(data, columnSet)};`
+                // result += `-- insert new feature for existing node
+                //                 ${this.pgp.helpers.insert(data, columnSet)}
+                //                 ON CONFLICT ON CONSTRAINT ${tableName}_pkey DO
+                //                     UPDATE 
+                //                     SET ${this.pgp.helpers.sets(data, columnSet)}
+                //                 WHERE
+                //                     ${tableName}.node_id = '${data["node_id"]}' AND
+                //                     ${tableName}.${metapointerColumn} = ${data[metapointerColumn]};`
                 break
             case Missing.MissingAfter:
                 result += `-- delete feature for existing node

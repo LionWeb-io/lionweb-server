@@ -13,7 +13,7 @@ import {
     PartitionDeletedEvent
 } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
-import { affectedNodeMessage, newErrorDelta, ErrorDelta } from "../events.js"
+import { affectedNodeMessage, newErrorDelta, ErrorDelta, affectedPartitionMessage } from "../events.js"
 import { ParticipationInfo } from "../queries/index.js"
 import { DeltaFunction } from "./DeltaUtil.js"
 import { validateProperTree } from "./Validations.js"
@@ -44,14 +44,15 @@ const AddPartitionFunction = async (
         const metaPointersTracker = new MetaPointersTracker(participation.repositoryData!)
         await metaPointersTracker.populateFromNodes(msg.newPartition.nodes, task)
 
-        const insert = SQL.insertNodeArraySQL(msg.newPartition.nodes, metaPointersTracker)
+        let query = SQL.nextRepoVersionSQL(participation.participationId)
+        query += SQL.insertNodeArraySQL(msg.newPartition.nodes, metaPointersTracker)
         // deltaLogger.info(`db add partition result is ${JSON.stringify(insert)}`)
-        const dbResult = task.query(participation.repositoryData!, insert)
+        const dbResult = await task.query(participation.repositoryData!, query)
         // deltaLogger.info(`db add partition result is ${JSON.stringify(dbResult)}`)
 
         // We have checked that there is exactly one partition node, now select it as affected node
         const partitionNode = msg.newPartition.nodes.find(n => n.parent === null)!
-        participation.subscribedPartitions.push(partitionNode.id)
+        participation.subscribedPartitions.add(partitionNode.id)
         console.log(`Adding partition ${partitionNode.id} to subscribed partitions`)
 
         return {
@@ -60,7 +61,7 @@ const AddPartitionFunction = async (
             newPartition: { nodes: [rootNode] },
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,
-            additionalInfos: [ affectedNodeMessage(partitionNode.id) ]
+            additionalInfos: [ affectedNodeMessage(partitionNode.id), affectedPartitionMessage(partitionNode.id) ]
         } as PartitionAddedEvent
     })
     return result
@@ -74,7 +75,8 @@ const DeletePartitionFunction = async (participation: ParticipationInfo, msg: De
             return newErrorDelta("unknownNode", `Partition node with id ${msg.deletedPartition} does not exist`, msg, participation)
         }
         const nodesToDelete = queryResult.map(qr => qr.id)
-        const query = SQL.deleteFullNodesSQL(nodesToDelete)
+        let query = SQL.nextRepoVersionSQL(participation.participationId)
+        query += SQL.deleteFullNodesSQL(nodesToDelete)
         const deleteResult = await task.query(participation.repositoryData!, query)
         return {
             messageKind: "PartitionDeleted",
@@ -82,7 +84,7 @@ const DeletePartitionFunction = async (participation: ParticipationInfo, msg: De
             deletedDescendants: nodesToDelete,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,
-            additionalInfos: [
+            additionalInfos: [ affectedPartitionMessage(msg.deletedPartition),
                 {
                     kind: "AffectedNode",
                     message: `Node ${msg.deletedPartition} has been changed`,

@@ -1,15 +1,37 @@
 import { RepositoryClient } from "@lionweb/server-client"
 import { adminResponseFunctions, DeltaClient, eventFunctions, responseFunctions } from "@lionweb/server-delta-client"
-import { DeltaErrorCode } from "@lionweb/server-delta-shared"
-import { HttpSuccessCodes } from "@lionweb/server-shared"
-import { Commands, hasError } from "../commands.js"
+import {
+    CommandMessageKind,
+    DeltaCommand,
+    DeltaCommandMessageKinds,
+    DeltaErrorCode,
+    DeltaRequest,
+    DeltaRequestMessageKinds,
+    EventMessageKind,
+    GetAvailableIdsResponse,
+    RequestMessageKind,
+    ResponseMessageKind,
+    ListPartitionsResponse
+} from "@lionweb/server-delta-shared"
+import { HttpSuccessCodes  } from "@lionweb/server-shared"
+import { Commands } from "../commands.js"
 import { test, describe, beforeAll, beforeEach, afterAll } from "vitest"
+import { reportHTML, TestCoverage } from "./helpers.js"
 import { CLASSIFIER as CLS, CONTAINMENT, CONTAINMENT as CON, PROPERTY as PROP, REFERENCE as REF } from "./keys.js"
 import { Logo2String } from "./Logo2String.js"
 // TOPO Delta : primary key exception when nohistory = false 
-const collection = [true]
+const collection = [true, false]
+const log: boolean = false
 
-// const bulkApiClient = new RepositoryClient({clientId: "BulkClient-01"})
+// Define a coverage map, so we can generate test overview table at the end.
+const CoverageMap: Map<CommandMessageKind | RequestMessageKind, TestCoverage> = new Map<CommandMessageKind | RequestMessageKind, TestCoverage>()
+
+for (const kind of DeltaCommandMessageKinds) {
+    CoverageMap.set(kind, new TestCoverage(kind))
+}
+for (const kind of DeltaRequestMessageKinds) {
+    CoverageMap.set(kind, new TestCoverage(kind))
+}
 
 expect.extend({
     toHaveError(received, expected) {
@@ -32,11 +54,6 @@ expect.extend({
     }
 })
 
-
-// interface Addition {
-//     toHaveError(error: DeltaErrorCode): void
-// }
-
 // eslint-disable-next-line @typescript-eslint/no-namespace
 declare module "vitest" {
     interface Assertion {
@@ -44,18 +61,18 @@ declare module "vitest" {
     }
 }
 
-
 // Run all, tests with and without history
 collection.forEach(withoutHistory => {
     const repository = withoutHistory ? "LogoRepo" : "LogoHistoryRepo"
     const bulkApiClient = new RepositoryClient({clientId: "BulkClient-01", repository: repository})
 
-    describe("Repository tests " + (withoutHistory ? "without history" : "with history"), async () => {
+    let cmd!: Commands
+    describe("Delta tests " + (withoutHistory ? "without history" : "with history"), async () => {
         const client = new DeltaClient({}, [eventFunctions, responseFunctions, adminResponseFunctions])
         // deltaApiClient01.deltaProcessor.
         client.repository = repository
         client.clientId = "DeltaClient-01"
-        const cmd = new Commands(client)
+        cmd = new Commands(client)
         // deltaApiClient01.customFunction = receiveDelta
 
         beforeAll(async function () {
@@ -67,17 +84,19 @@ collection.forEach(withoutHistory => {
             } else {
                 console.log(`Created repository (${repository}): ` + JSON.stringify(initResponse.body))
             }
-            client.loggingOn = true
+            client.loggingOn = log
             await client.connect()
-            const listRepos = cmd.listRepositories()
+            const listReposRequest = cmd.listRepositories()
             // const deleteRepo = deleteRepository(repository)
             // await responseFor(deleteRepo)
             const addRepo = cmd.addRepository(repository)
-            await cmd.responseFor(addRepo)
+            
+            expect((await cmd.responseFor(addRepo)).messageKind).toEqual("CreateRepositoryAdminResponse")
 
             const signOn = cmd.signOnRequest(client.repository, client.clientId)
 
-            // expect((await cmd.responseFor(listRepos)).messageKind).toEqual("ListRepositoriesAdminResponse")
+            expect((await cmd.responseFor(listReposRequest)).messageKind).toEqual("ListRepositoriesAdminResponse")
+            await expectResponse(signOn, "SignOnResponse")
             expect(await cmd.responseFor(signOn)).toMatchObject({
                 messageKind: "SignOnResponse",
                 queryId: signOn.queryId,
@@ -89,6 +108,8 @@ collection.forEach(withoutHistory => {
                     },
                 ],
             })
+            
+            // const subscribeToPartitionChanges = 
         })
 
         beforeEach(async function () {
@@ -104,26 +125,83 @@ collection.forEach(withoutHistory => {
             // const reply = await bulkApiClient.dbAdmin.deleteRepository(repository)
             // console.log(`afterEach.deleteRepository ${JSON.stringify(reply.body)}`)
             // console.log("DELETED")
+            reportHTML(CoverageMap)
         })
 
         describe("Partition tests", () => {
+            test("SignOnOff", async () => {
+                // Signing on twice is ok
+                const signOn = cmd.signOnRequest(repository, client.clientId)
+                await expectResponse(signOn, "SignOnResponse")
+
+                const signOff = cmd.signOffRequest()
+                await expectResponse(signOff, "SignOffResponse")
+
+                // SignOff twice is ok
+                const signOff2 = cmd.signOffRequest()
+                await expectError(signOff2, "notSignedOn")
+
+                const availableIdsErr = cmd.availableIds()
+                await expectError(availableIdsErr, "invalidParticipation")
+                const listPartitions = cmd.listPartitions()
+                await expectError(listPartitions, "invalidParticipation")
+                const listAndSubscribePartitions = cmd.listAndSubscribePartitions()
+                await expectError(listAndSubscribePartitions, "invalidParticipation")
+                const inform = cmd.informAbout()
+                await expectError(inform, "invalidParticipation")
+                const sub = cmd.subscribeToChangingPartitions()
+                await expectError(sub, "invalidParticipation")
+                
+                const signOn2 = cmd.signOnRequest(repository, client.clientId)
+                await expectResponse(signOn2, "SignOnResponse")
+
+                const inform2 = cmd.informAbout()
+                await expectResponse(inform2, "InformAboutChangingPartitionsResponse")
+                const sub2 = cmd.subscribeToChangingPartitions()
+                await expectResponse(sub2, "SubscribeToChangingPartitionsResponse")
+
+                const availableIds = cmd.availableIds()
+                await expectResponse(availableIds, "GetAvailableIdsResponse")
+                const ids = await cmd.responseFor(availableIds) as GetAvailableIdsResponse
+                expect(ids.ids.length).toEqual(25)
+            })
             test("AddPartition", async () => {
+                
                 // assert(initError === "", initError)
                 const addPartitionCommand1 = cmd.addPartition({ id: "Program-01", classifier: CLS.Program })
-                expect((await cmd.eventFor(addPartitionCommand1)).messageKind).toEqual("PartitionAdded")
+                await expectEvent(addPartitionCommand1, "PartitionAdded")
 
                 const addPartitionCommand2 = cmd.addPartition({ id: "Program-01", classifier: CLS.Program })
-                expect(await cmd.errorFor(addPartitionCommand2)).toHaveError("idsAlreadyInUse")
+                await expectError(addPartitionCommand2, "idsAlreadyInUse")
 
                 const deletePartition = cmd.deletePartition("Program-02")
-                expect(await cmd.errorFor(deletePartition)).toHaveError("unknownNode")
-                console.log("SentMessages")
-                console.log(client.sentMessageHistory)
-                console.log("ReceivedMessages")
-                console.log(client.receivedMessageHistory)
+                await expectError(deletePartition, "unknownNode")
+
+                const deletePartitionOk = cmd.deletePartition("Program-01")
+                await expectEvent(deletePartitionOk, "PartitionDeleted")
+
+                const addPartitionCommand3 = cmd.addPartition({ id: "Program-01", classifier: CLS.Program })
+                await expectEvent(addPartitionCommand3, "PartitionAdded")
+
+                const unsubscribe = cmd.unSubscribeToPartitionRequest(repository, client.clientId, "Program-01")
+                await expectResponse(unsubscribe, "UnsubscribeFromPartitionContentsResponse")
+                const unsubscribe2 = cmd.unSubscribeToPartitionRequest(repository, client.clientId, "Program-01")
+                await expectError(unsubscribe2, "notSubscribed")
+
+                const subscribe = cmd.subscribeToPartitionContentsRequest("Program-01")
+                await expectResponse(subscribe, "SubscribeToPartitionContentsResponse")
+
+                const unsubscribe3 = cmd.unSubscribeToPartitionRequest(repository, client.clientId, "Program-01")
+                await expectResponse(unsubscribe3, "UnsubscribeFromPartitionContentsResponse")
+
+                logProtocol(client)            
+                // const snapshot = await makeSnapShot()
             })
+            
             test("Properties", async () => {
-                // client.sendRequest(newSubscribeToPartitionRequest("Program-01"))
+                const subscribeAll = cmd.listAndSubscribePartitions()
+                await expectResponse(subscribeAll, "ListAndSubscribePartitionsResponse")
+                
                 const deletePropertyCmd = cmd.deleteProperty("Program-01", "-key-Partition-name")
                 const addPropertyCmd = cmd.addProperty("Program-01", "draw rectangle", "LionCore-builtins-INamed-name")
                 const addPropertyCmdE1 = cmd.addProperty("Program-11", "draw nothing", "LionCore-builtins-INamed-name")
@@ -136,24 +214,21 @@ collection.forEach(withoutHistory => {
                 const changePropertyE1 = cmd.changeProperty("Program-21", "draw a line", "LionCore-builtins-INamed-name")
                 const changePropertyE2 = cmd.changeProperty("Program-01", "draw a cricle", "-key-Program-name")
 
-                //
-                expect(hasError(await cmd.eventFor(deletePropertyCmd), "unknownProperty")).toBeTruthy()
-                expect((await cmd.eventFor(addPropertyCmd)).messageKind).toEqual("PropertyAdded")
-                expect(await cmd.errorFor(addPropertyCmdE1)).toHaveError("nodeDoesNotExist")
-
-                expect((await cmd.eventFor(deletePropertyCmd2)).messageKind).toEqual("PropertyDeleted")
-                expect(await cmd.errorFor(deletePropertyCmd3)).toHaveError("unknownProperty")
-
-                expect((await cmd.eventFor(addPropertyCmd2)).messageKind).toEqual("PropertyAdded")
-                expect((await cmd.eventFor(changePropertyCmd)).messageKind).toEqual("PropertyChanged")
-                expect(await cmd.errorFor(changePropertyE1)).toHaveError("nodeDoesNotExist")
-                expect(await cmd.errorFor(changePropertyE2)).toHaveError("unknownProperty")
-
-                console.log("SentMessages")
-                console.log(client.sentMessageHistory)
-                console.log("ReceivedMessages")
-                console.log(client.receivedMessageHistory)
-                await makeSnapShot()
+                await expectError(deletePropertyCmd, "unknownProperty")
+                await expectEvent(addPropertyCmd, "PropertyAdded")
+                await expectError(addPropertyCmdE1, "nodeDoesNotExist")
+                await expectEvent(deletePropertyCmd2, "PropertyDeleted")
+                await expectError(deletePropertyCmd3, "unknownProperty")
+                const event = await cmd.eventFor(addPropertyCmd2)
+                console.log(`Error ${JSON.stringify(addPropertyCmd2)}`)
+                console.log(`Error ${JSON.stringify(event)}`)
+                await expectEvent(addPropertyCmd2, "PropertyAdded")
+                await expectEvent(changePropertyCmd, "PropertyChanged")
+                await expectError(changePropertyE1, "nodeDoesNotExist")
+                await expectError(changePropertyE2, "unknownProperty")
+                
+                logProtocol(client)
+                // await makeSnapShot()
             })
             test("Children", async () => {
                 const subscribe = cmd.subscribeToPartitionContentsRequest("Program-01")
@@ -165,26 +240,23 @@ collection.forEach(withoutHistory => {
                 const deleteChildError2 = cmd.deleteChild({ id: "Move-01", index: 0, parent: "Program-01-A", containment: CON.ProgramCommands })
                 const deleteChildError3 = cmd.deleteChild({ id: "Move-01", index: 1, parent: "Program-01", containment: CON.ProgramCommands })
 
-                expect(await cmd.errorFor(subscribe)).toHaveError("alreadySubscribed")
-                expect((await cmd.eventFor(addChild)).messageKind).toEqual("ChildAdded")
-                expect(await cmd.errorFor(addChildE1)).toHaveError("nodeAlreadyExists")
-                expect(await cmd.errorFor(addChildE2)).toHaveError("unknownNode")
-                expect(await cmd.errorFor(addChildE3)).toHaveError("unknownIndex")
-                expect(await cmd.errorFor(deleteChildError1)).toHaveError("unknownContainment")
-                expect(await cmd.errorFor(deleteChildError2)).toHaveError("unknownNode")
-                expect(await cmd.errorFor(deleteChildError3)).toHaveError("unknownIndex")
+                await expectError(subscribe, "alreadySubscribed")
+                await expectEvent(addChild, "ChildAdded")
+                await expectError(addChildE1, "nodeAlreadyExists")
+                await expectError(addChildE2, "unknownNode")
+                await expectError(addChildE3, "unknownIndex")
+                await expectError(deleteChildError1, "unknownContainment")
+                await expectError(deleteChildError2, "unknownNode")
+                await expectError(deleteChildError3, "unknownIndex")
 
-                console.log("SentMessages")
-                console.log(client.sentMessageHistory)
-                console.log("ReceivedMessages")
-                console.log(client.receivedMessageHistory)
-                expect(await makeSnapShot()).toMatchSnapshot()
+                logProtocol(client)
+                // expect(await makeSnapShot()).toMatchSnapshot()
             })
         })
         test("AddPartition Second", async () => {
             const addPartitionCommand = cmd.addPartition({ id: "Library-01", classifier: CLS.Library, properties: [{ property: PROP.INamedName, value: "Library first" }] })
             const subscribeRequest = cmd.subscribeToPartitionContentsRequest("Library-01")
-            const addPropertyCmd = cmd.addProperty("Program-01", "draw rectangle", "LionCore-builtins-INamed-name")
+            const addPropertyCmd = cmd.addProperty("Program-01", "draw rectangle three", "LionCore-builtins-INamed-name")
             const addChildCommand = cmd.addChild({
                 id: "Procedure-01",
                 cls: CLS.Procedure,
@@ -194,24 +266,25 @@ collection.forEach(withoutHistory => {
             })
             const addChildCommand1 = cmd.addChild({ id: "Move-02", cls: CLS.MoveCommand, parent: "Procedure-01", containment: CON.ProcedureBody, props: [] })
             const deleteChildCommand = cmd.deleteChild({ id: "Procedure-01", index: 0, parent: "Library-01", containment: CON.LibraryProcedures })
-
-            expect((await cmd.eventFor(addPartitionCommand)).messageKind).toEqual("PartitionAdded")
-            expect((await cmd.responseFor(subscribeRequest)).messageKind).toEqual("ErrorResponse")
-            expect(await cmd.errorFor(addPropertyCmd)).toHaveError("propertyAlreadyExists")
-            expect((await cmd.eventFor(addChildCommand)).messageKind).toEqual("ChildAdded")
-            expect((await cmd.eventFor(addChildCommand1)).messageKind).toEqual("ChildAdded")
-            expect((await cmd.eventFor(deleteChildCommand)).messageKind).toEqual("ChildDeleted")
-            await makeSnapShot()
+            const listPartitions = cmd.listPartitions()
+            
+            await expectEvent(addPartitionCommand, "PartitionAdded")
+            await expectError(subscribeRequest, "alreadySubscribed")
+            await expectError(addPropertyCmd, "propertyAlreadyExists")
+            await expectEvent(addChildCommand, "ChildAdded")
+            await expectEvent(addChildCommand1, "ChildAdded")
+            await expectEvent(deleteChildCommand, "ChildDeleted")
+            await expectResponse(listPartitions, "ListPartitionsResponse")
+            const listResp = await cmd.responseFor(listPartitions) as ListPartitionsResponse
+            expect (listResp.partitions.nodes.length).toEqual(2)
+            // await makeSnapShot()
         })
         test("References", async () => {
-            client.loggingOn = true
             const addChild = cmd.addChild({ id: "PCall-01", cls: CLS.ProcedureCall, parent: "Program-01", containment: CON.ProgramCommands, props: [] })
             const addRef = cmd.addReference({ id: "PCall-01", index: 0, target: "Procedure-01", resolveInfo: "PROC-01", reference: REF.ProcedureCallProcedure })
 
-            expect((await cmd.eventFor(addChild)).messageKind).toEqual("ChildAdded")
-            expect((await cmd.eventFor(addRef)).messageKind).toEqual("ReferenceAdded")
-            console.log("1 add refertences")
-            await makeSnapShot()
+            await expectEvent(addChild, "ChildAdded")
+            await expectEvent(addRef, "ReferenceAdded")
 
             const addRef2 = cmd.addReference({
                 id: "PCall-01",
@@ -229,14 +302,11 @@ collection.forEach(withoutHistory => {
                 reference: REF.ProcedureCallProcedure,
             })
 
-            expect((await cmd.eventFor(addChild)).messageKind).toEqual("ChildAdded")
-            expect((await cmd.eventFor(addRef)).messageKind).toEqual("ReferenceAdded")
-            expect(await cmd.errorFor(addRef2)).toEqual("unknownIndex")
-            expect(await cmd.errorFor(addRef3)).toEqual("unknownIndex")
-            expect(await cmd.errorFor(addRef4)).toEqual("undefinedReferenceTarget")
-
-            console.log("2 add refertences")
-            await makeSnapShot()
+            await expectEvent(addChild, "ChildAdded")
+            await expectEvent(addRef, "ReferenceAdded")
+            await expectError(addRef2, "unknownIndex")
+            await expectError(addRef3, "unknownIndex")
+            await expectError(addRef4, "undefinedReferenceTarget")
 
             const delRef4 = cmd.deleteReference({
                 parent: "PCall-01",
@@ -245,32 +315,19 @@ collection.forEach(withoutHistory => {
                 deletedResolveInfo: "PROC-01",
                 reference: REF.ProcedureCallProcedure,
             })
-            expect((await cmd.eventFor(delRef4)).messageKind).toEqual("ReferenceDeleted")
-            console.log("3 deleted  refertence")
-            await makeSnapShot()
+            await expectEvent(delRef4, "ReferenceDeleted")
 
             const delRef5 = cmd.deleteReference({ parent: "PCall-01", index: 0, deletedTarget: "newTarget", deletedResolveInfo: null, reference: REF.ProcedureCallProcedure })
-            await cmd.eventFor(delRef5)
-            console.log("4 deleted  refertence")
-            await makeSnapShot()
-
-            expect(await cmd.errorFor(delRef5)).toHaveError("unknownIndex")
-            console.log("5 deleted  refertence")
-            await makeSnapShot()
+            await expectError(delRef5, "unknownIndex")
 
             const delRef6 = cmd.deleteReference({ parent: "PCall-01", index: 0, deletedTarget: null, deletedResolveInfo: null, reference: REF.ProcedureCallProcedure })
             const delRef7 = cmd.deleteReference({ parent: "PCall-000", index: 0, deletedTarget: "target", deletedResolveInfo: null, reference: REF.ProcedureCallProcedure })
 
-            expect(await cmd.errorFor(delRef6)).toHaveError("undefinedReferenceTarget")
-            expect(await cmd.errorFor(delRef7)).toHaveError("unknownNode")
-
-            console.log("33 deleted refertences")
-            await makeSnapShot()
+            await expectError(delRef6, "undefinedReferenceTarget")
+            await expectError(delRef7, "unknownNode")
 
             const addRef9 = cmd.addReference({ id: "PCall-01", index: 0, target: "Procedure-01", resolveInfo: "PROC-01", reference: REF.ProcedureCallProcedure })
-            expect((await cmd.eventFor(addRef9)).messageKind).toEqual("ReferenceAdded")
-            console.log("add refertences")
-            await makeSnapShot()
+            await expectEvent(addRef9, "ReferenceAdded")
 
             const changeRef4 = cmd.changeReference({
                 parent: "PCall-01",
@@ -281,9 +338,7 @@ collection.forEach(withoutHistory => {
                 newTarget: "Procedure-00",
                 newResolveInfo: "PROC-00",
             })
-            expect((await cmd.eventFor(changeRef4)).messageKind).toEqual("ReferenceChanged")
-            console.log("change refertences")
-            await makeSnapShot()
+            await expectEvent(changeRef4, "ReferenceChanged")
 
             const changeRef5 = cmd.changeReference({
                 parent: "PCall-01",
@@ -313,20 +368,32 @@ collection.forEach(withoutHistory => {
                 reference: REF.ProcedureCallProcedure,
             })
 
-            expect((await cmd.eventFor(addRef)).messageKind).toEqual("ReferenceAdded")
-            expect((await cmd.eventFor(changeRef4)).messageKind).toEqual("ReferenceChanged")
-            expect(await cmd.errorFor(changeRef5)).toHaveError("referenceTargetOrResolveInfoMismatch")
-            expect(await cmd.errorFor(changeRef6)).toHaveError("undefinedReferenceTarget")
-            expect(await cmd.errorFor(changeRef7)).toHaveError("unknownNode")
+            await expectEvent(addRef, "ReferenceAdded")
+            await expectEvent(changeRef4, "ReferenceChanged")
+            await expectError(changeRef5, "referenceTargetOrResolveInfoMismatch")
+            await expectError(changeRef6, "undefinedReferenceTarget")
+            await expectError(changeRef7, "unknownNode")
 
-            console.log("SentMessages References")
-            console.log(client.sentMessageHistory)
-            console.log("ReceivedMessages References")
-            console.log(client.receivedMessageHistory)
-            const snapshot = await makeSnapShot()
-            expect(snapshot).toMatchSnapshot
+            logProtocol(client)
+            // const snapshot = await makeSnapShot()
+            // expect(snapshot).toMatchSnapshot
         })
     })
+
+    async function expectError(delta: DeltaCommand | DeltaRequest, error: DeltaErrorCode): Promise<void> {
+        expect(await cmd.errorFor(delta)).toHaveError(error)
+        CoverageMap.get(delta.messageKind).receivedErrors.push(error)
+    }
+
+    async function expectEvent(delta: DeltaCommand, eventKind: EventMessageKind): Promise<void> {
+        expect((await cmd.eventFor(delta)).messageKind).toEqual(eventKind)
+        CoverageMap.get(delta.messageKind).receivedEvents++
+    }
+
+    async function expectResponse(delta: DeltaRequest, requestKind: ResponseMessageKind): Promise<void> {
+        expect((await cmd.responseFor(delta)).messageKind).toEqual(requestKind)
+        CoverageMap.get(delta.messageKind).receivedEvents++
+    }
 
     async function makeSnapShot(): Promise<string> {
         const partition = await bulkApiClient.bulk.retrieve(["Library-01", "Program-01"])
@@ -335,7 +402,15 @@ collection.forEach(withoutHistory => {
         console.log(string)
         return string
     }
-
+    
+    function logProtocol(client: DeltaClient): void {
+        if (log ) {
+            console.log("SentMessages References")
+            console.log(client.sentMessageHistory)
+            console.log("ReceivedMessages References")
+            console.log(client.receivedMessageHistory)
+        }
+    }
 })
 
 

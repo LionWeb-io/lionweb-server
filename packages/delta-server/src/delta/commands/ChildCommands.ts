@@ -27,9 +27,9 @@ import {
     ReplaceChildCommand
 } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
-import { affectedNodeMessage, newErrorDelta, type ErrorDelta } from "../events.js"
+import { affectedNodeMessage, newErrorDelta, type ErrorDelta, affectedPartitionMessage } from "../events.js"
 import { ParticipationInfo } from "../queries/index.js"
-import { DeltaFunction, errorEvent } from "./DeltaUtil.js"
+import { affectedPartition, DeltaFunction, errorEvent } from "./DeltaUtil.js"
 import { findAndValidateNodeExists, validateContainment, validateProperTree } from "./Validations.js"
 
 const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
@@ -70,11 +70,13 @@ const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, 
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await metaPointerTracker.populateFromNodes(msg.newChild.nodes, task)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, msg.newChild.nodes, task)
+        const nextVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
         const addNodesquery = SQL.insertNodeArraySQL(msg.newChild.nodes, metaPointerTracker)
         const addChildQuery = changes.createPostgresQuery(metaPointerTracker)
         deltaLogger.debug(`ADD NODES QUERY '${addNodesquery}`)
         deltaLogger.debug(`ADD CHILD QUERY '${addChildQuery}`)
-        const queryResult = await task.query(participation.repositoryData!, addNodesquery + addChildQuery)
+        const queryResult = await task.query(participation.repositoryData!, nextVersionSql + addNodesquery + addChildQuery)
+        const partition = await affectedPartition(parentNode!.id, participation, ctx)
         return {
             messageKind: "ChildAdded",
             containment: msg.containment,
@@ -83,7 +85,7 @@ const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, 
             newChild: msg.newChild,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,          // dummy, will be changed for each participation before sending
-            additionalInfos: [affectedNodeMessage(parentNode!.id)]
+            additionalInfos: [affectedNodeMessage(parentNode!.id), affectedPartitionMessage(partition)]
         } as ChildAddedEvent
     })
     return result
@@ -135,7 +137,9 @@ const DeleteChild = async (
         ) 
         // Run the query with metapointers as a dummy, there are no metapointers being added
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
-        const execute = task.query(participation.repositoryData!, deleteSql + dbChanges.createPostgresQuery(metaPointerTracker))
+        const nextVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
+        const execute = task.query(participation.repositoryData!, nextVersionSql + deleteSql + dbChanges.createPostgresQuery(metaPointerTracker))
+        const partition = await affectedPartition(parentNode!.id, participation, ctx)
         return {
             messageKind: "ChildDeleted",
             deletedChild: msg.deletedChild,
@@ -143,7 +147,7 @@ const DeleteChild = async (
             parent: msg.parent,
             containment: msg.containment,
             deletedDescendants: subtreeNodes.filter(node => node.id !== msg.deletedChild).map(node => node.id),
-            additionalInfos: [affectedNodeMessage(parentNode.id)],
+            additionalInfos: [affectedNodeMessage(parentNode.id), affectedPartitionMessage(partition)],
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0
         } as ChildDeletedEvent
@@ -203,8 +207,9 @@ const ReplaceChild = async (
         const addNodesquery = SQL.insertNodeArraySQL(msg.newChild.nodes, metaPointerTracker)
         const deleteNodes = SQL.deleteFullNodesSQL(replacedTree.map(node => node.id))
         const addChildQuery = changes.createPostgresQuery(metaPointerTracker)
-        const queryResult = await task.query(participation.repositoryData!, addNodesquery + deleteNodes + addChildQuery)
-        
+        const nextVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
+        const queryResult = await task.query(participation.repositoryData!, nextVersionSql + addNodesquery + deleteNodes + addChildQuery)
+        const partition = await affectedPartition(parentNode!.id, participation, ctx)
         return {
             messageKind: "ChildReplaced",
             parent: msg.parent,
@@ -214,7 +219,7 @@ const ReplaceChild = async (
             replacedChild: msg.replacedChild,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,          // dummy, will be changed for each participation before sending
-            additionalInfos: [affectedNodeMessage(parentNode.id)]
+            additionalInfos: [affectedNodeMessage(parentNode.id), affectedPartitionMessage(partition)]
         } as ChildReplacedEvent
     })
 
@@ -270,6 +275,8 @@ const MoveChildFromOtherContainment = async (
         await metaPointerTracker.populateFromNodes([newParentNode], task)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [newParentNode], task)
         await task.query(participation.repositoryData!, changes.createPostgresQuery(metaPointerTracker))
+        const oldPartition = await affectedPartition(oldParentNode!.id, participation, ctx)
+        const newPartition = await affectedPartition(newParentNode!.id, participation, ctx)
         return {
             messageKind: "ChildMovedFromOtherContainment",
             newParent: newParentNode.id,
@@ -280,8 +287,13 @@ const MoveChildFromOtherContainment = async (
             oldIndex: oldIndex,
             movedChild: "",
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
-            sequenceNumber: 0,          // dummy, will be changed for each participation before sending
-            additionalInfos: [affectedNodeMessage(msg.newParent)]
+            sequenceNumber: 0, // dummy, will be changed for each participation before sending
+            additionalInfos: [
+                affectedNodeMessage(msg.newParent),
+                affectedPartitionMessage(oldPartition),
+                // TODO Make sure two infos with the same key are handled correctly
+                affectedPartitionMessage(newPartition)
+            ]
         } as ChildMovedFromOtherContainmentEvent
     })
     return errorEvent(msg)

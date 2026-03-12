@@ -30,7 +30,13 @@ import {
     ChangeReferenceCommand,
     isDeltaCommand,
     isDeltaAdminRequest,
-    isDeltaRequest
+    isDeltaRequest,
+    SignOffRequest,
+    ListAndSubscribePartitionsRequest,
+    GetAvailableIdsRequest,
+    ListPartitionsRequest,
+    InformAboutChangingPartitionsRequest,
+    SubscribeToChangingPartitionsRequest
 } from "@lionweb/server-delta-shared"
 import { waitFor } from "./delta/helpers.js"
 import {} from "./utils.js"
@@ -71,7 +77,13 @@ export type AddReferenceType = {
     reference: LionWebJsonMetaPointer
 }
 
+/**
+ * Test utility class to easily send commands to the server
+ */
 export class Commands {
+    /**
+     * The client used to send the commands
+     */
     client: DeltaClient
     constructor(client: DeltaClient) {
         this.client = client
@@ -84,6 +96,15 @@ export class Commands {
             deltaProtocolVersion: "2023.1",
             clientId: clientId,
             queryId: `query-id-${queryId++}`,
+            additionalInfos: []
+        }
+        return this.client.sendRequest(request)
+    }
+
+    signOffRequest = (): DeltaRequest => {
+        const request: SignOffRequest = {
+            messageKind: "SignOffRequest",
+            queryId: "dummy",
             additionalInfos: []
         }
         return this.client.sendRequest(request)
@@ -104,6 +125,58 @@ export class Commands {
             messageKind: "UnsubscribeFromPartitionContentsRequest",
             partition: partition,
             queryId: `query-id-${queryId++}`,
+            additionalInfos: []
+        }
+        return this.client.sendRequest(request)
+    }
+    
+    subscribeToChangingPartitions = (): DeltaRequest => {
+        const request: SubscribeToChangingPartitionsRequest = {
+            messageKind: "SubscribeToChangingPartitionsRequest",
+            queryId: `query-id-${queryId++}`,
+            creation: true,
+            deletion: true,
+            additionalInfos: []
+        }
+        return this.client.sendRequest(request)
+    }
+    
+    informAbout = (): DeltaRequest => {
+        const request: InformAboutChangingPartitionsRequest = {
+            messageKind: "InformAboutChangingPartitionsRequest",
+            queryId: `query-id-${queryId++}`,
+            creation: true,
+            deletion: true,
+            depthLimit: 0,
+            additionalInfos: []
+        }
+        return this.client.sendRequest(request)
+    }
+
+    listAndSubscribePartitions = (): DeltaRequest => {
+        const request: ListAndSubscribePartitionsRequest = {
+            messageKind: "ListAndSubscribePartitionsRequest",
+            queryId: "dummy",
+            additionalInfos: []
+        }
+        return this.client.sendRequest(request)
+    }
+
+    listPartitions = (): DeltaRequest => {
+        const request: ListPartitionsRequest = {
+            messageKind: "ListPartitionsRequest",
+            queryId: "dummy",
+            depthLimit: 0,
+            additionalInfos: []
+        }
+        return this.client.sendRequest(request)
+    }
+
+    availableIds = (): DeltaRequest => {
+        const request: GetAvailableIdsRequest = {
+            messageKind: "GetAvailableIdsRequest",
+            queryId: "dummy",
+            count: 25,
             additionalInfos: []
         }
         return this.client.sendRequest(request)

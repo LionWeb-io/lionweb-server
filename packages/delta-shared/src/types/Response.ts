@@ -2,9 +2,29 @@ import type { QueryId } from "./DeltaTypes.js";
 import type { String } from "./DeltaTypes.js";
 import type { AdditionalInfo } from "./DeltaTypes.js";
 import type { LionWebDeltaJsonChunk } from "./DeltaTypes.js";
+import type { Boolean } from "./DeltaTypes.js";
+import type { Number } from "./DeltaTypes.js";
 import type { ParticipationId } from "./DeltaTypes.js";
 import type { SequenceNumber } from "./DeltaTypes.js";
 import type { LionWebId } from "./Chunks.js";
+
+export const DeltaResponseMessageKinds = [
+    "SubscribeToChangingPartitionsResponse",
+    "InformAboutChangingPartitionsResponse",
+    "SubscribeToPartitionContentsResponse",
+    "UnsubscribeFromPartitionContentsResponse",
+    "ChunkedQueryResponse",
+    "SignOnResponse",
+    "SignOffResponse",
+    "ReconnectResponse",
+    "GetAvailableIdsResponse",
+    "ListPartitionsResponse",
+    "ListAndSubscribePartitionsResponse",
+    "ErrorResponse",
+] as const;
+
+// The type for the tagged union property, derived from the above array
+export type ResponseMessageKind = (typeof DeltaResponseMessageKinds)[number];
 
 // The overall "super-type"
 export type DeltaResponse = {
@@ -32,6 +52,7 @@ export type InformAboutChangingPartitionsResponse = DeltaResponse & {
  */
 export type SubscribeToPartitionContentsResponse = DeltaResponse & {
     contents: LionWebDeltaJsonChunk;
+    split?: Boolean;
     messageKind: "SubscribeToPartitionContentsResponse";
 };
 
@@ -40,6 +61,16 @@ export type SubscribeToPartitionContentsResponse = DeltaResponse & {
  */
 export type UnsubscribeFromPartitionContentsResponse = DeltaResponse & {
     messageKind: "UnsubscribeFromPartitionContentsResponse";
+};
+
+/**
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-ChunkedQueryResponse
+ */
+export type ChunkedQueryResponse = DeltaResponse & {
+    chunk: LionWebDeltaJsonChunk;
+    continuedChunkCompleted: Boolean;
+    continuedChunkSequenceNumber: Number;
+    messageKind: "ChunkedQueryResponse";
 };
 
 /**
@@ -78,7 +109,17 @@ export type GetAvailableIdsResponse = DeltaResponse & {
  */
 export type ListPartitionsResponse = DeltaResponse & {
     partitions: LionWebDeltaJsonChunk;
+    split?: Boolean;
     messageKind: "ListPartitionsResponse";
+};
+
+/**
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-ListAndSubscribePartitions
+ */
+export type ListAndSubscribePartitionsResponse = DeltaResponse & {
+    partitions: LionWebDeltaJsonChunk;
+    split?: Boolean;
+    messageKind: "ListAndSubscribePartitionsResponse";
 };
 
 /**
@@ -90,35 +131,8 @@ export type ErrorResponse = DeltaResponse & {
     messageKind: "ErrorResponse";
 };
 
-// The type for the tagged union property
-export type ResponseMessageKind =
-    | "SubscribeToChangingPartitionsResponse"
-    | "InformAboutChangingPartitionsResponse"
-    | "SubscribeToPartitionContentsResponse"
-    | "UnsubscribeFromPartitionContentsResponse"
-    | "SignOnResponse"
-    | "SignOffResponse"
-    | "ReconnectResponse"
-    | "GetAvailableIdsResponse"
-    | "ListPartitionsResponse"
-    | "ErrorResponse";
-
 // Type Guard function
 export function isDeltaResponse(object: unknown): object is DeltaResponse {
     const castObject = object as DeltaResponse;
-    return (
-        castObject.messageKind !== undefined &&
-        [
-            "SubscribeToChangingPartitionsResponse",
-            "InformAboutChangingPartitionsResponse",
-            "SubscribeToPartitionContentsResponse",
-            "UnsubscribeFromPartitionContentsResponse",
-            "SignOnResponse",
-            "SignOffResponse",
-            "ReconnectResponse",
-            "GetAvailableIdsResponse",
-            "ListPartitionsResponse",
-            "ErrorResponse",
-        ].includes(castObject.messageKind)
-    );
+    return castObject.messageKind !== undefined && DeltaResponseMessageKinds.includes(castObject.messageKind);
 }

@@ -1,4 +1,4 @@
-import { DB, DbChanges, deltaLogger, isNullOrUndefined, LionWebTask, MetaPointersTracker, TableHelpers } from "@lionweb/server-common"
+import { DB, DbChanges, deltaLogger, isNullOrUndefined, LionWebTask, MetaPointersTracker, SQL, TableHelpers } from "@lionweb/server-common"
 import { TargetAdded, TargetRemoved, Missing } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
 import { isEqualMetaPointer } from "@lionweb/json"
@@ -13,9 +13,9 @@ import {
     ReferenceDeletedEvent
 } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
-import { affectedNodeMessage, ErrorDelta, newErrorDelta } from "../events.js"
+import { affectedNodeMessage, affectedPartitionMessage, ErrorDelta, newErrorDelta } from "../events.js"
 import { ParticipationInfo } from "../queries/index.js"
-import { DeltaFunction } from "./DeltaUtil.js"
+import { affectedPartition, DeltaFunction } from "./DeltaUtil.js"
 import { findAndValidateNodeExists, validateReference } from "./Validations.js"
 
 const AddReference = async (participation: ParticipationInfo, msg: AddReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorEvent> => {
@@ -39,8 +39,10 @@ const AddReference = async (participation: ParticipationInfo, msg: AddReferenceC
         )
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [], task)
+        const nextVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
         const changesQuery = changes.createPostgresQuery(metaPointerTracker)
-        const queryResult = await task.query(participation.repositoryData!, changesQuery)
+        const queryResult = await task.query(participation.repositoryData!, nextVersionSql + changesQuery)
+        const partition = await affectedPartition(msg.parent, participation, ctx)
         return {
             messageKind: "ReferenceAdded",
             newResolveInfo: msg.newResolveInfo,
@@ -50,7 +52,8 @@ const AddReference = async (participation: ParticipationInfo, msg: AddReferenceC
             parent: msg.parent,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0, // dummy, will be changed for each participation before sending
-            additionalInfos: [affectedNodeMessage(parentNode!.id), { kind: "MISSING", message: `AddReference missing ${missing}`, data: [] },
+            additionalInfos: [affectedNodeMessage(parentNode!.id), affectedPartitionMessage(partition),
+                { kind: "MISSING", message: `AddReference missing ${missing}`, data: [] },
                 {kind: "query", message: "AddReference query", data: [{key: "query", value: changesQuery}]}]
         } as ReferenceAddedEvent
     })
@@ -77,7 +80,9 @@ const DeleteReference = async (participation: ParticipationInfo, msg: DeleteRefe
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [], task)
         const changesQuery = changes.createPostgresQuery(metaPointerTracker)
-        const queryResult = await task.query(participation.repositoryData!, changesQuery)
+        const nextVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
+        const queryResult = await task.query(participation.repositoryData!, nextVersionSql + changesQuery)
+        const partition = await affectedPartition(msg.parent, participation, ctx)
         return {
             messageKind: "ReferenceDeleted",
             parent: msg.parent,
@@ -87,7 +92,7 @@ const DeleteReference = async (participation: ParticipationInfo, msg: DeleteRefe
             deletedTarget: msg.deletedTarget,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,          // dummy, will be changed for each participation before sending
-            additionalInfos: [affectedNodeMessage(msg.parent)]
+            additionalInfos: [affectedNodeMessage(msg.parent), affectedPartitionMessage(partition)]
         } as ReferenceDeletedEvent
     })
     return result
@@ -116,7 +121,9 @@ const ChangeReference = async (participation: ParticipationInfo, msg: ChangeRefe
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [], task)
         const changesQuery = changes.createPostgresQuery(metaPointerTracker)
-        await task.query(participation!.repositoryData!, changesQuery)
+        const nextVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
+        await task.query(participation!.repositoryData!, nextVersionSql + changesQuery)
+        const partition = await affectedPartition(msg.parent, participation, ctx)
         return {
             messageKind: "ReferenceChanged",
             parent: msg.parent,
@@ -128,7 +135,7 @@ const ChangeReference = async (participation: ParticipationInfo, msg: ChangeRefe
             newTarget: msg.newTarget,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,          // dummy, will be changed for each participation before sending
-            additionalInfos: [affectedNodeMessage(msg.parent),
+            additionalInfos: [affectedNodeMessage(msg.parent), affectedPartitionMessage(partition),
                 {kind: "query", message: "AddReference query", data: [{key: "query", value: changesQuery}]}]
 
         } as ReferenceChangedEvent

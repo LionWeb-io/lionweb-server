@@ -5,7 +5,43 @@ import type { AdditionalInfo } from "./DeltaTypes.js";
 import type { LionWebId } from "./Chunks.js";
 import type { LionWebJsonMetaPointer } from "./Chunks.js";
 import type { LionWebDeltaJsonChunk } from "./DeltaTypes.js";
+import type { Boolean } from "./DeltaTypes.js";
 // cannot find import for Event
+
+export const DeltaEventMessageKinds = [
+    "ClassifierChanged",
+    "PartitionAdded",
+    "PartitionDeleted",
+    "PropertyAdded",
+    "PropertyDeleted",
+    "PropertyChanged",
+    "ChildAdded",
+    "ChildDeleted",
+    "ChildReplaced",
+    "ChildMovedFromOtherContainment",
+    "ChildMovedFromOtherContainmentInSameParent",
+    "ChildMovedInSameContainment",
+    "ChildMovedAndReplacedFromOtherContainment",
+    "ChildMovedAndReplacedFromOtherContainmentInSameParent",
+    "ChildMovedAndReplacedInSameContainment",
+    "AnnotationAdded",
+    "AnnotationDeleted",
+    "AnnotationReplaced",
+    "AnnotationMovedFromOtherParent",
+    "AnnotationMovedInSameParent",
+    "AnnotationMovedAndReplacedFromOtherParent",
+    "AnnotationMovedAndReplacedInSameParent",
+    "ReferenceAdded",
+    "ReferenceDeleted",
+    "ReferenceChanged",
+    "ChunkedEvent",
+    "CompositeEvent",
+    "NoOp",
+    "ErrorEvent",
+] as const;
+
+// The type for the tagged union property, derived from the above array
+export type EventMessageKind = (typeof DeltaEventMessageKinds)[number];
 
 // The overall "super-type"
 export type DeltaEvent = {
@@ -30,6 +66,7 @@ export type ClassifierChangedEvent = DeltaEvent & {
  */
 export type PartitionAddedEvent = DeltaEvent & {
     newPartition: LionWebDeltaJsonChunk;
+    split?: Boolean;
     messageKind: "PartitionAdded";
 };
 
@@ -81,6 +118,7 @@ export type ChildAddedEvent = DeltaEvent & {
     containment: LionWebJsonMetaPointer;
     newChild: LionWebDeltaJsonChunk;
     index: Number;
+    split?: Boolean;
     messageKind: "ChildAdded";
 };
 
@@ -120,6 +158,7 @@ export type ChildMovedFromOtherContainmentEvent = DeltaEvent & {
     oldIndex: Number;
     oldContainment: LionWebJsonMetaPointer;
     movedChild: LionWebId;
+    split?: Boolean;
     messageKind: "ChildMovedFromOtherContainment";
 };
 
@@ -223,6 +262,7 @@ export type AnnotationReplacedEvent = DeltaEvent & {
     replacedAnnotation: LionWebId;
     replacedDescendants: LionWebId[];
     newAnnotation: LionWebDeltaJsonChunk;
+    split?: Boolean;
     messageKind: "AnnotationReplaced";
 };
 
@@ -315,6 +355,16 @@ export type ReferenceChangedEvent = DeltaEvent & {
 };
 
 /**
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ChunkedEvent
+ */
+export type ChunkedEvent = DeltaEvent & {
+    chunk: LionWebDeltaJsonChunk;
+    continuedChunkCompleted: Boolean;
+    continuedChunkSequenceNumber: Number;
+    messageKind: "ChunkedEvent";
+};
+
+/**
  *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-CompositeEvent
  */
 export type CompositeEvent = DeltaEvent & {
@@ -338,71 +388,8 @@ export type ErrorEvent = DeltaEvent & {
     messageKind: "ErrorEvent";
 };
 
-// The type for the tagged union property
-export type EventMessageKind =
-    | "ClassifierChanged"
-    | "PartitionAdded"
-    | "PartitionDeleted"
-    | "PropertyAdded"
-    | "PropertyDeleted"
-    | "PropertyChanged"
-    | "ChildAdded"
-    | "ChildDeleted"
-    | "ChildReplaced"
-    | "ChildMovedFromOtherContainment"
-    | "ChildMovedFromOtherContainmentInSameParent"
-    | "ChildMovedInSameContainment"
-    | "ChildMovedAndReplacedFromOtherContainment"
-    | "ChildMovedAndReplacedFromOtherContainmentInSameParent"
-    | "ChildMovedAndReplacedInSameContainment"
-    | "AnnotationAdded"
-    | "AnnotationDeleted"
-    | "AnnotationReplaced"
-    | "AnnotationMovedFromOtherParent"
-    | "AnnotationMovedInSameParent"
-    | "AnnotationMovedAndReplacedFromOtherParent"
-    | "AnnotationMovedAndReplacedInSameParent"
-    | "ReferenceAdded"
-    | "ReferenceDeleted"
-    | "ReferenceChanged"
-    | "CompositeEvent"
-    | "NoOp"
-    | "ErrorEvent";
-
 // Type Guard function
 export function isDeltaEvent(object: unknown): object is DeltaEvent {
     const castObject = object as DeltaEvent;
-    return (
-        castObject.messageKind !== undefined &&
-        [
-            "ClassifierChanged",
-            "PartitionAdded",
-            "PartitionDeleted",
-            "PropertyAdded",
-            "PropertyDeleted",
-            "PropertyChanged",
-            "ChildAdded",
-            "ChildDeleted",
-            "ChildReplaced",
-            "ChildMovedFromOtherContainment",
-            "ChildMovedFromOtherContainmentInSameParent",
-            "ChildMovedInSameContainment",
-            "ChildMovedAndReplacedFromOtherContainment",
-            "ChildMovedAndReplacedFromOtherContainmentInSameParent",
-            "ChildMovedAndReplacedInSameContainment",
-            "AnnotationAdded",
-            "AnnotationDeleted",
-            "AnnotationReplaced",
-            "AnnotationMovedFromOtherParent",
-            "AnnotationMovedInSameParent",
-            "AnnotationMovedAndReplacedFromOtherParent",
-            "AnnotationMovedAndReplacedInSameParent",
-            "ReferenceAdded",
-            "ReferenceDeleted",
-            "ReferenceChanged",
-            "CompositeEvent",
-            "NoOp",
-            "ErrorEvent",
-        ].includes(castObject.messageKind)
-    );
+    return castObject.messageKind !== undefined && DeltaEventMessageKinds.includes(castObject.messageKind);
 }

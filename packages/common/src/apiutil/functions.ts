@@ -270,7 +270,7 @@ export function runWithTry(func: (request: Request, response: Response) => void)
  * Get new node id
  */
 export function createId(clientId: string): string {
-    return clientId + "-" + uuidv4()
+    return uuidv4()
 }
 
 /**

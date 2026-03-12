@@ -6,6 +6,8 @@ import {
     GetAvailableIdsResponse,
     InformAboutChangingPartitionsRequest,
     InformAboutChangingPartitionsResponse,
+    ListAndSubscribePartitionsRequest,
+    ListAndSubscribePartitionsResponse,
     ListPartitionsRequest,
     ListPartitionsResponse,
     ReconnectRequest,
@@ -79,10 +81,10 @@ const SubscribeToPartitionContentsRequestFunction = async (
 ): Promise<DeltaEvent | DeltaResponse | ErrorDelta> => {
     deltaLogger.info("Called SubscribeToPartitionContentsRequestFunction " + msg.messageKind)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        if (participation.subscribedPartitions.includes(msg.partition)) {
+        if (participation.subscribedPartitions.has(msg.partition)) {
             return newErrorDelta("alreadySubscribed", `Already subscribed to partition ${msg.partition}`, msg, participation)
         }
-        participation.subscribedPartitions.push(msg.partition)
+        participation.subscribedPartitions.add(msg.partition)
         const queryResult = await DB.retrieveFullNodesRecursiveDB(task, participation.repositoryData!, [msg.partition], Number.MAX_SAFE_INTEGER)
         return {
             messageKind: "SubscribeToPartitionContentsResponse",
@@ -100,11 +102,10 @@ const UnsubscribeFromPartitionContentsRequestFunction = (
     _ctx: DeltaContext
 ): DeltaEvent | DeltaResponse | ErrorDelta => {
     deltaLogger.info("Called UnsubscribeFromPartitionContentsRequestFunction " + msg.messageKind)
-    if (!participation.subscribedPartitions.includes(msg.partition)) {
+    if (!participation.subscribedPartitions.has(msg.partition)) {
         return newErrorDelta("notSubscribed", `Not subscribed to partition ${msg.partition}, cannot unsubscribe`, msg, participation)
     }
-    const index = participation.subscribedPartitions.findIndex(p => p === msg.partition)
-    participation.subscribedPartitions.splice(index, 1)
+    const index = participation.subscribedPartitions.delete(msg.partition)
     return {
         queryId: msg.queryId,
         messageKind: "UnsubscribeFromPartitionContentsResponse",
@@ -147,7 +148,7 @@ const SignOffRequestFunction = (participation: ParticipationInfo, msg: SignOffRe
     if (participation.participationStatus !== "signedOn") {
         return newErrorDelta("notSignedOn", "Cannot SignOff a participation, because you are not signed on.", msg, participation)
     }
-    participation.participationStatus = "signedOff"
+    participation.participationStatus = "connected"
     return {
         messageKind: "SignOffResponse",
         queryId: msg.queryId,
@@ -166,7 +167,6 @@ const ListPartitionsRequestFunction = async (
         return result
     })
 
-    // const partitions = await retrievePartitionsFromDB(_ctx.dbConnection, participation.repositoryData!)
     const response: ListPartitionsResponse = {
         messageKind: "ListPartitionsResponse",
         partitions: { nodes: partitions.nodes },
@@ -178,6 +178,33 @@ const ListPartitionsRequestFunction = async (
                 data: [{ key: "version", value: "" + partitions.version }]
             }
         ]
+    }
+    return response
+}
+
+const ListAndSubscribePartitionsRequestFunction = async (
+    participation: ParticipationInfo,
+    msg: ListAndSubscribePartitionsRequest,
+    ctx: DeltaContext
+): Promise<DeltaEvent | DeltaResponse> => {
+    deltaLogger.info("Called ListAndSubscribePartitionsRequestFunction " + msg.messageKind)
+    const partitionsContents = await ctx.dbConnection.tx(async (task: LionWebTask) => {
+        const partitions = await DB.retrievePartitionsFromDB(task, participation.repositoryData!)
+        const partitionsContents = await DB.retrieveFullNodesRecursiveDB(
+            task,
+            participation.repositoryData!,
+            partitions.nodes.map(n => n.id),
+            Number.MAX_SAFE_INTEGER
+        )
+        partitions.nodes.forEach(part => participation.subscribedPartitions.add(part.id))
+        return partitionsContents
+    })
+    
+    const response: ListAndSubscribePartitionsResponse = {
+        messageKind: "ListAndSubscribePartitionsResponse",
+        partitions: { nodes: partitionsContents },
+        queryId: msg.queryId,
+        additionalInfos: []
     }
     return response
 }
@@ -255,5 +282,10 @@ export const requestFunctions: DeltaFunction[] = [
         messageKind: "UnsubscribeFromPartitionContentsRequest",
         // @ts-expect-error TS2322
         processor: UnsubscribeFromPartitionContentsRequestFunction
+    },
+    {
+        messageKind: "ListAndSubscribePartitionsRequest",
+        // @ts-expect-error TS2322
+        processor: ListAndSubscribePartitionsRequestFunction
     }
 ]

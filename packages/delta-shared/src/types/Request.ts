@@ -8,6 +8,22 @@ import type { ClientId } from "./DeltaTypes.js";
 import type { ParticipationId } from "./DeltaTypes.js";
 import type { SequenceNumber } from "./DeltaTypes.js";
 
+export const DeltaRequestMessageKinds = [
+    "InformAboutChangingPartitionsRequest",
+    "SubscribeToChangingPartitionsRequest",
+    "SubscribeToPartitionContentsRequest",
+    "UnsubscribeFromPartitionContentsRequest",
+    "SignOnRequest",
+    "SignOffRequest",
+    "ReconnectRequest",
+    "GetAvailableIdsRequest",
+    "ListPartitionsRequest",
+    "ListAndSubscribePartitionsRequest",
+] as const;
+
+// The type for the tagged union property, derived from the above array
+export type RequestMessageKind = (typeof DeltaRequestMessageKinds)[number];
+
 // The overall "super-type"
 export type DeltaRequest = {
     queryId: QueryId;
@@ -88,36 +104,19 @@ export type GetAvailableIdsRequest = DeltaRequest & {
  *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-ListPartitions
  */
 export type ListPartitionsRequest = DeltaRequest & {
+    depthLimit: Number;
     messageKind: "ListPartitionsRequest";
 };
 
-// The type for the tagged union property
-export type RequestMessageKind =
-    | "InformAboutChangingPartitionsRequest"
-    | "SubscribeToChangingPartitionsRequest"
-    | "SubscribeToPartitionContentsRequest"
-    | "UnsubscribeFromPartitionContentsRequest"
-    | "SignOnRequest"
-    | "SignOffRequest"
-    | "ReconnectRequest"
-    | "GetAvailableIdsRequest"
-    | "ListPartitionsRequest";
+/**
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-ListAndSubscribePartitions
+ */
+export type ListAndSubscribePartitionsRequest = DeltaRequest & {
+    messageKind: "ListAndSubscribePartitionsRequest";
+};
 
 // Type Guard function
 export function isDeltaRequest(object: unknown): object is DeltaRequest {
     const castObject = object as DeltaRequest;
-    return (
-        castObject.messageKind !== undefined &&
-        [
-            "InformAboutChangingPartitionsRequest",
-            "SubscribeToChangingPartitionsRequest",
-            "SubscribeToPartitionContentsRequest",
-            "UnsubscribeFromPartitionContentsRequest",
-            "SignOnRequest",
-            "SignOffRequest",
-            "ReconnectRequest",
-            "GetAvailableIdsRequest",
-            "ListPartitionsRequest",
-        ].includes(castObject.messageKind)
-    );
+    return castObject.messageKind !== undefined && DeltaRequestMessageKinds.includes(castObject.messageKind);
 }
