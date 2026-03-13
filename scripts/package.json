@@ -1,6 +1,6 @@
 {
     "name": "@lionweb/server-scripts",
-    "version": "0.4.0-beta.2",
+    "version": "0.4.0-beta.3",
     "private": true,
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -33,9 +33,9 @@
         "typescript": "5.9.3"
     },
     "dependencies": {
-        "@lionweb/server-common": "0.4.0-beta.2",
-        "@lionweb/server-delta-definitions": "0.4.0-beta.2",
-        "@lionweb/server-bulkapi": "0.4.0-beta.2",
+        "@lionweb/server-common": "0.4.0-beta.3",
+        "@lionweb/server-delta-definitions": "0.4.0-beta.3",
+        "@lionweb/server-bulkapi": "0.4.0-beta.3",
         "@lionweb/json": "0.9.0-beta.0",
         "@lionweb/json-utils": "0.9.0-beta.0",
         "@lionweb/validation": "0.9.0-beta.0",
