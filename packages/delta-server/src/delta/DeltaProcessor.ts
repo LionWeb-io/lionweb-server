@@ -13,7 +13,7 @@ import {
     ErrorResponse,
     AddPartitionCommand,
     PartitionAddedEvent,
-    LionWebId, PartitionDeletedEvent
+    LionWebId, PartitionDeletedEvent, CompositeCommand, DeltaEvent
 } from "@lionweb/server-delta-shared"
 import { MessageFromClient } from "@lionweb/server-delta-shared"
 import { ValidationResult } from "@lionweb/validation"
@@ -23,7 +23,7 @@ import { DeltaContext } from "./DeltaContext.js"
 import {
     annotationFunctions,
     childFunctions,
-    DeltaFunction,
+    DeltaFunction, errorEvent,
     issuesToProtocolMessages,
     MessageFunction,
     miscFunctions,
@@ -83,7 +83,7 @@ class DeltaProcessor {
         this.deltaValidator.validationResult.reset()
         this.deltaValidator.validate(delta, messageKind)
         if (this.deltaValidator.validationResult.hasErrors()) {
-            deltaLogger.error(`Validation errors:`)
+            deltaLogger.error(`Validation errors for delta: ${JSON.stringify(delta)}`)
             this.deltaValidator.validationResult.issues.forEach(issue => {
                 deltaLogger.error(issue.errorMsg())
             })
@@ -132,12 +132,14 @@ class DeltaProcessor {
             if (isErrorEvent(e) || isErrorResponse(e)) {
                 this.sendDelta(socket, participation, delta, e)
             } else if (isInternalQueryError(e)) {
-                const errorDelta = newErrorDelta('queryError', e.message, delta, participation!, {
-                    additionalInfos: [ {
-                        data: e.data,
-                        kind: e.name,
-                        message:"Additional data"
-                    }]
+                const errorDelta = newErrorDelta("queryError", e.message, delta, participation!, {
+                    additionalInfos: [
+                        {
+                            data: e.data,
+                            kind: e.name,
+                            message: "Additional data"
+                        }
+                    ]
                 })
                 this.sendDelta(socket, participation, delta, errorDelta)
             } else if (e instanceof Error) {
@@ -154,6 +156,30 @@ class DeltaProcessor {
                 this.sendDelta(socket, participation, delta, errorDelta)
             }
         }
+    }
+
+    CompositeCommandFunction = (
+        participation: ParticipationInfo,
+        msg: CompositeCommand,
+        _ctx: DeltaContext,
+        socket?: WebSocket
+    ): DeltaEvent => {
+        deltaLogger.info("Called CompositeCommandFunction " + msg.messageKind)
+        const store = []
+        this.sendDelta = (
+            socket: WebSocket,
+            participation: ParticipationInfo | undefined,
+            originalMessage: MessageFromClient,
+            responseOrEvent: MessageToClient
+        ): void => {
+            const call = { socket: socket, part: participation, orig: originalMessage, responseOrEvent: responseOrEvent }
+            store.push(call)
+            
+        }
+        for(const cmd of msg.parts) {
+            this.processDelta(socket!, cmd)
+        }
+        return errorEvent(msg)
     }
 
     /**
@@ -217,15 +243,17 @@ class DeltaProcessor {
             }
         } else if (isDeltaRequest(originalMessage) && isDeltaResponse(responseOrEvent)) {
             responseOrEvent.queryId = originalMessage.queryId
+        } else if (isDeltaAdminRequest(originalMessage) && isDeltaAdminResponse(responseOrEvent)) {
+            responseOrEvent.queryId = originalMessage.queryId
         } else {
-            // TODO INTERNAL ERROR
+            // TODO Ok for admin events, but otherwise this should be impossible
         }
         socket.send(JSON.stringify(responseOrEvent))
     }
 
     sendPartitionAddedEvents(socket: WebSocket, delta: MessageFromClient, response: PartitionAddedEvent): void {
         for (const participationInfo of activeSockets.values()) {
-            console.log("DeltaProcessor.PartitionAdded next socket " + participationInfo.participationId)
+            deltaLogger.info("DeltaProcessor.PartitionAdded next socket " + participationInfo.participationId)
             if (participationInfo.partitionChangesSubscription !== undefined) {
                 // Subscribed?
                 if (participationInfo.partitionChangesSubscription.creation) {
@@ -254,16 +282,15 @@ class DeltaProcessor {
         // Find out which nodes to send to whom
         for (const participationInfo of activeSockets.values()) {
             console.log("DeltaProcessor.PartitionDeleted next socket " + participationInfo.participationId)
-            const needsToSend: boolean = 
-                (participationInfo.partitionChangesSubscription !== undefined && participationInfo.partitionChangesSubscription.deletion) 
-                ||
+            const needsToSend: boolean =
+                (participationInfo.partitionChangesSubscription !== undefined && participationInfo.partitionChangesSubscription.deletion) ||
                 participationInfo.subscribedPartitions.has(response.deletedPartition)
             if (needsToSend) {
                 this.sendDelta(participationInfo.socket, participationInfo, delta, response)
             }
         }
     }
-    
+
     sendToSubscribers(delta: MessageFromClient, response: MessageToClient, partition: LionWebId): void {
         deltaLogger.debug(`affectedPartition ${partition}`)
         response.additionalInfos.push(affectedPartitionMessage(partition))

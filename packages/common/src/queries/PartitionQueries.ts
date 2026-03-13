@@ -11,8 +11,8 @@ export type NodeListAndVersion = {
 /**
  * Get all partitions: this returns all nodes that have parent set to null or undefined
  */
-export const retrievePartitionsFromDB = async (task: LionWebTask, repositoryData: RepositoryData): Promise<NodeListAndVersion> => {
-    dbLogger.info("PartitionQueries.retrievePartitionsFromDB")
+export const retrievePartitionNodes = async (task: LionWebTask, repositoryData: RepositoryData): Promise<NodeListAndVersion> => {
+    dbLogger.info("PartitionQueries.retrievePartitionNodes")
     let query = SQL.currentRepoVersionSQL()
     query += SQL.retrieveFullNodesFromQuerySQL(`SELECT * FROM ${NODES_TABLE} WHERE parent is null`)
     const [versionResult, result] = await task.multi(repositoryData, query)

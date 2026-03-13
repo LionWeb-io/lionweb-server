@@ -21,10 +21,11 @@
         ]
     },
     "logging": {
-        "request": "silent",
+        "bulk": "trace",
+        "request": "info",
         "trace": "silent",
         "database": "silent",
-        "query": "info",
+        "query": "silent",
         "express": "silent",
         "delta": "info",
         "message": "silent"

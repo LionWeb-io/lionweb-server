@@ -35,7 +35,7 @@ export class BulkApiWorker {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async bulkPartitions(task: LionWebTask, repositoryData: RepositoryData): Promise<QueryReturnType<ListPartitionsResponse>> {
-        const result = await DB.retrievePartitionsFromDB(task, repositoryData)
+        const result = await DB.retrievePartitionNodes(task, repositoryData)
         return {
             status: HttpSuccessCodes.Ok,
             query: "query",

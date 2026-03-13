@@ -38,7 +38,7 @@ const retrieveFullNodesRecursiveSQL = (nodeid: string[], depthLimit: number): st
 /**
  *
  */
-const retrieveFullNodesRecursiveDB = async (
+const retrieveFullNodesRecursive = async (
     task: LionWebTask,
     repoData: RepositoryData,
     nodeid: string[],
@@ -176,5 +176,5 @@ export const RETRIEVE_NODES_SQL = {
 export const RETRIEVE_NODES_DB = {
     retrieveNodeTreeDB,
     retrieveParentsDB,
-    retrieveFullNodesRecursiveDB
+    retrieveFullNodesRecursive
 }

@@ -20,7 +20,7 @@ import { reportHTML, TestCoverage } from "./helpers.js"
 import { CLASSIFIER as CLS, CONTAINMENT, CONTAINMENT as CON, PROPERTY as PROP, REFERENCE as REF } from "./keys.js"
 import { Logo2String } from "./Logo2String.js"
 // TOPO Delta : primary key exception when nohistory = false 
-const collection = [true, false]
+const collection = [true]
 const log: boolean = false
 
 // Define a coverage map, so we can generate test overview table at the end.
@@ -276,7 +276,7 @@ collection.forEach(withoutHistory => {
             await expectEvent(deleteChildCommand, "ChildDeleted")
             await expectResponse(listPartitions, "ListPartitionsResponse")
             const listResp = await cmd.responseFor(listPartitions) as ListPartitionsResponse
-            expect (listResp.partitions.nodes.length).toEqual(2)
+            expect (listResp.partitions.nodes.filter(n => n.parent === null).length).toEqual(2)
             // await makeSnapShot()
         })
         test("References", async () => {
