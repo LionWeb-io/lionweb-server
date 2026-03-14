@@ -181,7 +181,7 @@ export class ServerConfig {
 
     pgHost(): string {
         const result = this?.config?.postgres?.database?.host
-        return result || "postgres"
+        return result || "192.168.100.1"
     }
 
     pgUser(): string {

@@ -9,7 +9,7 @@ import { WebSocketServer } from "ws"
 import { postgresConnectionWithDatabase, pgp, postgresConnectionWithoutDatabase, postgresPool } from "./DbConnection.js"
 import {
     DbConnection,
-    expressLogger,
+    // expressLogger,
     LionWebTask,
     RepositoryConfig,
     requestLogger,
