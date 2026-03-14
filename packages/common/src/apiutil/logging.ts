@@ -14,10 +14,10 @@ export function verbosity(level: string, defaultValue: LevelWithSilent): LevelWi
 
 const transport = pino.transport({
     targets: [
-        {
-            target: "pino/file",
-            options: { destination: `./server-log.jsonl` }
-        },
+        // {
+        //     target: "pino/file",
+        //     options: { destination: `./server-log.jsonl` }
+        // },
         // {
         //     target: "pino/file" // default destination is console
         // },
