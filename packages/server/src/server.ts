@@ -45,12 +45,12 @@ app.use(
     })
 )
 // Setup automatic logging of request/result pairs
-app.use(
-    pinoHttp({
-        logger: expressLogger,
-        useLevel: ServerConfig.getInstance().expressLog()
-    })
-)
+// app.use(
+//     pinoHttp({
+//         logger: expressLogger,
+//         useLevel: ServerConfig.getInstance().expressLog()
+//     })
+// )
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json({ limit: ServerConfig.getInstance().bodyLimit(), type: JSON_CONTENT_TYPE }))

@@ -21,19 +21,19 @@ const transport = pino.transport({
         // {
         //     target: "pino/file" // default destination is console
         // },
-        {
-            target: "pino-pretty",
-            options: {
-                colorize: true,
-                ignore: "pid,hostname,level-label,type,query,chunk"
-            }
-        }
+        // {
+        //     target: "pino-pretty",
+        //     options: {
+        //         colorize: true,
+        //         ignore: "pid,hostname,level-label,type,query,chunk"
+        //     }
+        // }
     ]
 })
 
 const pinoLogger = pino(
     {
-        level: "info",
+        level: "silent",
         formatters: {
             // level: (label: string) => {
             //     return { level: label.toUpperCase() }
