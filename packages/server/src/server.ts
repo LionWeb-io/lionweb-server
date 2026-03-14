@@ -28,7 +28,7 @@ import {
 } from "@lionweb/server-additionalapi"
 import { registerLanguagesApi } from "@lionweb/server-languages"
 import { HttpClientErrors, PROTOBUF_CONTENT_TYPE } from "@lionweb/server-shared"
-import { pinoHttp } from "pino-http"
+// import { pinoHttp } from "pino-http"
 import * as http from "node:http"
 import { runWithTryDelta } from "./RunTry.js";
 
