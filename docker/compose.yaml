@@ -20,7 +20,7 @@ services:
        - db-data:/var/lib/postgresql/data
      environment:
        POSTGRES_DB: "lionweb"
-       POSTGRES_PASSWORD: "lionweb"
+       POSTGRES_PASSWORD: "posytgres"
        POSTGRES_HOST: "postgres"
        POSTGRESS_USER: "postgres"
      expose:
@@ -31,7 +31,7 @@ services:
        timeout: 5s
        retries: 5
      ports:
-       - '5432:5432'
+       - '54320:54320'
 volumes:
  db-data:
   driver: local
