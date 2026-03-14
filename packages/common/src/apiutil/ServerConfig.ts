@@ -206,7 +206,7 @@ export class ServerConfig {
 
     pgPort(): number {
         const result = this.config?.postgres?.database?.port
-        return result || 5432
+        return result || 54320
     }
 
     pgRootcert(): string {
