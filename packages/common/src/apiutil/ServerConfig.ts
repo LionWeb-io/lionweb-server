@@ -180,43 +180,51 @@ export class ServerConfig {
     }
 
     pgHost(): string {
+        const PGHOST = process.env.PGHOST
         const result = this?.config?.postgres?.database?.host
-        return result || "192.168.100.1"
+        return PGHOST ?? result ?? "192.168.100.1"
     }
 
     pgUser(): string {
+        const PGUSER = process.env.PGUSER
         const result = this?.config?.postgres?.database?.user
-        return result || "postgres"
+        return PGUSER ?? result ?? "postgres"
     }
 
     pgDb(): string {
+        const PGDB = process.env.PGDB
         const result = this?.config?.postgres?.database?.db
-        return result || "lionweb"
+        return PGDB ?? result ?? "lionweb"
     }
 
     pgMaintenanceDb(): string {
+        const PGMAINTENANCE = process.env.PGMAINTENANCE
         const result = this?.config?.postgres?.database?.maintenanceDb
-        return result || "postgres"
+        return PGMAINTENANCE ?? result ?? "postgres"
     }
 
     pgPassword(): string {
+        const PGPASSWORD = process.env.PGPASSWORD
         const result = this?.config?.postgres?.database?.password
-        return result || "lionweb"
+        return PGPASSWORD ?? result ?? "lionweb"
     }
 
     pgPort(): number {
+        const PGPORT = Number.parseInt(process.env.PGPORT)
         const result = this.config?.postgres?.database?.port
-        return result || 54320
+        return PGPORT ?? result ?? 54320
     }
 
     pgRootcert(): string {
+        const PGROOTCERT = process.env.PGROOTCERT
         const result = this?.config?.postgres?.certificates?.rootcert
-        return result
+        return PGROOTCERT ?? result
     }
 
     pgRootcertcontents(): string {
+        const PGROOTCERTCONTENTS = process.env.PGROOTCERTCONTENTS
         const result = this?.config?.postgres?.certificates?.rootcertcontent
-        return result
+        return PGROOTCERTCONTENTS ?? result
     }
 
     serverPort(): number {
