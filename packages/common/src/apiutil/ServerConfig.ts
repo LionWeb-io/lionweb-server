@@ -1,7 +1,7 @@
 import { LionWebVersionType } from "@lionweb/server-shared"
 import fs from "node:fs"
-// import { LevelWithSilent } from "pino"
-import { expressLogger, LevelWithSilent, verbosity } from "./logging.js"
+import { LevelWithSilent } from "./PinoLogger.js"
+import { expressLogger, verbosity } from "./logging.js"
 
 // Define the possible values of database creation both as a type, and as an array of strings and a type
 const CreationValues = ["always", "never", "if-not-exists"] as const
@@ -182,7 +182,7 @@ export class ServerConfig {
     pgHost(): string {
         const PGHOST = process.env.PGHOST
         const result = this?.config?.postgres?.database?.host
-        return PGHOST ?? result ?? "192.168.100.1"
+        return PGHOST ?? result ?? "127.0.0.1"
     }
 
     pgUser(): string {
@@ -210,9 +210,12 @@ export class ServerConfig {
     }
 
     pgPort(): number {
-        const PGPORT = Number.parseInt(process.env.PGPORT)
+        let PGPORT = Number.parseInt(process.env.PGPORT)
+        if (Number.isNaN(PGPORT)) {
+            PGPORT = undefined
+        }
         const result = this.config?.postgres?.database?.port
-        return PGPORT ?? result ?? 54320
+        return PGPORT ?? result ?? 5432
     }
 
     pgRootcert(): string {
