@@ -45,11 +45,7 @@ export class DeltaClient {
         this._state = value
     }
 
-    private DEFAULT_TIMEOUT = 2000
-    private DEFAULT_SERVER_IP = "ws://127.0.0.1"
-    private DEFAULT_PORT = 3005
-
-    // Server parameters
+    // Delta Server parameters
     private port: number
     private hostname: string
     private serverUrl: string
@@ -60,7 +56,7 @@ export class DeltaClient {
     /**
      * The Client id that is used for all Api requests
      */
-    clientId: string = "<missiong-c;lient-id>"
+    clientId: string = "<missiong-client-id>"
     participationId: string = ""
     /**
      * When true, will not call the event processing functions for events that are caused
@@ -78,11 +74,12 @@ export class DeltaClient {
      * @param repository we may want to pass a null repository if we are interested only in using the APIs that list,
      * create, or delete repositories and do not operate on a specific repository.
      */
-    constructor(config: DeltaConfiguration, deltaProcessingFunctions: ReceivingDelta[][]) {
+    constructor(clientId: string, config: DeltaConfiguration, deltaProcessingFunctions: ReceivingDelta[][]) {
         this.port = config.port ?? DEFAULT_PORT
         this.hostname = config.hostname ?? DEFAULT_SERVER_IP
-        this.serverUrl = `http://${this.hostname}:${this.port}/`
+        this.serverUrl = `ws://${this.hostname}:${this.port}/`
         this.timeout = config.timeout ?? DEFAULT_TIMEOUT
+        this.clientId = clientId
         
         const tmp = deltaProcessingFunctions
         tmp.push(
@@ -120,8 +117,10 @@ export class DeltaClient {
     receivedResponses: Map<string, DeltaResponse | DeltaAdminResponse> = new Map<string, DeltaResponse | DeltaAdminResponse>()
 
     asyncConnect(): Promise<WebSocket | Event> {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const self = this
         return new Promise(function(resolve, reject) {
-            const server = new WebSocket("ws://localhost:3005");
+            const server = new WebSocket(self.serverUrl);
             server.onopen = function() {
                 resolve(server);
             };
@@ -248,12 +247,16 @@ export class DeltaClient {
      */
     private commandNumber = 0;
     private setCommandId(command: DeltaCommand): void {
-        command.commandId = command.messageKind + "-" + this.commandNumber++
+        if (command.commandId === "") {
+            command.commandId = command.messageKind + "-" + this.commandNumber++
+        }
     }
 
     private queryNumber = 0;
     private setQueryId(query: DeltaRequest | DeltaAdminRequest): void {
-        query.queryId = query.messageKind + "-" + this.queryNumber++
+        if (query.queryId === "") {
+            query.queryId = query.messageKind + "-" + this.queryNumber++
+        }
     }
 
     private handleError(e: Error, method: string = ""): void {
@@ -275,7 +278,7 @@ export class DeltaClient {
      */
     log(message: string): void {
         if (this.loggingOn) {
-            console.log("DeltaClient: " + message)
+            console.log(`DeltaClient ${this.clientId}: ${message}`)
         }
     }
 
@@ -284,7 +287,7 @@ export class DeltaClient {
      * @param message
      */
     logError(message: string): void {
-        console.log("DeltaClient error: " + message)
+        console.log(`DeltaClient error ${this.clientId}: ${message}`)
     }
 
     /**

@@ -1,0 +1,150 @@
+import { RepositoryClient } from "@lionweb/server-client"
+import { adminResponseFunctions, DeltaClient, eventFunctions, responseFunctions } from "@lionweb/server-delta-client"
+import { HttpSuccessCodes  } from "@lionweb/server-shared"
+import { test, describe, beforeAll, beforeEach, afterAll } from "vitest"
+import { reportHTML } from "./helpers.js"
+import { CLASSIFIER as CLS } from "./keys.js"
+import { CoverageMap, cmd, expectEvent, expectResponse, logProtocol } from "./test-helpers.test.js"
+
+// TOPO Delta : primary key exception when nohistory = false 
+const collection = [true]
+const log: boolean = false
+
+const config = {
+    // hostname: "192.168.100.1",
+    hostname: "127.0.0.1",
+    port: 3005,
+    timeout: 2000,
+}
+
+// Run all, tests with and without history
+const client1 = new DeltaClient("client1", config, [eventFunctions, responseFunctions, adminResponseFunctions])
+const client2 = new DeltaClient("client2", config, [eventFunctions, responseFunctions, adminResponseFunctions])
+const client3 = new DeltaClient("client3", config, [eventFunctions, responseFunctions, adminResponseFunctions])
+const client4 = new DeltaClient("client4", config, [eventFunctions, responseFunctions, adminResponseFunctions])
+
+collection.forEach((withoutHistory) => {
+    const repository = withoutHistory ? "LogoRepo" : "LogoHistoryRepo"
+    const bulkApiClient = new RepositoryClient({ clientId: "BulkClient-01", repository: repository })
+
+    describe("Delta tests " + (withoutHistory ? "without history" : "with history"), async () => {
+        client1.repository = repository
+        client2.repository = repository
+        client3.repository = repository
+        client4.repository = repository + "_other"
+
+        beforeAll(async function () {
+            bulkApiClient.repository = repository
+            const delResponse = await bulkApiClient.dbAdmin.deleteRepository(repository, "delete at start og test")
+            const initResponse = await bulkApiClient.dbAdmin.createRepository(repository, !withoutHistory, "2023.1")
+            if (initResponse.status !== HttpSuccessCodes.Ok) {
+                console.log(`Cannot create repository (${repository}): ` + JSON.stringify(initResponse.body))
+            } else {
+                console.log(`Created repository (${repository}): ` + JSON.stringify(initResponse.body))
+            }
+            client1.loggingOn = log
+            client2.loggingOn = log
+            client3.loggingOn = log
+            client4.loggingOn = log
+            await client1.connect()
+            await client2.connect()
+            await client3.connect()
+            await client4.connect()
+            const listReposRequest = cmd.listRepositories(client1)
+            // const deleteRepo = deleteRepository(repository)
+            // await responseFor(deleteRepo)
+            const addRepo = cmd.addRepository(client1, repository)
+
+            expect((await cmd.responseFor(client1, addRepo)).messageKind).toEqual("CreateRepositoryAdminResponse")
+
+            const signOn = cmd.signOnRequest(client1, client1.repository)
+
+            expect((await cmd.responseFor(client1, listReposRequest)).messageKind).toEqual("ListRepositoriesAdminResponse")
+            await expectResponse(client1, signOn, "SignOnResponse")
+            expect(await cmd.responseFor(client1, signOn)).toMatchObject({
+                messageKind: "SignOnResponse",
+                queryId: signOn.queryId,
+                additionalInfos: [
+                    {
+                        data: [],
+                        kind: "Info",
+                        message: "SignOnRequest received ok",
+                    },
+                ],
+            })
+
+            // const subscribeToPartitionChanges =
+        })
+
+        beforeEach(async function () {
+            client1.sentMessageHistory = []
+            client1.receivedMessageHistory = []
+        })
+
+        afterAll(async function () {
+            // deltaApiClient01.sendRequest(newUnSubscribeToPartitionRequest(deltaApiClient01.repository, deltaApiClient01.clientId, "Program-01",))
+            console.log("CLOSING")
+            client1.socket.close()
+            // client2.socket.close()
+            // client3.socket.close()
+            // client4.socket.close()
+            console.log("CLOSED")
+            // const reply = await bulkApiClient.dbAdmin.deleteRepository(repository)
+            // console.log(`afterEach.deleteRepository ${JSON.stringify(reply.body)}`)
+            // console.log("DELETED")
+            reportHTML(CoverageMap)
+        })
+
+        describe("Partition tests", () => {
+            test("SignOnOff", async () => {
+                // Signing on twice is ok
+                const signOn = cmd.signOnRequest(client1, repository)
+                await expectResponse(client1, signOn, "SignOnResponse")
+                const signOn2 = cmd.signOnRequest(client2, repository)
+                await expectResponse(client2, signOn2, "SignOnResponse")
+                const signOn3 = cmd.signOnRequest(client3, repository)
+                await expectResponse(client3, signOn3, "SignOnResponse")
+                const signOn4 = cmd.signOnRequest(client4, repository)
+                await expectResponse(client4, signOn4, "SignOnResponse")
+
+                const inform2 = cmd.informAbout(client2)
+                await expectResponse(client2, inform2, "InformAboutChangingPartitionsResponse")
+                const sub2 = cmd.subscribeToChangingPartitions(client3)
+                await expectResponse(client3, sub2, "SubscribeToChangingPartitionsResponse")
+            })
+            test("AddPartition", async () => {
+                // assert(initError === "", initError)
+                const addPartitionCommand1 = cmd.addPartition(client1, { id: "Program-01", classifier: CLS.Program })
+                await expectEvent(client1, addPartitionCommand1, "PartitionAdded")
+                await expectEvent(client2, addPartitionCommand1, "PartitionAdded")
+                await expectEvent(client3, addPartitionCommand1, "PartitionAdded")
+
+                const deletePartition = cmd.deletePartition(client1, "Program-01")
+                await expectEvent(client1, deletePartition, "PartitionDeleted")
+                await expectEvent(client2, deletePartition, "PartitionDeleted")
+                await expectEvent(client3, deletePartition, "PartitionDeleted")
+                await expect(cmd.eventFor(client4, deletePartition)).rejects.toThrowErrorMatchingInlineSnapshot("[Error: TimeOut]")
+
+                // const unsubscribe = cmd.unsubscribeToChangingPartitions(client3)
+                // await expectResponse(client3, unsubscribe, "SubscribeToChangingPartitionsResponse")
+                const unsubscribe = cmd.unInformAboutChangingPartitions(client3)
+                await expectResponse(client3, unsubscribe, "InformAboutChangingPartitionsResponse")
+
+                const addPartitionCommand2 = cmd.addPartition(client2, { id: "Program-011111", classifier: CLS.Program })
+                await expectEvent(client2, addPartitionCommand2, "PartitionAdded")
+                // await expectEvent(client3, addPartitionCommand2, "PartitionAdded")
+                await expect(cmd.eventFor(client1, addPartitionCommand2)).rejects.toThrowErrorMatchingInlineSnapshot("[Error: TimeOut]")
+                await expect(cmd.eventFor(client3, addPartitionCommand2)).rejects.toThrowErrorMatchingInlineSnapshot("[Error: TimeOut]")
+                await expect(cmd.eventFor(client4, addPartitionCommand2)).rejects.toThrowErrorMatchingInlineSnapshot("[Error: TimeOut]")
+
+                logProtocol(client1, true)
+                logProtocol(client2, true)
+                logProtocol(client3, true)
+                logProtocol(client4, true)
+            })
+        })
+    })
+
+})
+
+

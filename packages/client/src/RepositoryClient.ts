@@ -9,7 +9,7 @@ import { LanguagesApi } from "./LanguagesApi.js"
 // Default config values
 const DEFAULT_NODE_PORT = "3005"
 const DEFAULT_SERVER_IP = "127.0.0.1"
-const DEFAULT_TIMEOUT = 20000
+const DEFAULT_TIMEOUT = 2000
 
 export type Status = number
 /**

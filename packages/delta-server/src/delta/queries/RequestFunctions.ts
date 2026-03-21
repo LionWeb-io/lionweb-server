@@ -105,7 +105,7 @@ const UnsubscribeFromPartitionContentsRequestFunction = (
     if (!participation.subscribedPartitions.has(msg.partition)) {
         return newErrorDelta("notSubscribed", `Not subscribed to partition ${msg.partition}, cannot unsubscribe`, msg, participation)
     }
-    const index = participation.subscribedPartitions.delete(msg.partition)
+    participation.subscribedPartitions.delete(msg.partition)
     return {
         queryId: msg.queryId,
         messageKind: "UnsubscribeFromPartitionContentsResponse",

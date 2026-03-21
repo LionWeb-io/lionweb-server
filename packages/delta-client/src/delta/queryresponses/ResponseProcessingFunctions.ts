@@ -2,6 +2,7 @@ import type {
     SubscribeToChangingPartitionsResponse,
     SubscribeToPartitionContentsResponse,
     UnsubscribeFromPartitionContentsResponse,
+    InformAboutChangingPartitionsResponse,
     ListPartitionsResponse,
     GetAvailableIdsResponse, ErrorResponse
 } from "@lionweb/server-delta-shared"
@@ -27,11 +28,20 @@ const GetAvailableIdsResponseFunction = (_msg: GetAvailableIdsResponse): void =>
     console.log("Called GetAvailableIdsResponseFunction " )
 }
 
+const InformAboutChangingPartitionsResponseFunction = (_msg: InformAboutChangingPartitionsResponse): void => {
+    console.log("Called InformAboutChangingPartitionsResponse ")
+}
+
 const ErrorResponseFunction = (_msg: ErrorResponse): void => {
     console.log("Called ErrorResponseFunction ")
 }
 
 export const responseFunctions: ReceivingDelta[] = [
+    {
+        messageKind: "InformAboutChangingPartitionsResponse",
+        // @ts-expect-error TS2322
+        processor: InformAboutChangingPartitionsResponseFunction
+    },
     {
         messageKind: "ListPartitionsResponse",
         // @ts-expect-error TS2322

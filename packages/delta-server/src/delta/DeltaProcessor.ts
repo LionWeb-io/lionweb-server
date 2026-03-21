@@ -1,3 +1,4 @@
+import { LionWebJsonChunkWrapper } from "@lionweb/json-utils"
 import { deltaLogger, isInternalQueryError, notNullOrUndefined } from "@lionweb/server-common"
 import { DeltaValidator } from "@lionweb/server-delta-definitions"
 import {
@@ -58,6 +59,16 @@ class DeltaProcessor {
      * @param delta
      */
     processDelta = async (socket: WebSocket, delta: MessageFromClient): Promise<void> => {
+        for (const participationInfo of activeSockets.values()) {
+            deltaLogger.info(
+                `Participation ${participationInfo.repositoryData?.clientId} subscibed partitions ${Array.from(participationInfo.subscribedPartitions).map(n => n)}`
+            )
+            if (participationInfo.partitionChangesSubscription !== undefined) {
+                deltaLogger.info(
+                    `              ${participationInfo.partitionChangesSubscription.creation} - ${participationInfo.partitionChangesSubscription.deletion}`
+                )
+            }
+        }
         // first try to get the `messageKind`
         deltaLogger.debug(`processDelta messageKind ${delta?.messageKind}`)
         const participation = activeSockets.get(socket)
@@ -109,18 +120,18 @@ class DeltaProcessor {
                 deltaLogger.info(`Sending Error Event or response ${JSON.stringify(response)}`)
                 this.sendDelta(socket, participation, delta, response)
             } else {
-                // To whom needs this Event (yes, it's an Event now) need to be sent.
-                deltaLogger.debug(`looking for affected partitions in ${response}`)
+                // To whom needs this Event (yes, it's an Event now) needs to be sent.
+                deltaLogger.info(`looking for affected partitions in ${response}`)
                 const affectedPartitionData = response.additionalInfos.find(m => m.kind == "AffectedPartition")
                 // TODO can be more than one affected partition
                 const affectedPartition = affectedPartitionData?.data?.find(kv => kv.key === "node")?.value
                 if (affectedPartition === undefined) {
-                    deltaLogger.debug("No affected partition found, not sending delta's")
+                    deltaLogger.info("No affected partition found, not sending delta's")
                 } else {
                     // First check for new/deleted partitions, then for partition subscriptions
                     if (response.messageKind === "PartitionAdded") {
                         deltaLogger.info("DeltaProcessor.PartitionAdded")
-                        this.sendPartitionAddedEvents(socket, delta, response as PartitionAddedEvent)
+                        this.sendPartitionAddedEvents(socket, delta as AddPartitionCommand, response as PartitionAddedEvent, affectedPartition)
                     } else if (response.messageKind === "PartitionDeleted") {
                         this.sendPartitionDeletedEvents(delta, response as PartitionDeletedEvent)
                     } else {
@@ -235,6 +246,7 @@ class DeltaProcessor {
         originalMessage: MessageFromClient,
         responseOrEvent: MessageToClient
     ) {
+        deltaLogger.info(`Send delta ${responseOrEvent.messageKind} to ${participation?.repositoryData?.clientId}`)
         if (isDeltaEvent(responseOrEvent) && isDeltaCommand(originalMessage)) {
             responseOrEvent.originCommands.forEach(cmd => (cmd.commandId = originalMessage.commandId))
             responseOrEvent.additionalInfos.push(...findDistributableInfos(originalMessage))
@@ -251,27 +263,49 @@ class DeltaProcessor {
         socket.send(JSON.stringify(responseOrEvent))
     }
 
-    sendPartitionAddedEvents(socket: WebSocket, delta: MessageFromClient, response: PartitionAddedEvent): void {
+    /**
+     * Send thye PartitionAdded event to all participations that are subscribed
+     * @param socket
+     * @param delta
+     * @param response
+     */
+    sendPartitionAddedEvents(socket: WebSocket, delta: AddPartitionCommand, response: PartitionAddedEvent, affectedPartition: string): void {
+        deltaLogger.info(`DeltaProcessor.sendPartitionAddedEvents for ${activeSockets.size}`)
         for (const participationInfo of activeSockets.values()) {
-            deltaLogger.info("DeltaProcessor.PartitionAdded next socket " + participationInfo.participationId)
+            deltaLogger.info("DeltaProcessor.sendPartitionAddedEvents for " + participationInfo.repositoryData?.clientId)
             if (participationInfo.partitionChangesSubscription !== undefined) {
+                deltaLogger.info(
+                    "DeltaProcessor.sendPartitionAddedEvents subscription for " +
+                        participationInfo.repositoryData?.clientId +
+                        " => " +
+                        participationInfo.partitionChangesSubscription.creation
+                )
+
                 // Subscribed?
-                if (participationInfo.partitionChangesSubscription.creation) {
+                if (participationInfo.partitionChangesSubscription.creation === true) {
                     if (participationInfo.partitionChangesSubscription.autoSubscribe) {
                         // autosubscribe, so send full partition nodes
                         response.newPartition = {
-                            nodes: (delta as AddPartitionCommand).newPartition.nodes
+                            nodes: delta.newPartition.nodes
                         }
                         this.sendDelta(participationInfo.socket, participationInfo, delta, response)
                     } else {
-                        console.error(`TODO retrieve until depthLimit`)
-                        // TODO retrieve until depthLimit
+                        const chunk = LionWebJsonChunkWrapper.fromNodesArray(delta.newPartition.nodes)
+                        const depthChunk =  chunk.getSubtreeWithDepth(affectedPartition, participationInfo.partitionChangesSubscription.depth)
+                        response.newPartition = { nodes: depthChunk }
+                        this.sendDelta(participationInfo.socket, participationInfo, delta, response)
                     }
                 } else if (participationInfo.socket === socket) {
                     // not subscribed but send event to originating client
+                    deltaLogger.info(
+                        "DeltaProcessor.sendPartitionAddedEvents to originating 1: " + participationInfo.repositoryData?.clientId
+                    )
                     this.sendDelta(socket, participationInfo, delta, response)
+                } else {
+                    deltaLogger.info("    Not sending event ...")
                 }
-            } else {
+            } else if (participationInfo.socket === socket) {
+                deltaLogger.info("DeltaProcessor.sendPartitionAddedEvents to originating: " + participationInfo.repositoryData?.clientId)
                 // noty subscribed but send event to originating client
                 this.sendDelta(socket, participationInfo, delta, response)
             }
@@ -281,7 +315,7 @@ class DeltaProcessor {
     sendPartitionDeletedEvents(delta: MessageFromClient, response: PartitionDeletedEvent): void {
         // Find out which nodes to send to whom
         for (const participationInfo of activeSockets.values()) {
-            console.log("DeltaProcessor.PartitionDeleted next socket " + participationInfo.participationId)
+            console.log("DeltaProcessor.PartitionDeleted next socket " + participationInfo.repositoryData?.clientId)
             const needsToSend: boolean =
                 (participationInfo.partitionChangesSubscription !== undefined && participationInfo.partitionChangesSubscription.deletion) ||
                 participationInfo.subscribedPartitions.has(response.deletedPartition)

@@ -53,7 +53,7 @@ const AddPartitionFunction = async (
         // We have checked that there is exactly one partition node, now select it as affected node
         const partitionNode = msg.newPartition.nodes.find(n => n.parent === null)!
         participation.subscribedPartitions.add(partitionNode.id)
-        console.log(`Adding partition ${partitionNode.id} to subscribed partitions`)
+        console.log(`Adding partition ${partitionNode.id} to subscribed partitions for ${participation.repositoryData?.clientId}`)
 
         return {
             messageKind: "PartitionAdded",

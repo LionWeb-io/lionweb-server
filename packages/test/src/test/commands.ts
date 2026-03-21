@@ -41,7 +41,7 @@ import {
 import { waitFor } from "./delta/helpers.js"
 import {} from "./utils.js"
 
-let queryId = 1
+let queryId = 100
 // let commandId = 1
 
 export type PartitionType = {
@@ -84,53 +84,50 @@ export class Commands {
     /**
      * The client used to send the commands
      */
-    client: DeltaClient
-    constructor(client: DeltaClient) {
-        this.client = client
-    }
+    constructor() {}
 
-    signOnRequest = (repo: string, clientId: string): DeltaRequest => {
+    signOnRequest = (client: DeltaClient, repo: string): DeltaRequest => {
         const request: SignOnRequest = {
             messageKind: "SignOnRequest",
             repositoryId: repo,
             deltaProtocolVersion: "2023.1",
-            clientId: clientId,
-            queryId: `query-id-${queryId++}`,
+            clientId: client.clientId,
+            queryId: `signOn-${queryId++}`,
             additionalInfos: []
         }
-        return this.client.sendRequest(request)
+        return client.sendRequest(request)
     }
 
-    signOffRequest = (): DeltaRequest => {
+    signOffRequest = (client: DeltaClient): DeltaRequest => {
         const request: SignOffRequest = {
             messageKind: "SignOffRequest",
-            queryId: "dummy",
+            queryId: "",
             additionalInfos: []
         }
-        return this.client.sendRequest(request)
+        return client.sendRequest(request)
     }
 
-    subscribeToPartitionContentsRequest = (partition: string): DeltaRequest => {
+    subscribeToPartitionContentsRequest = (client: DeltaClient, partition: string): DeltaRequest => {
         const request: SubscribeToPartitionContentsRequest = {
             messageKind: "SubscribeToPartitionContentsRequest",
             partition: partition,
             queryId: `query-id-${queryId++}`,
             additionalInfos: []
         }
-        return this.client.sendRequest(request)
+        return client.sendRequest(request)
     }
 
-    unSubscribeToPartitionRequest = (repo: string, clientId: string, partition: string): DeltaRequest => {
+    unSubscribeToPartitionRequest = (client: DeltaClient, repo: string, clientId: string, partition: string): DeltaRequest => {
         const request: UnsubscribeFromPartitionContentsRequest = {
             messageKind: "UnsubscribeFromPartitionContentsRequest",
             partition: partition,
             queryId: `query-id-${queryId++}`,
             additionalInfos: []
         }
-        return this.client.sendRequest(request)
+        return client.sendRequest(request)
     }
-    
-    subscribeToChangingPartitions = (): DeltaRequest => {
+
+    subscribeToChangingPartitions = (client: DeltaClient): DeltaRequest => {
         const request: SubscribeToChangingPartitionsRequest = {
             messageKind: "SubscribeToChangingPartitionsRequest",
             queryId: `query-id-${queryId++}`,
@@ -138,51 +135,74 @@ export class Commands {
             deletion: true,
             additionalInfos: []
         }
-        return this.client.sendRequest(request)
+        return client.sendRequest(request)
     }
-    
-    informAbout = (): DeltaRequest => {
+
+    unsubscribeToChangingPartitions = (client: DeltaClient): DeltaRequest => {
+        const request: SubscribeToChangingPartitionsRequest = {
+            messageKind: "SubscribeToChangingPartitionsRequest",
+            queryId: `query-id-${queryId++}`,
+            creation: false,
+            deletion: false,
+            additionalInfos: []
+        }
+        return client.sendRequest(request)
+    }
+
+    unInformAboutChangingPartitions = (client: DeltaClient): DeltaRequest => {
         const request: InformAboutChangingPartitionsRequest = {
             messageKind: "InformAboutChangingPartitionsRequest",
             queryId: `query-id-${queryId++}`,
+            creation: false,
+            deletion: false,
+            depthLimit: 0,
+            additionalInfos: []
+        }
+        return client.sendRequest(request)
+    }
+
+    informAbout = (client: DeltaClient): DeltaRequest => {
+        const request: InformAboutChangingPartitionsRequest = {
+            messageKind: "InformAboutChangingPartitionsRequest",
+            queryId: `informAbout-${queryId++}`,
             creation: true,
             deletion: true,
-            depthLimit: 0,
+            depthLimit: 1,
             additionalInfos: []
         }
-        return this.client.sendRequest(request)
+        return client.sendRequest(request)
     }
 
-    listAndSubscribePartitions = (): DeltaRequest => {
+    listAndSubscribePartitions = (client: DeltaClient): DeltaRequest => {
         const request: ListAndSubscribePartitionsRequest = {
             messageKind: "ListAndSubscribePartitionsRequest",
-            queryId: "dummy",
+            queryId: "",
             additionalInfos: []
         }
-        return this.client.sendRequest(request)
+        return client.sendRequest(request)
     }
 
-    listPartitions = (): DeltaRequest => {
+    listPartitions = (client: DeltaClient): DeltaRequest => {
         const request: ListPartitionsRequest = {
             messageKind: "ListPartitionsRequest",
-            queryId: "dummy",
+            queryId: "",
             depthLimit: 0,
             additionalInfos: []
         }
-        return this.client.sendRequest(request)
+        return client.sendRequest(request)
     }
 
-    availableIds = (): DeltaRequest => {
+    availableIds = (client: DeltaClient): DeltaRequest => {
         const request: GetAvailableIdsRequest = {
             messageKind: "GetAvailableIdsRequest",
-            queryId: "dummy",
+            queryId: "",
             count: 25,
             additionalInfos: []
         }
-        return this.client.sendRequest(request)
+        return client.sendRequest(request)
     }
 
-    addProperty = (nodeid: string, newValue: string, propertyKey: string): DeltaCommand => {
+    addProperty = (client: DeltaClient, nodeid: string, newValue: string, propertyKey: string): DeltaCommand => {
         const command: AddPropertyCommand = {
             messageKind: "AddProperty",
             commandId: `command-id-${queryId++}`,
@@ -195,10 +215,10 @@ export class Commands {
             },
             additionalInfos: []
         }
-        return this.client.sendCommand(command)
+        return client.sendCommand(command)
     }
 
-    changeProperty = (nodeid: string, newValue: string, propertyKey: string): DeltaCommand => {
+    changeProperty = (client: DeltaClient, nodeid: string, newValue: string, propertyKey: string): DeltaCommand => {
         const command: ChangePropertyCommand = {
             messageKind: "ChangeProperty",
             commandId: `command-id-${queryId++}`,
@@ -211,10 +231,10 @@ export class Commands {
             },
             additionalInfos: []
         }
-        return this.client.sendCommand(command)
+        return client.sendCommand(command)
     }
 
-    deleteProperty = (nodeid: string, propertyKey: string): DeltaCommand => {
+    deleteProperty = (client: DeltaClient, nodeid: string, propertyKey: string): DeltaCommand => {
         const command: DeletePropertyCommand = {
             messageKind: "DeleteProperty",
             commandId: `command-id-${queryId++}`,
@@ -226,10 +246,10 @@ export class Commands {
             },
             additionalInfos: []
         }
-        return this.client.sendCommand(command)
+        return client.sendCommand(command)
     }
 
-    addPartition = (partition: PartitionType): DeltaCommand => {
+    addPartition = (client: DeltaClient, partition: PartitionType): DeltaCommand => {
         const command: AddPartitionCommand = {
             messageKind: "AddPartition",
             commandId: `command-id-${queryId++}`,
@@ -248,20 +268,20 @@ export class Commands {
             },
             additionalInfos: []
         }
-        return this.client.sendCommand(command)
+        return client.sendCommand(command)
     }
 
-    deletePartition = (partition: LionWebId): DeltaCommand => {
+    deletePartition = (client: DeltaClient, partition: LionWebId): DeltaCommand => {
         const command: DeletePartitionCommand = {
             messageKind: "DeletePartition",
             commandId: `command-id-${queryId++}`,
             deletedPartition: partition,
             additionalInfos: []
         }
-        return this.client.sendCommand(command)
+        return client.sendCommand(command)
     }
 
-    addChild = (child: NewChild, extra?: Partial<AddChildCommand>): DeltaCommand => {
+    addChild = (client: DeltaClient, child: NewChild, extra?: Partial<AddChildCommand>): DeltaCommand => {
         const command: AddChildCommand = {
             messageKind: "AddChild",
             commandId: `command-id-${queryId++}`,
@@ -288,10 +308,10 @@ export class Commands {
         if (extra?.index) {
             command.index = extra.index
         }
-        return this.client.sendCommand(command)
+        return client.sendCommand(command)
     }
 
-    addReference = (addRef: AddReferenceType, extra?: Partial<AddReferenceCommand>): DeltaCommand => {
+    addReference = (client: DeltaClient, addRef: AddReferenceType, extra?: Partial<AddReferenceCommand>): DeltaCommand => {
         const command: AddReferenceCommand = {
             messageKind: "AddReference",
             commandId: `command-id-${queryId++}`,
@@ -305,10 +325,10 @@ export class Commands {
         if (extra?.index) {
             command.index = extra.index
         }
-        return this.client.sendCommand(command)
+        return client.sendCommand(command)
     }
 
-    changeReference = (addRef: Partial<ChangeReferenceCommand>): DeltaCommand => {
+    changeReference = (client: DeltaClient, addRef: Partial<ChangeReferenceCommand>): DeltaCommand => {
         const command: ChangeReferenceCommand = {
             messageKind: "ChangeReference",
             commandId: `command-id-${queryId++}`,
@@ -321,10 +341,10 @@ export class Commands {
             newResolveInfo: addRef.newResolveInfo,
             additionalInfos: []
         }
-        return this.client.sendCommand(command)
+        return client.sendCommand(command)
     }
 
-    deleteReference = (ref: Partial<DeleteReferenceCommand>): DeltaCommand => {
+    deleteReference = (client: DeltaClient, ref: Partial<DeleteReferenceCommand>): DeltaCommand => {
         const command: DeleteReferenceCommand = {
             messageKind: "DeleteReference",
             commandId: `command-id-${queryId++}`,
@@ -335,10 +355,10 @@ export class Commands {
             index: ref.index,
             additionalInfos: []
         }
-        return this.client.sendCommand(command)
+        return client.sendCommand(command)
     }
 
-    deleteChild = (deleteChild: DeleteChildType): DeltaCommand => {
+    deleteChild = (client: DeltaClient, deleteChild: DeleteChildType): DeltaCommand => {
         const command: DeleteChildCommand = {
             messageKind: "DeleteChild",
             commandId: `command-id-${queryId++}`,
@@ -348,59 +368,63 @@ export class Commands {
             deletedChild: deleteChild.id,
             additionalInfos: []
         }
-        return this.client.sendCommand(command)
+        return client.sendCommand(command)
     }
 
-    listRepositories = (): DeltaAdminRequest => {
-        return this.client.sendAdminRequest({ messageKind: "ListRepositoriesAdminRequest", queryId: "123", additionalInfos: [] })
+    listRepositories = (client: DeltaClient): DeltaAdminRequest => {
+        return client.sendAdminRequest({ messageKind: "ListRepositoriesAdminRequest", queryId: "123", additionalInfos: [] })
     }
 
-    addRepository = (repoName: string): DeltaAdminRequest => {
+    addRepository = (client: DeltaClient, repoName: string): DeltaAdminRequest => {
         const cmd = {
             messageKind: "CreateRepositoryAdminRequest",
-            queryId: "aa",
+            queryId: "",
             repositoryName: repoName,
             additionalInfos: []
         } as CreateRepositoryAdminRequest
-        return this.client.sendAdminRequest(cmd)
+        return client.sendAdminRequest(cmd)
     }
 
-    deleteRepository = (repoName: string): DeltaAdminRequest => {
+    deleteRepository = (client: DeltaClient, repoName: string): DeltaAdminRequest => {
         const cmd = {
             messageKind: "DeleteRepositoryAdminRequest",
-            queryId: "aa",
+            queryId: "",
             repositoryName: repoName,
             additionalInfos: []
         } as DeleteRepositoryAdminRequest
-        return this.client.sendAdminRequest(cmd)
+        return client.sendAdminRequest(cmd)
     }
 
     /**
      * Function that waits for the event corresponding to `command`
      * @param command
      */
-    eventFor = async (command: DeltaCommand): Promise<DeltaEvent> => {
-        return await waitFor<DeltaEvent>(
-            () => this.client.receivedEvents.get(command.commandId),
+    eventFor = async (client: DeltaClient, command: DeltaCommand): Promise<DeltaEvent> => {
+        const tmp = await waitFor<DeltaEvent>(
+            () => client.receivedEvents.get(command.commandId),
             result => result === undefined,
             50,
             10,
             `query ${command.commandId} ${command.messageKind}`
         )
+        if (tmp === undefined) {
+            throw new Error("TimeOut")
+        }
+        return tmp
     }
-    responseFor = async (query: DeltaRequest | DeltaAdminRequest): Promise<DeltaResponse | DeltaAdminResponse> => {
+    responseFor = async (client: DeltaClient, query: DeltaRequest | DeltaAdminRequest): Promise<DeltaResponse | DeltaAdminResponse> => {
         return await waitFor<DeltaResponse | DeltaAdminResponse>(
-            () => this.client.receivedResponses.get(query.queryId),
+            () => client.receivedResponses.get(query.queryId),
             result => result === undefined,
             50,
             10,
             `query ${query.queryId} ${query.messageKind}`
         )
     }
-    errorFor = async (command: MessageFromClient): Promise<string> => {
+    errorFor = async (client: DeltaClient, command: MessageFromClient): Promise<string> => {
         if (isDeltaCommand(command)) {
             const event = await waitFor<DeltaEvent>(
-                () => this.client.receivedEvents.get(command.commandId),
+                () => client.receivedEvents.get(command.commandId),
                 result => result === undefined,
                 50,
                 10,
@@ -413,7 +437,7 @@ export class Commands {
             }
         } else if (isDeltaAdminRequest(command) || isDeltaRequest(command)) {
             const response = await waitFor<DeltaResponse | DeltaAdminResponse>(
-                () => this.client.receivedResponses.get(command.queryId),
+                () => client.receivedResponses.get(command.queryId),
                 result => result === undefined,
                 50,
                 10,

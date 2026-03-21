@@ -32,7 +32,7 @@ import { HttpClientErrors, PROTOBUF_CONTENT_TYPE } from "@lionweb/server-shared"
 import * as http from "node:http"
 import { runWithTryDelta } from "./RunTry.js";
 
-export const app: Express = express()
+const app: Express = express()
 
 // Allow access,
 // ERROR Access to XMLHttpRequest from origin has been blocked by CORS policy:
@@ -61,7 +61,7 @@ const expectedToken = ServerConfig.getInstance().expectedToken()
 function verifyToken(request: Request, response: Response, next: NextFunction) {
     if (expectedToken != null) {
         const providedToken = request.headers["authorization"]
-        if (providedToken == null || typeof providedToken !== "string" || providedToken.trim() != expectedToken) {
+        if (providedToken === null || typeof providedToken !== "string" || providedToken.trim() !== expectedToken) {
             return response.status(HttpClientErrors.Unauthorized).send("Invalid token or no token provided")
         } else {
             next()
@@ -95,31 +95,6 @@ registerAdditionalApi(app, DbConnection.getInstance(), pgp, dbConnection.pgPool)
 registerLanguagesApi(app, DbConnection.getInstance(), pgp)
 registerHistoryApi(app, DbConnection.getInstance(), pgp)
 registerDeltaProcessor(DbConnection.getInstance(), pgp)
-// requestLogger.info(":start init")
-// await repositoryStore.initialize()
-// requestLogger.info(":end  init")
-
-/**********************************************************************
- *
- * Server can be started with either argument --setup or --run
- *
- **********************************************************************/
-
-const setupOnly = process.argv.includes("--setup")
-const noSetup = process.argv.includes("--run")
-if (setupOnly && noSetup) {
-    requestLogger.error("Cannot use flags --run and --setup together.")
-    process.exit(-1)
-}
-if (setupOnly) {
-    await setupDatabase()
-} else if (noSetup) {
-    await repositoryStore.refresh()
-    await startServer()
-} else {
-    requestLogger.error("Server should be called with either flag --setup or --run")
-    process.exit(-1)
-}
 
 async function setupDatabase() {
     // Initialize database
@@ -223,7 +198,7 @@ async function startServer() {
 
     httpServer.listen(serverPort, () => {
         bulkLogger.info(`Server is running at port ${serverPort} =========================================================`)
-        if (expectedToken == null) {
+        if (expectedToken === null) {
             bulkLogger.warn(
                 "WARNING! The server is not protected by a token. It can be accessed freely. " +
                     "If that is NOT your intention act accordingly."
@@ -265,4 +240,28 @@ async function startServer() {
     // wsServer.clients.forEach(cl => cl.)
 
 
+}
+
+/**********************************************************************
+ *
+ * Server can be started with either argument --setup or --run
+ *
+ **********************************************************************/
+
+export async function server() {
+    const setupOnly = process.argv.includes("--setup")
+    const noSetup = process.argv.includes("--run")
+    if (setupOnly && noSetup) {
+        requestLogger.error("Cannot use flags --run and --setup together.")
+        process.exit(-1)
+    }
+    if (setupOnly) {
+        await setupDatabase()
+    } else if (noSetup) {
+        await repositoryStore.refresh()
+        await startServer()
+    } else {
+        requestLogger.error("Server should be called with either flag --setup or --run")
+        process.exit(-1)
+    }
 }

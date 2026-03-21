@@ -45,7 +45,7 @@ export const CLASSIFIER = {
     IExpression,
     Procedure,
     Parameter,
-    ProcedureCall
+    ProcedureCall,
 }
 const INamedName = { "language": "LionCore-builtins", "key": "LionCore-builtins-INamed-name", "version": "2023.1" }
 const HeadingDegrees = { "language": "-key-LogoProgram", "key": "-key-Heading-degrees", "version": "1" }

@@ -16,8 +16,16 @@ const collection = [true, false]
 // Run all, tests with and without history
 collection.forEach(withoutHistory => {
     const repository = withoutHistory ? "MyFirstRepo" : "MyFirstHistoryRepo"
+    const config = {
+        clientId: "TestClient",
+        repository: repository,
+        hostname: "192.168.100.1",
+        // hostname: "127.0.0.1",
+        port: "30050"
+    }
     describe("Repository tests " + (withoutHistory ? "without history" : "with history"), () => {
-        const client = new RepositoryClient({ clientId: "TestClient", repository: repository })
+        const client = new RepositoryClient(config)
+        // client.hostname = "192.168.100.1"
         // client.loggingOn = true
         let initialPartition: LionWebJsonChunk
         let initialPartitionVersion: number = 0
