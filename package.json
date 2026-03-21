@@ -20,6 +20,7 @@
         "release-beta": "npm run release-beta -w packages --if-present",
         "release": "npm run release -w packages --if-present",
         "database": "node packages/dbadmin/dist/tools/database",
+        "install-local": "npm install --registry http://localhost:4873",
         "publish-local": "npm run publish-local -w packages --if-present",
         "unpublish-local": "npm run unpublish-local -w packages --if-present",
         "republish-local": "npm run republish-local -w packages --if-present",
