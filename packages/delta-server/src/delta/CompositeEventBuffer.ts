@@ -1,6 +1,6 @@
 import { deltaLogger } from "@lionweb/server-common"
 import { CompositeCommand, DeltaCommand, DeltaEvent } from "@lionweb/server-delta-shared"
-import { ParticipationInfo } from "./queries/index.js"
+import { Participation } from "./participation/index.js"
 
 export class CompositeEventBufferStack {
     eventBuffers: CompositeEventBuffer[] = []
@@ -10,7 +10,7 @@ export class CompositeEventBufferStack {
         return this.eventBuffers.length > 0
     }
 
-    startComposite(participation: ParticipationInfo, composite: CompositeCommand): void {
+    startComposite(participation: Participation, composite: CompositeCommand): void {
         deltaLogger.info(`start composite`)
         this.eventBuffers.push(new CompositeEventBuffer(participation, composite))
     }
@@ -19,7 +19,7 @@ export class CompositeEventBufferStack {
         this.eventBuffers.pop()
     }
 
-    buffer(participation: ParticipationInfo, originalMessage: DeltaCommand, responseOrEvent: DeltaEvent): void {
+    buffer(participation: Participation, originalMessage: DeltaCommand, responseOrEvent: DeltaEvent): void {
         deltaLogger.info(`buffer ${responseOrEvent.messageKind}`)
         this.activeBuffer().events.push({
             participation: participation,
@@ -34,20 +34,20 @@ export class CompositeEventBufferStack {
 }
 
 export class CompositeEventBuffer {
-    compositeParticipation: ParticipationInfo
+    compositeParticipation: Participation
     composite: CompositeCommand
     events: {
-        participation: ParticipationInfo
+        participation: Participation
         originalMessage: DeltaCommand
         responseOrEvent: DeltaEvent
     }[] = []
 
-    constructor(participation: ParticipationInfo, composite: CompositeCommand) {
+    constructor(participation: Participation, composite: CompositeCommand) {
         this.compositeParticipation = participation
         this.composite = composite
     }
 
-    addEvent(participation: ParticipationInfo, originalMessage: DeltaCommand, responseOrEvent: DeltaEvent) {
+    addEvent(participation: Participation, originalMessage: DeltaCommand, responseOrEvent: DeltaEvent) {
         this.events.push({
             participation: participation,
             originalMessage: originalMessage,

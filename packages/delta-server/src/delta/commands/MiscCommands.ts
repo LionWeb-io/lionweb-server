@@ -1,17 +1,16 @@
 import { deltaLogger } from "@lionweb/server-common"
 import { ChangeClassifierCommand, DeltaEvent, CompositeCommand, ChunkedCommand } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
-// import { deltaProcessor } from "../DeltaProcessor.js"
-import { ParticipationInfo } from "../queries/index.js"
+import { Participation } from "../participation/index.js"
 import { DeltaFunction, errorEvent } from "./DeltaUtil.js"
 import WebSocket from "ws"
 
-const ChangeClassifierFunction = (participation: ParticipationInfo, msg: ChangeClassifierCommand, _ctx: DeltaContext): DeltaEvent => {
+const ChangeClassifierFunction = (participation: Participation, msg: ChangeClassifierCommand, _ctx: DeltaContext): DeltaEvent => {
     deltaLogger.info("Called ChangeClassifierFunction " + msg.messageKind)
     return errorEvent(msg)
 }
 
-const CompositeCommandFunction = (participation: ParticipationInfo, msg: CompositeCommand, _ctx: DeltaContext, _ChunkedCommandsocket?: WebSocket): DeltaEvent => {
+const CompositeCommandFunction = (participation: Participation, msg: CompositeCommand, _ctx: DeltaContext, _ChunkedCommandsocket?: WebSocket): DeltaEvent => {
     deltaLogger.info("Called CompositeCommandFunction " + msg.messageKind)
     // for(const cmd of msg.parts) {
     //     deltaProcessor.processDelta(socket!, cmd)
@@ -19,7 +18,7 @@ const CompositeCommandFunction = (participation: ParticipationInfo, msg: Composi
     return errorEvent(msg)
 }
 
-const ChunkedCommandFunction = (participation: ParticipationInfo, msg: ChunkedCommand, _ctx: DeltaContext, _socket?: WebSocket): DeltaEvent => {
+const ChunkedCommandFunction = (participation: Participation, msg: ChunkedCommand, _ctx: DeltaContext, _socket?: WebSocket): DeltaEvent => {
     deltaLogger.info("Called ChunkedCommandFunction " + msg.messageKind)
     // for(const cmd of msg.parts) {
     //     deltaProcessor.processDelta(socket!, cmd)

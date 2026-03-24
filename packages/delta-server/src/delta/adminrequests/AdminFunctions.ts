@@ -15,9 +15,9 @@ import {
 } from "@lionweb/server-delta-shared"
 import { DeltaFunction } from "../commands/index.js"
 import { DeltaContext } from "../DeltaContext.js"
-import { ParticipationInfo } from "../queries/index.js"
+import { Participation } from "../participation/index.js"
 
-const ListRepositories = async (participation: ParticipationInfo, msg: ListRepositoriesAdminRequest, _ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
+const ListRepositories = async (participation: Participation, msg: ListRepositoriesAdminRequest, _ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
     deltaLogger.info("Called ListRepositories request id: " + msg.queryId)
     await repositoryStore.refresh()
 
@@ -35,7 +35,7 @@ const ListRepositories = async (participation: ParticipationInfo, msg: ListRepos
     } as ListRepositoriesAdminResponse
 }
 
-const CreateRepository = async (participation: ParticipationInfo, msg: CreateRepositoryAdminRequest, _ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
+const CreateRepository = async (participation: Participation, msg: CreateRepositoryAdminRequest, _ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
     deltaLogger.info("Called CreateRepository request id: " + msg.queryId)
     return {
         messageKind: "CreateRepositoryAdminResponse",
@@ -49,7 +49,7 @@ const CreateRepository = async (participation: ParticipationInfo, msg: CreateRep
     } as CreateRepositoryAdminResponse
 }
 
-const DeleteRepository = async (participation: ParticipationInfo, msg: DeleteRepositoryAdminRequest, _ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
+const DeleteRepository = async (participation: Participation, msg: DeleteRepositoryAdminRequest, _ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
     deltaLogger.info("Called DeleteRepository request id: " + msg.queryId)
     return {
         messageKind: "DeleteRepositoryAdminResponse",
@@ -63,7 +63,7 @@ const DeleteRepository = async (participation: ParticipationInfo, msg: DeleteRep
     } as DeleteRepositoryAdminResponse
 }
 
-const RenameRepository = async (participation: ParticipationInfo, msg: DeleteRepositoryAdminRequest, _ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
+const RenameRepository = async (participation: Participation, msg: DeleteRepositoryAdminRequest, _ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
     deltaLogger.info("Called RenameRepository request id: " + msg.queryId)
     return {
         messageKind: "RenameRepositoryAdminResponse",

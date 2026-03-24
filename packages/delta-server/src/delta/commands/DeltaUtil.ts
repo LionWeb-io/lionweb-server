@@ -12,7 +12,7 @@ import {
 } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
 import { newErrorDelta, queryData } from "../events.js"
-import { ParticipationInfo } from "../queries/index.js"
+import { Participation } from "../participation/index.js"
 import WebSocket from "ws"
 
 export type CommandOrRequest = {
@@ -21,7 +21,7 @@ export type CommandOrRequest = {
     additionalInfos: AdditionalInfo[];
 
 }
-export type MessageFunction =  (participation: ParticipationInfo, msg: MessageFromClient, ctx: DeltaContext, socket?: WebSocket) => (MessageToClient)
+export type MessageFunction =  (participation: Participation, msg: MessageFromClient, ctx: DeltaContext, socket?: WebSocket) => (MessageToClient)
 
 export type DeltaFunction = {
     messageKind: string;
@@ -66,7 +66,7 @@ export const issuesToProtocolMessages = (issues: ValidationIssue[]): AdditionalI
  * @param participation The participation info of the delta command
  * @param ctx           The database context to enable database calls
  */
-export const retrieveNodeFromDB = async(id: string, delta: DeltaCommand | DeltaRequest, participation: ParticipationInfo, task: LionWebTask): Promise<LionWebJsonNode> => {
+export const retrieveNodeFromDB = async(id: string, delta: DeltaCommand | DeltaRequest, participation: Participation, task: LionWebTask): Promise<LionWebJsonNode> => {
     const queryResult = await DB.retrieveSingleFullNodeDB(task, participation.repositoryData!, id)
     dbLogger.info(`Result of retrieveNode: '${JSON.stringify(queryResult)}'`) 
 
@@ -93,7 +93,7 @@ export const retrieveNodeFromDB = async(id: string, delta: DeltaCommand | DeltaR
  * @param participation
  * @param ctx
  */
-export async function affectedPartition(nodeid: LionWebId, participation: ParticipationInfo, ctx: DeltaContext): Promise<LionWebId> {
+export async function affectedPartition(nodeid: LionWebId, participation: Participation, ctx: DeltaContext): Promise<LionWebId> {
     const parentChain = await DB.retrieveParentsDB(ctx!.dbConnection, participation!.repositoryData!, nodeid)
     if (parentChain === undefined) {
         throw new Error("affectedPartition: Internal Error: PARENT CHAIN UNDEFINED")

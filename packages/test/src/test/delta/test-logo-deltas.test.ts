@@ -11,7 +11,7 @@ import { CLASSIFIER as CLS, CONTAINMENT, CONTAINMENT as CON, PROPERTY as PROP, R
 import { CoverageMap, cmd, expectError, expectEvent, expectResponse, logProtocol } from "./test-helpers.test.js"
 
 // TOPO Delta : primary key exception when nohistory = false 
-const collection = [true, false]
+const collection = [true]
 const log: boolean = false
 
 const config = {

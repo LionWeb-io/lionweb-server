@@ -10,43 +10,43 @@ import {
     ReplaceAnnotationCommand
 } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
-import { ParticipationInfo } from "../queries/index.js"
+import { Participation } from "../participation/index.js"
 import { DeltaFunction, errorEvent } from "./DeltaUtil.js"
 
-const AddAnnotation = (participation: ParticipationInfo, msg: AddAnnotationCommand, _ctx: DeltaContext): DeltaEvent => {
+const AddAnnotation = (participation: Participation, msg: AddAnnotationCommand, _ctx: DeltaContext): DeltaEvent => {
     deltaLogger.info("Called AddAnnotation " + msg.messageKind)
     return errorEvent(msg)
 }
 
-const DeleteAnnotation = (participation: ParticipationInfo, msg: DeleteAnnotationCommand, _ctx: DeltaContext): DeltaEvent => {
+const DeleteAnnotation = (participation: Participation, msg: DeleteAnnotationCommand, _ctx: DeltaContext): DeltaEvent => {
     deltaLogger.info("Called DeleteAnnotation " + msg.messageKind)
     return errorEvent(msg)
 }
 
-const ReplaceAnnotation = (participation: ParticipationInfo, msg: ReplaceAnnotationCommand, _ctx: DeltaContext): DeltaEvent => {
+const ReplaceAnnotation = (participation: Participation, msg: ReplaceAnnotationCommand, _ctx: DeltaContext): DeltaEvent => {
     deltaLogger.info("Called ReplaceAnnotation " + msg.messageKind)
     return errorEvent(msg)
 }
 
-const MoveAnnotationFromOtherParent = (participation: ParticipationInfo, msg: MoveAnnotationFromOtherParentCommand, _ctx: DeltaContext): DeltaEvent => {
+const MoveAnnotationFromOtherParent = (participation: Participation, msg: MoveAnnotationFromOtherParentCommand, _ctx: DeltaContext): DeltaEvent => {
     deltaLogger.info("Called MoveAnnotationFromOtherParent " + msg.messageKind)
     return errorEvent(msg)
 }
 
-const MoveAnnotationInSameParent = (participation: ParticipationInfo, msg: MoveAnnotationInSameParentCommand, _ctx: DeltaContext): DeltaEvent => {
+const MoveAnnotationInSameParent = (participation: Participation, msg: MoveAnnotationInSameParentCommand, _ctx: DeltaContext): DeltaEvent => {
     deltaLogger.info("Called MoveAnnotationInSameParent " + msg.messageKind)
     return errorEvent(msg)
 }
 
 const MoveAndReplaceAnnotationFromOtherParent = (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: MoveAndReplaceAnnotationFromOtherParentCommand, _ctx: DeltaContext
 ): DeltaEvent => {
     deltaLogger.info("Called MoveAndReplaceAnnotationFromOtherParent " + msg.messageKind)
     return errorEvent(msg)
 }
 
-const MoveAndReplaceAnnotationInSameParent = (participation: ParticipationInfo, msg: MoveAndReplaceAnnotationInSameParentCommand, _ctx: DeltaContext): DeltaEvent => {
+const MoveAndReplaceAnnotationInSameParent = (participation: Participation, msg: MoveAndReplaceAnnotationInSameParentCommand, _ctx: DeltaContext): DeltaEvent => {
     deltaLogger.info("Called MoveAndReplaceAnnotationInSameParent " + msg.messageKind)
     return errorEvent(msg)
 }

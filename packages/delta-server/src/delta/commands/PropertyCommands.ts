@@ -13,11 +13,11 @@ import {
 } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
 import { affectedNodeMessage, newErrorDelta, ErrorDelta, affectedPartitionMessage } from "../events.js"
-import { ParticipationInfo } from "../queries/index.js"
+import { Participation } from "../participation/index.js"
 import { affectedPartition, DeltaFunction, retrieveNodeFromDB } from "./DeltaUtil.js"
 
 const AddPropertyFunction = async (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: AddPropertyCommand,
     ctx: DeltaContext
 ): Promise<PropertyAddedEvent | ErrorDelta> => {
@@ -62,7 +62,7 @@ const AddPropertyFunction = async (
 }
 
 const DeletePropertyFunction = async (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: DeletePropertyCommand,
     ctx: DeltaContext
 ): Promise<PropertyDeletedEvent | ErrorDelta> => {
@@ -106,7 +106,7 @@ const DeletePropertyFunction = async (
 }
 
 const ChangePropertyFunction = async (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: ChangePropertyCommand,
     ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorDelta> => {

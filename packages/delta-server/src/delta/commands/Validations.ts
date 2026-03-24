@@ -12,7 +12,7 @@ import {
 } from "@lionweb/server-delta-shared"
 import { isEqualMetaPointer, LionWebJsonNode } from "@lionweb/json"
 import { newErrorDelta } from "../events.js"
-import { ParticipationInfo } from "../queries/index.js"
+import { Participation } from "../participation/index.js"
 import { issuesToProtocolMessages } from "./DeltaUtil.js"
 
 export type Change = "Add" | "Replace" | "Delete"
@@ -25,7 +25,7 @@ export type Change = "Add" | "Replace" | "Delete"
  * @param participation
  * @returns             The parent of the root node of the tree built from `nodes`
  */
-export function validateProperTree(nodes: LionWebDeltaJsonChunk, parent: LionWebId | null, msg: DeltaCommand, participation: ParticipationInfo): LionWebJsonNode | undefined {
+export function validateProperTree(nodes: LionWebDeltaJsonChunk, parent: LionWebId | null, msg: DeltaCommand, participation: Participation): LionWebJsonNode | undefined {
     // - There is exactly one node with parent `parentNode`, called `rootNode`
     // - All nodes together form a proper tree with root `rootNode`, i.e. no orphans allowed
     //   This can be done through the LionwebReferenceValidator.
@@ -60,7 +60,7 @@ export function validateContainment(
     change: Change,
     expectedChild: LionWebId | undefined,
     msg: DeltaCommand,
-    participation: ParticipationInfo
+    participation: Participation
 ): LionWebJsonContainment {
     // Check whether containment exists in the parent
     let foundContainment = parentNode.containments.find(c => isEqualMetaPointer(c.containment, containment))
@@ -112,7 +112,7 @@ export function validateReference(
     index: number,
     expectedReference: LionWebJsonReferenceTarget | undefined,
     msg: DeltaCommand,
-    participation: ParticipationInfo
+    participation: Participation
 ): LionWebJsonReference {
     // Check whether reference exists in the parent
     let foundReference = parentNode.references.find(c => isEqualMetaPointer(c.reference, reference))
@@ -192,7 +192,7 @@ export function findAndValidateNodeExists(
     id: LionWebId,
     nodes: LionWebJsonNode[],
     msg: DeltaCommand,
-    participation: ParticipationInfo
+    participation: Participation
 ): LionWebJsonNode {
     const result = nodes.find(n => n.id === id)
     if (result === undefined) {

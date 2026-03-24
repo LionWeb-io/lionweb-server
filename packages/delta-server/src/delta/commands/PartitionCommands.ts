@@ -14,12 +14,12 @@ import {
 } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
 import { affectedNodeMessage, newErrorDelta, ErrorDelta, affectedPartitionMessage } from "../events.js"
-import { ParticipationInfo } from "../queries/index.js"
+import { Participation } from "../participation/index.js"
 import { DeltaFunction } from "./DeltaUtil.js"
 import { validateProperTree } from "./Validations.js"
 
 const AddPartitionFunction = async (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: AddPartitionCommand,
     _ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorDelta> => {
@@ -68,7 +68,7 @@ const AddPartitionFunction = async (
     return result
 }
 
-const DeletePartitionFunction = async (participation: ParticipationInfo, msg: DeletePartitionCommand, _ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
+const DeletePartitionFunction = async (participation: Participation, msg: DeletePartitionCommand, _ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
     deltaLogger.debug("Called DeletePartitionFunction " + msg.messageKind)
     const result = await _ctx.dbConnection.tx(async (task: LionWebTask) => {
         const queryResult = await DB.retrieveNodeTreeDB(task, participation.repositoryData!, [msg.deletedPartition], Number.MAX_SAFE_INTEGER)

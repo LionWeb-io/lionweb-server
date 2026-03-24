@@ -15,6 +15,51 @@ import WebSocket from "ws"
  * signedOff => disconnected */
 export type ParticipationStatus = "connected" | "signedOn" | "signedOff" | "disconnected"
 
+export class ParticipationAdmin {
+    activeSockets: Map<WebSocket, Participation> = new Map<WebSocket, Participation>()
+
+    newParticipation(socket: WebSocket): Participation {
+        const part = new Participation(socket)
+        this.activeSockets.set(socket, part)
+        return part
+    }
+
+    getParticipation(socket: WebSocket): Participation | undefined {
+        return this.activeSockets.get(socket)
+    }
+
+    deleteParticipation(socket: WebSocket): void {
+        const info = this.getParticipation(socket)
+        if (info !== undefined) {
+            this.oldParticipations.add(info)
+            this.activeSockets.delete(socket)
+        }
+    }
+
+    allParticipations(): Participation[] {
+        return Array.from(this.activeSockets.values())
+    }
+
+    reconnect(socket: WebSocket, participation: Participation): void {
+        this.oldParticipations.delete(participation)
+        participation.socket = socket
+        this.activeSockets.set(socket, participation)
+    }
+    /**
+     * Keep old participations to be able to reconnect using the participation id.
+     */
+    oldParticipations: Set<Participation> = new Set<Participation>()
+    
+    findOldParticipation(participationId: string): Participation  | undefined {
+        return Array.from(this.oldParticipations).find(p => p.participationId === participationId)
+    }
+}
+
+export const PARTICIPATIONS = new ParticipationAdmin()
+
+/**
+ * Subscription information for added/deleted partitions
+ */
 export class ChangingPartitionsSubscription {
     creation: boolean = false
     deletion: boolean = false
@@ -26,7 +71,10 @@ export class ChangingPartitionsSubscription {
     }
 }
 
-export class ParticipationInfo {
+/**
+ * Info about a participation.
+ */
+export class Participation {
     /**
      * Just a number to ensure partitipation id's are uniquely numbered
      */
@@ -80,14 +128,19 @@ export class ParticipationInfo {
         }
         deltaLogger.info(`startParticipation repo '${repositoryId}' schema ${JSON.stringify(this.repositoryData)}`)
     }
-    
+
+    lastSequenceNumber(): number {
+        return (this.eventSequenceNumber - 1)
+    }
+
     nextSequenceNumber(): number {
         return this.eventSequenceNumber++
     }
+
     private nextParticipationId(): string {
-        return "participation-" + ParticipationInfo.nextIdNumber++
+        return "participation-" + Participation.nextIdNumber++
     }
-    
+
     send(msg: DeltaEvent | DeltaResponse | DeltaAdminResponse): void {
         if (isDeltaEvent(msg)) {
             msg.sequenceNumber = this.eventSequenceNumber++

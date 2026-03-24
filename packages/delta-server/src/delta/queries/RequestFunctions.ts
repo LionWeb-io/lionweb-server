@@ -11,6 +11,7 @@ import {
     ListPartitionsRequest,
     ListPartitionsResponse,
     ReconnectRequest,
+    ReconnectResponse,
     SignOffRequest,
     SignOffResponse,
     SignOnRequest,
@@ -22,10 +23,10 @@ import {
     UnsubscribeFromPartitionContentsRequest,
     UnsubscribeFromPartitionContentsResponse
 } from "@lionweb/server-delta-shared"
-import { DeltaFunction, errorNotImplementedEvent } from "../commands/index.js"
+import { DeltaFunction } from "../commands/index.js"
 import { DeltaContext } from "../DeltaContext.js"
 import { newErrorDelta, ErrorDelta } from "../events.js"
-import { ParticipationInfo, ChangingPartitionsSubscription } from "./Participation.js"
+import { Participation, ChangingPartitionsSubscription, PARTICIPATIONS } from "../participation/index.js"
 
 /**
  * Allowed state transitions:
@@ -40,7 +41,7 @@ import { ParticipationInfo, ChangingPartitionsSubscription } from "./Participati
 // export type ParticipationStatus = "connected" | "signedOn" | "signedOff" | "disconnected"
 
 const SubscribeToChangingPartitionsRequestFunction = (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: SubscribeToChangingPartitionsRequest
 ): DeltaEvent | DeltaResponse | ErrorDelta => {
     deltaLogger.info("Called SubscribeToChangingPartitionsRequestFunction " + msg.messageKind)
@@ -57,7 +58,7 @@ const SubscribeToChangingPartitionsRequestFunction = (
 }
 
 const InformAboutChangingPartitionsRequestFunction = (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: InformAboutChangingPartitionsRequest
 ): DeltaEvent | DeltaResponse | ErrorDelta => {
     deltaLogger.info("Called InformAboutChangingPartitionsRequestFunction " + msg.messageKind)
@@ -75,7 +76,7 @@ const InformAboutChangingPartitionsRequestFunction = (
 }
 
 const SubscribeToPartitionContentsRequestFunction = async (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: SubscribeToPartitionContentsRequest,
     ctx: DeltaContext
 ): Promise<DeltaEvent | DeltaResponse | ErrorDelta> => {
@@ -97,7 +98,7 @@ const SubscribeToPartitionContentsRequestFunction = async (
 }
 
 const UnsubscribeFromPartitionContentsRequestFunction = (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: UnsubscribeFromPartitionContentsRequest,
     _ctx: DeltaContext
 ): DeltaEvent | DeltaResponse | ErrorDelta => {
@@ -114,7 +115,7 @@ const UnsubscribeFromPartitionContentsRequestFunction = (
 }
 
 const SignOnRequestFunction = async (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: SignOnRequest,
     _ctx: DeltaContext
 ): Promise<DeltaEvent | DeltaResponse | ErrorDelta> => {
@@ -133,7 +134,7 @@ const SignOnRequestFunction = async (
     } as SignOnResponse
 }
 
-const validateSignOnRequest = (participation: ParticipationInfo | undefined, msg: SignOnRequest): ErrorDelta | undefined => {
+const validateSignOnRequest = (participation: Participation | undefined, msg: SignOnRequest): ErrorDelta | undefined => {
     if (msg.repositoryId === undefined) {
         return newErrorDelta("repositoryIdMissing", `Repository id missing in request`, msg, participation!)
     }
@@ -143,7 +144,7 @@ const validateSignOnRequest = (participation: ParticipationInfo | undefined, msg
     }
 }
 
-const SignOffRequestFunction = (participation: ParticipationInfo, msg: SignOffRequest, _ctx: DeltaContext): DeltaEvent | DeltaResponse => {
+const SignOffRequestFunction = (participation: Participation, msg: SignOffRequest, _ctx: DeltaContext): DeltaEvent | DeltaResponse => {
     deltaLogger.info("Called SignOffRequestFunction " + msg.messageKind)
     if (participation.participationStatus !== "signedOn") {
         return newErrorDelta("notSignedOn", "Cannot SignOff a participation, because you are not signed on.", msg, participation)
@@ -157,7 +158,7 @@ const SignOffRequestFunction = (participation: ParticipationInfo, msg: SignOffRe
 }
 
 const ListPartitionsRequestFunction = async (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: ListPartitionsRequest,
     ctx: DeltaContext
 ): Promise<DeltaEvent | DeltaResponse> => {
@@ -183,7 +184,7 @@ const ListPartitionsRequestFunction = async (
 }
 
 const ListAndSubscribePartitionsRequestFunction = async (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: ListAndSubscribePartitionsRequest,
     ctx: DeltaContext
 ): Promise<DeltaEvent | DeltaResponse> => {
@@ -210,7 +211,7 @@ const ListAndSubscribePartitionsRequestFunction = async (
 }
 
 const GetAvailableIdsRequestFunction = async (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: GetAvailableIdsRequest,
     ctx: DeltaContext
 ): Promise<DeltaEvent | DeltaResponse> => {
@@ -229,12 +230,25 @@ const GetAvailableIdsRequestFunction = async (
 }
 
 const ReconnectRequestFunction = (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: ReconnectRequest,
     _ctx: DeltaContext
 ): DeltaEvent | DeltaResponse => {
     deltaLogger.info("Called ReconnectRequestFunction " + msg.messageKind)
-    return errorNotImplementedEvent(msg)
+    const oldParticipation = PARTICIPATIONS.findOldParticipation(msg.participationId)
+    if (oldParticipation !== undefined) {
+        // TODO next line should be done here, but we don't know the socket.
+        // PARTICIPATIONS.reconnect(socket, oldParticipation)
+        const response: ReconnectResponse = {
+            messageKind: "ReconnectResponse",
+            queryId: msg.queryId,
+            lastSentSequenceNumber: oldParticipation.lastSequenceNumber(),
+            additionalInfos: []
+        }
+        return response
+    } else {
+        throw newErrorDelta("invalidParticipation", `Server cannot forn an old participation with the id ${msg.participationId}`, msg, undefined)
+    }
 }
 
 export const requestFunctions: DeltaFunction[] = [

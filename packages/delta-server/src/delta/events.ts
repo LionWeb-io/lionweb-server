@@ -6,7 +6,7 @@ import {
     ErrorResponse,
     MessageFromClient, isDeltaCommand
 } from "@lionweb/server-delta-shared"
-import { ParticipationInfo } from "./queries/index.js"
+import { Participation } from "./participation/index.js"
 
 export type ErrorDelta = ErrorEvent | ErrorResponse
 
@@ -21,7 +21,7 @@ export const newErrorDelta = (
     errorCode: DeltaErrorCode,
     message: string,
     delta: MessageFromClient,
-    participation: ParticipationInfo | undefined,
+    participation: Participation | undefined,
     data?: Partial<ErrorEvent>
 ): ErrorEvent | ErrorResponse => {
     if (isDeltaCommand(delta)) {

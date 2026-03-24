@@ -35,6 +35,7 @@ import {
     ListAndSubscribePartitionsRequest,
     GetAvailableIdsRequest,
     ListPartitionsRequest,
+    ReconnectRequest,
     InformAboutChangingPartitionsRequest,
     SubscribeToChangingPartitionsRequest,
     CompositeCommand
@@ -104,6 +105,17 @@ export class Commands {
             messageKind: "SignOffRequest",
             queryId: "",
             additionalInfos: []
+        }
+        return client.sendRequest(request)
+    }
+
+    reconnect = (client: DeltaClient, participationId: string): DeltaRequest => {
+        const request: ReconnectRequest = {
+            messageKind: "ReconnectRequest",
+            queryId: "",
+            participationId: participationId,
+            additionalInfos: [],
+            lastReceivedSequenceNumber: 0
         }
         return client.sendRequest(request)
     }
@@ -259,7 +271,7 @@ export class Commands {
         }
         return composite
     }
-    
+
     addPartitionCmd = (client: DeltaClient, partition: PartitionType): AddPartitionCommand => {
         const command: AddPartitionCommand = {
             messageKind: "AddPartition",
@@ -281,9 +293,9 @@ export class Commands {
         }
         return command
     }
-    
+
     addPartition = (client: DeltaClient, partition: PartitionType): DeltaCommand => {
-        return client.sendCommand(this.addPartitionCmd(client,partition))
+        return client.sendCommand(this.addPartitionCmd(client, partition))
     }
 
     deletePartition = (client: DeltaClient, partition: LionWebId): DeltaCommand => {
@@ -330,8 +342,7 @@ export class Commands {
         return client.sendCommand(this.addChildCmd(client, child, extra))
     }
 
-
-        addReference = (client: DeltaClient, addRef: AddReferenceType, extra?: Partial<AddReferenceCommand>): DeltaCommand => {
+    addReference = (client: DeltaClient, addRef: AddReferenceType, extra?: Partial<AddReferenceCommand>): DeltaCommand => {
         const command: AddReferenceCommand = {
             messageKind: "AddReference",
             commandId: `command-id-${queryId++}`,

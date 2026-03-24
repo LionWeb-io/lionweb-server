@@ -1,11 +1,10 @@
 import { RepositoryClient } from "@lionweb/server-client"
 import { adminResponseFunctions, DeltaClient, eventFunctions, responseFunctions } from "@lionweb/server-delta-client"
-import { CompositeCommand } from "@lionweb/server-delta-shared"
 import { HttpSuccessCodes  } from "@lionweb/server-shared"
 import { test, describe, beforeAll, beforeEach, afterAll } from "vitest"
 import { reportHTML } from "./helpers.js"
 import { CLASSIFIER as CLS, CONTAINMENT as CON } from "./keys.js"
-import { CoverageMap, cmd, expectEvent, expectResponse, logProtocol } from "./test-helpers.test.js"
+import { CoverageMap, cmd, expectEvent, expectResponse, expectError, logProtocol } from "./test-helpers.test.js"
 
 // TOPO Delta : primary key exception when nohistory = false 
 const collection = [true]
@@ -108,10 +107,26 @@ collection.forEach((withoutHistory) => {
                 const signOn4 = cmd.signOnRequest(client4, repository)
                 await expectResponse(client4, signOn4, "SignOnResponse")
 
+                const oldPid = client3.participationId
+                client3.socket.close(1000, "Testing close socket.")
+                await client3.connect()
+                const reconnect = cmd.reconnect(client3, oldPid)
+                await expectResponse(client3, reconnect, "ReconnectResponse")
+
                 const inform2 = cmd.informAbout(client2)
                 await expectResponse(client2, inform2, "InformAboutChangingPartitionsResponse")
                 const sub2 = cmd.subscribeToChangingPartitions(client3)
                 await expectResponse(client3, sub2, "SubscribeToChangingPartitionsResponse")
+
+                const oldPid2 = client2.participationId
+                client2.socket.close(1000, "Testing close socket.")
+                await client2.connect()
+                const reconnect2 = cmd.reconnect(client2, "unknownParticipationId")
+                await expectResponse(client2, reconnect2, "ErrorResponse")
+                await expectError(client2, reconnect2, "invalidParticipation")
+                const reconnect3 = cmd.reconnect(client2, oldPid2)
+                await expectResponse(client2, reconnect3, "ReconnectResponse")
+
             })
             test("MultiClient AddPartition", async () => {
                 // assert(initError === "", initError)
@@ -159,7 +174,6 @@ collection.forEach((withoutHistory) => {
 
                 await expectEvent(client2, composite, "CompositeEvent")
                 await expectEvent(client3, composite, "CompositeEvent")
-                const event = await cmd.eventFor(client2, composite)
                 // console.log(`COMPOSITE EVNT ${JSON.stringify(event, null, 2)}`)
                 await expect(cmd.eventFor(client1, composite)).rejects.toThrowErrorMatchingInlineSnapshot("[Error: TimeOut]")
                 await expect(cmd.eventFor(client4, composite)).rejects.toThrowErrorMatchingInlineSnapshot("[Error: TimeOut]")

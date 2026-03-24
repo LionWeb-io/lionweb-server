@@ -28,11 +28,11 @@ import {
 } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
 import { affectedNodeMessage, newErrorDelta, type ErrorDelta, affectedPartitionMessage } from "../events.js"
-import { ParticipationInfo } from "../queries/index.js"
+import { Participation } from "../participation/index.js"
 import { affectedPartition, DeltaFunction, errorEvent } from "./DeltaUtil.js"
 import { findAndValidateNodeExists, validateContainment, validateProperTree } from "./Validations.js"
 
-const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
+const AddChild = async (participation: Participation, msg: AddChildCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
     console.log(`Called AddChild ${msg.newChild.nodes.map(n => n.id)}`)
     const newChildNode = validateProperTree(msg.newChild, msg.parent, msg, participation)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
@@ -92,7 +92,7 @@ const AddChild = async (participation: ParticipationInfo, msg: AddChildCommand, 
 }
 
 const DeleteChild = async (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: DeleteChildCommand,
     ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorDelta> => {
@@ -156,7 +156,7 @@ const DeleteChild = async (
 }
 
 const ReplaceChild = async (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: ReplaceChildCommand,
     ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorDelta> => {
@@ -227,7 +227,7 @@ const ReplaceChild = async (
 }
 
 const MoveChildFromOtherContainment = async (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: MoveChildFromOtherContainmentCommand,
     ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorEvent> => {
@@ -300,7 +300,7 @@ const MoveChildFromOtherContainment = async (
 }
 
 const MoveChildFromOtherContainmentInSameParent = async (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: MoveChildFromOtherContainmentInSameParentCommand,
     _ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorEvent> => {
@@ -309,7 +309,7 @@ const MoveChildFromOtherContainmentInSameParent = async (
 }
 
 const MoveChildInSameContainment = async (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: MoveChildInSameContainmentCommand,
     _ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorEvent> => {
@@ -318,7 +318,7 @@ const MoveChildInSameContainment = async (
 }
 
 const MoveAndReplaceChildFromOtherContainment = async (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: MoveAndReplaceChildFromOtherContainmentCommand
 ): Promise<DeltaEvent | ErrorEvent> => {
     deltaLogger.debug("Called MoveAndReplaceChildFromOtherContainment " + msg.messageKind)
@@ -326,7 +326,7 @@ const MoveAndReplaceChildFromOtherContainment = async (
 }
 
 const MoveAndReplaceChildFromOtherContainmentInSameParent = async (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: MoveAndReplaceChildFromOtherContainmentInSameParentCommand,
     _ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorEvent> => {
@@ -335,7 +335,7 @@ const MoveAndReplaceChildFromOtherContainmentInSameParent = async (
 }
 
 const MoveAndReplaceChildInSameContainment = async (
-    participation: ParticipationInfo,
+    participation: Participation,
     msg: MoveAndReplaceChildInSameContainmentCommand,
     _ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorEvent> => {

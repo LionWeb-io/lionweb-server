@@ -14,11 +14,11 @@ import {
 } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
 import { affectedNodeMessage, affectedPartitionMessage, ErrorDelta, newErrorDelta } from "../events.js"
-import { ParticipationInfo } from "../queries/index.js"
+import { Participation } from "../participation/index.js"
 import { affectedPartition, DeltaFunction } from "./DeltaUtil.js"
 import { findAndValidateNodeExists, validateReference } from "./Validations.js"
 
-const AddReference = async (participation: ParticipationInfo, msg: AddReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorEvent> => {
+const AddReference = async (participation: Participation, msg: AddReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorEvent> => {
     deltaLogger.debug("Called AddReference " + msg.newResolveInfo)
     if (isNullOrUndefined(msg.newResolveInfo) && isNullOrUndefined(msg.newTarget)) {
         throw newErrorDelta("undefinedReferenceTarget", "resolveInfo and target are both null", msg, participation)
@@ -60,7 +60,7 @@ const AddReference = async (participation: ParticipationInfo, msg: AddReferenceC
     return result
 }
 
-const DeleteReference = async (participation: ParticipationInfo, msg: DeleteReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent> => {
+const DeleteReference = async (participation: Participation, msg: DeleteReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent> => {
     deltaLogger.debug("Called DeleteReference " + msg.messageKind)
     if (isNullOrUndefined(msg.deletedResolveInfo) && isNullOrUndefined(msg.deletedTarget)) {
         throw newErrorDelta("undefinedReferenceTarget", "resolveInfo and target are both null", msg, participation)
@@ -98,7 +98,7 @@ const DeleteReference = async (participation: ParticipationInfo, msg: DeleteRefe
     return result
 }
 
-const ChangeReference = async (participation: ParticipationInfo, msg: ChangeReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
+const ChangeReference = async (participation: Participation, msg: ChangeReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
     if (isNullOrUndefined(msg.newResolveInfo) && isNullOrUndefined(msg.newTarget)) {
         throw newErrorDelta("undefinedReferenceTarget", "resolveInfo and target are both null", msg, participation)
     }
