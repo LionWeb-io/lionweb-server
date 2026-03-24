@@ -6,7 +6,9 @@ import { REPOSITORIES_TABLE } from "@lionweb/server-common";
  * 
  * NOTE that the query begins with `SET search_path TO` avoiding the insertion of a search_path in `DbConnection`
  */
-export const CREATE_GLOBALS_SQL: string = `SET search_path TO 'public';
+export const CREATE_GLOBALS_SQL: string =
+// language=SQL
+`SET search_path TO 'public';
 --------------------------------------------------------------------        
 -- Global function to check whether schema exists
 --------------------------------------------------------------------        

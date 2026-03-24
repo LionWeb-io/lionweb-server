@@ -19,6 +19,7 @@ import { NODES_TABLE } from "../database/TableNames.js"
 const retrieveFullNodesRecursiveSQL = (nodeid: string[], depthLimit: number): string => {
     const sqlArray = sqlArrayFromNodeIdArray(nodeid)
     // Now query the full nodes, based on the list
+    // language=SQL
     return SQL.retrieveFullNodesFromQuerySQL(`--
             WITH RECURSIVE tmp AS (
                 SELECT id, parent, 0 as depth
@@ -80,6 +81,7 @@ function isNodeWithParent(o: unknown): o is NodeWithParent {
  */
 const retrieveParentsSQL = (nodeid: string): string => {
     // const sqlArray = sqlArrayFromNodeIdArray(nodeid)
+    // language=SQL
     return `--
             WITH RECURSIVE tmp AS (
                 SELECT id, parent
@@ -125,6 +127,7 @@ export type NodeTreeResultType = {
  */
 const retrieveNodeTreeForIdListSQL = (nodeidlist: string[], depthLimit: number): string => {
     const sqlArray = sqlArrayFromNodeIdArray(nodeidlist)
+    // language=SQL
     return `-- Recursively retrieve node tree
             WITH RECURSIVE tmp AS (
                 SELECT id, parent, 0 as depth

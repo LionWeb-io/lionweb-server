@@ -1,9 +1,10 @@
 import { RepositoryClient } from "@lionweb/server-client"
 import { adminResponseFunctions, DeltaClient, eventFunctions, responseFunctions } from "@lionweb/server-delta-client"
+import { CompositeCommand } from "@lionweb/server-delta-shared"
 import { HttpSuccessCodes  } from "@lionweb/server-shared"
 import { test, describe, beforeAll, beforeEach, afterAll } from "vitest"
 import { reportHTML } from "./helpers.js"
-import { CLASSIFIER as CLS } from "./keys.js"
+import { CLASSIFIER as CLS, CONTAINMENT as CON } from "./keys.js"
 import { CoverageMap, cmd, expectEvent, expectResponse, logProtocol } from "./test-helpers.test.js"
 
 // TOPO Delta : primary key exception when nohistory = false 
@@ -27,7 +28,7 @@ collection.forEach((withoutHistory) => {
     const repository = withoutHistory ? "LogoRepo" : "LogoHistoryRepo"
     const bulkApiClient = new RepositoryClient({ clientId: "BulkClient-01", repository: repository })
 
-    describe("Delta tests " + (withoutHistory ? "without history" : "with history"), async () => {
+    describe("Multi Client Delta tests " + (withoutHistory ? "without history" : "with history"), async () => {
         client1.repository = repository
         client2.repository = repository
         client3.repository = repository
@@ -77,8 +78,8 @@ collection.forEach((withoutHistory) => {
         })
 
         beforeEach(async function () {
-            client1.sentMessageHistory = []
-            client1.receivedMessageHistory = []
+            // client1.sentMessageHistory = []
+            // client1.receivedMessageHistory = []
         })
 
         afterAll(async function () {
@@ -95,7 +96,7 @@ collection.forEach((withoutHistory) => {
             reportHTML(CoverageMap)
         })
 
-        describe("Partition tests", () => {
+        describe("Multi Client Partition tests", () => {
             test("SignOnOff", async () => {
                 // Signing on twice is ok
                 const signOn = cmd.signOnRequest(client1, repository)
@@ -112,7 +113,7 @@ collection.forEach((withoutHistory) => {
                 const sub2 = cmd.subscribeToChangingPartitions(client3)
                 await expectResponse(client3, sub2, "SubscribeToChangingPartitionsResponse")
             })
-            test("AddPartition", async () => {
+            test("MultiClient AddPartition", async () => {
                 // assert(initError === "", initError)
                 const addPartitionCommand1 = cmd.addPartition(client1, { id: "Program-01", classifier: CLS.Program })
                 await expectEvent(client1, addPartitionCommand1, "PartitionAdded")
@@ -130,12 +131,38 @@ collection.forEach((withoutHistory) => {
                 const unsubscribe = cmd.unInformAboutChangingPartitions(client3)
                 await expectResponse(client3, unsubscribe, "InformAboutChangingPartitionsResponse")
 
-                const addPartitionCommand2 = cmd.addPartition(client2, { id: "Program-011111", classifier: CLS.Program })
+                const addPartitionCommand2 = cmd.addPartition(client2, { id: "Program-011", classifier: CLS.Program })
                 await expectEvent(client2, addPartitionCommand2, "PartitionAdded")
                 // await expectEvent(client3, addPartitionCommand2, "PartitionAdded")
                 await expect(cmd.eventFor(client1, addPartitionCommand2)).rejects.toThrowErrorMatchingInlineSnapshot("[Error: TimeOut]")
                 await expect(cmd.eventFor(client3, addPartitionCommand2)).rejects.toThrowErrorMatchingInlineSnapshot("[Error: TimeOut]")
                 await expect(cmd.eventFor(client4, addPartitionCommand2)).rejects.toThrowErrorMatchingInlineSnapshot("[Error: TimeOut]")
+
+                // logProtocol(client1, true)
+                // logProtocol(client2, true)
+                // logProtocol(client3, true)
+                // logProtocol(client4, true)
+            })
+            test("MultiClient CompositeCommand", async () => {
+                const subscribe = cmd.informAbout(client3)
+                const composite = cmd.compositeCommandCmd()
+                const addP = cmd.addPartitionCmd(client2, { id: "Program-022", classifier: CLS.Program })
+
+                // addP.additionalInfos = undefined
+                composite.parts.push(addP)
+                const nestedComposite = cmd.compositeCommandCmd()
+                const addChildCommand1 = cmd.addChildCmd(client2, { id: "Move-022", cls: CLS.MoveCommand, parent: "Program-022", containment: CON.ProgramCommands, props: [] })
+                nestedComposite.parts.push(addChildCommand1)
+                composite.parts.push(nestedComposite)
+                client2.sendCommand(composite)
+                await expectResponse(client3, subscribe, "InformAboutChangingPartitionsResponse")
+
+                await expectEvent(client2, composite, "CompositeEvent")
+                await expectEvent(client3, composite, "CompositeEvent")
+                const event = await cmd.eventFor(client2, composite)
+                // console.log(`COMPOSITE EVNT ${JSON.stringify(event, null, 2)}`)
+                await expect(cmd.eventFor(client1, composite)).rejects.toThrowErrorMatchingInlineSnapshot("[Error: TimeOut]")
+                await expect(cmd.eventFor(client4, composite)).rejects.toThrowErrorMatchingInlineSnapshot("[Error: TimeOut]")
 
                 logProtocol(client1, true)
                 logProtocol(client2, true)

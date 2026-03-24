@@ -14,7 +14,12 @@ import {
     ErrorResponse,
     AddPartitionCommand,
     PartitionAddedEvent,
-    LionWebId, PartitionDeletedEvent, CompositeCommand, DeltaEvent
+    LionWebId,
+    PartitionDeletedEvent,
+    CompositeCommand,
+    DeltaEvent,
+    CompositeEvent,
+    DeltaCommand
 } from "@lionweb/server-delta-shared"
 import { MessageFromClient } from "@lionweb/server-delta-shared"
 import { ValidationResult } from "@lionweb/validation"
@@ -35,6 +40,7 @@ import {
 import { activeSockets } from "./DeltaClientAdmin.js"
 import { affectedPartitionMessage, isErrorEvent, isErrorResponse, newErrorDelta } from "./events.js"
 import { ParticipationInfo, requestFunctions } from "./queries/index.js"
+import { CompositeEventBufferStack } from "./CompositeEventBuffer.js"
 
 class DeltaProcessor {
     processingFunctions: Map<string, MessageFunction> = new Map<string, MessageFunction>()
@@ -61,7 +67,9 @@ class DeltaProcessor {
     processDelta = async (socket: WebSocket, delta: MessageFromClient): Promise<void> => {
         for (const participationInfo of activeSockets.values()) {
             deltaLogger.info(
-                `Participation ${participationInfo.repositoryData?.clientId} subscibed partitions ${Array.from(participationInfo.subscribedPartitions).map(n => n)}`
+                `Participation ${participationInfo.repositoryData?.clientId} subscibed partitions ${Array.from(
+                    participationInfo.subscribedPartitions
+                ).map(n => n)}`
             )
             if (participationInfo.partitionChangesSubscription !== undefined) {
                 deltaLogger.info(
@@ -114,28 +122,37 @@ class DeltaProcessor {
 
         // Finally ok, process the delta and send the response
         try {
-            const response = await func(participation!, delta, this.context!, socket)
-            // Errors and responses to requests only need to be sent to the client that sent the message
-            if (response.messageKind === "ErrorEvent" || isDeltaResponse(response) || isDeltaAdminResponse(response)) {
-                deltaLogger.info(`Sending Error Event or response ${JSON.stringify(response)}`)
-                this.sendDelta(socket, participation, delta, response)
+            if (delta.messageKind === "CompositeCommand") {
+                await this.CompositeCommandFunction(participation!, delta as CompositeCommand, this.context!, socket)
             } else {
-                // To whom needs this Event (yes, it's an Event now) needs to be sent.
-                deltaLogger.info(`looking for affected partitions in ${response}`)
-                const affectedPartitionData = response.additionalInfos.find(m => m.kind == "AffectedPartition")
-                // TODO can be more than one affected partition
-                const affectedPartition = affectedPartitionData?.data?.find(kv => kv.key === "node")?.value
-                if (affectedPartition === undefined) {
-                    deltaLogger.info("No affected partition found, not sending delta's")
+                const response = await func(participation!, delta, this.context!, socket)
+                // Errors and responses to requests only need to be sent to the client that sent the message
+                if (response.messageKind === "ErrorEvent" || isDeltaResponse(response) || isDeltaAdminResponse(response)) {
+                    deltaLogger.info(`Sending Error Event or response ${JSON.stringify(response)}`)
+                    this.sendDelta(socket, participation, delta, response)
                 } else {
-                    // First check for new/deleted partitions, then for partition subscriptions
-                    if (response.messageKind === "PartitionAdded") {
-                        deltaLogger.info("DeltaProcessor.PartitionAdded")
-                        this.sendPartitionAddedEvents(socket, delta as AddPartitionCommand, response as PartitionAddedEvent, affectedPartition)
-                    } else if (response.messageKind === "PartitionDeleted") {
-                        this.sendPartitionDeletedEvents(delta, response as PartitionDeletedEvent)
+                    // To whom needs this Event (yes, it's an Event now) needs to be sent.
+                    deltaLogger.info(`looking for affected partitions in ${response}`)
+                    const affectedPartitionData = response.additionalInfos.find(m => m.kind == "AffectedPartition")
+                    // TODO can be more than one affected partition
+                    const affectedPartition = affectedPartitionData?.data?.find(kv => kv.key === "node")?.value
+                    if (affectedPartition === undefined) {
+                        deltaLogger.info("No affected partition found, not sending delta's")
                     } else {
-                        this.sendToSubscribers(delta, response, affectedPartition)
+                        // First check for new/deleted partitions, then for partition subscriptions
+                        if (response.messageKind === "PartitionAdded") {
+                            deltaLogger.info("DeltaProcessor.PartitionAdded")
+                            this.sendPartitionAddedEvents(
+                                socket,
+                                delta as AddPartitionCommand,
+                                response as PartitionAddedEvent,
+                                affectedPartition
+                            )
+                        } else if (response.messageKind === "PartitionDeleted") {
+                            this.sendPartitionDeletedEvents(delta, response as PartitionDeletedEvent)
+                        } else {
+                            this.sendToSubscribers(delta, response, affectedPartition)
+                        }
                     }
                 }
             }
@@ -169,27 +186,45 @@ class DeltaProcessor {
         }
     }
 
-    CompositeCommandFunction = (
+    eventBuffers: CompositeEventBufferStack = new CompositeEventBufferStack() 
+    
+     CompositeCommandFunction = async (
         participation: ParticipationInfo,
         msg: CompositeCommand,
         _ctx: DeltaContext,
         socket?: WebSocket
-    ): DeltaEvent => {
-        deltaLogger.info("Called CompositeCommandFunction " + msg.messageKind)
-        const store = []
-        this.sendDelta = (
-            socket: WebSocket,
-            participation: ParticipationInfo | undefined,
-            originalMessage: MessageFromClient,
-            responseOrEvent: MessageToClient
-        ): void => {
-            const call = { socket: socket, part: participation, orig: originalMessage, responseOrEvent: responseOrEvent }
-            store.push(call)
-            
+    ): Promise<DeltaEvent> => {
+        deltaLogger.info(`Called CompositeCommandFunction ${msg.parts.map(p => p.messageKind).join(", ")}`)
+        this.eventBuffers.startComposite(participation, msg)
+        for (const cmd of msg.parts) {
+            deltaLogger.info(`   processing part ${cmd.messageKind}`)
+            await this.processDelta(socket!, cmd)
+            deltaLogger.info(`   finished processing part ${cmd.messageKind}`)
         }
-        for(const cmd of msg.parts) {
-            this.processDelta(socket!, cmd)
+        // NOW build the actual composite events
+        const activeBuffer = this.eventBuffers.activeBuffer()
+        this.eventBuffers.endComposite()
+        for (const participationInfo of activeSockets.values()) {
+            deltaLogger.info("Composite for " + participationInfo.repositoryData?.clientId)
+            const toSend = activeBuffer?.events.filter(evt => evt.participation === participationInfo)
+            if (toSend !== undefined && toSend!.length > 0) {
+                // buid composite event and send
+                const event: CompositeEvent = {
+                    messageKind: "CompositeEvent",
+                    // TODO the sequence number now comes after the parts, should be before.
+                    // Hars! as we do not even know that there will be a composite for each participation.
+                    sequenceNumber: 0,
+                    additionalInfos: [],
+                    originCommands: [{
+                        commandId: msg.commandId,
+                        participationId: participation.participationId
+                    }],
+                    parts: toSend.map(tos => tos.responseOrEvent)
+                }
+                this.sendDelta(participationInfo.socket, participationInfo, msg, event)
+            }
         }
+        // ensure originationg client will get the response
         return errorEvent(msg)
     }
 
@@ -239,7 +274,7 @@ class DeltaProcessor {
         }
         return undefined
     }
-
+    
     sendDelta(
         socket: WebSocket,
         participation: ParticipationInfo | undefined,
@@ -250,9 +285,6 @@ class DeltaProcessor {
         if (isDeltaEvent(responseOrEvent) && isDeltaCommand(originalMessage)) {
             responseOrEvent.originCommands.forEach(cmd => (cmd.commandId = originalMessage.commandId))
             responseOrEvent.additionalInfos.push(...findDistributableInfos(originalMessage))
-            if (notNullOrUndefined(participation)) {
-                responseOrEvent.sequenceNumber = participation.nextSequenceNumber()
-            }
         } else if (isDeltaRequest(originalMessage) && isDeltaResponse(responseOrEvent)) {
             responseOrEvent.queryId = originalMessage.queryId
         } else if (isDeltaAdminRequest(originalMessage) && isDeltaAdminResponse(responseOrEvent)) {
@@ -260,16 +292,48 @@ class DeltaProcessor {
         } else {
             // TODO Ok for admin events, but otherwise this should be impossible
         }
-        socket.send(JSON.stringify(responseOrEvent))
+        // Buffer send events in case of composite command
+        if (this.eventBuffers.shouldBuffer()) {
+            deltaLogger.info(`    buffering event ${responseOrEvent.messageKind}`)
+            this.eventBuffers.activeBuffer().addEvent(participation!, (originalMessage as DeltaCommand), responseOrEvent as DeltaEvent)
+        } else {
+            deltaLogger.info(`    sending event ${responseOrEvent.messageKind}`)
+            this.applySequenceNumbers(participation!, responseOrEvent)
+            socket.send(JSON.stringify(responseOrEvent))
+        }
     }
 
     /**
-     * Send thye PartitionAdded event to all participations that are subscribed
-     * @param socket
-     * @param delta
-     * @param response
+     * Add sequence numbers to events is done just before actually sending the event, to ensure the numbers can de
+     * addedc correctly for Compoite Events.
+     * @param participation
+     * @param responseOrEvent
      */
-    sendPartitionAddedEvents(socket: WebSocket, delta: AddPartitionCommand, response: PartitionAddedEvent, affectedPartition: string): void {
+    applySequenceNumbers(participation: ParticipationInfo, responseOrEvent: MessageToClient): void {
+        if (isDeltaEvent(responseOrEvent)) {
+            responseOrEvent.sequenceNumber = participation.nextSequenceNumber()
+            if (responseOrEvent.messageKind === "CompositeEvent") {
+                for(const part of (responseOrEvent as CompositeEvent).parts) {
+                    this.applySequenceNumbers(participation, part)
+                }                
+            }
+        }
+    }
+
+    /**
+     * Send the PartitionAdded event to all participations that are subscribed.
+     * To make things complex,  each subscriber may get a different subset of tghe new partition's nodes.
+     *
+     * @param socket  The socket through which the AddPartition command was received.
+     * @param delta     The original AddPartition command
+     * @param response  The response event, with only the root partition node.
+     */
+    sendPartitionAddedEvents(
+        socket: WebSocket,
+        delta: AddPartitionCommand,
+        response: PartitionAddedEvent,
+        affectedPartition: string
+    ): void {
         deltaLogger.info(`DeltaProcessor.sendPartitionAddedEvents for ${activeSockets.size}`)
         for (const participationInfo of activeSockets.values()) {
             deltaLogger.info("DeltaProcessor.sendPartitionAddedEvents for " + participationInfo.repositoryData?.clientId)
@@ -285,20 +349,26 @@ class DeltaProcessor {
                 if (participationInfo.partitionChangesSubscription.creation === true) {
                     if (participationInfo.partitionChangesSubscription.autoSubscribe) {
                         // autosubscribe, so send full partition nodes
-                        response.newPartition = {
+                        const adaptedResponse = structuredClone(response)
+                        adaptedResponse.newPartition = {
                             nodes: delta.newPartition.nodes
                         }
-                        this.sendDelta(participationInfo.socket, participationInfo, delta, response)
+                        this.sendDelta(participationInfo.socket, participationInfo, delta, adaptedResponse)
                     } else {
+                        // No subscribe send requested depht limit nodes
                         const chunk = LionWebJsonChunkWrapper.fromNodesArray(delta.newPartition.nodes)
-                        const depthChunk =  chunk.getSubtreeWithDepth(affectedPartition, participationInfo.partitionChangesSubscription.depth)
-                        response.newPartition = { nodes: depthChunk }
-                        this.sendDelta(participationInfo.socket, participationInfo, delta, response)
+                        const depthChunk = chunk.getSubtreeWithDepth(
+                            affectedPartition,
+                            participationInfo.partitionChangesSubscription.depth
+                        )
+                        const adaptedResponse = structuredClone(response)
+                        adaptedResponse.newPartition = { nodes: depthChunk }
+                        this.sendDelta(participationInfo.socket, participationInfo, delta, adaptedResponse)
                     }
                 } else if (participationInfo.socket === socket) {
                     // not subscribed but send event to originating client
                     deltaLogger.info(
-                        "DeltaProcessor.sendPartitionAddedEvents to originating 1: " + participationInfo.repositoryData?.clientId
+                        `DeltaProcessor.sendPartitionAddedEvents to originating 1: ${participationInfo.repositoryData?.clientId}`
                     )
                     this.sendDelta(socket, participationInfo, delta, response)
                 } else {

@@ -6,6 +6,7 @@ import { METAPOINTERS_TABLE, sqlArrayFromNodeIdArray } from "@lionweb/server-com
  * @constructor
  */
 export const QueryNodeForIdList = (nodeid: string[], repoVersion: number): string => {
+    // language=SQL
     return `-- get full nodes from node id's
 WITH nodes_for_version AS (
     SELECT * FROM nodesForVersion(${repoVersion})
@@ -121,6 +122,7 @@ LEFT JOIN ${METAPOINTERS_TABLE} mp on mp.id = nodes_for_version.classifier
  */
 export const makeQueryNodeTreeForIdList = (nodeidlist: string[], depthLimit: number, repoVersion: number): string => {
     const sqlArray = sqlArrayFromNodeIdArray(nodeidlist)
+    // language=SQL
     return `-- Recursively retrieve node tree
             DROP VIEW IF EXISTS nodes;
             CREATE TEMPORARY VIEW nodes AS

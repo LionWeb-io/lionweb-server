@@ -12,6 +12,7 @@ import { getCorrespondingMetaPointerIDOnTheDB } from "./ImportLogic.js"
  */
 export const retrieveNodeTreeForIdListSQL = (nodeidlist: string[], depthLimit: number): string => {
     const sqlArray = sqlArrayFromNodeIdArray(nodeidlist)
+    // language=SQL
     return `-- Recursively retrieve node tree
             WITH RECURSIVE tmp AS (
                 SELECT id, parent, 0 as depth

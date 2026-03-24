@@ -39,6 +39,7 @@ export const newErrorDelta = (
             sequenceNumber: 0
         } as ErrorEvent
     } else {
+        // Response or AdminResponse
         return {
             messageKind: "ErrorResponse",
             errorCode: errorCode,

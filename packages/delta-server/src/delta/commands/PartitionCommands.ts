@@ -53,8 +53,9 @@ const AddPartitionFunction = async (
         // We have checked that there is exactly one partition node, now select it as affected node
         const partitionNode = msg.newPartition.nodes.find(n => n.parent === null)!
         participation.subscribedPartitions.add(partitionNode.id)
-        console.log(`Adding partition ${partitionNode.id} to subscribed partitions for ${participation.repositoryData?.clientId}`)
+        deltaLogger.info(`Adding partition ${partitionNode.id} to subscribed partitions for ${participation.repositoryData?.clientId}`)
 
+        // Only put one node in the response, the actual nodes sent depend on the specific client.
         return {
             messageKind: "PartitionAdded",
             //  TODO Send the partitions or part of it, depending on subscription

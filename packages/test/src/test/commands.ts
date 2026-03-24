@@ -36,7 +36,8 @@ import {
     GetAvailableIdsRequest,
     ListPartitionsRequest,
     InformAboutChangingPartitionsRequest,
-    SubscribeToChangingPartitionsRequest
+    SubscribeToChangingPartitionsRequest,
+    CompositeCommand
 } from "@lionweb/server-delta-shared"
 import { waitFor } from "./delta/helpers.js"
 import {} from "./utils.js"
@@ -249,7 +250,17 @@ export class Commands {
         return client.sendCommand(command)
     }
 
-    addPartition = (client: DeltaClient, partition: PartitionType): DeltaCommand => {
+    compositeCommandCmd = (): CompositeCommand => {
+        const composite: CompositeCommand = {
+            messageKind: "CompositeCommand",
+            commandId: `composite-id-${queryId++}`,
+            additionalInfos: [],
+            parts: []
+        }
+        return composite
+    }
+    
+    addPartitionCmd = (client: DeltaClient, partition: PartitionType): AddPartitionCommand => {
         const command: AddPartitionCommand = {
             messageKind: "AddPartition",
             commandId: `command-id-${queryId++}`,
@@ -268,7 +279,11 @@ export class Commands {
             },
             additionalInfos: []
         }
-        return client.sendCommand(command)
+        return command
+    }
+    
+    addPartition = (client: DeltaClient, partition: PartitionType): DeltaCommand => {
+        return client.sendCommand(this.addPartitionCmd(client,partition))
     }
 
     deletePartition = (client: DeltaClient, partition: LionWebId): DeltaCommand => {
@@ -281,7 +296,7 @@ export class Commands {
         return client.sendCommand(command)
     }
 
-    addChild = (client: DeltaClient, child: NewChild, extra?: Partial<AddChildCommand>): DeltaCommand => {
+    addChildCmd = (client: DeltaClient, child: NewChild, extra?: Partial<AddChildCommand>): DeltaCommand => {
         const command: AddChildCommand = {
             messageKind: "AddChild",
             commandId: `command-id-${queryId++}`,
@@ -308,10 +323,15 @@ export class Commands {
         if (extra?.index) {
             command.index = extra.index
         }
-        return client.sendCommand(command)
+        return command
     }
 
-    addReference = (client: DeltaClient, addRef: AddReferenceType, extra?: Partial<AddReferenceCommand>): DeltaCommand => {
+    addChild = (client: DeltaClient, child: NewChild, extra?: Partial<AddChildCommand>): DeltaCommand => {
+        return client.sendCommand(this.addChildCmd(client, child, extra))
+    }
+
+
+        addReference = (client: DeltaClient, addRef: AddReferenceType, extra?: Partial<AddReferenceCommand>): DeltaCommand => {
         const command: AddReferenceCommand = {
             messageKind: "AddReference",
             commandId: `command-id-${queryId++}`,

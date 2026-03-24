@@ -12,6 +12,7 @@ import {
 } from "@lionweb/server-common";
 
 export function initSchemaWithoutHistory(schemaName: string): string {
+    // language=PostgreSQL
     return `-- Create schema
     
     -- Delete tables and functions first, so that we can then delete the schema

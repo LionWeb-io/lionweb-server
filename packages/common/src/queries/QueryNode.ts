@@ -66,6 +66,7 @@ export const retrieveFullNodesFromQueryDB = async (dbConnection: DbConnection, r
  *                   Must have an `id` property.
  */
 export const retrieveFullNodesFromQuerySQL = (nodesQuery: string): string => {
+    // language=SQL
     return `-- Get the nodes for the nodes query
     WITH relevant_nodes AS (
         ${nodesQuery}

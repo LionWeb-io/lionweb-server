@@ -25,6 +25,7 @@
         "install-delta-data": "npx degit https://github.com/LionWeb-io/lionweb-integration-testing/delta/ delta",
         "test": "vitest --run --fileParallelism=false  --silent=false ./src/test/test.test.ts ./src/test/inspectionTests.test.ts ./dist/test/tests-issue19.test.ts ./src/test/history.test.ts ./src/test/sequentialize-requests.test.ts",
         "test-logo": "vitest --run --open --fileParallelism=false  --silent=false ./src/test/delta/test-logo-deltas.test.ts",
+        "test-delta":  "vitest --run --open --fileParallelism=false  --silent=false ./src/test/delta/test-logo-*.test.ts",
         "test2": "vitest --fileParallelism=false ./src/test/test.test.ts",
         "test-additional": "vitest --run src/test/additional-api.test.ts",
         "test-bulk": "vitest --run src/test/bulk-import.test.ts",

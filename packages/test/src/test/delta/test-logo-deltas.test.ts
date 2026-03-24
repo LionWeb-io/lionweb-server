@@ -8,11 +8,10 @@ import { HttpSuccessCodes  } from "@lionweb/server-shared"
 import { test, describe, beforeAll, beforeEach, afterAll } from "vitest"
 import { reportHTML } from "./helpers.js"
 import { CLASSIFIER as CLS, CONTAINMENT, CONTAINMENT as CON, PROPERTY as PROP, REFERENCE as REF } from "./keys.js"
-import { Logo2String } from "./Logo2String.js"
 import { CoverageMap, cmd, expectError, expectEvent, expectResponse, logProtocol } from "./test-helpers.test.js"
 
 // TOPO Delta : primary key exception when nohistory = false 
-const collection = [true]
+const collection = [true, false]
 const log: boolean = false
 
 const config = {
@@ -347,5 +346,9 @@ collection.forEach(withoutHistory => {
         })
     })
 })
+/**
+ * Run the other tests
+ */
+import "./test-logo-participation.test.js"
 
 

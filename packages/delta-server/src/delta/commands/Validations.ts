@@ -194,13 +194,9 @@ export function findAndValidateNodeExists(
     msg: DeltaCommand,
     participation: ParticipationInfo
 ): LionWebJsonNode {
-    console.log(`IN1 ${nodes.map(node => node.id)}`)
     const result = nodes.find(n => n.id === id)
-    console.log(`IN2 ${nodes.map(node => node.id)}`)
     if (result === undefined) {
-        console.log(`OUT1 ${nodes.map(node => node.id)}`)
         throw newErrorDelta("unknownNode", `Node ${id} does not exist`, msg, participation)
     }
-    console.log(`OUT2 ${nodes.map(node => node.id)}`)
     return result
 }

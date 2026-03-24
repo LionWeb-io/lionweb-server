@@ -12,6 +12,7 @@ import { ReservedIdRecord } from "../database/TableTypes.js"
  */
 function retrieveReservedNodesFromIdListSQL(repositoryData: RepositoryData, nodeIdList: string[]): string {
     const sqlArray = sqlArrayFromNodeIdArray(nodeIdList)
+    // language=SQL
     return `-- Retrieve node tree
             SELECT node_id, client_id
             FROM ${RESERVED_IDS_TABLE}
