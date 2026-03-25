@@ -32,10 +32,10 @@
     },
     "postgres": {
         "database": {
-            "host": "127.0.0.1",
+            "host": "postgres",
             "user": "postgres",
             "db": "lionweb",
-            "password": "postgres",
+            "password": "lionweb",
             "port": "5432"
         },
         "certificates": {
