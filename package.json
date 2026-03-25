@@ -12,7 +12,7 @@
     },
     "scripts": {
         "initialize": "npm run clean && npm install && npm run setup && npm run build",
-        "clean": "rm -rf node_modules/ && npm run clean -w packages --if-present",
+        "clean": "rm -rf node_modules/ && rm -f package-lock.json && npm run clean -w packages --if-present",
         "build": "npm run build -w packages --if-present",
         "lint": "npm run lint -w packages --if-present",
         "setup": "npm run setup -w packages --if-present",
@@ -39,6 +39,9 @@
         "prettier": "3.1.0",
         "ts-protoc-gen": "0.15.0",
         "typescript": "5.9.3"
+    },
+    "optionalDependencies": {
+        "@rollup/rollup-linux-arm64-gnu": "^4.59.0"
     },
     "workspaces": [
         "./packages/shared",
