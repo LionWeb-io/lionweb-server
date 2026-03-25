@@ -4,15 +4,22 @@ import { LionWebJsonChunk } from "@lionweb/json"
 import { LionWebJsonDiff } from "@lionweb/json-diff"
 
 import { assert } from "chai"
-import sm from "source-map-support"
+// import sm from "source-map-support"
 import { BulkImport } from "@lionweb/server-shared"
 import { beforeAll } from "vitest"
 
 const { fail, strictEqual } = assert
 
-sm.install()
+// sm.install()
+async function timeout(ms = 500) {
+    return new Promise(resolve => {
+        setTimeout(resolve, ms)
+    })
+}
+
 
 describe("Client - Additional API tests", () => {
+
     const repository = "clientAdditionalAPIRepo"
     const client = new RepositoryClient({ clientId: "TestClient", repository: repository })
     let initError: string = ""
@@ -71,7 +78,7 @@ describe("Client - Additional API tests", () => {
             const format = combination.format
             const compression = combination.compression
             it(`bulk import, ${compression ? "with compression" : "without compression"}, ${format}`, async function () {
-                this.timeout(15_000)
+                timeout(15_000)
                 assert(initError === "", initError)
 
                 const bulkImport: BulkImport = {

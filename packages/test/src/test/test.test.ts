@@ -19,9 +19,9 @@ collection.forEach(withoutHistory => {
     const config = {
         clientId: "TestClient",
         repository: repository,
-        hostname: "192.168.100.1",
-        // hostname: "127.0.0.1",
-        port: "30050"
+        // hostname: "192.168.100.1",
+        hostname: "127.0.0.1",
+        port: "3005"
     }
     describe("Repository tests " + (withoutHistory ? "without history" : "with history"), () => {
         const client = new RepositoryClient(config)

@@ -25,10 +25,10 @@
         "lint": "eslint src"
     },
     "dependencies": {
-        "@lionweb/json": "0.9.0-beta.2",
-        "@lionweb/json-diff": "0.9.0-beta.2",
-        "@lionweb/json-utils": "0.9.0-beta.2",
-        "@lionweb/validation": "0.9.0-beta.2",
+        "@lionweb/json": "0.9.0-beta.3",
+        "@lionweb/json-diff": "0.9.0-beta.3",
+        "@lionweb/json-utils": "0.9.0-beta.3",
+        "@lionweb/validation": "0.9.0-beta.3",
         "@lionweb/server-shared": "0.4.0-beta.4",
         "@lionweb/server-common": "0.4.0-beta.4",
         "@lionweb/server-delta-shared": "0.4.0-beta.4",

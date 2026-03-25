@@ -349,6 +349,6 @@ collection.forEach(withoutHistory => {
 /**
  * Run the other tests
  */
-import "./test-logo-participation.test.js"
+// import "./test-logo-participation.test.js"
 
 
