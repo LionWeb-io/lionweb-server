@@ -17,8 +17,8 @@
     },
     "scripts": {
         "clean": "rm -rf node_modules/ && rm -rf dist/",
-        "dev-setup": "node dist/server.js --setup --config server-config.json",
-        "dev-run": "nodemon dist/server.js -- --run --config",
+        "dev-setup": "node dist/bin/lionweb-server.js --setup --config server-config.json",
+        "dev-run": "node dist/bin/lionweb-server.js -- --run --config",
         "build": "tsc",
         "alive": "echo I am alive",
         "lint": "eslint src",
