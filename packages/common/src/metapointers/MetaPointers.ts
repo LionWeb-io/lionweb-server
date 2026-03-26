@@ -1,5 +1,5 @@
 import { LionWebJsonMetaPointer, LionWebJsonNode } from "@lionweb/json"
-import { deltaLogger } from "../apiutil/index.js"
+import { dbLogger, deltaLogger } from "../apiutil/index.js"
 import { DbConnection, LionWebTask, METAPOINTERS_TABLE, RepositoryData } from "../database/index.js"
 
 /**
@@ -114,11 +114,11 @@ export class MetaPointersCollector {
         const mpLanguages = `array[${metaPointersList.map(el => `'${el.language}'`).join(",")}]`
         const mpVersions = `array[${metaPointersList.map(el => `'${el.version}'`).join(",")}]`
         const mpKeys = `array[${metaPointersList.map(el => `'${el.key}'`).join(",")}]`
-        console.log(
+        dbLogger.debug(
             `> obtainindices for repo ${this.repositoryData.repository.repository_name} query is: SELECT toMetaPointerIDs(${mpLanguages},${mpVersions},${mpKeys});`
         )
         const raw_res: { tometapointerids: string }[] = await task.query(this.repositoryData, `SELECT toMetaPointerIDs(${mpLanguages},${mpVersions},${mpKeys});`)
-        console.log(`> obtainindices for repo ${this.repositoryData.repository.repository_name} rawres is ${raw_res.length}`)
+        dbLogger.debug(`> obtainindices for repo ${this.repositoryData.repository.repository_name} rawres is ${raw_res.length}`)
         raw_res.forEach(async el => {
             if (el === undefined) {
                 throw new Error("EL IS UNDEFINED")

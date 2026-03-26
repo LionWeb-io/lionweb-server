@@ -100,6 +100,7 @@ export class ServerConfig {
             }
         }
         if (fs.existsSync(configFile)) {
+            console.log(`Reading configuration from file ${configFile}`)
             const stats = fs.statSync(configFile)
             if (stats.isFile()) {
                 try {

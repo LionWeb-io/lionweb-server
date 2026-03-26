@@ -19,7 +19,7 @@ import { affectedPartition, DeltaFunction } from "./DeltaUtil.js"
 import { findAndValidateNodeExists, validateReference } from "./Validations.js"
 
 const AddReference = async (participation: Participation, msg: AddReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorEvent> => {
-    deltaLogger.debug("Called AddReference " + msg.newResolveInfo)
+    deltaLogger.info("Called AddReference " + msg.newResolveInfo)
     if (isNullOrUndefined(msg.newResolveInfo) && isNullOrUndefined(msg.newTarget)) {
         throw newErrorDelta("undefinedReferenceTarget", "resolveInfo and target are both null", msg, participation)
     }
@@ -33,7 +33,7 @@ const AddReference = async (participation: Participation, msg: AddReferenceComma
         const changes = new DbChanges(TableHelpers.pgp)
         const missing: Missing = parentNode.references.find(c => isEqualMetaPointer(c.reference, msg.reference)) === undefined ? Missing.MissingBefore : Missing.NotMissing
 
-        console.log(`AddReference missing ${missing}`)
+        deltaLogger.debug(`AddReference missing ${missing}`)
         changes.addChanges(
             [new TargetAdded(new JsonContext(null, ["delta"]), parentNode!, beforeReference, afterReference, { resolveInfo: msg.newResolveInfo  ?? null, reference: msg.newTarget!}, missing)]
         )
@@ -72,7 +72,7 @@ const DeleteReference = async (participation: Participation, msg: DeleteReferenc
         const afterTargets = [...beforeReference.targets]
         afterTargets.splice(msg.index, 1)
         const afterReference = { reference: beforeReference.reference, targets: afterTargets}
-        console.log(`REFERENCE DEL index ${msg.index} before ${JSON.stringify(beforeReference.targets)} after ${JSON.stringify(afterReference.targets)}`)
+        deltaLogger.debug(`REFERENCE DEL index ${msg.index} before ${JSON.stringify(beforeReference.targets)} after ${JSON.stringify(afterReference.targets)}`)
         const changes = new DbChanges(TableHelpers.pgp)
         changes.addChanges(
             [new TargetRemoved(new JsonContext(null, ["delta"]), parentNode, beforeReference, afterReference, { resolveInfo: msg.deletedResolveInfo ?? null, reference: msg.deletedTarget!}, Missing.NotMissing)]

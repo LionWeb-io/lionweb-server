@@ -1,4 +1,4 @@
-import { PARTICIPATIONS, Participation, registerDeltaProcessor } from "@lionweb/delta-server"
+import { PARTICIPATIONS, registerDeltaProcessor } from "@lionweb/delta-server"
 import { registerHistoryApi } from "@lionweb/server-history"
 import { DeltaCommand, DeltaRequest } from "@lionweb/server-delta-shared"
 import express, { Express, NextFunction, Response, Request } from "express"

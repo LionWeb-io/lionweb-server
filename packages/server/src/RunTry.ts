@@ -1,5 +1,5 @@
 import { deltaProcessor } from "@lionweb/delta-server"
-import { asError, deltaLogger, Job, requestQueue } from "@lionweb/server-common";
+import { asError, deltaLogger, expressLogger, Job, requestQueue } from "@lionweb/server-common"
 import { DeltaCommand, DeltaRequest } from "@lionweb/server-delta-shared";
 import WebSocket from "ws";
 
@@ -22,7 +22,7 @@ export async function runWithTryDelta(socket: WebSocket, delta: DeltaCommand | D
             deltaLogger.error(error)
         }
     }
-    console.log(`queue ${delta.messageKind}`)
+    expressLogger.info(`queue ${delta.messageKind}`)
     requestQueue.add(new Job(`${delta.messageKind}-delta-` + myIndex, deltaFunction))
     
 }

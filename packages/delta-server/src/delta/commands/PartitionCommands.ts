@@ -33,7 +33,7 @@ const AddPartitionFunction = async (
             msg.newPartition.nodes.map(n => n.id)
         )
         if (existingNodes.length > 0) {
-            console.error(`Cannot add partition, node ids ${existingNodes.map(n => n.id)} already in use`)
+            deltaLogger.debug(`Cannot add partition, node ids ${existingNodes.map(n => n.id)} already in use`)
             return newErrorDelta(
                 "idsAlreadyInUse",
                 `Cannot add partition, node ids ${existingNodes.map(n => n.id)} already in use`,

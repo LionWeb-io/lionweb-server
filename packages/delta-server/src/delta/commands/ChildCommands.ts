@@ -33,21 +33,21 @@ import { affectedPartition, DeltaFunction, errorEvent } from "./DeltaUtil.js"
 import { findAndValidateNodeExists, validateContainment, validateProperTree } from "./Validations.js"
 
 const AddChild = async (participation: Participation, msg: AddChildCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
-    console.log(`Called AddChild ${msg.newChild.nodes.map(n => n.id)}`)
+    deltaLogger.info(`Called AddChild ${msg.newChild.nodes.map(n => n.id)}`)
     const newChildNode = validateProperTree(msg.newChild, msg.parent, msg, participation)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
             ...(msg.newChild.nodes.map(n => n.id)), msg.parent
         ])
-        console.log("BEFORE EXISTING nodses form db " + nodesFromDB.map(n => n.id))
+        deltaLogger.debug("BEFORE EXISTING nodses form db " + nodesFromDB.map(n => n.id))
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
-        console.log("AFTER EXISTING nodses form db " + nodesFromDB.map(n => n.id))
+        deltaLogger.debug("AFTER EXISTING nodses form db " + nodesFromDB.map(n => n.id))
         const existingChildNodes = nodesFromDB.filter(nn => {
-            console.log(`nn.id ${nn.id} parent ${msg.parent}`)
+            deltaLogger.debug(`nn.id ${nn.id} parent ${msg.parent}`)
             return nn.id !== msg.parent
         })
         // node alreadyExists
-        console.log("EXISTING child nodes " + existingChildNodes.map(n => n.id))
+        deltaLogger.debug("EXISTING child nodes " + existingChildNodes.map(n => n.id))
         if (existingChildNodes.length > 0) {
             const existingIds = existingChildNodes.map(n => n.id)
             throw newErrorDelta("nodeAlreadyExists", `Nodes '${existingIds}' already exist`, msg, participation)

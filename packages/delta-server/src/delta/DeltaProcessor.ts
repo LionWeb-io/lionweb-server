@@ -381,7 +381,7 @@ class DeltaProcessor {
     sendPartitionDeletedEvents(delta: MessageFromClient, response: PartitionDeletedEvent): void {
         // Find out which nodes to send to whom
         for (const participationInfo of PARTICIPATIONS.allParticipations()) {
-            console.log("DeltaProcessor.PartitionDeleted next socket " + participationInfo.repositoryData?.clientId)
+            deltaLogger.debug("DeltaProcessor.PartitionDeleted next socket " + participationInfo.repositoryData?.clientId)
             const needsToSend: boolean =
                 (participationInfo.partitionChangesSubscription !== undefined && participationInfo.partitionChangesSubscription.deletion) ||
                 participationInfo.subscribedPartitions.has(response.deletedPartition)
