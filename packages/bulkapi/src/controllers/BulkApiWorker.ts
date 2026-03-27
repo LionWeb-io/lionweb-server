@@ -1,3 +1,4 @@
+import { versiontToHttpResponseMessage } from "@lionweb/server-common"
 import {
     CreatePartitionsResponse,
     DeletePartitionsResponse,
@@ -10,18 +11,16 @@ import {
     StoreResponse
 } from "@lionweb/server-shared"
 import {
-    createId,
     EMPTY_CHUNKS,
     LionWebTask,
     nodesToChunk,
     QueryReturnType,
     RepositoryData,
     requestLogger,
-    traceLogger
+    traceLogger,
+    SQL, DB,
 } from "@lionweb/server-common"
 import { LionWebJsonChunk } from "@lionweb/json"
-import { currentRepoVersionQuery, versionResultToResponse } from "../database/index.js"
-import { retrieveWith } from "../database/RetrieveInOneQuery.js"
 import { BulkApiContext } from "../main.js"
 
 /**
@@ -34,10 +33,17 @@ export class BulkApiWorker {
         this.context = context
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async bulkPartitions(task: LionWebTask, repositoryData: RepositoryData): Promise<QueryReturnType<ListPartitionsResponse>> {
-        const result = await this.context.queries.getPartitions(task, repositoryData)
-        return result
+        const result = await DB.retrievePartitionNodes(task, repositoryData)
+        return {
+            status: HttpSuccessCodes.Ok,
+            query: "query",
+            queryResult: {
+                chunk: nodesToChunk(result.nodes, repositoryData.repository.lionweb_version),
+                success: true,
+                messages: [versiontToHttpResponseMessage(result.version)]
+            }
+        }
     }
 
     /**
@@ -51,7 +57,7 @@ export class BulkApiWorker {
         requestLogger.info(`BulkApiWorker.createPartitions repo [${JSON.stringify(repositoryData)}]`)
         // TODO Optimize: This reuses the "getNodesFromIdList", but that retrieves full nodes, which is not needed here
 
-        const existingNodes = await this.context.queries.getNodesFromIdListIncludingChildren(
+        const existingNodes = await DB.retrieveFullNodesFromIdListDB(
             task,
             repositoryData,
             chunk.nodes.map(n => n.id)
@@ -86,7 +92,7 @@ export class BulkApiWorker {
         idList: string[]
     ): Promise<QueryReturnType<DeletePartitionsResponse>> => {
         // TODO Optimize: only need parent, all features are not needed, can be optimized.
-        const partitions = await this.context.queries.getNodesFromIdListIncludingChildren(task, repositoryData, idList)
+        const partitions = await DB.retrieveFullNodesFromIdListDB(task, repositoryData, idList)
         const issues: ResponseMessage[] = []
         partitions.forEach(part => {
             if (part.parent !== null) {
@@ -141,13 +147,15 @@ export class BulkApiWorker {
             }
         }
 
-        const [versionResult, nodes] = await task.multi(repositoryData, currentRepoVersionQuery() + retrieveWith(nodeIdList, depthLimit))
+        const [versionResult, nodes] = await task.multi(repositoryData, SQL.currentRepoVersionSQL() + SQL.retrieveFullNodesRecursiveSQL(nodeIdList, depthLimit))
+        requestLogger.info(`VERSION ${JSON.stringify(versionResult)}`)
+        requestLogger.trace(`NODES ${JSON.stringify(nodes)}`)
         return {
             status: HttpSuccessCodes.Ok,
             query: "",
             queryResult: {
                 success: true,
-                messages: [versionResultToResponse(versionResult)],
+                messages: [SQL.versionResultToResponse(versionResult)],
                 chunk: nodesToChunk(nodes, repositoryData.repository.lionweb_version)
             }
         }
@@ -160,42 +168,13 @@ export class BulkApiWorker {
      */
     ids = async (task: LionWebTask, repositoryData: RepositoryData, count: number): Promise<QueryReturnType<IdsResponse>> => {
         requestLogger.info("Reserve Count ids " + count + " for " + repositoryData.clientId)
-        const result: string[] = []
-        // Create a bunch of ids, they are probably all free
-        let done = false
-        while (!done) {
-            for (let i = 0; i < count; i++) {
-                const id = createId(repositoryData.clientId)
-                result.push(createId(id))
-            }
-            // Check for already used or reserved ids and remove them if needed
-            const reservedByOtherClient = await this.context.queries.reservedNodeIdsByOtherClient(task, repositoryData, result)
-            if (reservedByOtherClient.length > 0) {
-                reservedByOtherClient.forEach(reservedId => {
-                    const index = result.indexOf(reservedId.node_id)
-                    result.splice(index, 1)
-                })
-            }
-            // Remove ids that are already in use
-            const usedIds = await this.context.queries.nodeIdsInUse(task, repositoryData, result)
-            if (usedIds.length > 0) {
-                usedIds.forEach(usedId => {
-                    const index = result.indexOf(usedId.id)
-                    result.splice(index, 1)
-                })
-            }
-            if (result.length > 0) {
-                done = true
-            }
-        }
-        const returnValue = await this.context.queries.makeNodeIdsReservation(task, repositoryData, result)
-
+        const result: string[] = await DB.getAvailableIds(task, repositoryData, count)
         return {
             status: HttpSuccessCodes.Ok,
             query: "",
             queryResult: {
-                success: returnValue.queryResult.success,
-                messages: returnValue.queryResult.messages,
+                success: true,
+                messages: [],
                 ids: result
             }
         }

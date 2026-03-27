@@ -1,7 +1,7 @@
 import { LionWebJsonMetaPointer, LionWebJsonNode, LionWebJsonUsedLanguage } from "@lionweb/json"
 
 export function collectUsedLanguages(nodes: LionWebJsonNode[]): LionWebJsonUsedLanguage[] {
-    if (nodes.length == 0) {
+    if (nodes === undefined || nodes.length == 0) {
         return []
     }
     const languages: Map<string, Set<string>> = new Map<string, Set<string>>()

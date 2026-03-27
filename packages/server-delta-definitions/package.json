@@ -1,0 +1,39 @@
+{
+    "name": "@lionweb/server-delta-definitions",
+    "version": "0.4.0-beta.4",
+    "private": false,
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "typings": "dist/index.d.ts",
+    "type": "module",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/LionWeb-io/lionweb-repository.git"
+    },
+    "bugs": {
+        "url": "https://github.com/LionWeb-io/lionweb-repository/issues"
+    },
+    "scripts": {
+        "clean": "rm -rf node_modules/ && rm -rf dist/",
+        "build": "tsc",
+        "alive": "echo I am alive",
+        "lint": "eslint src",
+        "release-beta": "npm publish --tag beta --access=public",
+        "publish-local": "npm publish --registry http://localhost:4873 --tag beta",
+        "unpublish-local": "npm unpublish --force --registry http://localhost:4873",
+        "republish-local": "npm run unpublish-local && npm run publish-local"
+    },
+    "devDependencies": {
+        "prettier": "3.1.0",
+        "@types/chai": "4.3.11",
+        "@types/ws": "^8.18.1",
+        "eslint": "10.1.0",
+        "chai": "4.3.10",
+        "typescript": "5.9.3"
+    },
+    "dependencies": {
+        "@lionweb/json-utils": "0.9.0-beta.3",
+        "@lionweb/validation": "0.9.0-beta.3"
+    }
+}

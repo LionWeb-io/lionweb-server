@@ -1,4 +1,5 @@
 import { HttpServerErrors, isLionWebVersion, LionWebVersionType, LionWebVersionValues, ResponseMessage } from "@lionweb/server-shared"
+import { isInternalQueryError } from "../queries/index.js"
 import { requestLogger } from "./logging.js"
 import { Job, requestQueue } from "./RequestQueue.js"
 import { collectUsedLanguages } from "./UsedLanguages.js"
@@ -107,7 +108,7 @@ export function getIntegerParam(request: Request, paramName: string, defaultValu
             return {
                 success: false,
                 error: {
-                    kind: `${toFirstUpper(paramName)}Incorrect`,
+                    kind: `${toFirstUpper(paramName)}-ParameterIncorrect`,
                     message: `Parameter ${paramName} must be an integer, but it is ${result}`
                 }
             }
@@ -222,13 +223,22 @@ export function runWithTry(func: (request: Request, response: Response) => void)
             try {
                 await func(request, response)
             } catch (e) {
-                const error = asError(e)
-                requestLogger.error(`Exception ${myIndex} while serving request for ${request.url}: ${error.message}`)
-                requestLogger.error(error)
-                lionwebResponse(response, HttpServerErrors.InternalServerError, {
-                    success: false,
-                    messages: [{ kind: error.name, message: `Exception while serving request for ${request.url}: ${error.message}` }]
-                })
+                if (isInternalQueryError(e)) {
+                    requestLogger.error(`Exception ${myIndex} while serving request for ${request.url}: ${e.message}`)
+                    requestLogger.error(e)
+                    lionwebResponse(response, HttpServerErrors.InternalServerError, {
+                        success: false,
+                        messages: [{ kind: e.name, message: `Exception while serving request for ${request.url}: ${e.message}` }]
+                    })
+                } else {
+                    const error = asError(e)
+                    requestLogger.error(`Exception ${myIndex} while serving request for ${request.url}: ${error.message}`)
+                    requestLogger.error(error)
+                    lionwebResponse(response, HttpServerErrors.InternalServerError, {
+                        success: false,
+                        messages: [{ kind: error.name, message: `Exception while serving request for ${request.url}: ${error.message}` }]
+                    })
+                }
             }
         }
         requestQueue.add(new Job("request-" + myIndex, requestFunction))
@@ -239,7 +249,7 @@ export function runWithTry(func: (request: Request, response: Response) => void)
  * Get new node id
  */
 export function createId(clientId: string): string {
-    return clientId + "-" + uuidv4()
+    return uuidv4()
 }
 
 /**
@@ -259,6 +269,15 @@ export function assertIsDefined<T>(value: T): asserts value is NonNullable<T> {
     if (value === undefined || value === null) {
         throw new Error(`${value} is not defined`)
     }
+}
+
+export function isNullOrUndefined<T>(obj: T | null | undefined): obj is null | undefined {
+    return obj == null; // catches both null and undefined
+}
+
+
+export function notNullOrUndefined<T>(obj: T | null | undefined): obj is NonNullable<T> {
+    return obj != null; // catches both null and undefined
 }
 
 /**

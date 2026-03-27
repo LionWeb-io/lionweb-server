@@ -107,6 +107,8 @@ export async function compressJSON(input: unknown): Promise<BodyInit> {
     // Node: gzip to Buffer (BodyInit accepts Buffer/Uint8Array)
     if (isNode()) {
         const gzip = await getNodeGzip()
+        // TODO TypeScript gives type error - need to check whether this is correct
+        //@ts-expect-error TS2322
         return await gzip(json)
     }
 

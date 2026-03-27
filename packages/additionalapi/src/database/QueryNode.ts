@@ -1,21 +1,18 @@
-import {CONTAINMENTS_TABLE, NODES_TABLE} from "@lionweb/server-common";
+import { MetaPointersTracker, CONTAINMENTS_TABLE, NODES_TABLE, sqlArrayFromNodeIdArray } from "@lionweb/server-common"
 import { AttachPoint, PBAttachPoint, PBLanguage, PBMetaPointer } from "@lionweb/server-shared"
-import {MetaPointersTracker} from "@lionweb/server-dbadmin";
-import {getCorrespondingMetaPointerIDOnTheDB} from "./ImportLogic.js";
-
-function sqlArrayFromNodeIdArray(strings: string[]): string {
-    return `(${strings.map(id => `'${id}'`).join(", ")})`
-}
+import { getCorrespondingMetaPointerIDOnTheDB } from "./ImportLogic.js"
 
 /**
  * Query that will recursively get all child (ids) of all nodes in _nodeIdList_
  * Note that annotations are also considered children for this method.
  * This works ok because we use the _parent_ column to find the children, not the containment or annotation.
- * @param nodeidlist
+ * @param nodeidlist List of node `id`'s 
  * @param depthLimit
+ * @returns A query string which results in an array of {id: string, parent: string, depth: number}
  */
-export const makeQueryNodeTreeForIdList = (nodeidlist: string[], depthLimit: number): string => {
+export const retrieveNodeTreeForIdListSQL = (nodeidlist: string[], depthLimit: number): string => {
     const sqlArray = sqlArrayFromNodeIdArray(nodeidlist)
+    // language=SQL
     return `-- Recursively retrieve node tree
             WITH RECURSIVE tmp AS (
                 SELECT id, parent, 0 as depth
@@ -31,7 +28,7 @@ export const makeQueryNodeTreeForIdList = (nodeidlist: string[], depthLimit: num
     `
 }
 
-export const makeQueryToCheckHowManyExist = (nodeidlist: Set<string>): string => {
+export const checkHowManyExistSQL = (nodeidlist: Set<string>): string => {
     if (nodeidlist.size === 0) {
         throw new Error("Invalid nodeidlist (it is empty)")
     }
@@ -39,7 +36,7 @@ export const makeQueryToCheckHowManyExist = (nodeidlist: Set<string>): string =>
     return `SELECT COUNT(*) FROM ${NODES_TABLE} WHERE ID IN (${ids});`
 }
 
-export const makeQueryToCheckHowManyDoNotExist = (nodeidlist: Set<string>): string => {
+export const checkHowManyDoNotExistSQL = (nodeidlist: Set<string>): string => {
     if (nodeidlist.size === 0) {
         throw new Error("Invalid nodeidlist (it is empty)")
     }

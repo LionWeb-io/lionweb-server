@@ -20,6 +20,9 @@ export const config: PostgresConfig = {
 dbLogger.info("POSTGRES CONFIG: " + JSON.stringify(config, null, 2))
 
 export const pgp = pgPromise()
+// TODO
+export type PgPromiseType = ReturnType<typeof pgp>
+
 /**
  * Connection to a specific database, which needs to exist.
  */

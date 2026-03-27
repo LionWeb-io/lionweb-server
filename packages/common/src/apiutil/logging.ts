@@ -1,8 +1,5 @@
-import { pino, LevelWithSilent } from "pino"
 import { ServerConfig } from "./ServerConfig.js"
-
-// Need to copy from pino, as we cannot check a string value against a type in TS
-export const PINO_LEVELS = ["fatal", "error", "warn", "info", "debug", "trace", "silent"]
+import { LevelWithSilent, MainLogger, PINO_LEVELS } from "./PinoLogger.js"
 
 export function verbosity(level: string, defaultValue: LevelWithSilent): LevelWithSilent {
     if (level !== undefined && PINO_LEVELS.includes(level)) {
@@ -12,48 +9,61 @@ export function verbosity(level: string, defaultValue: LevelWithSilent): LevelWi
     }
 }
 
-const transport = pino.transport({
-    targets: [
-        {
-            target: "pino/file",
-            options: { destination: `./server-log.jsonl` }
-        },
+// const transport = pino.transport({
+//     targets: [
+        // {
+        //     target: "pino/file",
+        //     options: { destination: `./server-log.jsonl` }
+        // },
         // {
         //     target: "pino/file" // default destination is console
         // },
-        {
-            target: "pino-pretty",
-            options: {
-                colorize: true,
-                ignore: "pid,hostname,level-label,type,query,chunk"
-            }
-        }
-    ]
-})
+        // {
+        //     target: "pino-pretty",
+        //     options: {
+        //         colorize: true,
+        //         ignore: "pid,hostname,level-label,type,query,chunk"
+        //     }
+        // }
+    // ]
+// })
+
+function pino( _props: { level: LevelWithSilent, formatters: object, timestamp: unknown}): MainLogger {
+    const result = new MainLogger()
+    result.level = _props.level
+    return result
+}
 
 const pinoLogger = pino(
     {
-        level: "info",
+        level: "silent",
         formatters: {
             // level: (label: string) => {
             //     return { level: label.toUpperCase() }
             // },
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            bindings: () => {
-                return {}
-            }
+            // bindings: () => {
+            //     return {}
+            // }
         },
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         timestamp: undefined
     },
-    transport
+    // transport
 )
 
+export const bulkLogger = pinoLogger.child({ type: "bulk" })
 export const requestLogger = pinoLogger.child({ type: "request" })
 export const expressLogger = pinoLogger.child({ type: "express" })
 export const dbLogger = pinoLogger.child({ type: "database" })
+export const queryLogger = pinoLogger.child({ type: "query" })
 export const traceLogger = pinoLogger.child({ type: "trace" })
+export const deltaLogger = pinoLogger.child({ type: "delta" })
+export const messageLogger = pinoLogger.child({ type: "message" })
+
+bulkLogger.level = ServerConfig.getInstance().bulkLog()
 requestLogger.level = ServerConfig.getInstance().requestLog()
 traceLogger.level = ServerConfig.getInstance().traceLog()
 expressLogger.level = ServerConfig.getInstance().expressLog()
 dbLogger.level = ServerConfig.getInstance().databaseLog()
+queryLogger.level = ServerConfig.getInstance().queryLog()
+deltaLogger.level = ServerConfig.getInstance().deltaLog()
+messageLogger.level = ServerConfig.getInstance().messageLog()

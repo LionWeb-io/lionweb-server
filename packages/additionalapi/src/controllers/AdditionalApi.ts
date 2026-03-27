@@ -56,7 +56,7 @@ export class AdditionalApiImpl implements AdditionalApi {
             })
             return
         }
-        const repositoryData = getRepositoryData(request)
+        const repositoryData = await getRepositoryData(request)
         if (isParameterError(repositoryData)) {
             lionwebResponse(response, HttpClientErrors.BadRequest, {
                 success: false,
@@ -83,7 +83,7 @@ export class AdditionalApiImpl implements AdditionalApi {
     }
 
     bulkImport = async (request: Request, response: Response): Promise<void> => {
-        const repositoryData = getRepositoryData(request, "Dummy")
+        const repositoryData = await getRepositoryData(request, "Dummy")
         if (isParameterError(repositoryData)) {
             lionwebResponse(response, HttpClientErrors.BadRequest, {
                 success: false,

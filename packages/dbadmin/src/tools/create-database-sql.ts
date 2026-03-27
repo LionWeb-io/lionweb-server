@@ -1,6 +1,8 @@
 import { ServerConfig } from "@lionweb/server-common";
 
-export const CREATE_DATABASE_SQL: string = `
+export const CREATE_DATABASE_SQL: string = 
+// language=SQL
+`
 DROP DATABASE IF EXISTS ${ServerConfig.getInstance().pgDb()} WITH (FORCE);
 
 CREATE DATABASE ${ServerConfig.getInstance().pgDb()}

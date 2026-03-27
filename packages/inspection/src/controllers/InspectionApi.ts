@@ -88,7 +88,7 @@ class InspectionApiImpl implements InspectionApi {
     }
 
     nodesByClassifier = async (request: e.Request, response: e.Response) => {
-        const repositoryData = getRepositoryData(request, "Dummy")
+        const repositoryData = await getRepositoryData(request, "Dummy")
         if (isParameterError(repositoryData)) {
             lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
                 success: false,
@@ -105,7 +105,7 @@ class InspectionApiImpl implements InspectionApi {
     }
 
     nodesByLanguage = async (request: e.Request, response: e.Response) => {
-        const repositoryData = getRepositoryData(request, "Dummy")
+        const repositoryData = await getRepositoryData(request, "Dummy")
         if (isParameterError(repositoryData)) {
             lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
                 success: false,

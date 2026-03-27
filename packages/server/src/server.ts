@@ -1,18 +1,23 @@
+import { PARTICIPATIONS, registerDeltaProcessor } from "@lionweb/delta-server"
 import { registerHistoryApi } from "@lionweb/server-history"
+import { DeltaCommand, DeltaRequest } from "@lionweb/server-delta-shared"
 import express, { Express, NextFunction, Response, Request } from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
 import pgPromise from "pg-promise"
+import { WebSocketServer } from "ws"
 import { postgresConnectionWithDatabase, pgp, postgresConnectionWithoutDatabase, postgresPool } from "./DbConnection.js"
 import {
     DbConnection,
-    expressLogger,
+    // expressLogger,
     LionWebTask,
     RepositoryConfig,
     requestLogger,
     SCHEMA_PREFIX,
     ServerConfig,
-    initializeCommons
+    initializeCommons,
+    deltaLogger,
+    bulkLogger
 } from "@lionweb/server-common"
 import { registerDBAdmin, repositoryStore } from "@lionweb/server-dbadmin"
 import { registerInspection } from "@lionweb/server-inspection"
@@ -23,10 +28,11 @@ import {
 } from "@lionweb/server-additionalapi"
 import { registerLanguagesApi } from "@lionweb/server-languages"
 import { HttpClientErrors, PROTOBUF_CONTENT_TYPE } from "@lionweb/server-shared"
-import { pinoHttp } from "pino-http"
+// import { pinoHttp } from "pino-http"
 import * as http from "node:http"
+import { runWithTryDelta } from "./RunTry.js";
 
-export const app: Express = express()
+const app: Express = express()
 
 // Allow access,
 // ERROR Access to XMLHttpRequest from origin has been blocked by CORS policy:
@@ -39,12 +45,12 @@ app.use(
     })
 )
 // Setup automatic logging of request/result pairs
-app.use(
-    pinoHttp({
-        logger: expressLogger,
-        useLevel: ServerConfig.getInstance().expressLog()
-    })
-)
+// app.use(
+//     pinoHttp({
+//         logger: expressLogger,
+//         useLevel: ServerConfig.getInstance().expressLog()
+//     })
+// )
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json({ limit: ServerConfig.getInstance().bodyLimit(), type: JSON_CONTENT_TYPE }))
@@ -55,7 +61,7 @@ const expectedToken = ServerConfig.getInstance().expectedToken()
 function verifyToken(request: Request, response: Response, next: NextFunction) {
     if (expectedToken != null) {
         const providedToken = request.headers["authorization"]
-        if (providedToken == null || typeof providedToken !== "string" || providedToken.trim() != expectedToken) {
+        if (providedToken === null || typeof providedToken !== "string" || providedToken.trim() !== expectedToken) {
             return response.status(HttpClientErrors.Unauthorized).send("Invalid token or no token provided")
         } else {
             next()
@@ -69,7 +75,7 @@ app.use(verifyToken)
 
 const dbConnection = DbConnection.getInstance()
 dbConnection.postgresConnection = postgresConnectionWithoutDatabase
-dbConnection.dbConnection = postgresConnectionWithDatabase
+dbConnection.pgDatabaseConnection = postgresConnectionWithDatabase
 dbConnection.pgp = pgPromise()
 const { TransactionMode } = pgPromise.txMode
 const mode = new TransactionMode({
@@ -88,28 +94,7 @@ registerInspection(app, DbConnection.getInstance(), pgp)
 registerAdditionalApi(app, DbConnection.getInstance(), pgp, dbConnection.pgPool)
 registerLanguagesApi(app, DbConnection.getInstance(), pgp)
 registerHistoryApi(app, DbConnection.getInstance(), pgp)
-
-/**********************************************************************
- *
- * Server can be started with either argument --setup or --run
- *
- **********************************************************************/
-
-const setupOnly = process.argv.includes("--setup")
-const noSetup = process.argv.includes("--run")
-if (setupOnly && noSetup) {
-    requestLogger.error("Cannot use flags --run and --setup together.")
-    process.exit(-1)
-}
-if (setupOnly) {
-    await setupDatabase()
-} else if (noSetup) {
-    await repositoryStore.refresh()
-    await startServer()
-} else {
-    requestLogger.error("Server should be called with either flag --setup or --run")
-    process.exit(-1)
-}
+registerDeltaProcessor(DbConnection.getInstance(), pgp)
 
 async function setupDatabase() {
     // Initialize database
@@ -151,7 +136,7 @@ async function setupDatabase() {
                 requestLogger.info(`Creating new repository ${repository.name} (config option 'always')`)
                 if (existingRepositoryNames.includes(repository.name)) {
                     // need to remove the repository first
-                    dbAdminApi.tx(async (task: LionWebTask) => {
+                    await dbAdminApi.tx(async (task: LionWebTask) => {
                         const deletedn = await dbAdminApi.deleteRepository(task, {
                             clientId: "setup",
                             repository: {
@@ -212,14 +197,71 @@ async function startServer() {
     const serverPort = ServerConfig.getInstance().serverPort()
 
     httpServer.listen(serverPort, () => {
-        requestLogger.info(`Server is running at port ${serverPort} =========================================================`)
-        if (expectedToken == null) {
-            requestLogger.warn(
+        bulkLogger.info(`Server is running at port ${serverPort} =========================================================`)
+        if (expectedToken === null) {
+            bulkLogger.warn(
                 "WARNING! The server is not protected by a token. It can be accessed freely. " +
                     "If that is NOT your intention act accordingly."
             )
         } else if (expectedToken.length < 24) {
-            requestLogger.warn("WARNING! The used token is quite short. Consider using a token of 24 characters or more.")
+            bulkLogger.warn("WARNING! The used token is quite short. Consider using a token of 24 characters or more.")
         }
     })
+    
+    const wsServer = new WebSocketServer({server: httpServer})
+    wsServer.on('connection', (socket, _request) => {
+        deltaLogger.info(`Client connected`);
+        PARTICIPATIONS.newParticipation(socket)
+        
+        socket.onmessage = message => {
+            deltaLogger.info(`Server Received: ${message.data.toString()}`);
+            const msg = JSON.parse(message.data.toString()) as unknown as (DeltaCommand | DeltaRequest)
+            runWithTryDelta(socket, msg)
+        };
+
+        socket.onclose = _ev => {
+            deltaLogger.info('Client disconnected');
+            PARTICIPATIONS.deleteParticipation(socket)
+        };
+        socket.onerror = ev => {
+            deltaLogger.info(`Error message on socket: ${ev.toString()}`);
+            // activeSockets.delete(socket)
+        };
+        socket.on('ping', () => {
+            deltaLogger.info('Ping message on socket');
+            // activeSockets.delete(socket)
+        });
+        socket.on('upgrade', () => {
+            deltaLogger.info('Upgrade message on socket');
+            // activeSockets.delete(socket)
+        });
+    });
+    
+    // wsServer.clients.forEach(cl => cl.)
+
+
+}
+
+/**********************************************************************
+ *
+ * Server can be started with either argument --setup or --run
+ *
+ **********************************************************************/
+
+export async function server() {
+    const setupOnly = process.argv.includes("--setup")
+    const noSetup = process.argv.includes("--run")
+    if (setupOnly && noSetup) {
+        requestLogger.error("Cannot use flags --run and --setup together.")
+        process.exit(-1)
+    }
+    if (setupOnly) {
+        await setupDatabase()
+    } else if (noSetup) {
+        await repositoryStore.refresh()
+        await startServer()
+    } else {
+        requestLogger.error("Server should be called with either flag --setup or --run")
+        process.exit(-1)
+    }
 }

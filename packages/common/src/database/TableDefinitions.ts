@@ -26,6 +26,7 @@ export const UNLIMITED_DEPTH = 2147483647
 // NOTE: '?' at front of column name means that this column will not be updated by an UPDATE
 
 export class TableDefinitions {
+    pgp: pgPromise.IMain<object, pg.IClient>
     NODES_COLUMN_SET: pgPromise.ColumnSet
     CONTAINMENTS_COLUMN_SET: pgPromise.ColumnSet
     PROPERTIES_COLUMN_SET: pgPromise.ColumnSet
@@ -34,7 +35,7 @@ export class TableDefinitions {
     METAPOINTERS_COLUMN_SET: pgPromise.ColumnSet
     REPOSITORIES_COLUMN_SET: pgPromise.ColumnSet
 
-    constructor(private pgp: pgPromise.IMain<object, pg.IClient>) {
+    constructor(pgp: pgPromise.IMain<object, pg.IClient>) {
         this.pgp = pgp
         // prettier-ignore
         this.METAPOINTERS_COLUMN_SET = new this.pgp.helpers.ColumnSet(
@@ -50,10 +51,7 @@ export class TableDefinitions {
         this.NODES_COLUMN_SET = new this.pgp.helpers.ColumnSet(
             [
                 "?id",                   // The node id // Don't update this column
-                {
-                    name: 'classifier',
-                    mod: ':raw'
-                },
+                "classifier",
                 "annotations",          // The annotation(id)s
                 "parent"                // The id of the parent node
             ],
@@ -62,11 +60,7 @@ export class TableDefinitions {
         // prettier-ignore
         this.CONTAINMENTS_COLUMN_SET = new this.pgp.helpers.ColumnSet(
             [
-                {
-                    name: 'containment',
-                    mod: ':raw',
-                    cnd: true // Don't update this column
-                },
+                "?containment",
                 "children",
                 "?node_id"              // Don't update this column
             ],
@@ -75,11 +69,7 @@ export class TableDefinitions {
         // prettier-ignore
         this.PROPERTIES_COLUMN_SET = new this.pgp.helpers.ColumnSet(
             [
-                {
-                    name: 'property',
-                    mod: ':raw',
-                    cnd: true // Don't update this column
-                },
+                '?property',
                 "value",
                 "?node_id"      // Don't update this column
             ],
@@ -88,11 +78,7 @@ export class TableDefinitions {
         // prettier-ignore
         this.REFERENCES_COLUMN_SET = new this.pgp.helpers.ColumnSet(
             [
-                {
-                    name: 'reference',
-                    mod: ':raw',
-                    cnd: true // Don't update this column
-                },
+                '?reference',
                 {
                     name: "targets",
                     cast: "jsonb[]"

@@ -49,7 +49,7 @@ The server is started with `npm run dev-run` in  the `packages/server` folder:
 
 ```
 cd packages/server
-npm run dev-run
+npm run dev-local-run
 ```
 
 For more information on how to configure the server, please check [configuration.md](configuration.md).
@@ -64,6 +64,8 @@ npm run test
 
 ## Status
 This server implents the full LionWeb [Bulk API](https://lionweb.io/specification/bulk/repo-access-api.html) as defined in the LionWeb specification.
+
+The server also implements the LionWeb Delta protocol, although currently only partly.
 
 ##  Main Packages
 

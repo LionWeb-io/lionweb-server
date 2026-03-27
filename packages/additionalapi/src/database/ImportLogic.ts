@@ -2,12 +2,11 @@ import { LionWebJsonNode } from "@lionweb/json"
 import { Duplex } from "stream"
 import { PoolClient } from "pg"
 import { from as copyFrom } from "pg-copy-streams"
-import { DbConnection, RepositoryData } from "@lionweb/server-common"
+import { DbConnection, RepositoryData, MetaPointersTracker, MetaPointersCollector } from "@lionweb/server-common"
 import { BulkImport, HttpClientErrors, HttpSuccessCodes, PBBulkImport, PBLanguage, PBMetaPointer } from "@lionweb/server-shared"
-import { MetaPointersCollector, MetaPointersTracker } from "@lionweb/server-dbadmin"
 import { finished } from "stream/promises"
 import { BulkImportResultType } from "./AdditionalQueries.js"
-import { makeQueryToAttachNodeForProtobuf, makeQueryToCheckHowManyDoNotExist } from "./QueryNode.js"
+import { makeQueryToAttachNodeForProtobuf, checkHowManyDoNotExistSQL } from "./QueryNode.js"
 
 // When using the Postgres COPY command, we need to escape newlines, tabs, and backslashes.
 // We also need to use a specific separator character to separate fields.
@@ -376,7 +375,7 @@ export async function performImportFromProtobuf(
 
         // Check - verify all the given new nodes are effectively new
         const allNewNodesResult =
-            newNodesSet.size == 0 ? 0 : await dbConnection.query(repositoryData, makeQueryToCheckHowManyDoNotExist(newNodesSet))
+            newNodesSet.size == 0 ? 0 : await dbConnection.query(repositoryData, checkHowManyDoNotExistSQL(newNodesSet))
         if (allNewNodesResult > 0) {
             return {
                 status: HttpClientErrors.BadRequest,
@@ -389,7 +388,7 @@ export async function performImportFromProtobuf(
         const allExistingNodesResult =
             attachPointContainers.size == 0
                 ? 0
-                : await dbConnection.query(repositoryData, makeQueryToCheckHowManyDoNotExist(attachPointContainers))
+                : await dbConnection.query(repositoryData, checkHowManyDoNotExistSQL(attachPointContainers))
         if (allExistingNodesResult > 0) {
             return {
                 status: HttpClientErrors.BadRequest,

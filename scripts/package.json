@@ -1,0 +1,56 @@
+{
+    "name": "@lionweb/server-scripts",
+    "version": "0.4.0-beta.4",
+    "private": true,
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "typings": "dist/index.d.ts",
+    "type": "module",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/LionWeb-io/lionweb-repository.git"
+    },
+    "bugs": {
+        "url": "https://github.com/LionWeb-io/lionweb-repository/issues"
+    },
+    "scripts": {
+        "clean": "rm -rf node_modules/ && rm -rf dist/",
+        "build": "tsc",
+        "generate": "node ./dist/GenerateTypes.js",
+        "alive": "echo I am alive",
+        "lint": "eslint src"
+    },
+    "devDependencies": {
+        "prettier": "3.1.0",
+        "@prettier/sync": "^0.5.5",
+        "@typescript-eslint/eslint-plugin": "6.13.2",
+        "@typescript-eslint/parser": "6.13.2",
+        "@types/chai": "4.3.11",
+        "@types/ws": "^8.18.1",
+        "eslint": "10.1.0",
+        "chai": "4.3.10",
+        "typescript": "5.9.3"
+    },
+    "dependencies": {
+        "@lionweb/server-common": "0.4.0-beta.4",
+        "@lionweb/server-delta-definitions": "0.4.0-beta.4",
+        "@lionweb/server-bulkapi": "0.4.0-beta.4",
+        "@lionweb/json": "0.9.0-beta.3",
+        "@lionweb/json-utils": "0.9.0-beta.3",
+        "@lionweb/validation": "0.9.0-beta.3",
+        "@prettier/sync": "^0.5.5",
+        "@types/express": "4.17.21",
+        "@types/source-map-support": "0.5.10",
+        "body-parser": "2.0.2",
+        "cors": "2.8.5",
+        "dotenv": "16.3.1",
+        "express": "4.21.2",
+        "fs-extra": "11.1.1",
+        "nodemon": "3.0.1",
+        "pg": "8.11.3",
+        "pg-promise": "11.7.8",
+        "source-map-support": "0.5.21",
+        "ws": "^8.18.2"
+    }
+}

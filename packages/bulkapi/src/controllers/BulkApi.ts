@@ -13,7 +13,7 @@ import {
     ResponseMessage,
     StoreResponse
 } from "@lionweb/server-shared"
-import { lionwebResponse } from "@lionweb/server-common"
+import { bulkLogger, dbLogger, lionwebResponse } from "@lionweb/server-common"
 import { getIntegerParam, isParameterError, LionWebTask, requestLogger, traceLogger } from "@lionweb/server-common"
 import { getRepositoryData, validateLionWebVersion } from "@lionweb/server-dbadmin"
 import { getLanguageRegistry } from "@lionweb/server-languages"
@@ -41,13 +41,13 @@ export class BulkApiImpl implements BulkApi {
      * @param response The list of all partition nodes, without children or annotations
      */
     listPartitions = async (request: Request, response: Response): Promise<void> => {
-        requestLogger.info(` * listPartitions request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = getRepositoryData(request)
+        bulkLogger.info(` * listPartitions request received, with body of ${request.headers["content-length"]} bytes`)
+        const repositoryData = await getRepositoryData(request)
         requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
         if (isParameterError(repositoryData)) {
             lionwebResponse<ListPartitionsResponse>(response, HttpClientErrors.PreconditionFailed, {
                 success: false,
-                chunk: null,
+                chunk: null, 
                 messages: [repositoryData.error]
             })
         } else {
@@ -59,8 +59,8 @@ export class BulkApiImpl implements BulkApi {
     }
 
     createPartitions = async (request: Request, response: Response): Promise<void> => {
-        requestLogger.info(` * createPartitions request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = getRepositoryData(request)
+        bulkLogger.info(` * createPartitions request received, with body of ${request.headers["content-length"]} bytes`)
+        const repositoryData = await getRepositoryData(request)
         requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
         const chunk: LionWebJsonChunk = request.body
         if (isParameterError(repositoryData)) {
@@ -126,8 +126,8 @@ export class BulkApiImpl implements BulkApi {
     }
 
     deletePartitions = async (request: Request, response: Response): Promise<void> => {
-        requestLogger.info(` * deletePartitions request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = getRepositoryData(request)
+        bulkLogger.info(` * deletePartitions request received, with body of ${request.headers["content-length"]} bytes`)
+        const repositoryData = await getRepositoryData(request)
         requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
         if (isParameterError(repositoryData)) {
             lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
@@ -149,8 +149,8 @@ export class BulkApiImpl implements BulkApi {
      * @param response `ok`  if everything is correct
      */
     store = async (request: Request, response: Response): Promise<void> => {
-        requestLogger.info(` * store request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = getRepositoryData(request)
+        bulkLogger.info(` * store request received, with body of ${request.headers["content-length"]} bytes`)
+        const repositoryData = await getRepositoryData(request)
         requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
         if (isParameterError(repositoryData)) {
             requestLogger.error("STORE ERROR: repository data incorrect: " + JSON.stringify(repositoryData))
@@ -173,7 +173,7 @@ export class BulkApiImpl implements BulkApi {
             } else {
                 await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
                     const result = await this.ctx.bulkApiWorker.bulkStore(task, repositoryData, chunk)
-                    result.queryResult.messages.push({ kind: "QueryFromApi", message: result.query })
+                    result.queryResult.messages.push({ kind: "QueryFromApi", message: dbLogger.isLevelEnabled("debug") ? result.query : "no debug log" })
                     lionwebResponse<StoreResponse>(response, result.status, result.queryResult)
                 })
             }
@@ -187,8 +187,8 @@ export class BulkApiImpl implements BulkApi {
      * @param response
      */
     retrieve = async (request: Request, response: Response): Promise<void> => {
-        requestLogger.info(` * retrieve request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = getRepositoryData(request)
+        bulkLogger.info(` * retrieve request received, with body of ${request.headers["content-length"]} bytes`)
+        const repositoryData = await getRepositoryData(request)
         requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
         const depthLimit = getIntegerParam(request, "depthLimit", Number.MAX_SAFE_INTEGER)
         const idList = request.body.ids
@@ -225,8 +225,8 @@ export class BulkApiImpl implements BulkApi {
      * @param response
      */
     ids = async (request: Request, response: Response): Promise<void> => {
-        requestLogger.info(` * ids request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = getRepositoryData(request)
+        bulkLogger.info(` * ids request received, with body of ${request.headers["content-length"]} bytes`)
+        const repositoryData = await getRepositoryData(request)
         requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
         const count = getIntegerParam(request, "count", Number.MAX_SAFE_INTEGER)
         if (isParameterError(count)) {

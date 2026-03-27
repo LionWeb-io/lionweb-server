@@ -5,6 +5,7 @@
     "outDir": "dist",
     "resolveJsonModule": true,
     /* Enable importing .json files */
-    "sourceRoot": "./src"
-  }
+//    "sourceRoot": "./src"
+  },
+    "include": ["./src/**/*.ts"]
 }

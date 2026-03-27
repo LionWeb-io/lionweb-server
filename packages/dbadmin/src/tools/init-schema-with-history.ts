@@ -18,7 +18,8 @@ export function listSchemas(): string {
 }
 
 export function initSchemaWithHistory(schemaName: string): string {
-        return  `-- Create schema
+    // language=SQL
+    return `-- Create schema
         -- drop if empty, otherwise fail
         DROP SCHEMA IF EXISTS "${schemaName}" RESTRICT;
         CREATE SCHEMA "${schemaName}";

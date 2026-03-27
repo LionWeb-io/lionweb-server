@@ -1,57 +1,88 @@
 {
-  "name": "@lionweb/server",
-  "version": "0.3.0",
-  "private": true,
-  "license": "Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/LionWeb-io/lionweb-server.git"
-  },
-  "bugs": {
-    "url": "https://github.com/LionWeb-io/lionweb-server/issues"
-  },
-  "scripts": {
-    "initialize": "npm run clean && npm install && npm run setup && npm run build",
-    "clean": "rm -rf node_modules/ && npm run clean -w packages --if-present",
-    "build": "npm run build -w packages --if-present",
-    "lint": "npm run lint -w packages --if-present",
-    "setup": "npm run setup -w packages --if-present",
-    "test": "npm run test -w packages --if-present",
-    "release": "npm run release -w packages --if-present",
-    "database": "node packages/dbadmin/dist/tools/database",
-    "npm-install-local": "npm config set registry http://localhost:4873 && npm install",
-    "npm-install": "npm config set registry https://registry.npmjs.com && npm install",
-    "publish-docker": "bash scripts/tag-and-release-docker-image.sh"
-  },
-  "devDependencies": {
-    "@types/chai": "4.3.11",
-    "@types/mocha": "10.0.10",
-    "@types/pg": "8.11.6",
-    "@typescript-eslint/eslint-plugin": "6.13.2",
-    "@typescript-eslint/parser": "6.13.2",
-    "chai": "4.3.10",
-    "changesets": "1.0.2",
-    "@changesets/cli": "2.27.11",
-    "@changesets/config": "3.0.0",
-    "eslint": "8.56.0",
-    "mocha": "11.0.1",
-    "prettier": "3.1.0",
-    "ts-node": "10.9.2",
-    "ts-protoc-gen": "0.15.0",
-    "typescript": "5.2.2"
-  },
-  "workspaces": [
-    "./packages/shared",
-    "./packages/common",
-    "./packages/dbadmin",
-    "./packages/languages",
-    "./packages/inspection",
-    "./packages/bulkapi",
-    "./packages/history",
-    "./packages/additionalapi",
-    "./packages/server",
-    "./packages/client",
-    "./packages/test",
-    "."
-  ]
+    "name": "@lionweb/server",
+    "version": "0.4.0-beta.4",
+    "type": "module",
+    "private": true,
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/LionWeb-io/lionweb-server.git"
+    },
+    "bugs": {
+        "url": "https://github.com/LionWeb-io/lionweb-server/issues"
+    },
+    "scripts": {
+        "initialize": "npm run clean && npm install && npm run setup && npm run build",
+        "clean": "rm -rf node_modules/ && rm -f package-lock.json && npm run clean -w packages --if-present",
+        "build": "npm run build -w packages --if-present",
+        "lint": "npm run lint -w packages --if-present",
+        "setup": "npm run setup -w packages --if-present",
+        "test": "npm run test -w packages --if-present",
+        "release-beta": "npm run release-beta -w packages --if-present",
+        "release": "npm run release -w packages --if-present",
+        "database": "node packages/dbadmin/dist/tools/database",
+        "install-local": "npm install --registry http://localhost:4873",
+        "publish-local": "npm run publish-local -w packages --if-present",
+        "unpublish-local": "npm run unpublish-local -w packages --if-present",
+        "republish-local": "npm run republish-local -w packages --if-present",
+        "publish-docker": "bash scripts/tag-and-release-docker-image.sh"
+    },
+    "devDependencies": {
+        "@changesets/cli": "2.27.11",
+        "@changesets/config": "3.0.0",
+        "@eslint/compat": "2.0.2",
+        "@eslint/eslintrc": "3.3.3",
+        "@eslint/js": "10.0.1",
+        "@types/chai": "4.3.11",
+        "@types/pg": "8.11.6",
+        "@typescript-eslint/eslint-plugin": "8.57.2",
+        "@typescript-eslint/parser": "8.57.2",
+        "@vitest/eslint-plugin": "^1.6.13",
+        "chai": "4.3.10",
+        "changesets": "1.0.2",
+        "dependency-cruiser": "^17.3.9",
+        "eslint": "10.1.0",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-n": "17.24.0",
+        "eslint-plugin-node": "11.1.0",
+        "monorepo-mapper": "^1.0.5",
+        "prettier": "3.1.0",
+        "ts-protoc-gen": "0.15.0",
+        "typescript": "5.9.3",
+        "typescript-eslint": "8.57.2"
+    },
+    "overrides": {
+        "vite": {
+            "rollup": "npm:@rollup/wasm-node"
+        }
+    },
+    "optionalDependencies": {
+        "@rollup/rollup-linux-arm64-gnu": "^4.59.0"
+    },
+    "workspaces": [
+        "./packages/shared",
+        "./packages/delta-shared",
+        "./packages/server-delta-definitions",
+        "./packages/common",
+        "./packages/dbadmin",
+        "./packages/languages",
+        "./packages/inspection",
+        "./packages/bulkapi",
+        "./packages/history",
+        "./packages/additionalapi",
+        "./packages/client",
+        "./packages/delta-client",
+        "./packages/delta-server",
+        "./packages/server",
+        "./packages/test",
+        "./scripts",
+        "."
+    ],
+    "dependencies": {
+        "pg-monitor": "^3.1.0"
+    },
+    "engines": {
+        "npm": ">=11.0.0",
+        "node": ">=24.0.0"
+    }
 }

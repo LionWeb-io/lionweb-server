@@ -1,25 +1,19 @@
 import {
-    ListPartitionsResponse,
     CreatePartitionsResponse,
     StoreResponse,
     HttpSuccessCodes,
     HttpClientErrors,
-    LionwebResponse,
     DeletePartitionsResponse
 } from "@lionweb/server-shared"
 import {
-    asError,
     QueryReturnType,
-    nodesToChunk,
-    ReservedIdRecord,
     UNLIMITED_DEPTH,
-    NODES_TABLE,
     LionWebTask,
     RepositoryData,
     dbLogger,
-    requestLogger,
-    CURRENT_DATA,
-    CURRENT_DATA_REPO_VERSION_KEY
+    DbChanges,
+    MetaPointersTracker,
+    SQL, DB
 } from "@lionweb/server-common"
 import { LionWebJsonChunkWrapper, NodeUtils, JsonContext } from "@lionweb/json-utils"
 import { LionWebJsonChunk, LionWebJsonNode } from "@lionweb/json"
@@ -39,16 +33,6 @@ import {
 } from "@lionweb/json-diff"
 
 import { BulkApiContext } from "../main.js"
-import { DbChanges } from "./DbChanges.js"
-import {
-    currentRepoVersionQuery,
-    makeQueryNodeTreeForIdList,
-    nextRepoVersionQuery,
-    nodesForQueryQuery,
-    QueryNodeForIdList,
-    versionResultToResponse
-} from "./QueryNode.js"
-import { MetaPointersTracker } from "@lionweb/server-dbadmin"
 
 function createDummyNode(nodeId: string): LionWebJsonNode {
     return {
@@ -75,69 +59,16 @@ export class LionWebQueries {
     constructor(private context: BulkApiContext) {}
 
     /**
-     * Get recursively the ids of all children/annotations of _nodeIdList_ with depth `depthLimit`
-     * @param nodeIdList
-     * @param depthLimit
-     */
-    getNodeTree = async (
-        task: LionWebTask,
-        repositoryData: RepositoryData,
-        nodeIdList: string[],
-        depthLimit: number
-    ): Promise<QueryReturnType<NodeTreeResultType[]>> => {
-        let query = ""
-        try {
-            if (nodeIdList.length === 0) {
-                return { status: HttpClientErrors.PreconditionFailed, query: "query", queryResult: [] }
-            }
-            query = makeQueryNodeTreeForIdList(nodeIdList, depthLimit)
-            return { status: HttpSuccessCodes.Ok, query: query, queryResult: await task.query(repositoryData, query) }
-        } catch (e) {
-            const error = asError(e)
-            requestLogger.error(error)
-            requestLogger.debug(query)
-            throw error
-        }
-    }
-
-    getNodesFromIdListIncludingChildren = async (
-        task: LionWebTask,
-        repositoryData: RepositoryData,
-        nodeIdList: string[]
-    ): Promise<LionWebJsonNode[]> => {
-        dbLogger.info("LionWebQueries.getNodesFromIdListIncludingChildren: " + nodeIdList)
-        // this is necessary as otherwise the query would crash as it is not intended to be run on an empty set
-        if (nodeIdList.length == 0) {
-            return []
-        }
-        return await task.query(repositoryData, QueryNodeForIdList(nodeIdList))
-    }
-
-    /**
      * Get all partitions: this returns all nodes that have parent set to null or undefined
      */
-    getPartitions = async (task: LionWebTask, repositoryData: RepositoryData): Promise<QueryReturnType<ListPartitionsResponse>> => {
-        dbLogger.info("LionWebQueries.getPartitions")
-        let query = currentRepoVersionQuery()
-        query += nodesForQueryQuery(`SELECT * FROM ${NODES_TABLE} WHERE parent is null`)
-        const [versionResult, result] = await task.multi(repositoryData, query)
-        return {
-            status: HttpSuccessCodes.Ok,
-            query: "query",
-            queryResult: {
-                chunk: nodesToChunk(result, repositoryData.repository.lionweb_version),
-                success: true,
-                messages: [versionResultToResponse(versionResult)]
-            }
-        }
-    }
+
 
     /**
      * Get the current version of the repo.
      * Should only be used by non-changing queries, as otherwise the _nextRepoVersion_ function should be used..
      */
-    getRepoVersion = async (task: LionWebTask, repositoryData: RepositoryData): Promise<number> => {
-        const v = await task.query(repositoryData, `SELECT value FROM ${CURRENT_DATA} WHERE key = '${CURRENT_DATA_REPO_VERSION_KEY}'`)
+    retrieveRepoVersionFromDB = async (task: LionWebTask, repositoryData: RepositoryData): Promise<number> => {
+        const v = await task.query(repositoryData, SQL.currentRepoVersionSQL())
         return Number.parseInt(v.value)
     }
 
@@ -147,10 +78,10 @@ export class LionWebQueries {
         partitions: LionWebJsonChunk
     ): Promise<QueryReturnType<CreatePartitionsResponse>> => {
         dbLogger.info("LionWebQueries.createPartitions repo " + JSON.stringify(repositoryData))
-        let query = nextRepoVersionQuery(repositoryData.clientId)
+        let query = SQL.nextRepoVersionSQL(repositoryData.clientId)
         const metaPointersTracker = new MetaPointersTracker(repositoryData)
         await metaPointersTracker.populateFromNodes(partitions.nodes, task)
-        query += this.context.queryMaker.dbInsertNodeArray(partitions.nodes, metaPointersTracker)
+        query += SQL.insertNodeArraySQL(partitions.nodes, metaPointersTracker)
         dbLogger.info(query)
         const [versionresult] = await task.multi(repositoryData, query)
         return {
@@ -158,7 +89,7 @@ export class LionWebQueries {
             query: query,
             queryResult: {
                 success: true,
-                messages: [versionResultToResponse(versionresult)]
+                messages: [SQL.versionResultToResponse(versionresult)]
             }
         }
     }
@@ -250,13 +181,8 @@ export class LionWebQueries {
             )
         })
         // Now get all children of the orphans
-        const orphansContainedChildren = await this.getNodeTree(
-            task,
-            repositoryData,
-            removedAndNotAddedChildren.map(rm => rm.childId),
-            UNLIMITED_DEPTH
-        )
-        const orphansContainedChildrenOrphans = orphansContainedChildren.queryResult.filter(contained => {
+        const orphansContainedChildren = await DB.retrieveNodeTreeDB(task, repositoryData, removedAndNotAddedChildren.map(rm => rm.childId), UNLIMITED_DEPTH)
+        const orphansContainedChildrenOrphans = orphansContainedChildren.filter(contained => {
             return (
                 addedChildren.find(added => added.childId === contained.id) === undefined &&
                 databaseChildrenOfNewNodes.find(child => child.id === contained.id) === undefined
@@ -290,7 +216,7 @@ export class LionWebQueries {
             0
         )
         // Now all changes are turned into queries.
-        const dbCommands = new DbChanges(this.context)
+        const dbCommands = new DbChanges(this.context.pgp)
         let queries = ""
         dbCommands.addChanges(propertyChanged)
         dbCommands.addChanges([...addedChildren, ...removedChildren, ...childrenOrderChanged])
@@ -319,16 +245,15 @@ export class LionWebQueries {
             parentsOfImplicitlyRemovedChildNodes.queryResult.chunk
         )
         const metaPointersTracker = new MetaPointersTracker(repositoryData)
-        await populateFromDbChanges(
+        await dbCommands.populateMetaPointersFromDbChanges(
             metaPointersTracker,
-            dbCommands,
             toBeStoredNewNodes.map(ch => (ch as NodeAdded).node),
             task
         )
         queries += dbCommands.createPostgresQuery(metaPointersTracker)
 
         // Check whether new node ids are not reserved for another client
-        const reservedIds = await this.reservedNodeIdsByOtherClient(
+        const reservedIds = await DB.reservedNodeIdsByOtherClientDB(
             task,
             repositoryData,
             toBeStoredNewNodes.map(ch => ch.node.id)
@@ -350,25 +275,25 @@ export class LionWebQueries {
                 }
             }
         }
-        queries += this.context.queryMaker.dbInsertNodeArray(
+        queries += SQL.insertNodeArraySQL(
             toBeStoredNewNodes.map(ch => (ch as NodeAdded).node),
             metaPointersTracker
         )
         // And run them on the database
         if (queries !== "") {
-            queries = nextRepoVersionQuery(repositoryData.clientId) + queries
+            queries = SQL.nextRepoVersionSQL(repositoryData.clientId) + queries
             const [multiResult] = await task.multi(repositoryData, queries)
             return {
                 status: HttpSuccessCodes.Ok,
                 query: queries,
                 queryResult: {
                     success: true,
-                    messages: [versionResultToResponse(multiResult), { kind: "QueryFromStore", message: queries }]
+                    messages: [SQL.versionResultToResponse(multiResult), { kind: "query", message: dbLogger.isLevelEnabled("debug") ? queries : "no debug log" }]
                 }
             }
         } else {
             // Nothing to change, empty query
-            const version = await this.getRepoVersion(task, repositoryData)
+            const version = await this.retrieveRepoVersionFromDB(task, repositoryData)
             return {
                 status: HttpSuccessCodes.Ok,
                 query: queries,
@@ -385,47 +310,8 @@ export class LionWebQueries {
                             message: "Nothing to store",
                             data: { version: `${version}` }
                         },
-                        { kind: "QueryFromStore", message: queries }
+                        { kind: "query", message: dbLogger.isLevelEnabled("debug") ? queries : "no debug level" }
                     ]
-                }
-            }
-        }
-    }
-
-    async reservedNodeIdsByOtherClient(
-        task: LionWebTask,
-        repositoryData: RepositoryData,
-        addedNodes: string[]
-    ): Promise<ReservedIdRecord[]> {
-        if (addedNodes.length > 0) {
-            const query = this.context.queryMaker.findReservedNodesFromIdList(repositoryData, addedNodes)
-            const result = (await task.query(repositoryData, query)) as ReservedIdRecord[]
-            return result
-        }
-    }
-
-    async nodeIdsInUse(task: LionWebTask, repositoryData: RepositoryData, nodeIds: string[]): Promise<{ id: string }[]> {
-        if (nodeIds.length > 0) {
-            const query = this.context.queryMaker.findNodeIdsInUse(nodeIds)
-            const result = (await task.query(repositoryData, query)) as { id: string }[]
-            return result
-        }
-    }
-
-    async makeNodeIdsReservation(
-        task: LionWebTask,
-        repositoryData: RepositoryData,
-        idsAdded: string[]
-    ): Promise<QueryReturnType<LionwebResponse>> {
-        if (idsAdded.length > 0) {
-            const query = this.context.queryMaker.storeReservedNodeIds(repositoryData, idsAdded)
-            await task.query(repositoryData, query)
-            return {
-                status: HttpSuccessCodes.Ok,
-                query: query,
-                queryResult: {
-                    success: true,
-                    messages: []
                 }
             }
         }
@@ -484,6 +370,13 @@ export class LionWebQueries {
         dbCommands.addChanges(changes)
     }
 
+    /**
+     * 
+     * @param task
+     * @param repositoryData
+     * @param idList
+     */
+    // TODO Does three separate queries to Postgress, should be combined into one for performance
     async deletePartitions(
         task: LionWebTask,
         repositoryData: RepositoryData,
@@ -491,7 +384,7 @@ export class LionWebQueries {
     ): Promise<QueryReturnType<DeletePartitionsResponse>> {
         dbLogger.info("LionWebQueries.deletePartitions: " + idList)
         // TODO combine in one query
-        const partitions = await this.getNodesFromIdListIncludingChildren(task, repositoryData, idList)
+        const partitions = await DB.retrieveFullNodesFromIdListDB(task, repositoryData, idList)
         // Validate that the nodes are partitions
         partitions.forEach(part => {
             if (part.parent !== null) {
@@ -503,9 +396,9 @@ export class LionWebQueries {
             }
         })
         // Remove the partition nodes and all children/annotations
-        const removedNodes = (await this.getNodeTree(task, repositoryData, idList, UNLIMITED_DEPTH)).queryResult.map(n => n.id)
-        let query = nextRepoVersionQuery(repositoryData.clientId)
-        query += this.context.queryMaker.makeQueriesForOrphans(removedNodes)
+        const removedNodes = (await DB.retrieveNodeTreeDB(task, repositoryData, idList, UNLIMITED_DEPTH)).map(n => n.id)
+        let query = SQL.nextRepoVersionSQL(repositoryData.clientId)
+        query += SQL.deleteFullNodesSQL(removedNodes)
         dbLogger.debug("DELETE PARTITIONS QUERY: " + query)
         const [versionResult] = await task.multi(repositoryData, query)
         return {
@@ -513,7 +406,7 @@ export class LionWebQueries {
             query: query,
             queryResult: {
                 success: true,
-                messages: [versionResultToResponse(versionResult)]
+                messages: [SQL.versionResultToResponse(versionResult)]
             }
         }
     }
@@ -540,18 +433,4 @@ export function printMap(map: Map<string, string>): string {
         result += `[${entry[0]} => ${entry[1]}]`
     }
     return result
-}
-
-async function populateFromDbChanges(
-    metaPointersTracker: MetaPointersTracker,
-    dbCommands: DbChanges,
-    nodes: LionWebJsonNode[],
-    task: LionWebTask
-): Promise<void> {
-    await metaPointersTracker.populate(collector => {
-        dbCommands.updatesPropertyTable.values().forEach(table => table.forEach(e => collector.considerAddingMetaPointer(e.property)))
-        dbCommands.updatesContainmentTable.values().forEach(table => table.forEach(e => collector.considerAddingMetaPointer(e.containment)))
-        dbCommands.updatesReferenceTable.values().forEach(table => table.forEach(e => collector.considerAddingMetaPointer(e.reference)))
-        nodes.forEach((node: LionWebJsonNode) => collector.considerNode(node))
-    }, task)
 }

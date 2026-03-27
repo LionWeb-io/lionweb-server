@@ -1,5 +1,5 @@
 import pgPromise from "pg-promise"
-import { traceLogger } from "../apiutil/index.js"
+import { queryLogger, traceLogger } from "../apiutil/index.js"
 import { addRepositorySchema, RepositoryData } from "./DbConnection.js"
 
 /**
@@ -10,7 +10,7 @@ import { addRepositorySchema, RepositoryData } from "./DbConnection.js"
  * This is a wrapper for a pg-promise task.
  * @see pgPromise.ITask
  */
-export class LionWebTask {
+export class    LionWebTask {
     task: pgPromise.ITask<object> & object
 
     /**
@@ -29,11 +29,13 @@ export class LionWebTask {
     async query(repositoryData: RepositoryData, query: string) {
         traceLogger.info("LionWebTask.query")
         query = addRepositorySchema(query, repositoryData)
+        queryLogger.info(`LionWebTask.query ${query}`)
         return await this.task.query(query)
     }
 
     async queryWithoutRepository(query: string) {
         traceLogger.info("LionWebTask.queryWithoutRepository")
+        queryLogger.info(`LionWebTask.queryWithoutRepository ${query}`)
         return await this.task.query(query)
     }
 
@@ -45,6 +47,7 @@ export class LionWebTask {
     async many(repositoryData: RepositoryData, query: string) {
         traceLogger.info("LionWebTask.many")
         query = addRepositorySchema(query, repositoryData)
+        queryLogger.info(`LionWebTask.many ${query}`)
         return await this.task.many(query)
     }
 
@@ -56,6 +59,7 @@ export class LionWebTask {
     async multi(repositoryData: RepositoryData, query: string) {
         traceLogger.info("LionWebTask.multi")
         query = addRepositorySchema(query, repositoryData)
+        queryLogger.info(`LionWebTask.multi ${query}`)
         const multiResult = await this.task.multi(query)
         // Remove first two elements since these are the result of the inserted search_path and schema existence check
         multiResult.shift()

@@ -1,0 +1,140 @@
+{
+    "tests": [
+        {
+            "expectedError": "KeyFormat",
+            "command": {
+                "messageKind": "AddProperty",
+                "commandId": "command-1",
+                "additionalInfos": [],
+                "node": "123",
+                "property": {
+                    "key": "",
+                    "language": "l1",
+                    "version": "1.0"
+                },
+                "newValue": "string"
+            }
+        },
+        {
+            "expectedError": "PropertyNull",
+            "command": {
+                "messageKind": "AddProperty",
+                "commandId": "command-1",
+                "additionalInfos": [],
+                "node": "123",
+                "property": {
+                    "key": "key",
+                    "language": "l1",
+                    "version": "1.0"
+                },
+                "newValue": null
+            }
+        },
+        {
+            "expectedError": "IdFormat",
+            "command": {
+                "messageKind": "AddProperty",
+                "commandId": "command-1",
+                "additionalInfos": [],
+                "node": "%#&@%@",
+                "property": {
+                    "key": "key",
+                    "language": "l1",
+                    "version": "1.0"
+                },
+                "newValue": "string"
+            }
+        },
+        {
+            "expectedError": "VersionFormat",
+            "command": {
+                "messageKind": "AddProperty",
+                "commandId": "command-1",
+                "additionalInfos": [],
+                "node": "123",
+                "property": {
+                    "key": "key",
+                    "language": "l1",
+                    "version": ""
+                },
+                "newValue": "string"
+            }
+        },
+        {
+            "expectedError": "PropertyMissing",
+            "command": {
+                "messageKind": "AddProperty",
+                "commandId": "command-1",
+                "additionalInfos": [],
+                "node": "123",
+                "property": {
+                    "key": "key",
+                    "language": "l1",
+                    "version": "22"
+                }
+            }
+        },
+        {
+            "expectedError": "PropertyMissing",
+            "command": {
+                "messageKind": "AddProperty",
+                "commandId": "command-1",
+                "additionalInfos": [],
+                "property": {
+                    "key": "key",
+                    "language": "l1",
+                    "version": "22"
+                },
+                "newValue": "hello"
+            }
+        },
+        {
+            "expectedError": "PropertyMissing",
+            "command": {
+                "messageKind": "AddProperty",
+                "commandId": "command-1",
+                "additionalInfos": [],
+                "node": "id",
+                "property": {
+                    "key": "key",
+                    "language": "l1",
+                    "version": "22"
+                },
+                "newValue": "hello",
+                "additionalInfos": [
+                    {
+                        "kind": "Info"
+                    }
+                ]
+            }
+        },
+        {
+            "expectedError": null,
+            "command": {
+                "messageKind": "AddProperty",
+                "commandId": "command-1",
+                "additionalInfos": [],
+                "node": "id",
+                "property": {
+                    "key": "key",
+                    "language": "l1",
+                    "version": "22"
+                },
+                "newValue": "hello",
+                "commandId": "1",
+                "additionalInfos": [
+                    {
+                        "kind": "Info",
+                        "message": "23",
+                        "data": [
+                            {
+                                "key": "12",
+                                "value": "12"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

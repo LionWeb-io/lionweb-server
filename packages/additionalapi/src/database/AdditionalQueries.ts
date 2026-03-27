@@ -1,14 +1,13 @@
 import { HttpClientErrors, HttpSuccessCodes } from "@lionweb/server-shared"
-import { QueryReturnType, RepositoryData, requestLogger } from "@lionweb/server-common"
+import { QueryReturnType, RepositoryData, requestLogger, MetaPointersTracker } from "@lionweb/server-common"
 import { AdditionalApiContext } from "../main.js"
 import {
-    makeQueryNodeTreeForIdList,
+    retrieveNodeTreeForIdListSQL,
     makeQueryToAttachNode,
-    makeQueryToCheckHowManyDoNotExist,
-    makeQueryToCheckHowManyExist
+    checkHowManyDoNotExistSQL,
+    checkHowManyExistSQL
 } from "./QueryNode.js"
 import { populateFromBulkImport, storeNodes } from "./ImportLogic.js"
-import { MetaPointersTracker } from "@lionweb/server-dbadmin"
 import { AttachPoint, BulkImport } from "@lionweb/server-shared"
 
 export type NodeTreeResultType = {
@@ -44,7 +43,7 @@ export class AdditionalQueries {
         if (nodeIdList.length === 0) {
             return { status: HttpSuccessCodes.NoContent, query: "query", queryResult: [] }
         }
-        query = makeQueryNodeTreeForIdList(nodeIdList, depthLimit)
+        query = retrieveNodeTreeForIdListSQL(nodeIdList, depthLimit)
         return { status: HttpSuccessCodes.Ok, query: query, queryResult: await this.context.dbConnection.query(repositoryData, query) }
     }
 
@@ -94,7 +93,7 @@ export class AdditionalQueries {
 
         // Check - verify all the given new nodes are effectively new
         const allNewNodesResult =
-            newNodesSet.size == 0 ? 0 : await this.context.dbConnection.query(repositoryData, makeQueryToCheckHowManyExist(newNodesSet))
+            newNodesSet.size == 0 ? 0 : await this.context.dbConnection.query(repositoryData, checkHowManyExistSQL(newNodesSet))
         if (allNewNodesResult > 0) {
             return { status: HttpClientErrors.BadRequest, success: false, description: `Some of the given nodes already exist` }
         }
@@ -103,7 +102,7 @@ export class AdditionalQueries {
         const allExistingNodesResult =
             attachPointContainers.size == 0
                 ? 0
-                : await this.context.dbConnection.query(repositoryData, makeQueryToCheckHowManyDoNotExist(attachPointContainers))
+                : await this.context.dbConnection.query(repositoryData, checkHowManyDoNotExistSQL(attachPointContainers))
         if (allExistingNodesResult > 0) {
             return { status: HttpClientErrors.BadRequest, success: false, description: `Some of the attach point containers do not exist` }
         }

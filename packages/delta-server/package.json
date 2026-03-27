@@ -1,0 +1,51 @@
+{
+    "private": false,
+    "name": "@lionweb/delta-server",
+    "publishConfig": {
+        "access": "public"
+    },
+    "version": "0.4.0-beta.4",
+    "description": "Library with types used in delta protocol between TypeScript/JavaScript client and server",
+    "main": "dist/index.js",
+    "exports": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "typings": "dist/index.d.ts",
+    "type": "module",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/LionWeb-io/lionweb-repository.git"
+    },
+    "bugs": {
+        "url": "https://github.com/LionWeb-io/lionweb-repository/issues"
+    },
+    "scripts": {
+        "clean": "rm -rf node_modules/ && rm -rf dist/",
+        "build": "tsc",
+        "release-beta": "npm publish --tag beta",
+        "lint": "eslint src"
+    },
+    "dependencies": {
+        "@lionweb/json": "0.9.0-beta.3",
+        "@lionweb/json-diff": "0.9.0-beta.3",
+        "@lionweb/json-utils": "0.9.0-beta.3",
+        "@lionweb/validation": "0.9.0-beta.3",
+        "@lionweb/server-shared": "0.4.0-beta.4",
+        "@lionweb/server-common": "0.4.0-beta.4",
+        "@lionweb/server-dbadmin": "0.4.0-beta.4",
+        "@lionweb/server-delta-shared": "0.4.0-beta.4",
+        "@lionweb/server-delta-definitions": "0.4.0-beta.4",
+        "es-toolkit": "^1.41.0",
+        "pg-promise": "11.7.8",
+        "ws": "^8.12.2"
+    },
+    "devDependencies": {
+        "prettier": "3.1.0",
+        "@types/chai": "4.3.11",
+        "chai": "4.3.10",
+        "typescript": "5.9.3"
+    },
+    "engines": {
+        "node": "^24.0.0"
+    }
+}

@@ -12,7 +12,6 @@ export class HistoryApiWorker {
         this.context = context
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async bulkPartitions(
         task: LionWebTask,
         repoData: RepositoryData,

@@ -1,7 +1,7 @@
 import { LionWebVersionType } from "@lionweb/server-shared"
 import pgPromise from "pg-promise"
 import pg from "pg-promise/typescript/pg-subset.js"
-import { dbLogger, requestLogger, traceLogger } from "../apiutil/index.js"
+import { dbLogger, queryLogger, traceLogger } from "../apiutil/index.js"
 import { Pool } from "pg"
 import { LionWebTask } from "./LionWebTask.js"
 
@@ -26,8 +26,10 @@ export type RepositoryInfo = {
 
 /**
  * Adds a SET search_path in from of the query to make it work in the context of the schema of the repository requested.
+ * Also checks whether the required schema exists by calling the PSQL `existsschema` function.
  * @param query             The query to adapt
  * @param repositoryData    The data of the repository on which the query should work
+ * @returns                 The original query preceded by the set path and exits schema queries
  */
 export function addRepositorySchema(query: string, repositoryData: RepositoryData) {
     if (!query.startsWith("SET search_path TO")) {
@@ -45,7 +47,7 @@ export function addRepositorySchema(query: string, repositoryData: RepositoryDat
  */
 export class DbConnection {
     postgresConnection: pgPromise.IDatabase<object, pg.IClient>
-    dbConnection: pgPromise.IDatabase<object, pg.IClient>
+    pgDatabaseConnection: pgPromise.IDatabase<object, pg.IClient>
     private _pgp: pgPromise.IMain<object, pg.IClient>
     pgPool: Pool
     transactionMode: object
@@ -69,7 +71,8 @@ export class DbConnection {
 
     async queryWithoutRepository(query: string) {
         traceLogger.info("DbConnection.queryWithoutRepository")
-        return await this.dbConnection.query(query)
+        queryLogger.info(`DbConnection.queryWithoutRepository ${query}`)
+        return await this.pgDatabaseConnection.query(query)
     }
 
     /**
@@ -80,8 +83,8 @@ export class DbConnection {
     async none(repositoryData: RepositoryData, query: string) {
         traceLogger.info("DbConnection.none")
         query = addRepositorySchema(query, repositoryData)
-        dbLogger.debug({ query: query.split("\n", 500) })
-        return await this.dbConnection.none(query)
+        queryLogger.info(`DbConnection.none ${query}`)
+        return await this.pgDatabaseConnection.none(query)
     }
 
     /**
@@ -93,7 +96,8 @@ export class DbConnection {
         traceLogger.info("DbConnection.query")
         query = addRepositorySchema(query, repositoryData)
         dbLogger.debug({ query: query.split("\n", 500) })
-        return await this.dbConnection.query(query)
+        queryLogger.info(`DbConnection.query ${query}`)
+        return await this.pgDatabaseConnection.query(query)
     }
 
     /**
@@ -104,7 +108,8 @@ export class DbConnection {
     async multi(repositoryData: RepositoryData, query: string) {
         traceLogger.info("DbConnection.multi")
         query = addRepositorySchema(query, repositoryData)
-        const multiResult = await this.dbConnection.multi(query)
+        queryLogger.info(`DbConnection.multi ${query}`)
+        const multiResult = await this.pgDatabaseConnection.multi(query)
         // Remove first two elements since these are the result of the inserted search_path and schema existence check
         multiResult.shift()
         multiResult.shift()
@@ -120,7 +125,21 @@ export class DbConnection {
         traceLogger.info("DbConnection.one")
         query = addRepositorySchema(query, repositoryData)
         dbLogger.debug({ query: query.split("\n", 500) })
-        return await this.dbConnection.one(query)
+        queryLogger.info(`DbConnection.one ${query}`)
+        return await this.pgDatabaseConnection.one(query)
+    }
+
+    /**
+     * @see  pgPromise.IDatabase.one
+     * @param repositoryData
+     * @param query
+     */
+    async manyOrNone(repositoryData: RepositoryData, query: string) {
+        traceLogger.info("DbConnection.one")
+        query = addRepositorySchema(query, repositoryData)
+        dbLogger.debug({ query: query.split("\n", 500) })
+        queryLogger.info(`DbConnection.manyOrNone ${query}`)
+        return await this.pgDatabaseConnection.manyOrNone(query)
     }
 
     /**
@@ -129,13 +148,13 @@ export class DbConnection {
     async tx<T>(body: (tsk: LionWebTask) => Promise<T>): Promise<T> {
         traceLogger.info("DbConnection.tx start with mode " + JSON.stringify(this.transactionMode))
         try {
-            return await this.dbConnection.tx({ mode: this.transactionMode as never }, async task => {
+            return await this.pgDatabaseConnection.tx({ mode: this.transactionMode as never }, async task => {
                 const tsk = new LionWebTask(task)
                 traceLogger.info("DbConnection.tx return ")
                 return await body(tsk)
             })
         } catch (e) {
-            requestLogger.info("DbConnection.tx TRANSACTION ERROR " + JSON.stringify(e))
+            dbLogger.error("DbConnection.tx TRANSACTION ERROR " + JSON.stringify(e))
             throw e
         }
     }

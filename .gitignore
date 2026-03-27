@@ -6,3 +6,5 @@
 /packages/*/dist
 /.idea
 build
+/scripts/dist
+/scripts/node_modules

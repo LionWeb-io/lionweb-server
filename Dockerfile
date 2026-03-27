@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-ARG NODE_VERSION=21.6.2
+ARG NODE_VERSION=24.4.1
 
 FROM node:${NODE_VERSION}-alpine
 
@@ -28,4 +28,4 @@ COPY .. .
 EXPOSE 3005
 
 # Run the application.
-CMD node ./packages/server/dist/server.js
+CMD node ./packages/server/dist/bin/lionweb-server.js --run

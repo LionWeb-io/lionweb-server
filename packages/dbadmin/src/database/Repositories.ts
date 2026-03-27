@@ -1,6 +1,6 @@
 import {
     getRepositoryParameter,
-    getStringParam,
+    getStringParam, initializeGlobalMetaPointersMap,
     isParameterError,
     ParameterError,
     REPOSITORIES_TABLE,
@@ -14,13 +14,13 @@ import { JsonContext } from "@lionweb/json-utils"
 import { Request } from "express"
 import { DbAdminApiContext } from "../main.js"
 
-export function getRepositoryData(request: Request, defaultClient?: string): RepositoryData | ParameterError {
+export async function getRepositoryData(request: Request, defaultClient?: string): Promise<RepositoryData | ParameterError> {
     const clientId = getStringParam(request, "clientId", defaultClient)
     if (isParameterError(clientId)) {
         return clientId
     } else {
         const repoName = getRepositoryParameter(request)
-        const repo: RepositoryInfo = repositoryStore.getRepository(repoName)
+        const repo: RepositoryInfo = await repositoryStore.getRepository(repoName)
         // requestLogger.info(`getRepository(...): FOUND REPO '${JSON.stringify(repo)}' for reponame ${repoName}`)
         if (repo === undefined) {
             return {
@@ -48,6 +48,7 @@ export class RepositoryStore {
     repositoryName2repository: Map<string, RepositoryInfo> = new Map<string, RepositoryInfo>()
     initialized: boolean = false
     ctx: DbAdminApiContext
+    i: number = 1
 
     constructor() {}
 
@@ -56,30 +57,38 @@ export class RepositoryStore {
     }
 
     async refresh(): Promise<void> {
+        requestLogger.trace("RepositoryStore REFRESH")
         this.initialized = false
         await this.initialize()
     }
 
     async initialize() {
+        requestLogger.trace("RepositoryStore initialize " + this.i++)
         if (this.initialized) {
-            requestLogger.info("ALREADY initialized")
+            // requestLogger.info("ALREADY initialized")
             return
         }
+        // requestLogger.info("initializing")
         this.repositoryName2repository.clear()
         const repoTable = (await this.ctx.dbConnection.queryWithoutRepository(`SELECT * FROM ${REPOSITORIES_TABLE};\n`)) as RepositoryInfo[]
-        repoTable.forEach(repo => {
+        for(const repo of repoTable) {
             this.repositoryName2repository.set(repo.repository_name, repo)
-            requestLogger.info("Repo row: " + JSON.stringify(repo))
-        })
+            // requestLogger.info("Repo row: " + JSON.stringify(repo))
+            await initializeGlobalMetaPointersMap(this.ctx.dbConnection, { repository: repo, clientId: "SERVER" })
+        }
+        this.initialized = true
     }
 
     allRepositories(): RepositoryInfo[] {
         return Array.from(this.repositoryName2repository.values())
     }
 
-    getRepository(repoName: string): RepositoryInfo {
+    async getRepository(repoName: string): Promise<RepositoryInfo> {
+        if (!this.initialized) {
+            await this.initialize()
+        }
         const result = this.repositoryName2repository.get(repoName)
-        // requestLogger.info(`getRepository(${repoName}) => ${JSON.stringify(result)}`)
+        requestLogger.trace(`getRepository(${repoName}) => ${JSON.stringify(result)}`)
         return result
     }
 
@@ -104,9 +113,11 @@ export function validateLionWebVersion(chunk: LionWebJsonChunk, repositoryData: 
         requestLogger.info(
             `SeralizationVersion ${chunk.serializationFormatVersion} is incorrect for repository ${repositoryData.repository.repository_name} with LionWeb version ${repositoryData.repository.lionweb_version}.`
         )
+    const ctx: JsonContext = new JsonContext(null, ["$"])
+
         validationResult.issues.push(
             new GenericIssue(
-                new JsonContext(null, ["$"]),
+                ctx,
                 `SeralizationVersion ${chunk.serializationFormatVersion} is incorrect for repository ${repositoryData.repository.repository_name} with LionWeb version ${repositoryData.repository.lionweb_version}.`
             )
         )

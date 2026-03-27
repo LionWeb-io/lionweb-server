@@ -1,6 +1,6 @@
 import { LionWebVersionType } from "@lionweb/server-shared"
 import fs from "node:fs"
-import { LevelWithSilent } from "pino"
+import { LevelWithSilent } from "./PinoLogger.js"
 import { expressLogger, verbosity } from "./logging.js"
 
 // Define the possible values of database creation both as a type, and as an array of strings and a type
@@ -41,7 +41,11 @@ export type ServerConfigJson = {
         request?: LevelWithSilent
         trace?: LevelWithSilent
         database?: LevelWithSilent
+        query?: LevelWithSilent
         express?: LevelWithSilent
+        delta?: LevelWithSilent
+        bulk?: LevelWithSilent
+        message?: LevelWithSilent
     }
     postgres: {
         database: {
@@ -96,6 +100,7 @@ export class ServerConfig {
             }
         }
         if (fs.existsSync(configFile)) {
+            console.log(`Reading configuration from file ${configFile}`)
             const stats = fs.statSync(configFile)
             if (stats.isFile()) {
                 try {
@@ -138,7 +143,12 @@ export class ServerConfig {
 
     requestLog(): LevelWithSilent {
         const result = this?.config?.logging?.request
-        return verbosity(result, "warn")
+        return verbosity(result, "error")
+    }
+
+    bulkLog(): LevelWithSilent {
+        const result = this?.config?.logging?.bulk
+        return verbosity(result, "info")
     }
 
     traceLog(): LevelWithSilent {
@@ -148,7 +158,12 @@ export class ServerConfig {
 
     databaseLog(): LevelWithSilent {
         const result = this.config?.logging?.database
-        return verbosity(result, "warn")
+        return verbosity(result, "error")
+    }
+
+    queryLog(): LevelWithSilent {
+        const result = this.config?.logging?.query
+        return verbosity(result, "error")
     }
 
     expressLog(): LevelWithSilent {
@@ -156,44 +171,64 @@ export class ServerConfig {
         return verbosity(result, "error")
     }
 
+    deltaLog(): LevelWithSilent {
+        const result = this.config?.logging?.delta
+        return verbosity(result, "info")
+    }
+    messageLog(): LevelWithSilent {
+        const result = this.config?.logging?.message
+        return verbosity(result, "error")
+    }
+
     pgHost(): string {
+        const PGHOST = process.env.PGHOST
         const result = this?.config?.postgres?.database?.host
-        return result || "postgres"
+        return PGHOST ?? result ?? "127.0.0.1"
     }
 
     pgUser(): string {
+        const PGUSER = process.env.PGUSER
         const result = this?.config?.postgres?.database?.user
-        return result || "postgres"
+        return PGUSER ?? result ?? "postgres"
     }
 
     pgDb(): string {
+        const PGDB = process.env.PGDB
         const result = this?.config?.postgres?.database?.db
-        return result || "lionweb"
+        return PGDB ?? result ?? "lionweb"
     }
 
     pgMaintenanceDb(): string {
+        const PGMAINTENANCE = process.env.PGMAINTENANCE
         const result = this?.config?.postgres?.database?.maintenanceDb
-        return result || "postgres"
+        return PGMAINTENANCE ?? result ?? "postgres"
     }
 
     pgPassword(): string {
+        const PGPASSWORD = process.env.PGPASSWORD
         const result = this?.config?.postgres?.database?.password
-        return result || "lionweb"
+        return PGPASSWORD ?? result ?? "lionweb"
     }
 
     pgPort(): number {
+        let PGPORT = Number.parseInt(process.env.PGPORT)
+        if (Number.isNaN(PGPORT)) {
+            PGPORT = undefined
+        }
         const result = this.config?.postgres?.database?.port
-        return result || 5432
+        return PGPORT ?? result ?? 5432
     }
 
     pgRootcert(): string {
+        const PGROOTCERT = process.env.PGROOTCERT
         const result = this?.config?.postgres?.certificates?.rootcert
-        return result
+        return PGROOTCERT ?? result
     }
 
     pgRootcertcontents(): string {
+        const PGROOTCERTCONTENTS = process.env.PGROOTCERTCONTENTS
         const result = this?.config?.postgres?.certificates?.rootcertcontent
-        return result
+        return PGROOTCERTCONTENTS ?? result
     }
 
     serverPort(): number {

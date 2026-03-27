@@ -1,12 +1,4 @@
-import { METAPOINTERS_TABLE } from "@lionweb/server-common"
-
-export function sqlArrayFromNodeIdArray(strings: string[]): string {
-    return `(${strings.map(id => `'${id}'`).join(", ")})`
-}
-
-export function postgresArrayFromStringArray(strings: string[]): string {
-    return `{${strings.map(id => `"${id}"`).join(", ")}}`
-}
+import { METAPOINTERS_TABLE, sqlArrayFromNodeIdArray } from "@lionweb/server-common"
 
 /**
  * Query to retrieve the full LionWeb nodes from the database.
@@ -14,6 +6,7 @@ export function postgresArrayFromStringArray(strings: string[]): string {
  * @constructor
  */
 export const QueryNodeForIdList = (nodeid: string[], repoVersion: number): string => {
+    // language=SQL
     return `-- get full nodes from node id's
 WITH nodes_for_version AS (
     SELECT * FROM nodesForVersion(${repoVersion})
@@ -125,9 +118,11 @@ LEFT JOIN ${METAPOINTERS_TABLE} mp on mp.id = nodes_for_version.classifier
  * This works ok because we use the _parent_ column to find the children, not the containment or annotation.
  * @param nodeidlist
  * @param depthLimit
+ * @param repoVersion The version of the repo for which the query is done.
  */
 export const makeQueryNodeTreeForIdList = (nodeidlist: string[], depthLimit: number, repoVersion: number): string => {
     const sqlArray = sqlArrayFromNodeIdArray(nodeidlist)
+    // language=SQL
     return `-- Recursively retrieve node tree
             DROP VIEW IF EXISTS nodes;
             CREATE TEMPORARY VIEW nodes AS
