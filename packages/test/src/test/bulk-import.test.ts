@@ -1,5 +1,5 @@
 import { BulkImport, HttpSuccessCodes } from "@lionweb/server-shared"
-import { RepositoryClient, TransferFormat } from "@lionweb/server-client"
+import { RepositoryClient, TransferFormat } from "@lionweb/server-http-client"
 import { assert } from "chai"
 const { deepEqual } = assert
 

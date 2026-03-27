@@ -30,12 +30,10 @@
     },
     "devDependencies": {
         "prettier": "3.1.0",
-        "@typescript-eslint/eslint-plugin": "6.13.2",
-        "@typescript-eslint/parser": "6.13.2",
         "@types/chai": "4.3.11",
         "@types/cors": "^2.8.17",
         "@types/ws": "^8.18.1",
-        "eslint": "8.56.0",
+        "eslint": "10.1.0",
         "chai": "4.3.10",
         "typescript": "5.9.3"
     },
@@ -47,6 +45,7 @@
         "@lionweb/server-languages": "0.4.0-beta.4",
         "@lionweb/server-bulkapi": "0.4.0-beta.4",
         "@lionweb/server-history": "0.4.0-beta.4",
+        "@lionweb/server-shared": "0.4.0-beta.4",
         "@lionweb/delta-server": "0.4.0-beta.4",
         "@lionweb/server-delta-definitions": "0.4.0-beta.4",
         "@lionweb/server-delta-shared": "0.4.0-beta.4",

@@ -1,6 +1,6 @@
 {
     "private": false,
-    "name": "@lionweb/server-client",
+    "name": "@lionweb/server-http-client",
     "publishConfig": {
         "access": "public"
     },
@@ -34,11 +34,12 @@
     },
     "devDependencies": {
         "prettier": "3.1.0",
-        "@typescript-eslint/eslint-plugin": "6.13.2",
-        "@typescript-eslint/parser": "6.13.2",
         "@types/chai": "4.3.11",
-        "eslint": "8.56.0",
+        "eslint": "10.1.0",
         "chai": "4.3.10",
         "typescript": "5.9.3"
+    },
+    "engines": {
+        "node": "^24.0.0"
     }
 }

@@ -182,12 +182,6 @@ export class LionWebQueries {
         })
         // Now get all children of the orphans
         const orphansContainedChildren = await DB.retrieveNodeTreeDB(task, repositoryData, removedAndNotAddedChildren.map(rm => rm.childId), UNLIMITED_DEPTH)
-        // const orphansContainedChildren = await this.getNodeTree(
-        //     task,
-        //     repositoryData,
-        //     removedAndNotAddedChildren.map(rm => rm.childId),
-        //     UNLIMITED_DEPTH
-        // )
         const orphansContainedChildrenOrphans = orphansContainedChildren.filter(contained => {
             return (
                 addedChildren.find(added => added.childId === contained.id) === undefined &&
@@ -322,25 +316,6 @@ export class LionWebQueries {
             }
         }
     }
-
-    // async makeNodeIdsReservation(
-    //     task: LionWebTask,
-    //     repositoryData: RepositoryData,
-    //     idsAdded: string[]
-    // ): Promise<QueryReturnType<LionwebResponse>> {
-    //     if (idsAdded.length > 0) {
-    //         const query = SQL.insertReservedNodeIdsSQL(repositoryData, idsAdded)
-    //         await task.query(repositoryData, query)
-    //         return {
-    //             status: HttpSuccessCodes.Ok,
-    //             query: query,
-    //             queryResult: {
-    //                 success: true,
-    //                 messages: []
-    //             }
-    //         }
-    //     }
-    // }
 
     private dbCommandsForImplicitlyRemovedChildNodes(
         dbCommands: DbChanges,

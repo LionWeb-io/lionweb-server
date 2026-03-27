@@ -1,4 +1,4 @@
-import { RepositoryClient } from "@lionweb/server-client"
+import { RepositoryClient } from "@lionweb/server-http-client"
 import { adminResponseFunctions, DeltaClient, eventFunctions, responseFunctions } from "@lionweb/server-delta-client"
 import {
     GetAvailableIdsResponse,
@@ -38,6 +38,11 @@ collection.forEach(withoutHistory => {
         beforeAll(async function () {
             bulkApiClient.repository = repository
             const delResponse = await bulkApiClient.dbAdmin.deleteRepository(repository, "delete at start og test")
+            if (delResponse.status !== HttpSuccessCodes.Ok) {
+                console.log(`Could not delete repository (${repository}): ` + JSON.stringify(delResponse.body))
+            } else {
+                console.log(`Deleted repository (${repository}): ` + JSON.stringify(delResponse.body))
+            }
             const initResponse = await bulkApiClient.dbAdmin.createRepository(repository, !withoutHistory, "2023.1")
             if (initResponse.status !== HttpSuccessCodes.Ok) {
                 console.log(`Cannot create repository (${repository}): ` + JSON.stringify(initResponse.body))
@@ -107,7 +112,7 @@ collection.forEach(withoutHistory => {
                 await expectError(client, listPartitions, "invalidParticipation")
                 const listAndSubscribePartitions = cmd.listAndSubscribePartitions(client)
                 await expectError(client, listAndSubscribePartitions, "invalidParticipation")
-                const inform = cmd.informAbout(client)
+                const inform = cmd.informAbout(client, 1)
                 await expectError(client, inform, "invalidParticipation")
                 const sub = cmd.subscribeToChangingPartitions(client)
                 await expectError(client, sub, "invalidParticipation")
@@ -115,7 +120,7 @@ collection.forEach(withoutHistory => {
                 const signOn2 = cmd.signOnRequest(client, repository)
                 await expectResponse(client, signOn2, "SignOnResponse")
 
-                const inform2 = cmd.informAbout(client)
+                const inform2 = cmd.informAbout(client, 1)
                 await expectResponse(client, inform2, "InformAboutChangingPartitionsResponse")
                 const sub2 = cmd.subscribeToChangingPartitions(client)
                 await expectResponse(client, sub2, "SubscribeToChangingPartitionsResponse")
@@ -192,7 +197,7 @@ collection.forEach(withoutHistory => {
             })
             test("Children", async () => {
                 const subscribe = cmd.subscribeToPartitionContentsRequest(client, "Program-01")
-                const addChild = cmd.addChild(client, { id: "Move-01", cls: CLS.Forward, parent: "Progra" + "m-01", containment: CON.ProgramCommands, props: [] })
+                const addChild = cmd.addChild(client, { id: "Move-01", cls: CLS.Forward, parent: "Program-01", containment: CON.ProgramCommands, props: [] })
                 const addChildE1 = cmd.addChild(client, { id: "Move-01", cls: CLS.Forward, parent: "Program-01", containment: CON.ProgramCommands, props: [] })
                 const addChildE2 = cmd.addChild(client, { id: "Move-02", cls: CLS.Forward, parent: "Program-02", containment: CON.ProgramCommands, props: [] })
                 const addChildE3 = cmd.addChild(client, { id: "Move-03", cls: CLS.Forward, parent: "Program-01", containment: CON.ProcedureParameter, props: [] }, { index: 1 })
@@ -349,6 +354,6 @@ collection.forEach(withoutHistory => {
 /**
  * Run the other tests
  */
-// import "./test-logo-participation.test.js"
+import "./test-logo-participation.test.js"
 
 

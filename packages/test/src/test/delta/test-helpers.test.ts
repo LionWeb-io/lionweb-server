@@ -1,4 +1,4 @@
-import { RepositoryClient } from "@lionweb/server-client"
+import { RepositoryClient } from "@lionweb/server-http-client"
 import { DeltaClient } from "@lionweb/server-delta-client"
 import {
     CommandMessageKind,
@@ -48,7 +48,7 @@ expect.extend({
     },
 })
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
+// NOT NEEDED eslint-disable-next-line @typescript-eslint/no-namespace
 declare module "vitest" {
     interface Assertion {
         toHaveError(error: DeltaErrorCode): void

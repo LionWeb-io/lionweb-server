@@ -357,8 +357,9 @@ class DeltaProcessor {
                             affectedPartition,
                             participationInfo.partitionChangesSubscription.depth
                         )
+                        deltaLogger.info(`chunk has ${depthChunk.length} nodes`)
                         const adaptedResponse = structuredClone(response)
-                        adaptedResponse.newPartition = { nodes: depthChunk }
+                        adaptedResponse.newPartition.nodes = depthChunk
                         this.sendDelta(participationInfo.socket, participationInfo, delta, adaptedResponse)
                     }
                 } else if (participationInfo.socket === socket) {

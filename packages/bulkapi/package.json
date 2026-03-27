@@ -27,14 +27,14 @@
     },
     "devDependencies": {
         "prettier": "3.1.0",
-        "@typescript-eslint/eslint-plugin": "6.13.2",
-        "@typescript-eslint/parser": "6.13.2",
         "@types/chai": "4.3.11",
-        "eslint": "8.56.0",
+        "eslint": "10.1.0",
         "chai": "4.3.10",
         "typescript": "5.9.3"
     },
     "dependencies": {
+        "@lionweb/server-shared": "0.4.0-beta.4",
+        "@lionweb/server-languages": "0.4.0-beta.4",
         "@lionweb/server-common": "0.4.0-beta.4",
         "@lionweb/server-dbadmin": "0.4.0-beta.4",
         "@lionweb/validation": "0.9.0-beta.3",
@@ -52,5 +52,8 @@
         "pg": "8.11.3",
         "pg-promise": "11.7.8",
         "source-map-support": "0.5.21"
+    },
+    "engines": {
+        "node": "^24.0.0"
     }
 }

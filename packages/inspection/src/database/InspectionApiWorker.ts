@@ -24,7 +24,7 @@ export interface ClassifierNodes {
 export class InspectionApiWorker {
     constructor(private context: InspectionContext) {}
 
-    async nodesByLanguage(repositoryData: RepositoryData, sql: string) {
+    async nodesByLanguage(repositoryData: RepositoryData, sql: string): Promise<LanguageNodes[]> {
         return ((await this.context.dbConnection.query(repositoryData, sql)) as [object]).map(el => {
             // @ts-expect-error TS7503
             const ids = el["ids"].split(",")
@@ -37,7 +37,7 @@ export class InspectionApiWorker {
         })
     }
 
-    async nodesByClassifier(repositoryData: RepositoryData, sql: string) {
+    async nodesByClassifier(repositoryData: RepositoryData, sql: string): Promise<ClassifierNodes[]> {
         return ((await this.context.dbConnection.query(repositoryData, sql)) as [object]).map(el => {
             // @ts-expect-error TS7503
             const ids = el["ids"].split(",")

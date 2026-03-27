@@ -31,7 +31,7 @@ services:
        timeout: 5s
        retries: 5
      ports:
-       - '54320:54320'
+       - '5432:5432'
 volumes:
  db-data:
   driver: local

@@ -1,5 +1,5 @@
 import { CreatePartitionsResponse, HttpSuccessCodes, ListPartitionsResponse } from "@lionweb/server-shared"
-import { ClientResponse, RepositoryClient } from "@lionweb/server-client"
+import { ClientResponse, RepositoryClient } from "@lionweb/server-http-client"
 import { LionWebJsonChunk, LionWebJsonNode } from "@lionweb/json"
 import { LanguageChange, LionWebJsonDiff } from "@lionweb/json-diff"
 import { afterAll } from "vitest"

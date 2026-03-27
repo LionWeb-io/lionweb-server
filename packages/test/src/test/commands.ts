@@ -174,13 +174,13 @@ export class Commands {
         return client.sendRequest(request)
     }
 
-    informAbout = (client: DeltaClient): DeltaRequest => {
+    informAbout = (client: DeltaClient, depth: number): DeltaRequest => {
         const request: InformAboutChangingPartitionsRequest = {
             messageKind: "InformAboutChangingPartitionsRequest",
             queryId: `informAbout-${queryId++}`,
             creation: true,
             deletion: true,
-            depthLimit: 1,
+            depthLimit: depth,
             additionalInfos: []
         }
         return client.sendRequest(request)

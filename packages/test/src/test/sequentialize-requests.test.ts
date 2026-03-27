@@ -1,4 +1,4 @@
-import { ClientResponse, RepositoryClient } from "@lionweb/server-client"
+import { ClientResponse, RepositoryClient } from "@lionweb/server-http-client"
 import { StoreResponse } from "@lionweb/server-shared"
 import { LionWebJsonChunk } from "@lionweb/json"
 import { assert } from "chai"

@@ -1,5 +1,5 @@
 import { HttpSuccessCodes } from "@lionweb/server-shared"
-import { RepositoryClient, TransferFormat } from "@lionweb/server-client"
+import { RepositoryClient, TransferFormat } from "@lionweb/server-http-client"
 import { LionWebJsonChunk } from "@lionweb/json"
 import { LionWebJsonDiff } from "@lionweb/json-diff"
 

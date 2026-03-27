@@ -1,9 +1,12 @@
-import { RepositoryClient } from "@lionweb/server-client"
+import { RepositoryClient } from "@lionweb/server-http-client"
 import { adminResponseFunctions, DeltaClient, eventFunctions, responseFunctions } from "@lionweb/server-delta-client"
+import { PartitionAddedEvent } from "@lionweb/server-delta-shared"
 import { HttpSuccessCodes  } from "@lionweb/server-shared"
 import { test, describe, beforeAll, beforeEach, afterAll } from "vitest"
 import { reportHTML } from "./helpers.js"
 import { CLASSIFIER as CLS, CONTAINMENT as CON } from "./keys.js"
+import { Logo2String } from "./Logo2String.js"
+import { ProgramNodes } from "./logomodel.js"
 import { CoverageMap, cmd, expectEvent, expectResponse, expectError, logProtocol } from "./test-helpers.test.js"
 
 // TOPO Delta : primary key exception when nohistory = false 
@@ -113,7 +116,7 @@ collection.forEach((withoutHistory) => {
                 const reconnect = cmd.reconnect(client3, oldPid)
                 await expectResponse(client3, reconnect, "ReconnectResponse")
 
-                const inform2 = cmd.informAbout(client2)
+                const inform2 = cmd.informAbout(client2, 3)
                 await expectResponse(client2, inform2, "InformAboutChangingPartitionsResponse")
                 const sub2 = cmd.subscribeToChangingPartitions(client3)
                 await expectResponse(client3, sub2, "SubscribeToChangingPartitionsResponse")
@@ -159,7 +162,7 @@ collection.forEach((withoutHistory) => {
                 // logProtocol(client4, true)
             })
             test("MultiClient CompositeCommand", async () => {
-                const subscribe = cmd.informAbout(client3)
+                const subscribe = cmd.informAbout(client3, 2)
                 const composite = cmd.compositeCommandCmd()
                 const addP = cmd.addPartitionCmd(client2, { id: "Program-022", classifier: CLS.Program })
 
@@ -178,10 +181,31 @@ collection.forEach((withoutHistory) => {
                 await expect(cmd.eventFor(client1, composite)).rejects.toThrowErrorMatchingInlineSnapshot("[Error: TimeOut]")
                 await expect(cmd.eventFor(client4, composite)).rejects.toThrowErrorMatchingInlineSnapshot("[Error: TimeOut]")
 
-                logProtocol(client1, true)
+            })
+            test("AddPartition with depth", async () => {
+                const addPartition = cmd.addPartitionCmd(client2, { id: "Program", classifier: CLS.Program })
+                addPartition.newPartition.nodes = ProgramNodes
+                client2.sendCommand(addPartition)
+                
+                await expectEvent(client2, addPartition, "PartitionAdded")
+
+                {
+                    const client2Event = (await cmd.eventFor(client2, addPartition)) as PartitionAddedEvent
+                    const logo = new Logo2String(client2Event.newPartition.nodes)
+
+                    console.log("Client 2 Depth 3")
+                    console.log(logo.logo2string())
+                }
+                {
+                    const depth1 = (await cmd.eventFor(client3, addPartition)) as PartitionAddedEvent
+                    const logo3 = new Logo2String(depth1.newPartition.nodes)
+                    console.log("Client 3 Depth 1")
+                    console.log(logo3.logo2string())
+                }
+                // logProtocol(client1, true)
                 logProtocol(client2, true)
                 logProtocol(client3, true)
-                logProtocol(client4, true)
+                // logProtocol(client4, true)
             })
         })
     })

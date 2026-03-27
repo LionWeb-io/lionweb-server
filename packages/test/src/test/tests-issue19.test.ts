@@ -1,5 +1,5 @@
 import { HttpSuccessCodes } from "@lionweb/server-shared"
-import { RepositoryClient } from "@lionweb/server-client"
+import { RepositoryClient } from "@lionweb/server-http-client"
 import { LionWebJsonChunk } from "@lionweb/json"
 import * as string_decoder from "node:string_decoder"
 import { afterEach } from "vitest"

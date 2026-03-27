@@ -70,6 +70,10 @@ export class Logo2String {
 
     cmd2string(node: LionWebJsonNode, indent: string): string {
         let result = indent
+        if (node === undefined) {
+            result += "undefined"
+            return result
+        }
         if (isEqualMetaPointer(node.classifier, CLASSIFIER.Forward)) {
             result += `FORWARD ${NodeUtils.findProperty(node, PROPERTY.MoveCommandDistance)?.value}`
         } else if (isEqualMetaPointer(node.classifier, CLASSIFIER.Backward)) {
@@ -90,11 +94,52 @@ export class Logo2String {
             }`
         } else if (isEqualMetaPointer(node.classifier, CLASSIFIER.SetHeading)) {
             result += `HEADING ${NodeUtils.findProperty(node, PROPERTY.HeadingDegrees)!.value}`
+        } else if (isEqualMetaPointer(node.classifier, CLASSIFIER.NumbericLiteral)) {
+            result += `NUM ${NodeUtils.findProperty(node, PROPERTY.NumbericLiteralValue)?.value}`
+        } else if (isEqualMetaPointer(node.classifier, CLASSIFIER.GreaterThan)) {
+            const left = NodeUtils.findContainment(node, CONTAINMENT.GreaterThanLeft)
+            if (left !== undefined) {
+                const leftNode = this.chunkWrapper.getNode(left.children[0])
+                result += `${this.cmd2string(leftNode, "")}`
+            } else {
+                result += `<<unknown node>>`
+            }
+            result += ` > `
+            const right = NodeUtils.findContainment(node, CONTAINMENT.GreaterThanRight)
+            if (right !== undefined) {
+                const rightNode = this.chunkWrapper.getNode(right.children[0])
+                result += `${this.cmd2string(rightNode, "")}`
+            } else {
+                result += `<<unknown node>>`
+            }
         } else if (isEqualMetaPointer(node.classifier, CLASSIFIER.HomeCommand)) {
             result += `HOME`
         } else if (isEqualMetaPointer(node.classifier, CLASSIFIER.ProcedureCall)) {
             const reference = NodeUtils.findReference(node, REFERENCE.ProcedureCallProcedure)
             result += `CALL [${reference === undefined ? "<unknown>" : reference.targets.map((t) => `ref ${t.reference} resolve '${t.resolveInfo}'`)}]`
+        } else if (isEqualMetaPointer(node.classifier, CLASSIFIER.If)) {
+            const condition = NodeUtils.findContainment(node, CONTAINMENT.IfCondition)
+            if (condition !== undefined) {
+                const condNode = this.chunkWrapper.getNode(condition.children[0])
+                result += `IF ${this.cmd2string(condNode, "")}`
+            } else {
+                result += `IF <<unknown node>>`
+            }
+            const left = NodeUtils.findContainment(node, CONTAINMENT.IfIfTrue)
+            if (left !== undefined) {
+                const leftNode = this.chunkWrapper.getNode(left.children[0])
+                result += `THEN\n${this.cmd2string(leftNode, indent + "    ")}`
+            } else {
+                result += `THEN <<unknown node>>`
+            }
+            const right = NodeUtils.findContainment(node, CONTAINMENT.IfIfFalse)
+            if (right !== undefined) {
+                const rightNode = this.chunkWrapper.getNode(right.children[0])
+                result += `ELSE\n${this.cmd2string(rightNode, indent + "    ")}`
+            } else {
+                result += `ELSE <<unknown node>>`
+            }
+            
         } else {
             result += `UNKNOWM COMMAND ${JSON.stringify(node.classifier)}` 
         }

@@ -41,12 +41,10 @@ const pinoLogger = pino(
             // level: (label: string) => {
             //     return { level: label.toUpperCase() }
             // },
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             // bindings: () => {
             //     return {}
             // }
         },
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         timestamp: undefined
     },
     // transport

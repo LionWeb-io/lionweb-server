@@ -24,5 +24,4 @@ export async function runWithTryDelta(socket: WebSocket, delta: DeltaCommand | D
     }
     expressLogger.info(`queue ${delta.messageKind}`)
     requestQueue.add(new Job(`${delta.messageKind}-delta-` + myIndex, deltaFunction))
-    
 }

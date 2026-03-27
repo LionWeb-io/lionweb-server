@@ -28,4 +28,4 @@ COPY .. .
 EXPOSE 3005
 
 # Run the application.
-CMD node ./packages/server/dist/server.js --run
+CMD node ./packages/server/dist/bin/lionweb-server.js --run
