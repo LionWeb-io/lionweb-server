@@ -20,6 +20,7 @@
         "build": "tsc",
         "alive": "echo I am alive",
         "lint": "eslint src",
+        "release-beta": "npm publish --tag beta",
         "manualtest": "node dist/test/ManualTests.js"
     },
     "devDependencies": {

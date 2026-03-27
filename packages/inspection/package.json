@@ -19,6 +19,7 @@
         "clean": "rm -rf node_modules/ && rm -rf dist/",
         "build": "tsc",
         "lint": "eslint src",
+        "release-beta": "npm publish --tag beta",
         "test": "echo No tests in server-inspection"
     },
     "dependencies": {

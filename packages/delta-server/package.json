@@ -22,6 +22,7 @@
     "scripts": {
         "clean": "rm -rf node_modules/ && rm -rf dist/",
         "build": "tsc",
+        "release-beta": "npm publish --tag beta",
         "lint": "eslint src"
     },
     "dependencies": {

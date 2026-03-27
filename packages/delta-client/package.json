@@ -23,6 +23,7 @@
         "clean": "rm -rf node_modules/ && rm -rf dist/",
         "build": "tsc",
         "lint": "eslint src",
+        "release-beta": "npm publish --tag beta",
         "publish-local": "npm publish --registry http://localhost:4873  --tag beta",
         "publish-titania": "npm publish --registry http://localhost:4873  --tag beta",
         "unpublish-local": "npm unpublish --force --registry http://localhost:4873",

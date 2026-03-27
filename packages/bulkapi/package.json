@@ -21,6 +21,7 @@
         "alive": "echo I am alive",
         "lint": "eslint src",
         "manualtest": "node dist/test/ManualTests.js",
+        "release-beta": "npm publish --tag beta",
         "publish-local": "npm publish --registry http://localhost:4873 --tag beta",
         "unpublish-local": "npm unpublish --force --registry http://localhost:4873",
         "republish-local": "npm run unpublish-local && npm run publish-local"
