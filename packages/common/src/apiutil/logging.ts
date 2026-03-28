@@ -9,25 +9,6 @@ export function verbosity(level: string, defaultValue: LevelWithSilent): LevelWi
     }
 }
 
-// const transport = pino.transport({
-//     targets: [
-        // {
-        //     target: "pino/file",
-        //     options: { destination: `./server-log.jsonl` }
-        // },
-        // {
-        //     target: "pino/file" // default destination is console
-        // },
-        // {
-        //     target: "pino-pretty",
-        //     options: {
-        //         colorize: true,
-        //         ignore: "pid,hostname,level-label,type,query,chunk"
-        //     }
-        // }
-    // ]
-// })
-
 function pino( _props: { level: LevelWithSilent, formatters: object, timestamp: unknown}): MainLogger {
     const result = new MainLogger()
     result.level = _props.level
