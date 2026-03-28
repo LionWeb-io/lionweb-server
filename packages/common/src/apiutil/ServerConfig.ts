@@ -168,7 +168,7 @@ export class ServerConfig {
 
     expressLog(): LevelWithSilent {
         const result = this?.config?.logging?.express
-        return verbosity(result, "error")
+        return verbosity(result, "info")
     }
 
     deltaLog(): LevelWithSilent {

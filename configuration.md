@@ -43,14 +43,20 @@ Below is the server-config.json with all default values
     ]
   },
   "logging": {
-    // Logging level for reuests logging
+    // Logging level for delta protocol logging
+    "delta": "info",
+    // Logging level for bulk api logging
+    "bulk": "info",
+    // Logging level for requests logging
     "request": "info",
     // Logging level for detailed tracing
     "trace": "silent",
     // Logging level for database actions
     "database": "silent",
     // logging level for (automatic) request/response logging
-    "express": "silent"
+    "express": "silent",
+    // For generic logging messages
+    "message": "silent"
   },
   "postgres": {
     // Postgress configuration
