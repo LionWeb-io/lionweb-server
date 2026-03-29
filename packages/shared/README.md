@@ -16,7 +16,7 @@ In practice:
 In this project we decided to commit the generated code to the repository. So, you would need to install protoc only
 if you want to modify the .proto schema. Otherwise, you can just use the generated code.
 
-If you want to re-generate the cooe, you will need protoc installed (for example, on macOS you can install it with `brew install protobuf`).
+If you want to re-generate the code, you will need protoc installed (for example, on macOS you can install it with `brew install protobuf`).
 
 From the root of this package run:
 
@@ -24,3 +24,15 @@ From the root of this package run:
 protoc --plugin=../../node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=. --ts_proto_opt=esModuleInterop=true --ts_proto_opt=env=node --ts_proto_opt=importSuffix=.js src/proto/Chunk.proto
 protoc --plugin=../../node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=. --ts_proto_opt=esModuleInterop=true --ts_proto_opt=env=node --ts_proto_opt=importSuffix=.js src/proto/BulkImport.proto
 ```
+
+The generated code needs to be changed. In `Chunk.ts` and `BulkImport.ts` replace
+
+```ts
+import _m0 from "protobufjs/minimal.js";
+```
+to
+```asciidoc
+import * as _m0 from "protobufjs/minimal.js";
+```
+
+This is needed as the generated code will not work when starting the server with `npx`.

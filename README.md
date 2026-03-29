@@ -1,7 +1,13 @@
 # lionweb-server
 Reference implementation of LionWeb repository
 
-## Changes in Version 0.3.0
+## Changes in Version 0.4.0
+
+- Implementation of the LionWeb Delta protocol.
+- Ability to run server through `npx`
+- Replace Pino logger because it didn't work inside docker
+
+- ## Changes in Version 0.3.0
 
 - Support for LionWeb 2024.1
 - Removed `init` request from dbAdmin
@@ -9,7 +15,19 @@ Reference implementation of LionWeb repository
   - All tests and applications need to add this parameter    
   - The server config section for creating repositories also has this additional field 
 - All requests fail if the LionWeb version of the chunk is not the same LionWeb version as the repository. 
-- 
+
+## Howto run the server
+
+To run the server you need two applications
+
+1. Run a Postgres server, easiets done through using docker.
+   There are postgres images available, we are using Postgres 16.1
+2. Run the LionWeb server, easiets done through using `npx`:
+```asciidoc
+npx  @lionweb/server-server@0.4.0-beta.5 --run --config server-config.json 
+```
+T=You should ensure that the Postgress information in the `server-config.json` corresponds
+with the Postgres you installed.
 
 ## Postgres
 The database used for storage of models is Postgres, 
@@ -23,7 +41,7 @@ The `.env` file contains the user/database/port names and numbers being used.
 The `lionweb_properties.property`, `lionweb_containments.containment` and `lionweb_references.reference` 
 fields are LionWeb metapointers.
 
-We use `pgAdmin 4` to test queries and look directly into the database. 
+We use `pgAdmin 4` or the database plugin in WebStorm to test queries and look directly into the database. 
 
 ### How to start Postgres through docker
 
@@ -45,11 +63,18 @@ npm run lint
 
 ### How to start the LionWeb server
 Ensure that Postgres is running.
-The server is started with `npm run dev-run` in  the `packages/server` folder:
+
+If you have a local copy of the project from github,
+the server is started with `npm run dev-run` in  the `packages/server` folder:
 
 ```
 cd packages/server
 npm run dev-local-run
+```
+
+If you don't want to checkout the code, use npx:
+```asciidoc
+npx  @lionweb/server-server@0.4.0-beta.5 --run --config server-config.json
 ```
 
 For more information on how to configure the server, please check [configuration.md](configuration.md).
@@ -65,7 +90,7 @@ npm run test
 ## Status
 This server implents the full LionWeb [Bulk API](https://lionweb.io/specification/bulk/repo-access-api.html) as defined in the LionWeb specification.
 
-The server also implements the LionWeb Delta protocol, although currently only partly.
+The server also implements the LionWeb Delta protocol, although currently not completely.
 
 ##  Main Packages
 

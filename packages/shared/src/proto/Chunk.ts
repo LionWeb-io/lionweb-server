@@ -5,7 +5,7 @@
 // source: src/proto/Chunk.proto
 
 /* eslint-disable */
-import _m0 from "protobufjs/minimal.js";
+import * as _m0 from "protobufjs/minimal.js";
 
 export const protobufPackage = "io.lionweb.protobuf";
 

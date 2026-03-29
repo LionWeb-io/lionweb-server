@@ -1,6 +1,6 @@
 {
     "name": "@lionweb/server-dbadmin",
-    "version": "0.4.0-beta.4",
+    "version": "0.4.0-beta.5",
     "private": false,
     "description": "DB Admin routes for the lionweb server",
     "main": "dist/index.js",
@@ -19,15 +19,15 @@
         "clean": "rm -rf node_modules/ && rm -rf dist/",
         "build": "tsc",
         "lint": "eslint src",
-        "release-beta": "npm publish --tag beta",
+        "release-beta": "npm publish --tag beta --access=public",
         "publish-local": "npm publish --registry http://localhost:4873 --tag beta",
         "unpublish-local": "npm unpublish --force --registry http://localhost:4873",
         "republish-local": "npm run unpublish-local && npm run publish-local"
     },
     "dependencies": {
         "@lionweb/json-diff": "0.9.0-beta.3",
-        "@lionweb/server-common": "0.4.0-beta.4",
-        "@lionweb/server-shared": "0.4.0-beta.4",
+        "@lionweb/server-common": "0.4.0-beta.5",
+        "@lionweb/server-shared": "0.4.0-beta.5",
         "@lionweb/validation": "0.9.0-beta.3",
         "@lionweb/json": "0.9.0-beta.3",
         "@lionweb/json-utils": "0.9.0-beta.3",
