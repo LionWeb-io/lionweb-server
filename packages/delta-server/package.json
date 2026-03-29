@@ -4,7 +4,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "version": "0.4.0-beta.4",
+    "version": "0.4.0-beta.5",
     "description": "Library with types used in delta protocol between TypeScript/JavaScript client and server",
     "main": "dist/index.js",
     "exports": "./dist/index.js",
@@ -22,7 +22,10 @@
     "scripts": {
         "clean": "rm -rf node_modules/ && rm -rf dist/",
         "build": "tsc",
-        "release-beta": "npm publish --tag beta",
+        "release-beta": "npm publish --tag beta --access=public",
+        "publish-local": "npm publish --registry http://localhost:4873 --tag local",
+        "unpublish-local": "npm unpublish --force --registry http://localhost:4873",
+        "republish-local": "npm run unpublish-local && npm run publish-local",
         "lint": "eslint src"
     },
     "dependencies": {
@@ -30,11 +33,11 @@
         "@lionweb/json-diff": "0.9.0-beta.3",
         "@lionweb/json-utils": "0.9.0-beta.3",
         "@lionweb/validation": "0.9.0-beta.3",
-        "@lionweb/server-shared": "0.4.0-beta.4",
-        "@lionweb/server-common": "0.4.0-beta.4",
-        "@lionweb/server-dbadmin": "0.4.0-beta.4",
-        "@lionweb/server-delta-shared": "0.4.0-beta.4",
-        "@lionweb/server-delta-definitions": "0.4.0-beta.4",
+        "@lionweb/server-shared": "0.4.0-beta.5",
+        "@lionweb/server-common": "0.4.0-beta.5",
+        "@lionweb/server-dbadmin": "0.4.0-beta.5",
+        "@lionweb/server-delta-shared": "0.4.0-beta.5",
+        "@lionweb/server-delta-definitions": "0.4.0-beta.5",
         "es-toolkit": "^1.41.0",
         "pg-promise": "11.7.8",
         "ws": "^8.12.2"

@@ -1,6 +1,6 @@
 {
     "name": "@lionweb/server-bulkapi",
-    "version": "0.4.0-beta.4",
+    "version": "0.4.0-beta.5",
     "private": false,
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -21,7 +21,7 @@
         "alive": "echo I am alive",
         "lint": "eslint src",
         "manualtest": "node dist/test/ManualTests.js",
-        "release-beta": "npm publish --tag beta",
+        "release-beta": "npm publish --tag beta --access=public",
         "publish-local": "npm publish --registry http://localhost:4873 --tag beta",
         "unpublish-local": "npm unpublish --force --registry http://localhost:4873",
         "republish-local": "npm run unpublish-local && npm run publish-local"
@@ -34,10 +34,10 @@
         "typescript": "5.9.3"
     },
     "dependencies": {
-        "@lionweb/server-shared": "0.4.0-beta.4",
-        "@lionweb/server-languages": "0.4.0-beta.4",
-        "@lionweb/server-common": "0.4.0-beta.4",
-        "@lionweb/server-dbadmin": "0.4.0-beta.4",
+        "@lionweb/server-shared": "0.4.0-beta.5",
+        "@lionweb/server-languages": "0.4.0-beta.5",
+        "@lionweb/server-common": "0.4.0-beta.5",
+        "@lionweb/server-dbadmin": "0.4.0-beta.5",
         "@lionweb/validation": "0.9.0-beta.3",
         "@lionweb/json": "0.9.0-beta.3",
         "@lionweb/json-diff": "0.9.0-beta.3",

@@ -1,6 +1,6 @@
 {
     "name": "@lionweb/server",
-    "version": "0.4.0-beta.4",
+    "version": "0.4.0-beta.5",
     "type": "module",
     "private": true,
     "license": "Apache-2.0",
