@@ -73,7 +73,6 @@ export class DBAdminApiWorker {
             //     }
             // }
             // Add the global functions to the public schema
-            bulkLogger.info(`statements done globals ${CREATE_GLOBALS_SQL}`)
             const tmpo = await this.ctx.dbConnection.queryWithoutRepository(removeNewlinesBetween$$(CREATE_GLOBALS_SQL))
             bulkLogger.info(`globals done ${JSON.stringify(tmpo)}`)
             return {
