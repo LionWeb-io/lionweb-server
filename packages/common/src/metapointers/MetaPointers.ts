@@ -1,6 +1,7 @@
 import { LionWebJsonMetaPointer, LionWebJsonNode } from "@lionweb/json"
-import { dbLogger, deltaLogger } from "../apiutil/index.js"
-import { DbConnection, LionWebTask, METAPOINTERS_TABLE, RepositoryData } from "../database/index.js"
+import { DbConnection, LionWebTask, RepositoryData } from "@lionweb/server-database"
+import { dbLogger, deltaLogger } from "@lionweb/server-shared"
+import { METAPOINTERS_TABLE } from "../database/index.js"
 
 /**
  * Map from the calculated metapointer id which is `language`@`version`@`key` to
@@ -32,8 +33,9 @@ export async function initializeGlobalMetaPointersMap(task: LionWebTask | DbConn
         // deltaLogger.info(`Initializing key '${mpKey}' with id '${mp.id}'`)
     }
 }
+
 // TODO Why is this function async? It does nothing asyn and doesn't call an async function.
-async function insertInGlobalMetaPointersMap(task: LionWebTask | DbConnection, repositoryData: RepositoryData, key: string, metaPointerIndex: number) {
+function insertInGlobalMetaPointersMap(repositoryData: RepositoryData, key: string, metaPointerIndex: number) {
     // deltaLogger.info(`insertInGlobalMetaPointersMap repo ${repositoryData.repository.repository_name} key ${key} index ${metaPointerIndex}`)
     if (!globalMetaPointersMap.has(repositoryData.repository.repository_name)) {
         globalMetaPointersMap.set(repositoryData.repository.repository_name, new Map<string, number>())
@@ -106,7 +108,7 @@ export class MetaPointersCollector {
         }
     }
 
-    async obtainIndexes(task: LionWebTask | DbConnection): Promise<void> {
+    async obtainIndexes(task: LionWebTask): Promise<void> {
         if (this.metaPointers.size == 0) {
             return
         }
@@ -119,7 +121,7 @@ export class MetaPointersCollector {
         )
         const raw_res: { tometapointerids: string }[] = await task.query(this.repositoryData, `SELECT toMetaPointerIDs(${mpLanguages},${mpVersions},${mpKeys});`)
         dbLogger.debug(`> obtainindices for repo ${this.repositoryData.repository.repository_name} rawres is ${raw_res.length}`)
-        raw_res.forEach(async el => {
+        raw_res.forEach(el => {
             if (el === undefined) {
                 throw new Error("EL IS UNDEFINED")
             }
@@ -128,7 +130,7 @@ export class MetaPointersCollector {
                 throw new Error("VALUE IS UNDEFINED")
             }
             const parts = value.substring(1, value.length - 1).split(",")
-            await insertInGlobalMetaPointersMap(task, this.repositoryData, `${parts[1]}@${parts[2]}@${parts[3]}`, Number(parts[0]))
+            insertInGlobalMetaPointersMap(this.repositoryData, `${parts[1]}@${parts[2]}@${parts[3]}`, Number(parts[0]))
         })
     }
 }
@@ -160,11 +162,11 @@ export class MetaPointersTracker {
      * @param populationLogic   The function that finds all metapointers 
      * @param dbConnection      The database connection.
      */
-    async populate(populationLogic: (collector: MetaPointersCollector) => void, dbConnection: DbConnection | LionWebTask): Promise<void> {
+    async populate(populationLogic: (collector: MetaPointersCollector) => void, task: LionWebTask): Promise<void> {
         // deltaLogger.info(`Populate ${this.repositoryData.repository.repository_name}`)
         const localCollector = new MetaPointersCollector(this.repositoryData)
         populationLogic(localCollector)
-        await localCollector.obtainIndexes(dbConnection)
+        await localCollector.obtainIndexes(task)
     }
 
     /**

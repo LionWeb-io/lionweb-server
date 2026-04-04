@@ -1,13 +1,10 @@
 import { HttpSuccessCodes } from "@lionweb/server-shared"
 import { RepositoryClient } from "@lionweb/server-http-client"
 import { LionWebJsonChunk } from "@lionweb/json"
-import * as string_decoder from "node:string_decoder"
 import { afterEach } from "vitest"
 import { readModel } from "./utils.js"
 
 import { assert } from "chai"
-import sm from "source-map-support"
-sm.install()
 const DATA: string = "./data/"
 
 describe("Repository tests", () => {
@@ -21,9 +18,12 @@ describe("Repository tests", () => {
         } else {
             console.log("database created: " + JSON.stringify(createResponse.body))
         }
-        await t.dbAdmin.deleteRepository("default")
-        await t.dbAdmin.createRepository("default", true, "2023.1")
-        await t.bulk.createPartitions(readModel(DATA + "Disk_A_partition.json") as LionWebJsonChunk)
+        const delRepo = await t.dbAdmin.deleteRepository("default")
+        console.log(`delRepo ${JSON.stringify(delRepo)}`)
+        const creRepo = await t.dbAdmin.createRepository("default", true, "2023.1")
+        console.log(`creaRepo ${JSON.stringify(creRepo)}`)
+        const createPart = await t.bulk.createPartitions(readModel(DATA + "Disk_A_partition.json") as LionWebJsonChunk)
+        console.log(`createPart ${JSON.stringify(createPart)}`)
     })
 
     afterEach( async function()  {

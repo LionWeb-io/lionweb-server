@@ -1,8 +1,8 @@
-import { dbLogger } from "../apiutil/index.js"
+import { DbConnection, LionWebTask, RepositoryData } from "@lionweb/server-database"
 import { InternalQueryError } from "./GuardFunctions.js"
 import { LionWebJsonNode } from "@lionweb/json"
-import { ResponseMessage } from "@lionweb/server-shared"
-import { CONTAINMENTS_TABLE, DbConnection, LionWebTask, METAPOINTERS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE, RepositoryData } from "../database/index.js"
+import { dbLogger, ResponseMessage } from "@lionweb/server-shared"
+import { CONTAINMENTS_TABLE, METAPOINTERS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "../database/index.js"
 import { isLionWebJsonNode } from "./GuardFunctions.js"
 import { sqlArrayFromNodeIdArray } from "./PgHelpers.js"
 

@@ -1,6 +1,7 @@
 import { LionWebJsonNode } from "@lionweb/json"
-import { dbLogger, deltaLogger } from "../apiutil/index.js"
-import { LionWebTask, NODES_TABLE, RepositoryData } from "../database/index.js"
+import { LionWebTask, RepositoryData } from "@lionweb/server-database"
+import { dbLogger } from "@lionweb/server-shared"
+import { NODES_TABLE } from "../database/index.js"
 import { SQL } from "./index.js"
 
 export type NodeListAndVersion = {

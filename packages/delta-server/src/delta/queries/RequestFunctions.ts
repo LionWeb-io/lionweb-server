@@ -1,4 +1,5 @@
-import { deltaLogger, LionWebTask, DB } from "@lionweb/server-common"
+import { DB } from "@lionweb/server-common"
+import { LionWebTask } from "@lionweb/server-database"
 import {
     DeltaEvent,
     DeltaResponse,
@@ -23,6 +24,7 @@ import {
     UnsubscribeFromPartitionContentsRequest,
     UnsubscribeFromPartitionContentsResponse
 } from "@lionweb/server-delta-shared"
+import { deltaLogger } from "@lionweb/server-shared"
 import { DeltaFunction } from "../commands/index.js"
 import { DeltaContext } from "../DeltaContext.js"
 import { newErrorDelta, ErrorDelta } from "../events.js"
@@ -117,7 +119,7 @@ const UnsubscribeFromPartitionContentsRequestFunction = (
 const SignOnRequestFunction = async (
     participation: Participation,
     msg: SignOnRequest,
-    _ctx: DeltaContext
+    ctx: DeltaContext
 ): Promise<DeltaEvent | DeltaResponse | ErrorDelta> => {
     deltaLogger.info("Called SignOnRequestFunction " + msg.messageKind)
     const error = validateSignOnRequest(participation, msg)
@@ -125,7 +127,9 @@ const SignOnRequestFunction = async (
         return error
     }
     participation.participationStatus = "signedOn"
-    await participation.startParticipation(msg.clientId, msg.repositoryId)
+    const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
+        await participation.startParticipation(task, msg.clientId, msg.repositoryId)
+    })
     return {
         messageKind: "SignOnResponse",
         participationId: participation.participationId,

@@ -79,7 +79,7 @@ export function reportHTML(CoverageMap: Map<CommandMessageKind | RequestMessageK
 </body>
 </html>
 `
-    console.log(result)
+    // console.log(result)
     fs.writeFileSync("./lionweb-server-test.html", result)
 }
 

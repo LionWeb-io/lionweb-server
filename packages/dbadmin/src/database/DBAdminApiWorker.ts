@@ -1,5 +1,6 @@
-import { cleanGlobalPointersMap , LionWebTask, QueryReturnType, removeNewlinesBetween$$, RepositoryData, requestLogger, ServerConfig } from "@lionweb/server-common"
-import { HttpSuccessCodes } from "@lionweb/server-shared"
+import { cleanGlobalPointersMap, QueryReturnType, removeNewlinesBetween$$ } from "@lionweb/server-common"
+import { LionWebTask, RepositoryData } from "@lionweb/server-database"
+import { bulkLogger, HttpSuccessCodes, requestLogger, ServerConfig } from "@lionweb/server-shared"
 import { DbAdminApiContext } from "../main.js"
 import { CREATE_DATABASE_SQL, CREATE_GLOBALS_SQL, dropSchema, initSchemaWithHistory, initSchemaWithoutHistory } from "../tools/index.js"
 
@@ -24,8 +25,12 @@ export class DBAdminApiWorker {
     }
 
     async deleteRepository(task: LionWebTask, repositoryData: RepositoryData): Promise<QueryReturnType<string>> {
+        requestLogger.info(`deleteRepository`)
         const queryResult = await task.queryWithoutRepository(dropSchema(repositoryData.repository.schema_name))
+        requestLogger.info(`cleanMetaPointers`)
+        requestLogger.info(`${JSON.stringify(queryResult)}`)
         cleanGlobalPointersMap(repositoryData.repository.repository_name)
+        requestLogger.info(`return`)
         return {
             status: HttpSuccessCodes.Ok,
             query: dropSchema(repositoryData.repository.schema_name),
@@ -55,18 +60,22 @@ export class DBAdminApiWorker {
     }
 
     async createDatabase(): Promise<QueryReturnType<string>> {
+        bulkLogger.info(`create ${CREATE_DATABASE_SQL}`)
         const sql = CREATE_DATABASE_SQL
         if (!this.done) {
             // split the file into separate statements
             const statements = sql.split(/;\s*$/m)
-            for (const statement of statements) {
-                if (statement.length > 3) {
-                    // execute each of the statements
-                    await this.ctx.postgresConnection.none(statement)
-                }
-            }
+            // for (const statement of statements) {
+            //     if (statement.length > 3) {
+            //         // execute each of the statements
+            //         bulkLogger.info(`statement ${statement}`)
+            //         await this.ctx.postgresConnection.none(statement)
+            //     }
+            // }
             // Add the global functions to the public schema
-            await this.ctx.dbConnection.queryWithoutRepository(removeNewlinesBetween$$(CREATE_GLOBALS_SQL))
+            bulkLogger.info(`statements done globals ${CREATE_GLOBALS_SQL}`)
+            await this.ctx.postgresConnection.none(removeNewlinesBetween$$(CREATE_GLOBALS_SQL))
+            bulkLogger.info(`globals done`)
             return {
                 status: HttpSuccessCodes.Ok,
                 query: sql,

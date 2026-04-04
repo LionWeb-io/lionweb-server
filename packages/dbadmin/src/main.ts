@@ -1,7 +1,9 @@
+import { DbConnection } from "@lionweb/server-database"
+import { requestLogger } from "@lionweb/server-shared"
 import { Express } from "express"
 import pgPromise from "pg-promise"
 import pg from "pg-promise/typescript/pg-subset.js"
-import { runWithTry, DbConnection, requestLogger } from "@lionweb/server-common"
+import { runWithTry } from "@lionweb/server-common"
 import { DBAdminApi, DBAdminApiImpl } from "./controllers/DBAdminApi.js"
 import { DBAdminApiWorker } from "./database/DBAdminApiWorker.js"
 import { repositoryStore } from "./database/index.js"
@@ -22,11 +24,11 @@ export class DbAdminApiContext {
 
     constructor(
         dbConnection: DbConnection,
-        pgConnection: pgPromise.IDatabase<object, pg.IClient>,
+        postgresConnection: pgPromise.IDatabase<object, pg.IClient>,
         pgp: pgPromise.IMain<object, pg.IClient>
     ) {
         this.dbConnection = dbConnection
-        this.postgresConnection = pgConnection
+        this.postgresConnection = postgresConnection
         this.pgp = pgp
         this.dbAdminApi = new DBAdminApiImpl(this)
         this.dbAdminApiWorker = new DBAdminApiWorker(this)
@@ -44,13 +46,13 @@ export class DbAdminApiContext {
 export function registerDBAdmin(
     app: Express,
     dbConnection: DbConnection,
-    pgConnection: pgPromise.IDatabase<object, pg.IClient>,
+    postgresConnection: pgPromise.IDatabase<object, pg.IClient>,
     pgp: pgPromise.IMain<object, pg.IClient>
 ): DBAdminApiWorker {
     requestLogger.info("Registering DB Admin Module")
     // Create all objects
-    const dbAdminApiContext = new DbAdminApiContext(dbConnection, pgConnection, pgp)
-    repositoryStore.setContext(dbAdminApiContext)
+    const dbAdminApiContext = new DbAdminApiContext(dbConnection, postgresConnection, pgp)
+    // repositoryStore.setContext(dbAdminApiContext)
 
     // Add routes to app
     app.post("/createRepository", runWithTry(dbAdminApiContext.dbAdminApi.createRepository))

@@ -1,4 +1,4 @@
-import { deltaLogger } from "@lionweb/server-common"
+import { deltaLogger } from "@lionweb/server-shared"
 import {
     AddAnnotationCommand,
     DeleteAnnotationCommand,

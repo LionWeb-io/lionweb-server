@@ -60,6 +60,7 @@ export async function expectError(client: DeltaClient, delta: DeltaCommand | Del
 }
 
 export async function expectEvent(client: DeltaClient, delta: DeltaCommand, eventKind: EventMessageKind): Promise<void> {
+    console.log(`expect for ${delta.messageKind}-${delta.commandId} event ${eventKind}`)
     expect((await cmd.eventFor(client, delta)).messageKind).toEqual(eventKind)
     CoverageMap.get(delta.messageKind).receivedEvents++
 }

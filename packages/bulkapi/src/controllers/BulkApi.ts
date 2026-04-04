@@ -5,16 +5,21 @@
  *   - pack response
  */
 import {
+    bulkLogger,
     CreatePartitionsResponse,
+    dbLogger,
     DeletePartitionsResponse,
     HttpClientErrors,
     HttpSuccessCodes,
     ListPartitionsResponse,
+    requestLogger,
     ResponseMessage,
-    StoreResponse
+    StoreResponse,
+    traceLogger
 } from "@lionweb/server-shared"
-import { bulkLogger, dbLogger, lionwebResponse } from "@lionweb/server-common"
-import { getIntegerParam, isParameterError, LionWebTask, requestLogger, traceLogger } from "@lionweb/server-common"
+import { lionwebResponse } from "@lionweb/server-common"
+import { LionWebTask } from "@lionweb/server-database"
+import { getIntegerParam, isParameterError } from "@lionweb/server-common"
 import { getRepositoryData, validateLionWebVersion } from "@lionweb/server-dbadmin"
 import { getLanguageRegistry } from "@lionweb/server-languages"
 import { LionWebValidator } from "@lionweb/validation"
@@ -42,105 +47,105 @@ export class BulkApiImpl implements BulkApi {
      */
     listPartitions = async (request: Request, response: Response): Promise<void> => {
         bulkLogger.info(` * listPartitions request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = await getRepositoryData(request)
-        requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
-        if (isParameterError(repositoryData)) {
-            lionwebResponse<ListPartitionsResponse>(response, HttpClientErrors.PreconditionFailed, {
-                success: false,
-                chunk: null, 
-                messages: [repositoryData.error]
-            })
-        } else {
-            await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
+        await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
+            const repositoryData = await getRepositoryData(task, request)
+            requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
+            if (isParameterError(repositoryData)) {
+                lionwebResponse<ListPartitionsResponse>(response, HttpClientErrors.PreconditionFailed, {
+                    success: false,
+                    chunk: null,
+                    messages: [repositoryData.error]
+                })
+            } else {
                 const result = await this.ctx.bulkApiWorker.bulkPartitions(task, repositoryData)
                 lionwebResponse<ListPartitionsResponse>(response, result.status, result.queryResult)
-            })
-        }
+            }
+        })
     }
 
     createPartitions = async (request: Request, response: Response): Promise<void> => {
         bulkLogger.info(` * createPartitions request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = await getRepositoryData(request)
-        requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
-        const chunk: LionWebJsonChunk = request.body
-        if (isParameterError(repositoryData)) {
-            lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
-                success: false,
-                messages: [repositoryData.error]
-            })
-        } else {
-            const validator = new LionWebValidator(chunk, getLanguageRegistry())
-            validateLionWebVersion(chunk, repositoryData, validator.validationResult)
-            validator.validateSyntax()
-            validator.validateReferences()
-            if (validator.validationResult.hasErrors()) {
-                lionwebResponse(response, HttpClientErrors.PreconditionFailed, {
+        await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
+            const repositoryData = await getRepositoryData(task, request)
+            requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
+            const chunk: LionWebJsonChunk = request.body
+            if (isParameterError(repositoryData)) {
+                lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
                     success: false,
-                    messages: validator.validationResult.issues.map(issue => ({ kind: issue.issueType, message: issue.errorMsg() }))
+                    messages: [repositoryData.error]
                 })
             } else {
-                const issues: ResponseMessage[] = []
-                for (const node of chunk.nodes) {
-                    if (node.parent !== null && node.parent !== undefined) {
-                        issues.push({
-                            kind: "PartitionHasParent",
-                            message: `Node ${node} cannot be created as partition because it has a parent.`
-                        })
-                    }
-                    for (const containment of node.containments) {
-                        if (containment.children.length !== 0) {
+                const validator = new LionWebValidator(chunk, getLanguageRegistry())
+                validateLionWebVersion(chunk, repositoryData, validator.validationResult)
+                validator.validateSyntax()
+                validator.validateReferences()
+                if (validator.validationResult.hasErrors()) {
+                    lionwebResponse(response, HttpClientErrors.PreconditionFailed, {
+                        success: false,
+                        messages: validator.validationResult.issues.map(issue => ({ kind: issue.issueType, message: issue.errorMsg() }))
+                    })
+                } else {
+                    const issues: ResponseMessage[] = []
+                    for (const node of chunk.nodes) {
+                        if (node.parent !== null && node.parent !== undefined) {
                             issues.push({
-                                kind: "PartitionHasChildren",
-                                message: `Node ${node.id} cannot be created as a partition because it has children in containment ${containment.containment.key}`
+                                kind: "PartitionHasParent",
+                                message: `Node ${node} cannot be created as partition because it has a parent.`
+                            })
+                        }
+                        for (const containment of node.containments) {
+                            if (containment.children.length !== 0) {
+                                issues.push({
+                                    kind: "PartitionHasChildren",
+                                    message: `Node ${node.id} cannot be created as a partition because it has children in containment ${containment.containment.key}`
+                                })
+                            }
+                        }
+                        if (node.annotations.length !== 0) {
+                            issues.push({
+                                kind: "PartitionHasAnnotations",
+                                message: `Node ${node.id} cannot be created as a partition because it has annotations`
                             })
                         }
                     }
-                    if (node.annotations.length !== 0) {
-                        issues.push({
-                            kind: "PartitionHasAnnotations",
-                            message: `Node ${node.id} cannot be created as a partition because it has annotations`
+                    if (issues.length !== 0) {
+                        lionwebResponse<CreatePartitionsResponse>(response, HttpClientErrors.PreconditionFailed, {
+                            success: false,
+                            messages: issues
                         })
+                        return
                     }
-                }
-                if (issues.length !== 0) {
-                    lionwebResponse<CreatePartitionsResponse>(response, HttpClientErrors.PreconditionFailed, {
-                        success: false,
-                        messages: issues
-                    })
-                    return
-                }
-                if (chunk.nodes.length === 0) {
-                    // do nothing, no new partitions
-                    lionwebResponse<CreatePartitionsResponse>(response, HttpSuccessCodes.Ok, {
-                        success: true,
-                        messages: [{ kind: "EmptyChunk", message: "-- empty partitions list, no query" }]
-                    })
-                    return
-                }
-                await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
+                    if (chunk.nodes.length === 0) {
+                        // do nothing, no new partitions
+                        lionwebResponse<CreatePartitionsResponse>(response, HttpSuccessCodes.Ok, {
+                            success: true,
+                            messages: [{ kind: "EmptyChunk", message: "-- empty partitions list, no query" }]
+                        })
+                        return
+                    }
                     const result = await this.ctx.bulkApiWorker.createPartitions(task, repositoryData, chunk)
                     lionwebResponse<CreatePartitionsResponse>(response, result.status, result.queryResult)
-                })
+                }
             }
-        }
+        })
     }
 
     deletePartitions = async (request: Request, response: Response): Promise<void> => {
         bulkLogger.info(` * deletePartitions request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = await getRepositoryData(request)
-        requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
-        if (isParameterError(repositoryData)) {
-            lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
-                success: false,
-                messages: [repositoryData.error]
-            })
-        } else {
-            const idList = request.body
-            await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
+        await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
+            const repositoryData = await getRepositoryData(task, request)
+            requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
+            if (isParameterError(repositoryData)) {
+                lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
+                    success: false,
+                    messages: [repositoryData.error]
+                })
+            } else {
+                const idList = request.body
                 const x = await this.ctx.bulkApiWorker.deletePartitions(task, repositoryData, idList)
                 lionwebResponse<DeletePartitionsResponse>(response, x.status, x.queryResult)
-            })
-        }
+            }
+        })
     }
 
     /**
@@ -150,34 +155,39 @@ export class BulkApiImpl implements BulkApi {
      */
     store = async (request: Request, response: Response): Promise<void> => {
         bulkLogger.info(` * store request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = await getRepositoryData(request)
-        requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
-        if (isParameterError(repositoryData)) {
-            requestLogger.error("STORE ERROR: repository data incorrect: " + JSON.stringify(repositoryData))
-            lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
-                success: false,
-                messages: [repositoryData.error]
-            })
-        } else {
-            const chunk: LionWebJsonChunk = request.body
-            const validator = new LionWebValidator(chunk, getLanguageRegistry())
-            validateLionWebVersion(chunk, repositoryData, validator.validationResult)
-            validator.validateSyntax()
-            validator.validateReferences()
-            if (validator.validationResult.hasErrors()) {
-                requestLogger.error("BulkApi.store validation errors: " + validator.validationResult.issues.map(issue => issue.errorMsg()))
+        await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
+            const repositoryData = await getRepositoryData(task, request)
+            requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
+            if (isParameterError(repositoryData)) {
+                requestLogger.error("STORE ERROR: repository data incorrect: " + JSON.stringify(repositoryData))
                 lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
                     success: false,
-                    messages: validator.validationResult.issues.map(issue => ({ kind: issue.issueType, message: issue.errorMsg() }))
+                    messages: [repositoryData.error]
                 })
             } else {
-                await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
+                const chunk: LionWebJsonChunk = request.body
+                const validator = new LionWebValidator(chunk, getLanguageRegistry())
+                validateLionWebVersion(chunk, repositoryData, validator.validationResult)
+                validator.validateSyntax()
+                validator.validateReferences()
+                if (validator.validationResult.hasErrors()) {
+                    requestLogger.error(
+                        "BulkApi.store validation errors: " + validator.validationResult.issues.map(issue => issue.errorMsg())
+                    )
+                    lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
+                        success: false,
+                        messages: validator.validationResult.issues.map(issue => ({ kind: issue.issueType, message: issue.errorMsg() }))
+                    })
+                } else {
                     const result = await this.ctx.bulkApiWorker.bulkStore(task, repositoryData, chunk)
-                    result.queryResult.messages.push({ kind: "QueryFromApi", message: dbLogger.isLevelEnabled("debug") ? result.query : "no debug log" })
+                    result.queryResult.messages.push({
+                        kind: "QueryFromApi",
+                        message: dbLogger.isLevelEnabled("debug") ? result.query : "no debug log"
+                    })
                     lionwebResponse<StoreResponse>(response, result.status, result.queryResult)
-                })
+                }
             }
-        }
+        })
     }
 
     /**
@@ -188,35 +198,35 @@ export class BulkApiImpl implements BulkApi {
      */
     retrieve = async (request: Request, response: Response): Promise<void> => {
         bulkLogger.info(` * retrieve request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = await getRepositoryData(request)
-        requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
-        const depthLimit = getIntegerParam(request, "depthLimit", Number.MAX_SAFE_INTEGER)
-        const idList = request.body.ids
-        if (isParameterError(depthLimit)) {
-            requestLogger.warn("   * retrieve request: depthlimit error")
-            lionwebResponse(response, HttpClientErrors.PreconditionFailed, {
-                success: false,
-                messages: [depthLimit.error]
-            })
-        } else if (isParameterError(repositoryData)) {
-            requestLogger.warn("   * retrieve request: clientId error")
-            lionwebResponse(response, HttpClientErrors.PreconditionFailed, {
-                success: false,
-                messages: [repositoryData.error]
-            })
-        } else if (!Array.isArray(idList)) {
-            requestLogger.warn("   * retrieve request: idlist error")
-            lionwebResponse(response, HttpClientErrors.PreconditionFailed, {
-                success: false,
-                messages: [{ kind: "IdsIncorrect", message: `parameter 'ids' is not an array` }]
-            })
-        } else {
-            traceLogger.info("   * retrieve request: calling worker")
-            await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
+        await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
+            const repositoryData = await getRepositoryData(task, request)
+            requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
+            const depthLimit = getIntegerParam(request, "depthLimit", Number.MAX_SAFE_INTEGER)
+            const idList = request.body.ids
+            if (isParameterError(depthLimit)) {
+                requestLogger.warn("   * retrieve request: depthlimit error")
+                lionwebResponse(response, HttpClientErrors.PreconditionFailed, {
+                    success: false,
+                    messages: [depthLimit.error]
+                })
+            } else if (isParameterError(repositoryData)) {
+                requestLogger.warn("   * retrieve request: clientId error")
+                lionwebResponse(response, HttpClientErrors.PreconditionFailed, {
+                    success: false,
+                    messages: [repositoryData.error]
+                })
+            } else if (!Array.isArray(idList)) {
+                requestLogger.warn("   * retrieve request: idlist error")
+                lionwebResponse(response, HttpClientErrors.PreconditionFailed, {
+                    success: false,
+                    messages: [{ kind: "IdsIncorrect", message: `parameter 'ids' is not an array` }]
+                })
+            } else {
+                traceLogger.info("   * retrieve request: calling worker")
                 const result = await this.ctx.bulkApiWorker.bulkRetrieve(task, repositoryData, idList, depthLimit)
                 lionwebResponse(response, result.status, result.queryResult)
-            })
-        }
+            }
+        })
     }
 
     /**
@@ -226,24 +236,24 @@ export class BulkApiImpl implements BulkApi {
      */
     ids = async (request: Request, response: Response): Promise<void> => {
         bulkLogger.info(` * ids request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = await getRepositoryData(request)
-        requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
-        const count = getIntegerParam(request, "count", Number.MAX_SAFE_INTEGER)
-        if (isParameterError(count)) {
-            lionwebResponse(response, HttpClientErrors.PreconditionFailed, {
-                success: false,
-                messages: [count.error]
-            })
-        } else if (isParameterError(repositoryData)) {
-            lionwebResponse(response, HttpClientErrors.PreconditionFailed, {
-                success: false,
-                messages: [repositoryData.error]
-            })
-        } else {
-            await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
+        await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
+            const repositoryData = await getRepositoryData(task, request)
+            requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
+            const count = getIntegerParam(request, "count", Number.MAX_SAFE_INTEGER)
+            if (isParameterError(count)) {
+                lionwebResponse(response, HttpClientErrors.PreconditionFailed, {
+                    success: false,
+                    messages: [count.error]
+                })
+            } else if (isParameterError(repositoryData)) {
+                lionwebResponse(response, HttpClientErrors.PreconditionFailed, {
+                    success: false,
+                    messages: [repositoryData.error]
+                })
+            } else {
                 const result = await this.ctx.bulkApiWorker.ids(task, repositoryData, count)
                 lionwebResponse(response, result.status, result.queryResult)
-            })
-        }
+            }
+        })
     }
 }

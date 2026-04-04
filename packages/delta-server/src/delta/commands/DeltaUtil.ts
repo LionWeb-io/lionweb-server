@@ -1,6 +1,8 @@
 import { LionWebJsonNode } from "@lionweb/json"
+import { LionWebTask } from "@lionweb/server-database"
+import { dbLogger, deltaLogger } from "@lionweb/server-shared"
 import { ValidationIssue } from "@lionweb/validation"
-import { dbLogger, SQL, DB, LionWebTask, deltaLogger, NodeWithParent } from "@lionweb/server-common"
+import { SQL, DB, NodeWithParent } from "@lionweb/server-common"
 import {
     AdditionalInfo,
     CommandId,
@@ -93,8 +95,8 @@ export const retrieveNodeFromDB = async(id: string, delta: DeltaCommand | DeltaR
  * @param participation
  * @param ctx
  */
-export async function affectedPartition(nodeid: LionWebId, participation: Participation, ctx: DeltaContext): Promise<LionWebId> {
-    const parentChain = await DB.retrieveParentsDB(ctx!.dbConnection, participation!.repositoryData!, nodeid)
+export async function affectedPartition(task: LionWebTask, nodeid: LionWebId, participation: Participation): Promise<LionWebId> {
+    const parentChain = await DB.retrieveParentsDB(task, participation!.repositoryData!, nodeid)
     if (parentChain === undefined) {
         throw new Error("affectedPartition: Internal Error: PARENT CHAIN UNDEFINED")
     }

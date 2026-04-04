@@ -1,7 +1,8 @@
 import { isEqualMetaPointer } from "@lionweb/json"
 import { Missing, PropertyValueChanged } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
-import { DbChanges, deltaLogger, LionWebTask, MetaPointersTracker, SQL, TableHelpers } from "@lionweb/server-common"
+import { DbChanges, MetaPointersTracker, SQL, TableHelpers } from "@lionweb/server-common"
+import { LionWebTask } from "@lionweb/server-database"
 import {
     AddPropertyCommand,
     ChangePropertyCommand,
@@ -11,6 +12,7 @@ import {
     PropertyChangedEvent,
     PropertyDeletedEvent
 } from "@lionweb/server-delta-shared"
+import { deltaLogger } from "@lionweb/server-shared"
 import { DeltaContext } from "../DeltaContext.js"
 import { affectedNodeMessage, newErrorDelta, ErrorDelta, affectedPartitionMessage } from "../events.js"
 import { Participation } from "../participation/index.js"
@@ -24,6 +26,7 @@ const AddPropertyFunction = async (
     deltaLogger.debug(`Called AddPropertyFunction command id ${msg.commandId}`)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const node = await retrieveNodeFromDB(msg.node, msg, participation, task)
+        console.log("PropertyAdded: retrieve done")
         const oldProperty = node.properties.find(prop => isEqualMetaPointer(prop.property, msg.property))
         if (oldProperty !== undefined && oldProperty.value !== null && oldProperty.value !== undefined) {
             return newErrorDelta("propertyAlreadyExists", `The property with key '${msg.property.key}' already exist`, msg, participation)
@@ -42,12 +45,13 @@ const AddPropertyFunction = async (
         changes.addChanges([change])
         const metaPointersTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointersTracker, [], task)
+        console.log("PropertyAdded: populate done")
         deltaLogger.debug(`query: ${changes.createPostgresQuery(metaPointersTracker)}`)
         let query = SQL.nextRepoVersionSQL(participation.participationId) 
         query += changes.createPostgresQuery(metaPointersTracker)
         const dbResult = await task.query(participation.repositoryData!, query)
-        // console.log(`db add dor ${msg.newValue} result is ${JSON.stringify(dbResult)}`)
-        const partition = await affectedPartition(msg.node, participation, ctx)
+        console.log(`PropertyAdded: db add dor ${msg.newValue} result is ${JSON.stringify(dbResult)}`)
+        const partition = await affectedPartition(task, msg.node, participation)
         return {
             messageKind: "PropertyAdded",
             newValue: msg.newValue,
@@ -90,7 +94,7 @@ const DeletePropertyFunction = async (
         const addPropSql= changes.createPostgresQuery(metaPointersTracker)
         const dbResult = await task.query(participation.repositoryData!, nextRepoVersionSql + addPropSql )
         deltaLogger.debug(`db delete is ${JSON.stringify(dbResult)}`)
-        const partition = await affectedPartition(msg.node, participation, ctx)
+        const partition = await affectedPartition(task, msg.node, participation)
 
         return {
             messageKind: "PropertyDeleted",
@@ -147,7 +151,7 @@ const ChangePropertyFunction = async (
         const addPropSql = changes.createPostgresQuery(metaPointersTracker)
         const dbResult = await task.query(participation.repositoryData!, nextRepoVersionSql + addPropSql)
         // deltaLogger.debug(`Result is ${JSON.stringify(dbResult)}`)
-        const partition = await affectedPartition(msg.node, participation, ctx)
+        const partition = await affectedPartition(task, msg.node, participation)
 
         return {
             messageKind: "PropertyChanged",

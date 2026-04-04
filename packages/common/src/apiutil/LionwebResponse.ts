@@ -1,7 +1,6 @@
-import { LionwebResponse } from "@lionweb/server-shared"
+import { bulkLogger, LionwebResponse } from "@lionweb/server-shared"
 import { Response } from "express"
 import { JsonStreamStringify } from "json-stream-stringify"
-import { bulkLogger } from "./logging.js"
 
 /**
  * Indicates the configuration of an existing repository.

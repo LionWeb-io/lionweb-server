@@ -33,12 +33,7 @@
         "test3": "vitest --run --fileParallelism=false ./src/test/test.test.ts && vitest --run ./src/test/inspectionTests.test.ts  && vitest --run ./src/test/history.test.ts && vitest --run ./src/test/sequentialize-requests.test.ts && vitest --run ./src/test/tests-issue19.test.ts"
     },
     "devDependencies": {
-        "prettier": "3.1.0",
-        "@types/chai": "4.3.11",
         "degit": "2.8.4",
-        "eslint": "10.1.0",
-        "chai": "4.3.10",
-        "typescript": "5.9.3",
         "vitest": "3.2.4",
         "@vitest/ui": "3.2.4",
         "@vitest/coverage-v8": "3.2.4"

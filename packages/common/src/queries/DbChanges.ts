@@ -10,10 +10,12 @@ import {
     PropertyValueChanged,
     ReferenceChange
 } from "@lionweb/json-diff"
+import { DbConnection, LionWebTask } from "@lionweb/server-database"
+import { dbLogger, queryLogger } from "@lionweb/server-shared"
 import pgPromise, { ColumnSet } from "pg-promise"
 import pg from "pg-promise/typescript/pg-subset.js"
-import { dbLogger, queryLogger, UnknownObjectType } from "../apiutil/index.js"
-import { CONTAINMENTS_TABLE, DbConnection, LionWebTask, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "../database/index.js"
+import { UnknownObjectType } from "../apiutil/index.js"
+import { CONTAINMENTS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "../database/index.js"
 import { TableHelpers } from "../main.js"
 import { MetaPointersTracker } from "../metapointers/MetaPointers.js"
 import { InitializedMapToArray } from "./InitializedMapToArray.js"
@@ -346,7 +348,7 @@ export class DbChanges {
     async populateMetaPointersFromDbChanges(
         metaPointersTracker: MetaPointersTracker,
         newNodes: LionWebJsonNode[],
-        task: LionWebTask | DbConnection
+        task: LionWebTask
     ): Promise<void> {
         // deltaLogger.info(`populateFromDbChanges`)
         await metaPointersTracker.populate(collector => {

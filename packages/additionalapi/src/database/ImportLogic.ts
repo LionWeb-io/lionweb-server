@@ -1,8 +1,9 @@
 import { LionWebJsonNode } from "@lionweb/json"
+import { DbConnection, LionWebTask, RepositoryData } from "@lionweb/server-database"
 import { Duplex } from "stream"
 import { PoolClient } from "pg"
 import { from as copyFrom } from "pg-copy-streams"
-import { DbConnection, RepositoryData, MetaPointersTracker, MetaPointersCollector } from "@lionweb/server-common"
+import { MetaPointersTracker, MetaPointersCollector } from "@lionweb/server-common"
 import { BulkImport, HttpClientErrors, HttpSuccessCodes, PBBulkImport, PBLanguage, PBMetaPointer } from "@lionweb/server-shared"
 import { finished } from "stream/promises"
 import { BulkImportResultType } from "./AdditionalQueries.js"
@@ -277,13 +278,13 @@ export async function storeNodes(
 async function storeNodesThroughProtobuf(
     client: PoolClient,
     repositoryData: RepositoryData,
-    dbConnection: DbConnection,
+    task: LionWebTask,
     bulkImport: PBBulkImport
 ): Promise<MetaPointersTracker> {
     // We obtain all the indexes for all the MetaPointers we need. We will then use such indexes in successive calls
     // to pipeInputIntoQueryStream, etc.
     const metaPointersTracker = new MetaPointersTracker(repositoryData)
-    await populateThroughProtobuf(metaPointersTracker, bulkImport, repositoryData, dbConnection)
+    await populateThroughProtobuf(metaPointersTracker, bulkImport, repositoryData, task)
 
     const repositoryName = repositoryData.repository.repository_name
     const schemaName = repositoryData.repository.schema_name
@@ -323,7 +324,7 @@ async function storeNodesThroughProtobuf(
  */
 export async function performImportFromProtobuf(
     client: PoolClient,
-    dbConnection: DbConnection,
+    task: LionWebTask,
     bulkImport: PBBulkImport,
     repositoryData: RepositoryData
 ): Promise<BulkImportResultType> {
@@ -375,7 +376,7 @@ export async function performImportFromProtobuf(
 
         // Check - verify all the given new nodes are effectively new
         const allNewNodesResult =
-            newNodesSet.size == 0 ? 0 : await dbConnection.query(repositoryData, checkHowManyDoNotExistSQL(newNodesSet))
+            newNodesSet.size == 0 ? 0 : await task.query(repositoryData, checkHowManyDoNotExistSQL(newNodesSet))
         if (allNewNodesResult > 0) {
             return {
                 status: HttpClientErrors.BadRequest,
@@ -388,7 +389,7 @@ export async function performImportFromProtobuf(
         const allExistingNodesResult =
             attachPointContainers.size == 0
                 ? 0
-                : await dbConnection.query(repositoryData, checkHowManyDoNotExistSQL(attachPointContainers))
+                : await task.query(repositoryData, checkHowManyDoNotExistSQL(attachPointContainers))
         if (allExistingNodesResult > 0) {
             return {
                 status: HttpClientErrors.BadRequest,
@@ -398,12 +399,12 @@ export async function performImportFromProtobuf(
         }
 
         // Add all the new nodes
-        const metaPointersTracker = await storeNodesThroughProtobuf(client, repositoryData, dbConnection, bulkImport)
+        const metaPointersTracker = await storeNodesThroughProtobuf(client, repositoryData, task, bulkImport)
 
         // Attach the root of the new nodes to existing containers
         for (let i = 0; i < bulkImport.attachPoints.length; i++) {
             const pbAttachPoint = bulkImport.attachPoints[i]
-            await dbConnection.query(repositoryData, makeQueryToAttachNodeForProtobuf(pbAttachPoint, metaPointersTracker,
+            await task.query(repositoryData, makeQueryToAttachNodeForProtobuf(pbAttachPoint, metaPointersTracker,
                 bulkImport.internedLanguages, bulkImport.internedStrings, bulkImport.internedMetaPointers))
         }
 
@@ -417,7 +418,7 @@ async function populateThroughProtobuf(
     metaPointersTracker: MetaPointersTracker,
     bulkImport: PBBulkImport,
     repositoryData: RepositoryData,
-    dbConnection: DbConnection
+    task: LionWebTask
 ): Promise<void> {
     await metaPointersTracker.populate((collector: MetaPointersCollector) => {
         function considerAddingPBMetaPointer(metaPointer: PBMetaPointer) {
@@ -455,7 +456,7 @@ async function populateThroughProtobuf(
             const metaPointer = bulkImport.internedMetaPointers[attachPoint.mpiMetaPointer]
             considerAddingPBMetaPointer(metaPointer)
         }
-    }, dbConnection)
+    }, task)
 }
 
 /**
@@ -480,10 +481,10 @@ export function getCorrespondingMetaPointerIDOnTheDB(metaPointersTracker: MetaPo
     })
 }
 
-export async function populateFromBulkImport(metaPointersTracker: MetaPointersTracker, bulkImport: BulkImport, dbConnection: DbConnection) {
+export async function populateFromBulkImport(task: LionWebTask, metaPointersTracker: MetaPointersTracker, bulkImport: BulkImport) {
     await metaPointersTracker.populate((collector: MetaPointersCollector) => {
         const nodes = bulkImport.nodes
         nodes.forEach((node: LionWebJsonNode) => collector.considerNode(node))
         bulkImport.attachPoints.forEach(ap => collector.considerAddingMetaPointer(ap.containment))
-    }, dbConnection)
+    }, task)
 }

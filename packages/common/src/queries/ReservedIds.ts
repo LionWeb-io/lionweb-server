@@ -1,7 +1,6 @@
+import { LionWebTask, RepositoryData } from "@lionweb/server-database"
 import { TableHelpers } from "../main.js"
 import { sqlArrayFromNodeIdArray } from "./index.js"
-import { RepositoryData } from "../database/DbConnection.js"
-import { LionWebTask } from "../database/LionWebTask.js"
 import { NODES_TABLE, RESERVED_IDS_TABLE } from "../database/TableNames.js"
 import { ReservedIdRecord } from "../database/TableTypes.js"
 

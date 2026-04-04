@@ -3,12 +3,11 @@ import { ChildAdded, Missing, ChildRemoved } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
 import {
     DbChanges,
-    deltaLogger,
     SQL, DB,
-    LionWebTask,
     MetaPointersTracker,
     TableHelpers
 } from "@lionweb/server-common"
+import { LionWebTask } from "@lionweb/server-database"
 import {
     AddChildCommand,
     ChildAddedEvent,
@@ -26,6 +25,7 @@ import {
     MoveChildInSameContainmentCommand,
     ReplaceChildCommand
 } from "@lionweb/server-delta-shared"
+import { deltaLogger } from "@lionweb/server-shared"
 import { DeltaContext } from "../DeltaContext.js"
 import { affectedNodeMessage, newErrorDelta, type ErrorDelta, affectedPartitionMessage } from "../events.js"
 import { Participation } from "../participation/index.js"
@@ -76,7 +76,7 @@ const AddChild = async (participation: Participation, msg: AddChildCommand, ctx:
         deltaLogger.debug(`ADD NODES QUERY '${addNodesquery}`)
         deltaLogger.debug(`ADD CHILD QUERY '${addChildQuery}`)
         const queryResult = await task.query(participation.repositoryData!, nextVersionSql + addNodesquery + addChildQuery)
-        const partition = await affectedPartition(parentNode!.id, participation, ctx)
+        const partition = await affectedPartition(task, parentNode!.id, participation)
         return {
             messageKind: "ChildAdded",
             containment: msg.containment,
@@ -139,7 +139,7 @@ const DeleteChild = async (
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         const nextVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
         const execute = task.query(participation.repositoryData!, nextVersionSql + deleteSql + dbChanges.createPostgresQuery(metaPointerTracker))
-        const partition = await affectedPartition(parentNode!.id, participation, ctx)
+        const partition = await affectedPartition(task, parentNode!.id, participation)
         return {
             messageKind: "ChildDeleted",
             deletedChild: msg.deletedChild,
@@ -209,7 +209,7 @@ const ReplaceChild = async (
         const addChildQuery = changes.createPostgresQuery(metaPointerTracker)
         const nextVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
         const queryResult = await task.query(participation.repositoryData!, nextVersionSql + addNodesquery + deleteNodes + addChildQuery)
-        const partition = await affectedPartition(parentNode!.id, participation, ctx)
+        const partition = await affectedPartition(task, parentNode!.id, participation)
         return {
             messageKind: "ChildReplaced",
             parent: msg.parent,
@@ -275,8 +275,8 @@ const MoveChildFromOtherContainment = async (
         await metaPointerTracker.populateFromNodes([newParentNode], task)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [newParentNode], task)
         await task.query(participation.repositoryData!, changes.createPostgresQuery(metaPointerTracker))
-        const oldPartition = await affectedPartition(oldParentNode!.id, participation, ctx)
-        const newPartition = await affectedPartition(newParentNode!.id, participation, ctx)
+        const oldPartition = await affectedPartition(task, oldParentNode!.id, participation)
+        const newPartition = await affectedPartition(task, newParentNode!.id, participation)
         return {
             messageKind: "ChildMovedFromOtherContainment",
             newParent: newParentNode.id,

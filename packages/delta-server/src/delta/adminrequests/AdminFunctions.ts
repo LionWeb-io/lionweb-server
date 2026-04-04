@@ -1,6 +1,7 @@
+import { LionWebTask } from "@lionweb/server-database"
 import {
     deltaLogger,
-} from "@lionweb/server-common"
+} from "@lionweb/server-shared"
 import { repositoryStore } from "@lionweb/server-dbadmin"
 import {
     CreateRepositoryAdminRequest,
@@ -17,9 +18,11 @@ import { DeltaFunction } from "../commands/index.js"
 import { DeltaContext } from "../DeltaContext.js"
 import { Participation } from "../participation/index.js"
 
-const ListRepositories = async (participation: Participation, msg: ListRepositoriesAdminRequest, _ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
+const ListRepositories = async (participation: Participation, msg: ListRepositoriesAdminRequest, ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
     deltaLogger.info("Called ListRepositories request id: " + msg.queryId)
-    await repositoryStore.refresh()
+    const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
+        await repositoryStore.refresh(task)
+    })
 
     const repositories = Array.from(repositoryStore.repositoryName2repository.values()).map(repo => ({
         name: repo.repository_name,

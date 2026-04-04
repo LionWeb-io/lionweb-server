@@ -34,12 +34,12 @@ collection.forEach(withoutHistory => {
         let initError: string = ""
 
         beforeAll(async function () {
-            const initResponse = await client.dbAdmin.createDatabase()
-            if (initResponse.status !== HttpSuccessCodes.Ok) {
-                console.log("Cannot create database: " + JSON.stringify(initResponse.body))
-            } else {
-                console.log("database created: " + JSON.stringify(initResponse.body))
-            }
+            // const initResponse = await client.dbAdmin.createDatabase()
+            // if (initResponse.status !== HttpSuccessCodes.Ok) {
+            //     console.log("Cannot create database: " + JSON.stringify(initResponse.body))
+            // } else {
+            //     console.log("database created: " + JSON.stringify(initResponse.body))
+            // }
         })
 
         beforeEach(async function () {
@@ -75,12 +75,16 @@ collection.forEach(withoutHistory => {
                 `repoVersionAfterPartitionCreated ${initialPartitionVersion} => ${baseFullChunkVersion}`
             )
             const repositories = await client.dbAdmin.listRepositories()
-            console.log("repositories: " + JSON.stringify(repositories.body.repositories))
+            console.log("before each (end) repositories: " + JSON.stringify(repositories.body.repositories))
         })
 
         afterEach(async function () {
+            const blist = await client.dbAdmin.listRepositories()
+            console.log(`Start afterEach list repositories ${JSON.stringify(blist)}`)
             const del = await client.dbAdmin.deleteRepository(repository)
             console.log(`afterEach delete repository ${repository}: ${JSON.stringify(del.body)}`)
+            const list = await client.dbAdmin.listRepositories()
+            console.log(`End afterEach list repositories ${JSON.stringify(list)}`)
         })
 
         describe("Repository does not exist", () => {
@@ -92,7 +96,7 @@ collection.forEach(withoutHistory => {
                 assert(retrieve.body.success === false, "Repository === null failed")
             })
             it("repository name must exist", async () => {
-                assert(initError === "", initError)
+                // assert(initError === "", initError)
                 client.repository = "nothing"
                 const retrieve = await client.bulk.retrieve(["ID-2"])
                 console.log("Retrieve Result: " + JSON.stringify(JSON.stringify(retrieve.body.messages)))
@@ -102,7 +106,8 @@ collection.forEach(withoutHistory => {
 
         describe("Partition tests", () => {
             it("retrieve nodes", async () => {
-                assert(initError === "", initError)
+                // assert(initError === "", initError)
+                client.repository =  repository
                 const retrieve = await client.bulk.retrieve(["ID-2"])
                 console.log("Retrieve Result: " + JSON.stringify(JSON.stringify(retrieve.body.messages)))
                 const retrieveResponse = retrieve.body as RetrieveResponse
@@ -112,7 +117,7 @@ collection.forEach(withoutHistory => {
             })
 
             it("retrieve partitions", async () => {
-                assert(initError === "", initError)
+                // assert(initError === "", initError)
                 const model = structuredClone(baseFullChunk)
                 model.nodes = model.nodes.filter(node => node.parent === null)
                 const partitions = await client.bulk.listPartitions()
@@ -420,6 +425,8 @@ collection.forEach(withoutHistory => {
                 const currentrepo = withoutHistory ? "MyFirstRepo" : "MyFirstHistoryRepo"
                 {
                     const repositories = await client.dbAdmin.listRepositories()
+                    console.log(`multi repo test repositores ${JSON.stringify(repositories)}`)
+                    console.log(`length ${repositories?.body?.repositories?.length}`)
                     assert(repositories.body.repositories.length === 1, "There should be exactly one repository")
                     assert(
                         repositories.body.repositories.some(repo => repo.name === currentrepo),

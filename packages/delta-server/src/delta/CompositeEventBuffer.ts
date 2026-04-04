@@ -1,4 +1,4 @@
-import { deltaLogger } from "@lionweb/server-common"
+import { deltaLogger } from "@lionweb/server-shared"
 import { CompositeCommand, DeltaCommand, DeltaEvent } from "@lionweb/server-delta-shared"
 import { Participation } from "./participation/index.js"
 

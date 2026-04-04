@@ -1,13 +1,13 @@
 import { LionWebJsonNode } from "@lionweb/json"
+import { DbConnection, LionWebTask, RepositoryData } from "@lionweb/server-database"
 import { KeyValuePair } from "@lionweb/server-delta-shared"
-import { asError, dbLogger } from "../apiutil/index.js"
+import { dbLogger } from "@lionweb/server-shared"
+import { asError } from "../apiutil/index.js"
 import {
     InternalQueryError,
     SQL,
     sqlArrayFromNodeIdArray
 } from "./index.js"
-import { DbConnection, RepositoryData } from "../database/DbConnection.js"
-import { LionWebTask } from "../database/LionWebTask.js"
 import { NODES_TABLE } from "../database/TableNames.js"
 
 /**
@@ -101,8 +101,8 @@ const retrieveParentsSQL = (nodeid: string): string => {
  * @param nodeid
  * @returns Nodes-table rows: {id, classifier, parent}[] 
  */
-const retrieveParentsDB = async (db: DbConnection, repoData: RepositoryData, nodeid: string): Promise<NodeWithParent[]> => {
-    const result = await db.manyOrNone(repoData, retrieveParentsSQL(nodeid))
+const retrieveParentsDB = async (task: LionWebTask, repoData: RepositoryData, nodeid: string): Promise<NodeWithParent[]> => {
+    const result = await task.manyOrNone(repoData, retrieveParentsSQL(nodeid))
     // deltaLogger.info(`Parents of '${nodeid} are '${JSON.stringify(result)}'`)
     if (Array.isArray(result) && result.every(n => isNodeWithParent(n))) {
         // deltaLogger.info(`found parent`)

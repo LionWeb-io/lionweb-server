@@ -26,15 +26,10 @@
         "unpublish-local": "npm unpublish --force --registry http://localhost:4873",
         "republish-local": "npm run unpublish-local && npm run publish-local"
     },
-    "devDependencies": {
-        "prettier": "3.1.0",
-        "@types/chai": "4.3.11",
-        "eslint": "10.1.0",
-        "chai": "4.3.10",
-        "typescript": "5.9.3"
-    },
+    "devDependencies": {},
     "dependencies": {
         "@lionweb/server-shared": "0.4.0-beta.5",
+        "@lionweb/server-database": "0.4.0-beta.5",
         "@lionweb/server-languages": "0.4.0-beta.5",
         "@lionweb/server-common": "0.4.0-beta.5",
         "@lionweb/server-dbadmin": "0.4.0-beta.5",

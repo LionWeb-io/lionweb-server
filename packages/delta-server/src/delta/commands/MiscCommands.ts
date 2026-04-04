@@ -1,4 +1,4 @@
-import { deltaLogger } from "@lionweb/server-common"
+import { deltaLogger } from "@lionweb/server-shared"
 import { ChangeClassifierCommand, DeltaEvent, CompositeCommand, ChunkedCommand } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
 import { Participation } from "../participation/index.js"

@@ -1,10 +1,9 @@
 import {
-    deltaLogger,
-    LionWebTask,
     MetaPointersTracker,
     SQL,
     DB
 } from "@lionweb/server-common"
+import { LionWebTask } from "@lionweb/server-database"
 import {
     AddPartitionCommand,
     DeletePartitionCommand,
@@ -12,6 +11,7 @@ import {
     PartitionAddedEvent,
     PartitionDeletedEvent
 } from "@lionweb/server-delta-shared"
+import { deltaLogger } from "@lionweb/server-shared"
 import { DeltaContext } from "../DeltaContext.js"
 import { affectedNodeMessage, newErrorDelta, ErrorDelta, affectedPartitionMessage } from "../events.js"
 import { Participation } from "../participation/index.js"

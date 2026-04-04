@@ -1,4 +1,5 @@
-import { CONTAINMENTS_TABLE, LionWebTask, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE, RepositoryData } from "../database/index.js"
+import { LionWebTask, RepositoryData } from "@lionweb/server-database"
+import { CONTAINMENTS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "../database/index.js"
 import { InternalQueryError } from "./GuardFunctions.js"
 import { sqlArrayFromNodeIdArray } from "./PgHelpers.js"
 import { is_NodesForQueryQuery_ResultType, NodesForQueryQuery_ResultType, retrieveFullNodesFromQuerySQL } from "./QueryNode.js"

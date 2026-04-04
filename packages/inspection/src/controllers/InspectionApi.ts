@@ -1,3 +1,4 @@
+import { LionWebTask } from "@lionweb/server-database"
 import { HttpClientErrors, StoreResponse } from "@lionweb/server-shared"
 import { lionwebResponse } from "@lionweb/server-common"
 import { isParameterError } from "@lionweb/server-common"
@@ -88,37 +89,41 @@ class InspectionApiImpl implements InspectionApi {
     }
 
     nodesByClassifier = async (request: e.Request, response: e.Response) => {
-        const repositoryData = await getRepositoryData(request, "Dummy")
-        if (isParameterError(repositoryData)) {
-            lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
-                success: false,
-                messages: [repositoryData.error]
-            })
-        } else {
-            const sql = this.context.inspectionQueries.nodesByClassifier()
-            const queryResult = await this.context.inspectionApiWorker.nodesByClassifier(repositoryData, sql)
-            const limitStr = request.query.limit
-            // TODO handle the case in which multiple query parameters are specified
-            const limit: number = limitStr === undefined ? -1 : parseInt(limitStr as string, 10)
-            response.send(this.classifierNodesToBuffer(queryResult, limit))
-        }
+        await this.context.dbConnection.tx(async (task: LionWebTask) => {
+            const repositoryData = await getRepositoryData(task, request, "Dummy")
+            if (isParameterError(repositoryData)) {
+                lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
+                    success: false,
+                    messages: [repositoryData.error]
+                })
+            } else {
+                const sql = this.context.inspectionQueries.nodesByClassifier()
+                const queryResult = await this.context.inspectionApiWorker.nodesByClassifier(task, repositoryData, sql)
+                const limitStr = request.query.limit
+                // TODO handle the case in which multiple query parameters are specified
+                const limit: number = limitStr === undefined ? -1 : parseInt(limitStr as string, 10)
+                response.send(this.classifierNodesToBuffer(queryResult, limit))
+            }
+        })
     }
 
     nodesByLanguage = async (request: e.Request, response: e.Response) => {
-        const repositoryData = await getRepositoryData(request, "Dummy")
-        if (isParameterError(repositoryData)) {
-            lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
-                success: false,
-                messages: [repositoryData.error]
-            })
-        } else {
-            const sql = this.context.inspectionQueries.nodesByLanguage()
-            const queryResult = await this.context.inspectionApiWorker.nodesByLanguage(repositoryData, sql)
-            const limitStr = request.query.limit
-            // TODO handle the case in which multiple query parameters are specified
-            const limit: number = limitStr === undefined ? -1 : parseInt(limitStr as string, 10)
-            response.send(this.languageNodesToBuffer(queryResult, limit))
-        }
+        await this.context.dbConnection.tx(async (task: LionWebTask) => {
+            const repositoryData = await getRepositoryData(task, request, "Dummy")
+            if (isParameterError(repositoryData)) {
+                lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
+                    success: false,
+                    messages: [repositoryData.error]
+                })
+            } else {
+                const sql = this.context.inspectionQueries.nodesByLanguage()
+                const queryResult = await this.context.inspectionApiWorker.nodesByLanguage(task, repositoryData, sql)
+                const limitStr = request.query.limit
+                // TODO handle the case in which multiple query parameters are specified
+                const limit: number = limitStr === undefined ? -1 : parseInt(limitStr as string, 10)
+                response.send(this.languageNodesToBuffer(queryResult, limit))
+            }
+        })
     }
 }
 

@@ -1,22 +1,21 @@
 import {
-    bulkLogger,
     getClientIdParameter,
     getClientLog,
     getHistoryParameter,
     getLionWebVersionParameter,
     getRepositoryParameter,
     isParameterError,
-    LionWebTask,
     QueryReturnType,
-    RepositoryData,
-    requestLogger,
     SCHEMA_PREFIX
 } from "@lionweb/server-common"
+import { LionWebTask, RepositoryData } from "@lionweb/server-database"
 import {
+    bulkLogger,
     HttpClientErrors,
     HttpSuccessCodes,
     ListPartitionsResponse,
-    ListRepositoriesResponse
+    ListRepositoriesResponse,
+    requestLogger
 } from "@lionweb/server-shared"
 import { lionwebResponse } from "@lionweb/server-common"
 import e, { Request, Response } from "express"
@@ -125,7 +124,10 @@ export class DBAdminApiImpl implements DBAdminApi {
             })
         } else {
             // Request is correct, fist check whether repo already exists
-            const existingRepo = await repositoryStore.getRepository(repositoryName)
+            let existingRepo
+            await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
+                existingRepo = await repositoryStore.getRepository(task, repositoryName)
+            })
             if (existingRepo !== undefined) {
                 lionwebResponse<ListPartitionsResponse>(response, HttpClientErrors.PreconditionFailed, {
                     success: false,
@@ -156,10 +158,12 @@ export class DBAdminApiImpl implements DBAdminApi {
             requestLogger.trace(`  createRepository go!`)
             await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
                 result = await this.ctx.dbAdminApiWorker.createRepository(task, repositoryData)
+                requestLogger.info("created repo")
                 await this.ctx.dbAdminApiWorker.addRepositoryToTable(task, repositoryData)
+                requestLogger.info(`  createRepository go 2 !`)
+                await repositoryStore.refresh(task)
             })
-            requestLogger.info(`  createRepository go 2 !`)
-            await repositoryStore.refresh()
+            requestLogger.info(`  createRepository go 3 !`)
             lionwebResponse(response, result.status, {
                 success: result.status === HttpSuccessCodes.Ok,
                 messages: [{ kind: "Info", message: result.queryResult }]
@@ -176,7 +180,9 @@ export class DBAdminApiImpl implements DBAdminApi {
         bulkLogger.info(
             ` * listRepositories request received, with body of ${request.headers["content-length"]} bytes. ${getClientLog(request)}`
         )
-        await repositoryStore.refresh()
+        await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
+            await repositoryStore.refresh(task)
+        })
 
         const repositories = Array.from(repositoryStore.repositoryName2repository.values()).map(repo => ({
             name: repo.repository_name,
@@ -197,7 +203,9 @@ export class DBAdminApiImpl implements DBAdminApi {
      */
     deleteRepository = async (request: e.Request, response: e.Response): Promise<void> => {
         bulkLogger.info(` * deleteRepository request received, with body of ${request.headers["content-length"]} bytes`)
-        const repositoryData = await getRepositoryData(request)
+        const repositoryData = await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
+            return await getRepositoryData(task, request)
+        })
         if (isParameterError(repositoryData)) {
             lionwebResponse<ListPartitionsResponse>(response, HttpClientErrors.PreconditionFailed, {
                 success: false,
@@ -214,11 +222,12 @@ export class DBAdminApiImpl implements DBAdminApi {
         } else {
             await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
                 const result = await this.ctx.dbAdminApiWorker.deleteRepository(task, repositoryData)
-                // Update repository info table
-                await this.ctx.dbConnection.queryWithoutRepository(
+                requestLogger.info(`Update repository info table ${repositoryData.repository.repository_name}`)
+                await task.queryWithoutRepository(
                     `SELECT public.deleteRepositoryInfo('${repositoryData.repository.repository_name}'::text);\n`
                 )
-                await repositoryStore.refresh()
+                requestLogger.info("refresh repostore")
+                await repositoryStore.refresh(task)
                 lionwebResponse(response, result.status, {
                     success: result.status === HttpSuccessCodes.Ok,
                     messages: [{ kind: "Info", message: result.queryResult }]

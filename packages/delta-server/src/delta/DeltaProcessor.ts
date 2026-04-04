@@ -1,6 +1,6 @@
 import { LionWebJsonChunkWrapper } from "@lionweb/json-utils"
-import { deltaLogger, isInternalQueryError } from "@lionweb/server-common"
 import { DeltaValidator } from "@lionweb/server-delta-definitions"
+import { isInternalQueryError } from "@lionweb/server-common"
 import {
     ErrorEvent,
     isDeltaResponse,
@@ -23,6 +23,7 @@ import {
     DeltaCommand
 } from "@lionweb/server-delta-shared"
 import { MessageFromClient } from "@lionweb/server-delta-shared"
+import { deltaLogger } from "@lionweb/server-shared"
 import { ValidationResult } from "@lionweb/validation"
 import WebSocket from 'ws';
 import { adminRequestFunctions } from "./adminrequests/AdminFunctions.js"
@@ -278,6 +279,9 @@ class DeltaProcessor {
         responseOrEvent: MessageToClient
     ) {
         deltaLogger.info(`Send delta ${responseOrEvent.messageKind} to ${participation?.repositoryData?.clientId}`)
+        if (responseOrEvent.messageKind === "ErrorEvent") {
+            console.log(`Sending ERROR EVENYT ${JSON.stringify(responseOrEvent)}`)
+        }
         if (isDeltaEvent(responseOrEvent) && isDeltaCommand(originalMessage)) {
             responseOrEvent.originCommands.forEach(cmd => (cmd.commandId = originalMessage.commandId))
             responseOrEvent.additionalInfos.push(...findDistributableInfos(originalMessage))
