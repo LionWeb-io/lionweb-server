@@ -211,7 +211,7 @@ function prepareInputStreamContainmentsProtobuf(bulkImport: PBBulkImport, pbInde
     return read_stream_string
 }
 
-async function pipeInputIntoQueryStream(client: PoolClient, query: string, inputStream: Duplex, opDesc: string): Promise<void> {
+async function pipeInputIntoQueryStream(task: LionWebTask, client: PoolClient, query: string, inputStream: Duplex, opDesc: string): Promise<void> {
     const queryStream = client.query(copyFrom(query));
 
     // propagate src errors too
@@ -235,6 +235,7 @@ async function pipeInputIntoQueryStream(client: PoolClient, query: string, input
 }
 
 export async function storeNodes(
+    task: LionWebTask, 
     client: PoolClient,
     repositoryData: RepositoryData,
     bulkImport: BulkImport,
@@ -247,6 +248,7 @@ export async function storeNodes(
         const nodes = bulkImport.nodes
 
         await pipeInputIntoQueryStream(
+            task,
             client,
             `COPY "${schemaName}".lionweb_nodes(id,classifier,annotations,parent) FROM STDIN`,
             prepareInputStreamNodes(nodes, metaPointersTracker),
