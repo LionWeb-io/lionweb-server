@@ -25,6 +25,6 @@ export const CREATE_CONFIG: PostgresConfig = {
     port: ServerConfig.getInstance().pgPort(),
     user: ServerConfig.getInstance().pgUser(),
     password: ServerConfig.getInstance().pgPassword(),
-    database: ServerConfig.getInstance().pgDb(),
+    database: ServerConfig.getInstance().pgMaintenanceDb(),
     ssl: pgSSLConf
 }

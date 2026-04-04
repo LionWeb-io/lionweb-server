@@ -11,7 +11,9 @@ export const CREATE_GLOBALS_SQL: string =
 `SET search_path TO 'public';
 --------------------------------------------------------------------        
 -- Global function to check whether schema exists
---------------------------------------------------------------------        
+--------------------------------------------------------------------   
+DROP FUNCTION IF EXISTS public.existsSchema(name text);
+
 CREATE FUNCTION public.existsSchema(name text)
     RETURNS void
 AS
@@ -49,6 +51,8 @@ CREATE TABLE IF NOT EXISTS ${REPOSITORIES_TABLE} (
 --------------------------------------------------------------------        
 -- Global function to add repo
 --------------------------------------------------------------------        
+DROP FUNCTION IF EXISTS public.createRepositoryInfo(repository_name text, schema_name text, lionweb_version text, history boolean);
+
 CREATE FUNCTION public.createRepositoryInfo(repository_name text, schema_name text, lionweb_version text, history boolean)
     RETURNS void
 AS
@@ -62,6 +66,8 @@ $$ LANGUAGE plpgsql;
 --------------------------------------------------------------------        
 -- Global function to delete repo
 --------------------------------------------------------------------        
+DROP FUNCTION IF EXISTS public.deleteRepositoryInfo(repo text);
+ 
 CREATE FUNCTION public.deleteRepositoryInfo(repo text)
     RETURNS void
 AS

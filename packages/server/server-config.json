@@ -21,7 +21,7 @@
         ]
     },
     "logging": {
-        "bulk": "trace",
+        "bulk": "info",
         "request": "info",
         "trace": "silent",
         "database": "silent",

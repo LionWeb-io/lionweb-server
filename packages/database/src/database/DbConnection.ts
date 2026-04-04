@@ -147,7 +147,7 @@ export class DbConnection {
      * @see  IBaseProtocol.tx
      */
     async tx<T>(body: (tsk: LionWebTask) => Promise<T>): Promise<T> {
-        traceLogger.info("DbConnection.tx start with mode " + JSON.stringify(this.transactionMode))
+        console.log("DbConnection.tx start with mode " + JSON.stringify(this.transactionMode))
         try {
             return await this.pgDatabaseConnection.tx({ mode: this.transactionMode as never }, async task => {
                 const tsk = new LionWebTask(task)

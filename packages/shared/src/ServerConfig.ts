@@ -201,7 +201,7 @@ export class ServerConfig {
     pgMaintenanceDb(): string {
         const PGMAINTENANCE = process.env.PGMAINTENANCE
         const result = this?.config?.postgres?.database?.maintenanceDb
-        return PGMAINTENANCE ?? result ?? "lionweb"
+        return PGMAINTENANCE ?? result ?? "postgres"
     }
 
     pgPassword(): string {

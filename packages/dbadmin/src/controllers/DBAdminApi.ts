@@ -125,9 +125,9 @@ export class DBAdminApiImpl implements DBAdminApi {
         } else {
             // Request is correct, fist check whether repo already exists
             let existingRepo
-            await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
+            const result = await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
                 existingRepo = await repositoryStore.getRepository(task, repositoryName)
-            })
+            // })
             if (existingRepo !== undefined) {
                 lionwebResponse<ListPartitionsResponse>(response, HttpClientErrors.PreconditionFailed, {
                     success: false,
@@ -156,12 +156,13 @@ export class DBAdminApiImpl implements DBAdminApi {
             }
             let result: QueryReturnType<string>
             requestLogger.trace(`  createRepository go!`)
-            await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
+            // await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
                 result = await this.ctx.dbAdminApiWorker.createRepository(task, repositoryData)
                 requestLogger.info("created repo")
                 await this.ctx.dbAdminApiWorker.addRepositoryToTable(task, repositoryData)
                 requestLogger.info(`  createRepository go 2 !`)
                 await repositoryStore.refresh(task)
+                return result
             })
             requestLogger.info(`  createRepository go 3 !`)
             lionwebResponse(response, result.status, {
