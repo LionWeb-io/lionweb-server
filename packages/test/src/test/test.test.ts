@@ -34,12 +34,12 @@ collection.forEach(withoutHistory => {
         let initError: string = ""
 
         beforeAll(async function () {
-            // const initResponse = await client.dbAdmin.createDatabase()
-            // if (initResponse.status !== HttpSuccessCodes.Ok) {
-            //     console.log("Cannot create database: " + JSON.stringify(initResponse.body))
-            // } else {
-            //     console.log("database created: " + JSON.stringify(initResponse.body))
-            // }
+            const initResponse = await client.dbAdmin.createDatabase()
+            if (initResponse.status !== HttpSuccessCodes.Ok) {
+                console.log("Cannot create database: " + JSON.stringify(initResponse.body))
+            } else {
+                console.log("database created: " + JSON.stringify(initResponse.body))
+            }
         })
 
         beforeEach(async function () {
@@ -107,7 +107,7 @@ collection.forEach(withoutHistory => {
         describe("Partition tests", () => {
             it("retrieve nodes", async () => {
                 // assert(initError === "", initError)
-                client.repository =  repository
+                // client.repository =  repository
                 const retrieve = await client.bulk.retrieve(["ID-2"])
                 console.log("Retrieve Result: " + JSON.stringify(JSON.stringify(retrieve.body.messages)))
                 const retrieveResponse = retrieve.body as RetrieveResponse
