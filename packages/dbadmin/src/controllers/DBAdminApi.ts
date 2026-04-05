@@ -124,9 +124,9 @@ export class DBAdminApiImpl implements DBAdminApi {
             })
         } else {
             // Request is correct, fist check whether repo already exists
-            let existingRepo
+            // let existingRepo
             const result = await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
-                existingRepo = await repositoryStore.getRepository(task, repositoryName)
+                const existingRepo = await repositoryStore.getRepository(task, repositoryName)
             // })
             if (existingRepo !== undefined) {
                 lionwebResponse<ListPartitionsResponse>(response, HttpClientErrors.PreconditionFailed, {

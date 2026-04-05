@@ -65,13 +65,12 @@ export class DBAdminApiWorker {
         if (!this.done) {
             // split the file into separate statements
             const statements = sql.split(/;\s*$/m)
-            // for (const statement of statements) {
-            //     if (statement.length > 3) {
-            //         // execute each of the statements
-            //         bulkLogger.info(`statement ${statement}`)
-            //         await this.ctx.postgresConnection.none(statement)
-            //     }
-            // }
+            for (const statement of statements) {
+                if (statement.length > 3) {
+                    // execute each of the statements
+                    await this.ctx.postgresConnection.none(statement)
+                }
+            }
             // Add the global functions to the public schema
             const tmpo = await this.ctx.dbConnection.queryWithoutRepository(removeNewlinesBetween$$(CREATE_GLOBALS_SQL))
             bulkLogger.info(`globals done ${JSON.stringify(tmpo)}`)
