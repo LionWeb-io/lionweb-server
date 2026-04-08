@@ -444,6 +444,7 @@ collection.forEach(withoutHistory => {
                 console.log(`listRepositories 1b: ${repositories1.body.repositories.map(r => r.name)}`)
                 {
                     const repositories = await client.dbAdmin.listRepositories()
+                    console.log(`listRepositories 1c ${repositories.body.repositories.map(r => r.name)}`)
                     assert(repositories.body.repositories.length === 2, "There should be exactly two repositories")
                     assert(
                         repositories.body.repositories.every(repo => repo.name === currentrepo || repo.name === "Repo2"),
@@ -473,12 +474,14 @@ collection.forEach(withoutHistory => {
                     )
                 }
                 const createResult2 = await client.dbAdmin.createRepository("Repo2", !withoutHistory, "2023.1")
+                console.log(`createREsult ${JSON.stringify(createResult2)}`)
                 {
                     assert(
                         createResult2.body.success === true,
-                        "Should  be able to create existing repository: " + JSON.stringify(createResult2.body.messages)
+                        "Should  be able to create new repository: " + JSON.stringify(createResult2.body.messages)
                     )
                     const repositories = await client.dbAdmin.listRepositories()
+                    console.log(`Repositories 22: ${JSON.stringify(repositories)}`)
                     assert(repositories.body.repositories.length === 2, "There should be exactly two repositories")
                     assert(
                         repositories.body.repositories.every(repo => repo.name === currentrepo || repo.name === "Repo2"),

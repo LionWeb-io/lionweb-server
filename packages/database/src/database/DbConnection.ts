@@ -72,7 +72,7 @@ export class DbConnection {
 
     async queryWithoutRepository(query: string) {
         traceLogger.info("DbConnection.queryWithoutRepository")
-        requestLogger.info(`DbConnection.queryWithoutRepository ${query}`)
+        // requestLogger.info(`DbConnection.queryWithoutRepository ${query}`)
         return await this.pgDatabaseConnection.query(query)
     }
 
@@ -150,12 +150,12 @@ export class DbConnection {
         console.log("DbConnection.tx start with mode " + JSON.stringify(this.transactionMode))
         try {
             return await this.pgDatabaseConnection.tx({ mode: this.transactionMode as never }, async task => {
-                const tsk = new LionWebTask(task)
+                const lionwebTask = new LionWebTask(task)
                 traceLogger.info("DbConnection.tx return ")
-                return await body(tsk)
+                return await body(lionwebTask)
             })
         } catch (e) {
-            dbLogger.error("DbConnection.tx TRANSACTION ERROR " + JSON.stringify(e))
+            dbLogger.error("DbConnection.tx TRANSACTION ERROR " + e)
             throw e
         }
     }

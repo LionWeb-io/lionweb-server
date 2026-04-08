@@ -11,7 +11,6 @@ import { GenericIssue, ValidationResult } from "@lionweb/validation"
 import { LionWebJsonChunk } from "@lionweb/json"
 import { JsonContext } from "@lionweb/json-utils"
 import { Request } from "express"
-import { DbAdminApiContext } from "../main.js"
 
 // TODO Move elsewhere?
 export async function getRepositoryData(task: LionWebTask, request: Request, defaultClient?: string): Promise<RepositoryData | ParameterError> {
@@ -65,8 +64,7 @@ export class RepositoryStore {
         }
         // requestLogger.info("initializing")
         this.repositoryName2repository.clear()
-        let repoTable
-         repoTable = (await task.queryWithoutRepository(`SELECT * FROM ${REPOSITORIES_TABLE};\n`)) as RepositoryInfo[]
+        let repoTable = (await task.queryWithoutRepository(`SELECT * FROM ${REPOSITORIES_TABLE};\n`)) as RepositoryInfo[]
         requestLogger.info("repotable found")
         for (const repo of repoTable) {
             this.repositoryName2repository.set(repo.repository_name, repo)

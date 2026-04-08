@@ -21,22 +21,24 @@
         ]
     },
     "logging": {
-        "bulk": "silent",
+        "bulk": "trace",
         "request": "info",
         "trace": "silent",
-        "database": "silent",
-        "query": "info",
-        "express": "silent",
-        "delta": "silent",
+        "database": "info",
+        "query": "silent",
+        "express": "info",
+        "delta": "info",
         "message": "silent"
     },
     "postgres": {
         "database": {
-            "host": "192.168.100.1",
+            "type": "pglite",
+            "host": "127.0.0.1",
             "user": "postgres",
-            "db": "lionweb",
-            "password": "postgres",
-            "port": "54320"
+            "db": "postgres",
+            "password": "lionweb",
+            "port": "45432",
+            "maintenanceDb": "postgres"
         },
         "certificates": {
             "rootcert": null,

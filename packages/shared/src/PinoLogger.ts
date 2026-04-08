@@ -16,38 +16,48 @@ export class PinoLogger {
         this.name = child.type
     }
 
+    private out(level: string, msg: string | object) {
+        if (typeof msg === "string") {
+            console.log(`${level} ${msg}`)
+        } else {
+            console.log(`${level} ${JSON.stringify(msg)}`)
+        }
+    }
+
     info(msg: string | object, _msg2?: string) {
         if (!this.isEnabled("info")) {
             return
         }
-        console.log(`info ${JSON.stringify(msg)}`)
+        this.out("info", msg)
     }
     warn(msg: string) {
         if (!this.isEnabled("warn")) {
             return
         }
-        console.log(`info ${msg}`)
+        this.out("warn", msg)
     }
     debug(msg: string | object) {
         if (!this.isEnabled("debug")) {
             return
         }
-        console.log(`info ${JSON.stringify(msg)}`)
+        this.out("debug", msg)
     }
     trace(msg: string) {
         if (!this.isEnabled("trace")) {
             return
         }
-        console.log(`trace ${msg}`)
+        this.out("trace", msg)
     }
     error(msg: string | Error) {
-        if (!this.isEnabled("error")) { return }
-        console.error(`info ${msg}`)
+        if (!this.isEnabled("error")) {
+            return
+        }
+        this.out("error", msg)
     }
     isLevelEnabled(level: LevelWithSilent): boolean {
         return level === this.level
     }
-    
+
     levelVal: Map<LevelWithSilent, number> = new Map<LevelWithSilent, number>([
         ["trace", 10],
         ["debug", 20],
@@ -55,9 +65,9 @@ export class PinoLogger {
         ["warn", 40],
         ["error", 50],
         ["fatal", 60],
-        ["silent", 600],
+        ["silent", 600]
     ])
-    
+
     isEnabled(level: LevelWithSilent): boolean {
         return this.levelVal.get(level) >= this.levelVal.get(this.level)
     }

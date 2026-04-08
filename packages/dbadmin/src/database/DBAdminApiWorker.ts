@@ -16,10 +16,6 @@ export class DBAdminApiWorker {
 
     constructor(private ctx: DbAdminApiContext) {}
 
-    async tx(task: (task: LionWebTask) => Promise<void>) {
-        return this.ctx.dbConnection.tx(task)
-    }
-
     async queryWithoutRepository(query: string) {
         return this.ctx.dbConnection.queryWithoutRepository(query)
     }
@@ -60,20 +56,36 @@ export class DBAdminApiWorker {
     }
 
     async createDatabase(): Promise<QueryReturnType<string>> {
-        bulkLogger.info(`create ${CREATE_DATABASE_SQL}`)
+        bulkLogger.info(`createDatabase: ${CREATE_DATABASE_SQL}`)
         const sql = CREATE_DATABASE_SQL
         if (!this.done) {
-            // split the file into separate statements
-            const statements = sql.split(/;\s*$/m)
-            for (const statement of statements) {
-                if (statement.length > 3) {
-                    // execute each of the statements
-                    await this.ctx.postgresConnection.none(statement)
+            // When using PGlite the "postgres" database is used for lionweb, as PGlite only supports one database.
+            // Therefore no need to create a lionweb database, it's there already.
+            if (ServerConfig.getInstance().pgDb() !== "postgres") {
+                bulkLogger.info("Creating new database " + ServerConfig.getInstance().pgDb())
+                // split the file into separate statements
+                const statements = sql.split(/;\s*$/m)
+                for (const statement of statements) {
+                    if (statement.length > 3) {
+                        // execute each of the statements
+                        console.log(`create ${statement}`)
+                        await this.ctx.postgresConnection.none(statement)
+                    }
                 }
             }
             // Add the global functions to the public schema
-            const tmpo = await this.ctx.dbConnection.queryWithoutRepository(removeNewlinesBetween$$(CREATE_GLOBALS_SQL))
-            bulkLogger.info(`globals done ${JSON.stringify(tmpo)}`)
+            bulkLogger.info(`globals start`)
+            // split the file into separate statements
+            const global_statements = CREATE_GLOBALS_SQL.split(/--%\s*$/m)
+            for (const statement of global_statements) {
+                if (statement.length > 3) {
+                    console.log(`globals ${statement}`)
+                    // execute each of the statements
+                    // TODO execute inside lionweb instead of postgres database
+                    await this.ctx.dbConnection.queryWithoutRepository(statement)
+                }
+            }
+            bulkLogger.info(`globals done`)
             return {
                 status: HttpSuccessCodes.Ok,
                 query: sql,
