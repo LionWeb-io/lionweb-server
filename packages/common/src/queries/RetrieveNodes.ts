@@ -51,11 +51,11 @@ const retrieveFullNodesRecursive = async (
         const data: KeyValuePair[] = [
             {
                 key: "query",
-                value: dbLogger.isLevelEnabled("debug") ? SQL.retrieveFullNodesFromQuerySQL(query) : "no debug logging"
+                value: dbLogger.isEnabledFor("debug") ? SQL.retrieveFullNodesFromQuerySQL(query) : "no debug logging"
             },
             {
                 key: "queryResult",
-                value: dbLogger.isLevelEnabled("debug") ? JSON.stringify(result) : "no debug logging"
+                value: dbLogger.isEnabledFor("debug") ? JSON.stringify(result) : "no debug logging"
             }
         ]
         throw InternalQueryError("Query returned incorrect type", data)

@@ -1,50 +1,66 @@
+import { getFileSink } from "@logtape/file"
+import { configure, getConsoleSink, getJsonLinesFormatter, getLogger, getLogLevels, LogLevel } from "@logtape/logtape"
+import { getPrettyFormatter, prettyFormatter } from "@logtape/pretty"
 import { ServerConfig } from "./ServerConfig.js"
-import { LevelWithSilent, MainLogger, PINO_LEVELS } from "./PinoLogger.js"
 
-export function verbosity(level: string, defaultValue: LevelWithSilent): LevelWithSilent {
-    if (level !== undefined && PINO_LEVELS.includes(level)) {
-        return level as LevelWithSilent
+export function verbosity(level: LogLevel, defaultValue: LogLevel): LogLevel {
+    if (level !== undefined && getLogLevels().includes(level)) {
+        return level as LogLevel
     } else {
         return defaultValue
     }
 }
 
-function pino( _props: { level: LevelWithSilent, formatters: object, timestamp: unknown}): MainLogger {
-    const result = new MainLogger()
-    result.level = _props.level
-    return result
-}
-
-const pinoLogger = pino(
-    {
-        level: "silent",
-        formatters: {
-            // level: (label: string) => {
-            //     return { level: label.toUpperCase() }
-            // },
-            // bindings: () => {
-            //     return {}
-            // }
-        },
-        timestamp: undefined
+await configure<"console" | "file", string>({
+    sinks: {
+        file: getFileSink("./sink.jsonl", {
+            formatter: getJsonLinesFormatter({
+                categorySeparator: " > ",
+                message: "rendered",
+                properties: "flatten"
+            })
+        }),
+        console: getConsoleSink({
+            // formatter: prettyFormatter
+            // formatter: jsonLinesFormatter,
+            formatter: getPrettyFormatter({
+                timestamp: "none",
+                // Control colors
+                colors: true,
+                messageColor: "black",
+                messageStyle: null,
+                categoryWidth: 10,
+                icons: {
+                    info: "📘",
+                    error: "🔥",
+                },
+                properties: false,
+                inspectOptions: {
+                    depth: 3, // Show 3 levels of nesting
+                    colors: true, // Disable value syntax highlighting
+                    compact: true, // Use compact object display
+                },
+            }),
+        })
     },
-    // transport
-)
+    loggers: [
+        { category: "query", lowestLevel: ServerConfig.getInstance().queryLog() as LogLevel, sinks: ["console", "file"] },
+        { category: "request", lowestLevel: ServerConfig.getInstance().requestLog() as LogLevel, sinks: ["console", "file"] },
+        { category: "delta", lowestLevel: ServerConfig.getInstance().deltaLog() as LogLevel, sinks: ["console", "file"] },
+        { category: "bulk", lowestLevel: ServerConfig.getInstance().bulkLog() as LogLevel, sinks: ["console", "file"] },
+        { category: "express", lowestLevel: ServerConfig.getInstance().expressLog() as LogLevel, sinks: ["console", "file"] },
+        { category: "trace", lowestLevel: ServerConfig.getInstance().traceLog() as LogLevel, sinks: ["console", "file"] },
+        { category: "database", lowestLevel: ServerConfig.getInstance().databaseLog() as LogLevel, sinks: ["console", "file"] },
+        { category: "message", lowestLevel: ServerConfig.getInstance().messageLog() as LogLevel, sinks: ["console", "file"] }
+    ]
+})
 
-export const bulkLogger = pinoLogger.child({ type: "bulk" })
-export const requestLogger = pinoLogger.child({ type: "request" })
-export const expressLogger = pinoLogger.child({ type: "express" })
-export const dbLogger = pinoLogger.child({ type: "database" })
-export const queryLogger = pinoLogger.child({ type: "query" })
-export const traceLogger = pinoLogger.child({ type: "trace" })
-export const deltaLogger = pinoLogger.child({ type: "delta" })
-export const messageLogger = pinoLogger.child({ type: "message" })
+export const bulkLogger = getLogger("bulk")
+export const requestLogger = getLogger("request")
+export const expressLogger = getLogger("express")
+export const dbLogger = getLogger("database")
+export const queryLogger = getLogger("query")
+export const traceLogger = getLogger("trace")
+export const deltaLogger = getLogger("delta")
+export const messageLogger = getLogger("message")
 
-bulkLogger.level = ServerConfig.getInstance().bulkLog()
-requestLogger.level = ServerConfig.getInstance().requestLog()
-traceLogger.level = ServerConfig.getInstance().traceLog()
-expressLogger.level = ServerConfig.getInstance().expressLog()
-dbLogger.level = ServerConfig.getInstance().databaseLog()
-queryLogger.level = ServerConfig.getInstance().queryLog()
-deltaLogger.level = ServerConfig.getInstance().deltaLog()
-messageLogger.level = ServerConfig.getInstance().messageLog()

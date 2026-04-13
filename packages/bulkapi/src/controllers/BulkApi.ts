@@ -182,7 +182,7 @@ export class BulkApiImpl implements BulkApi {
                     const result = await this.ctx.bulkApiWorker.bulkStore(task, repositoryData, chunk)
                     result.queryResult.messages.push({
                         kind: "QueryFromApi",
-                        message: dbLogger.isLevelEnabled("debug") ? result.query : "no debug log"
+                        message: dbLogger.isEnabledFor("debug") ? result.query : "no debug log"
                     })
                     lionwebResponse<StoreResponse>(response, result.status, result.queryResult)
                 }

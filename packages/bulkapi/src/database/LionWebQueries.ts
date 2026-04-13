@@ -118,11 +118,11 @@ export class LionWebQueries {
         const tbsNodeIds = toBeStoredChunk.nodes.map(node => node.id)
         const tbsContainedChildIds = this.getContainedIds(toBeStoredChunk.nodes)
         const tbsNodeAndChildIds = [...tbsNodeIds, ...tbsContainedChildIds.filter(cid => !tbsNodeIds.includes(cid))]
-        dbLogger.info({ tbsNodeAndChildIds: tbsNodeAndChildIds }, "tbsNodeAndChildIds ")
+        dbLogger.info("tbsNodeAndChildIds ", { tbsNodeAndChildIds: tbsNodeAndChildIds })
         // Retrieve nodes for all id's that exist
         const databaseChunk = await this.context.bulkApiWorker.bulkRetrieve(task, repositoryData, tbsNodeAndChildIds, 0)
         const databaseChunkWrapper = new LionWebJsonChunkWrapper(databaseChunk.queryResult.chunk)
-        dbLogger.info({ chunk: databaseChunkWrapper.jsonChunk }, "database chunk")
+        dbLogger.info("database chunk", { chunk: databaseChunkWrapper.jsonChunk }, )
 
         // Check whether there are new nodes without a parent
         const newNodesWithoutParent = toBeStoredChunk.nodes
@@ -144,7 +144,7 @@ export class LionWebQueries {
         const diff = new LionWebJsonDiff()
         diff.diffLwChunk(databaseChunkWrapper.jsonChunk, toBeStoredChunk)
         dbLogger.info("STORE.CHANGES")
-        dbLogger.info(diff.diffResult.changes.map(ch => "    " + ch.changeMsg()))
+        dbLogger.info(diff.diffResult.changes.map(ch => "    " + ch.changeMsg()).join("\n"))
 
         const toBeStoredNewNodes = diff.diffResult.changes.filter((ch): ch is NodeAdded => ch.changeType === "NodeAdded")
         const addedChildren: ChildAdded[] = diff.diffResult.changes.filter((ch): ch is ChildAdded => ch instanceof ChildAdded)
@@ -287,7 +287,10 @@ export class LionWebQueries {
                 query: queries,
                 queryResult: {
                     success: true,
-                    messages: [SQL.versionResultToResponse(multiResult), { kind: "query", message: dbLogger.isLevelEnabled("debug") ? queries : "no debug log" }]
+                    messages: [
+                        SQL.versionResultToResponse(multiResult),
+                        { kind: "query", message: dbLogger.isEnabledFor("debug") ? queries : "no debug log" }
+                    ]
                 }
             }
         } else {
@@ -309,7 +312,7 @@ export class LionWebQueries {
                             message: "Nothing to store",
                             data: { version: `${version}` }
                         },
-                        { kind: "query", message: dbLogger.isLevelEnabled("debug") ? queries : "no debug level" }
+                        { kind: "query", message: dbLogger.isEnabledFor("debug") ? queries : "no debug level" }
                     ]
                 }
             }
