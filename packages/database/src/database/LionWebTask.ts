@@ -1,4 +1,4 @@
-import { queryLogger, traceLogger } from "@lionweb/server-shared"
+import { queryLogger, toJsonString, traceLogger } from "@lionweb/server-shared"
 import pgPromise from "pg-promise"
 import { addRepositorySchema, RepositoryData } from "./DbConnection.js"
 
@@ -30,7 +30,7 @@ export class LionWebTask {
         queryLogger.info(`LionWebTask.query ${query} for repository ${repositoryData.repository.repository_name}`)
         query = addRepositorySchema(query, repositoryData)
         const result = await this.task.query(query)
-        queryLogger.info(`   LionWebTask.query result ${JSON.stringify(result)}`)
+        queryLogger.info(`   LionWebTask.query result ${toJsonString(result)}`)
         return result
     }
 

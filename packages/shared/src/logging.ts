@@ -1,5 +1,14 @@
 import { getFileSink } from "@logtape/file"
-import { configure, getConsoleSink, getJsonLinesFormatter, getLogger, getLogLevels, LogLevel } from "@logtape/logtape"
+import {
+    configure,
+    getConsoleSink,
+    getJsonLinesFormatter,
+    getLogger,
+    getLogLevels,
+    LoggerConfig,
+    LogLevel,
+    LogRecord
+} from "@logtape/logtape"
 import { getPrettyFormatter, prettyFormatter } from "@logtape/pretty"
 import { ServerConfig } from "./ServerConfig.js"
 
@@ -11,7 +20,12 @@ export function verbosity(level: LogLevel, defaultValue: LogLevel): LogLevel {
     }
 }
 
+function queryFilter(config: LogRecord): boolean {
+    return config.message.includes("aa")
+}
+
 await configure<"console" | "file", string>({
+    filters: { queryFilter },
     sinks: {
         file: getFileSink("./sink.jsonl", {
             formatter: getJsonLinesFormatter({
@@ -50,7 +64,7 @@ await configure<"console" | "file", string>({
         { category: "bulk", lowestLevel: ServerConfig.getInstance().bulkLog() as LogLevel, sinks: ["console", "file"] },
         { category: "express", lowestLevel: ServerConfig.getInstance().expressLog() as LogLevel, sinks: ["console", "file"] },
         { category: "trace", lowestLevel: ServerConfig.getInstance().traceLog() as LogLevel, sinks: ["console", "file"] },
-        { category: "database", lowestLevel: ServerConfig.getInstance().databaseLog() as LogLevel, sinks: ["console", "file"] },
+        { category: "database", lowestLevel: ServerConfig.getInstance().databaseLog() as LogLevel, sinks: ["console", "file"], filters: ["queryFilter"] },
         { category: "message", lowestLevel: ServerConfig.getInstance().messageLog() as LogLevel, sinks: ["console", "file"] }
     ]
 })
