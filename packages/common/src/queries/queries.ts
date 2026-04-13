@@ -60,7 +60,8 @@ const retrieveSingleFullNodeDB = async (task: LionWebTask, repo: RepositoryData,
 /**
  * Delete all nodes with id in `nodeIds`, including all of their features
  * @param nodeIds
- */ function deleteFullNodesSQL(nodeIds: string[]) {
+ */ 
+function deleteFullNodesSQL(nodeIds: string[]) {
     if (nodeIds.length === 0) {
         return ""
     }

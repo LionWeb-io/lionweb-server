@@ -51,6 +51,8 @@ export function validateProperTree(nodes: LionWebDeltaJsonChunk, parent: LionWeb
  * @param expectedChild The current child at `index`
  * @param msg
  * @param participation
+ * @throws              ErrorEvent
+ * @throws              ErrorResponse
  * @returns             The containment of the parent node, or a copy of it 
  */
 export function validateContainment(
@@ -104,6 +106,8 @@ export function validateContainment(
  * @param expectedChild The current child at `index`
  * @param msg
  * @param participation
+ * @throws              ErrorEvent
+ * @throws              ErrorResponse
  * @returns             The containment of the parent node, or a copy of it
  */
 export function validateReference(
@@ -188,6 +192,16 @@ export function validateReference(
     return foundReference
 }
 
+/**
+ * Find node with nodeid `id` in `nodes`.
+ * Throw an ErrorEvent or ErrorResponse if the node does not exists in `nodes`.
+ * @param id        The node to be found
+ * @param nodes     The collection to search
+ * @param msg       The message for the potential ErrorEvent or ErrorResponse
+ * @param participation The participation for which this is done.
+ * @throws              ErrorEvent
+ * @throws              ErrorResponse
+ */
 export function findAndValidateNodeExists(
     id: LionWebId,
     nodes: LionWebJsonNode[],

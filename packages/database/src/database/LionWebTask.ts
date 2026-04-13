@@ -27,14 +27,14 @@ export class LionWebTask {
      * @param query
      */
     async query(repositoryData: RepositoryData, query: string) {
-        traceLogger.info("LionWebTask.query")
+        queryLogger.info(`LionWebTask.query ${query} for repository ${repositoryData.repository.repository_name}`)
         query = addRepositorySchema(query, repositoryData)
-        queryLogger.info(`LionWebTask.query ${query}`)
-        return await this.task.query(query)
+        const result = await this.task.query(query)
+        queryLogger.info(`   LionWebTask.query result ${JSON.stringify(result)}`)
+        return result
     }
 
     async queryWithoutRepository(query: string) {
-        traceLogger.info("LionWebTask.queryWithoutRepository")
         queryLogger.info(`LionWebTask.queryWithoutRepository ${query}`)
         return await this.task.query(query)
     }
@@ -45,9 +45,8 @@ export class LionWebTask {
      * @param query
      */
     async many(repositoryData: RepositoryData, query: string) {
-        traceLogger.info("LionWebTask.many")
+        queryLogger.info(`LionWebTask.many ${query} for repository ${repositoryData.repository.repository_name}`)
         query = addRepositorySchema(query, repositoryData)
-        queryLogger.info(`LionWebTask.many ${query}`)
         return await this.task.many(query)
     }
 

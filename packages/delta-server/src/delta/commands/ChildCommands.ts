@@ -184,14 +184,14 @@ const ReplaceChild = async (
             return newErrorDelta("childNotFound", `The newChild chunk does not contain a node with parent ${msg.parent}`, msg, participation)
         }
         
-        // Check whether child exists
+        // Check whether replaced child exists
         const childNode = nodesFromDB.find(n => n.id === msg.replacedChild)
         if (childNode === undefined) {
             return newErrorDelta("unknownNode", `Child '${msg.replacedChild}' does not exist`, msg, participation)
         }
 
         const containment = validateContainment(parentNode, msg.containment, msg.index, "Replace", msg.replacedChild, msg, participation)
-        // Check done, do the work
+        // Checks done, do the work
         const changes = new DbChanges(TableHelpers.pgp)
         const replacedTree = await DB.retrieveNodeTreeDB(task, participation.repositoryData!, [
             msg.replacedChild], Number.MAX_SAFE_INTEGER)
