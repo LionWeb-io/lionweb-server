@@ -5,11 +5,10 @@ import {
     getJsonLinesFormatter,
     getLogger,
     getLogLevels,
-    LoggerConfig,
     LogLevel,
     LogRecord
 } from "@logtape/logtape"
-import { getPrettyFormatter, prettyFormatter } from "@logtape/pretty"
+import { getPrettyFormatter } from "@logtape/pretty"
 import { ServerConfig } from "./ServerConfig.js"
 
 export function verbosity(level: LogLevel, defaultValue: LogLevel): LogLevel {

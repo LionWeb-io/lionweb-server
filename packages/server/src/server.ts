@@ -23,7 +23,7 @@ import {
     registerAdditionalApi
 } from "@lionweb/server-additionalapi"
 import { registerLanguagesApi } from "@lionweb/server-languages"
-import { deltaLogger, bulkLogger, HttpClientErrors, PROTOBUF_CONTENT_TYPE, RepositoryConfig, requestLogger, ServerConfig } from "@lionweb/server-shared"
+import { deltaLogger, bulkLogger, HttpClientErrors, PROTOBUF_CONTENT_TYPE, RepositoryConfig, requestLogger, ServerConfig, toJsonString } from "@lionweb/server-shared"
 import * as http from "node:http"
 import { runWithTryDelta } from "./RunTry.js";
 
@@ -211,8 +211,8 @@ async function startServer() {
         PARTICIPATIONS.newParticipation(socket)
         
         socket.onmessage = message => {
-            deltaLogger.info(`Server Received: ${message.data.toString()}`);
             const msg = JSON.parse(message.data.toString()) as unknown as (DeltaCommand | DeltaRequest)
+            deltaLogger.info(`Server Received: ${toJsonString(msg)}`)
             runWithTryDelta(socket, msg)
         };
 

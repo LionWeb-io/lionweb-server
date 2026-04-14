@@ -23,7 +23,7 @@ import {
     DeltaCommand
 } from "@lionweb/server-delta-shared"
 import { MessageFromClient } from "@lionweb/server-delta-shared"
-import { deltaLogger } from "@lionweb/server-shared"
+import { deltaLogger, toJsonString } from "@lionweb/server-shared"
 import { ValidationResult } from "@lionweb/validation"
 import WebSocket from 'ws';
 import { adminRequestFunctions } from "./adminrequests/AdminFunctions.js"
@@ -92,7 +92,7 @@ class DeltaProcessor {
         this.deltaValidator.validationResult.reset()
         this.deltaValidator.validate(delta, messageKind)
         if (this.deltaValidator.validationResult.hasErrors()) {
-            deltaLogger.error(`Validation errors for delta: ${JSON.stringify(delta)}`)
+            deltaLogger.error(`Validation errors for delta: ${toJsonString(delta)}`)
             this.deltaValidator.validationResult.issues.forEach(issue => {
                 deltaLogger.error(issue.errorMsg())
             })
@@ -105,7 +105,7 @@ class DeltaProcessor {
         // Check participation status
         const errorDelta = this.validateParticipation(delta, participation)
         if (errorDelta !== undefined) {
-            deltaLogger.error(`error event/response ${JSON.stringify(errorDelta)}`)
+            deltaLogger.error(`error event/response ${toJsonString(errorDelta)}`)
             this.sendDelta(socket, participation, delta, errorDelta)
             return
         }
@@ -118,7 +118,7 @@ class DeltaProcessor {
                 const response = await func(participation!, delta, this.context!, socket)
                 // Errors and responses to requests only need to be sent to the client that sent the message
                 if (response.messageKind === "ErrorEvent" || isDeltaResponse(response) || isDeltaAdminResponse(response)) {
-                    deltaLogger.info(`Sending Error Event or response ${JSON.stringify(response)}`)
+                    deltaLogger.info(`Sending Error Event or Response: ${toJsonString(response)}`)
                     if (response.messageKind === "ReconnectResponse") {
                         // TODO Should be done inside processing function, but the socket is not known there
                         PARTICIPATIONS.reconnect(socket, PARTICIPATIONS.findOldParticipation((delta as ReconnectRequest).participationId)!)
@@ -280,7 +280,7 @@ class DeltaProcessor {
     ) {
         deltaLogger.info(`Send delta ${responseOrEvent.messageKind} to ${participation?.repositoryData?.clientId}`)
         if (responseOrEvent.messageKind === "ErrorEvent") {
-            console.log(`Sending ERROR EVENYT ${JSON.stringify(responseOrEvent)}`)
+            deltaLogger.info(`Sending ERROR message ${toJsonString(responseOrEvent)}`)
         }
         if (isDeltaEvent(responseOrEvent) && isDeltaCommand(originalMessage)) {
             responseOrEvent.originCommands.forEach(cmd => (cmd.commandId = originalMessage.commandId))
@@ -401,12 +401,12 @@ class DeltaProcessor {
         response.additionalInfos.push(affectedPartitionMessage(partition))
         for (const participationInfo of PARTICIPATIONS.allParticipations()) {
             deltaLogger.info(
-                `Participant ${participationInfo.repositoryData?.clientId} subscribed to '${JSON.stringify(
+                `Participant ${participationInfo.repositoryData?.clientId} subscribed to '${toJsonString(
                     participationInfo.subscribedPartitions
                 )}'`
             )
             if (participationInfo.subscribedPartitions.has(partition)) {
-                deltaLogger.info(`Subscribed Sending ${JSON.stringify(response)} to ${participationInfo.repositoryData?.clientId}`)
+                deltaLogger.info(`Subscribed Sending ${toJsonString(response)} to ${participationInfo.repositoryData?.clientId}`)
                 this.sendDelta(participationInfo.socket, participationInfo, delta, response)
             } else {
                 // deltaLogger.info(`NOT Subscribed ${participationInfo.repositoryData?.clientId}`)

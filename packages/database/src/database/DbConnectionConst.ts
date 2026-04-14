@@ -1,4 +1,4 @@
-import { dbLogger, ServerConfig } from "@lionweb/server-shared"
+import { dbLogger, ServerConfig, toJsonString } from "@lionweb/server-shared"
 import pgPromise from "pg-promise"
 import dotenv from "dotenv"
 import pg from "pg"
@@ -17,7 +17,7 @@ export const config: PostgresConfig = {
     ssl: pgSSLConf
 }
 
-dbLogger.info("POSTGRES CONFIG: " + JSON.stringify(config, null, 2))
+dbLogger.info("POSTGRES CONFIG: " + toJsonString(config, 2))
 
 export const pgp = pgPromise()
 // TODO

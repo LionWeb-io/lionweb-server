@@ -10,6 +10,7 @@ import {
     ResponseMessage,
     RetrieveResponse,
     StoreResponse,
+    toJsonString,
     traceLogger
 } from "@lionweb/server-shared"
 import {
@@ -145,9 +146,8 @@ export class BulkApiWorker {
                 }
             }
         }
-
         const [versionResult, nodes] = await task.multi(repositoryData, SQL.currentRepoVersionSQL() + SQL.retrieveFullNodesRecursiveSQL(nodeIdList, depthLimit))
-        requestLogger.info(`VERSION ${JSON.stringify(versionResult)}`)
+        requestLogger.info(`VERSION ${toJsonString(versionResult)}`)
         requestLogger.trace(`NODES ${JSON.stringify(nodes)}`)
         return {
             status: HttpSuccessCodes.Ok,
