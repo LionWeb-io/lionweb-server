@@ -26,6 +26,7 @@
         "unpublish-local": "npm run unpublish-local -w packages --if-present",
         "republish-local": "npm run republish-local -w packages --if-present",
         "publish-docker": "bash scripts/tag-and-release-docker-image.sh",
+        "dependency-graph": "monorepo-mapper",
         "check-dependencies": "npx  syncpack lint --source 'package.json' --source 'packages/*/package.json'",
         "list-dependencies": "npx  syncpack list --source 'package.json' --source 'packages/*/package.json'"
     },

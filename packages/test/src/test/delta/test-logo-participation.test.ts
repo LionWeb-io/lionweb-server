@@ -4,9 +4,9 @@ import { PartitionAddedEvent } from "@lionweb/server-delta-shared"
 import { HttpSuccessCodes  } from "@lionweb/server-shared"
 import { test, describe, beforeAll, beforeEach, afterAll } from "vitest"
 import { reportHTML } from "./helpers.js"
-import { CLASSIFIER as CLS, CONTAINMENT as CON } from "./keys.js"
-import { Logo2String } from "./Logo2String.js"
-import { ProgramNodes } from "./logomodel.js"
+import { CLASSIFIER as CLS, CONTAINMENT as CON } from "../models/keys.js"
+import { newModel } from "../models/testmodel.js"
+import { Logo2String } from "../models/Logo2String.js"
 import { CoverageMap, cmd, expectEvent, expectResponse, expectError, logProtocol } from "./test-helpers.test.js"
 
 // TOPO Delta : primary key exception when nohistory = false 
@@ -184,7 +184,7 @@ collection.forEach((withoutHistory) => {
             })
             test("AddPartition with depth", async () => {
                 const addPartition = cmd.addPartitionCmd(client2, { id: "Program", classifier: CLS.Program })
-                addPartition.newPartition.nodes = ProgramNodes
+                addPartition.newPartition.nodes = newModel
                 client2.sendCommand(addPartition)
                 
                 await expectEvent(client2, addPartition, "PartitionAdded")
@@ -203,8 +203,8 @@ collection.forEach((withoutHistory) => {
                     console.log(logo3.logo2string())
                 }
                 // logProtocol(client1, true)
-                logProtocol(client2, true)
-                logProtocol(client3, true)
+                logProtocol(client2, bulkApiClient, ["Program", "Program-22"], true)
+                logProtocol(client3, bulkApiClient, ["Program", "Program-22"], true)
                 // logProtocol(client4, true)
             })
         })

@@ -1,3 +1,4 @@
+import { LionWebJsonNode } from "@lionweb/json"
 import { DeltaClient } from "@lionweb/server-delta-client"
 import { isErrorEvent, isErrorResponse } from "@lionweb/delta-server"
 import {
@@ -38,7 +39,8 @@ import {
     ReconnectRequest,
     InformAboutChangingPartitionsRequest,
     SubscribeToChangingPartitionsRequest,
-    CompositeCommand
+    CompositeCommand,
+    MoveChildFromOtherContainmentCommand
 } from "@lionweb/server-delta-shared"
 import { waitFor } from "./delta/helpers.js"
 import {} from "./utils.js"
@@ -87,6 +89,8 @@ export class Commands {
      * The client used to send the commands
      */
     constructor() {}
+
+    nodes: LionWebJsonNode[] = []
 
     signOnRequest = (client: DeltaClient, repo: string): DeltaRequest => {
         const request: SignOnRequest = {
@@ -273,36 +277,50 @@ export class Commands {
     }
 
     addPartitionCmd = (client: DeltaClient, partition: PartitionType): AddPartitionCommand => {
+        const newNode: LionWebJsonNode = {
+            id: partition.id,
+            parent: null,
+            properties: partition.properties ?? [],
+            containments: [],
+            references: [],
+            classifier: partition.classifier,
+            annotations: []
+        }
+        this.nodes.push(newNode)
         const command: AddPartitionCommand = {
             messageKind: "AddPartition",
             commandId: `command-id-${queryId++}`,
-            newPartition: {
-                nodes: [
-                    {
-                        id: partition.id,
-                        parent: null,
-                        properties: partition.properties ?? [],
-                        containments: [],
-                        references: [],
-                        classifier: partition.classifier,
-                        annotations: []
-                    }
-                ]
-            },
+            newPartition: { nodes: [newNode] },
             additionalInfos: []
         }
         return command
     }
 
-    addPartition = (client: DeltaClient, partition: PartitionType): DeltaCommand => {
-        return client.sendCommand(this.addPartitionCmd(client, partition))
+    addPartition = (client: DeltaClient, partition: PartitionType): AddPartitionCommand => {
+        return client.sendCommand(this.addPartitionCmd(client, partition)) as AddPartitionCommand
     }
 
-    deletePartition = (client: DeltaClient, partition: LionWebId): DeltaCommand => {
+    deletePartition = (client: DeltaClient, partition: LionWebId): DeletePartitionCommand => {
         const command: DeletePartitionCommand = {
             messageKind: "DeletePartition",
             commandId: `command-id-${queryId++}`,
             deletedPartition: partition,
+            additionalInfos: []
+        }
+        return client.sendCommand(command) as DeletePartitionCommand
+    }
+
+    moveChildFromOtherContainment = (client: DeltaClient, params: Partial<MoveChildFromOtherContainmentCommand>): DeltaCommand => {
+        const command: MoveChildFromOtherContainmentCommand = {
+            messageKind: "MoveChildFromOtherContainment",
+            commandId: `command-id-${queryId++}`,
+            movedChild: params.movedChild,
+            oldContainment: params.oldContainment,
+            oldIndex: params.oldIndex,
+            oldParent: params.oldParent,
+            newContainment: params.newContainment,
+            newIndex: params.newIndex,
+            newParent: params.newParent,
             additionalInfos: []
         }
         return client.sendCommand(command)

@@ -1,3 +1,5 @@
+import { LionWebJsonDiff } from "@lionweb/json-diff"
+import { collectUsedLanguages } from "@lionweb/server-common"
 import { RepositoryClient } from "@lionweb/server-http-client"
 import { DeltaClient } from "@lionweb/server-delta-client"
 import {
@@ -8,12 +10,16 @@ import {
     DeltaRequest,
     DeltaRequestMessageKinds,
     EventMessageKind,
+    LionWebId,
     RequestMessageKind,
     ResponseMessageKind,
+    SubscribeToPartitionContentsResponse,
 } from "@lionweb/server-delta-shared"
+import { ast2dot } from "../../Ast2Dot.js"
 import { Commands } from "../commands.js"
 import { TestCoverage } from "./helpers.js"
-import { Logo2String } from "./Logo2String.js"
+import { LionWebModel } from "../models/LionWebModel.js"
+import { Logo2String } from "../models/Logo2String.js"
 
 export const cmd: Commands = new Commands()
 
@@ -70,19 +76,45 @@ export async function expectResponse(client: DeltaClient, delta: DeltaRequest, r
     CoverageMap.get(delta.messageKind).receivedEvents++
 }
 
-export async function makeSnapShot(bulkApiClient: RepositoryClient): Promise<string> {
-    const partition = await bulkApiClient.bulk.retrieve(["Library-01", "Program-01"])
+export async function makeSnapShot(bulkApiClient: RepositoryClient, rootIds: LionWebId[]): Promise<string> {
+    const partition = await bulkApiClient.bulk.retrieve(rootIds)
     // const string = JSON.stringify(partition.body.chunk.nodes, null, 4)
     const string = new Logo2String(partition.body.chunk.nodes).logo2string()
     console.log(string)
     return string
 }
 
-export function logProtocol(client: DeltaClient, log: boolean): void {
+export async function logProtocol(client: DeltaClient, checkClient: RepositoryClient, rootIds: LionWebId[], log: boolean, model?: LionWebModel): Promise<void> {
     if (log) {
         console.log(`SentMessages ${client.clientId}`)
-        console.log(client.sentMessageHistory)
+        // console.log(client.sentMessageHistory)
         console.log(`ReceivedMessages ${client.clientId}`)
-        console.log(client.receivedMessageHistory)
+        // console.log(client.receivedMessageHistory)
+
+        const chunk = await checkClient.bulk.retrieve(rootIds)
+
+        // console.log(ast2dot(rootIds[0], chunk.body.chunk.nodes))
+        const snapshot = await makeSnapShot(checkClient, rootIds)
+
+        if (model !== undefined) {
+            console.log("Model to string")
+            console.log(model.asString())
+            console.log("Model diff")
+            const diff = new LionWebJsonDiff()
+            const logoChunk = {
+                    serializationFormatVersion: "2023.1",
+                    languages: collectUsedLanguages(model.nodes()),
+                    nodes: model.nodes(),
+                }
+            diff.diffLwChunk(logoChunk, chunk.body.chunk)
+            // diff.diffLwChunk(chunk.body.chunk, logoChunk)
+            console.log(`Diff has changes ${diff.diffResult.hasChanges()}`)
+            diff.diffResult.changes.forEach(ch => {
+                console.log(`change ${ch.changeMsg()}`)
+            })
+            expect(diff.diffResult.changes).toStrictEqual([])
+            // console.log(`logoModel ${JSON.stringify(logoChunk, null, 2)}`)
+            // console.log(`logoModel ${JSON.stringify(chunk.body.chunk, null, 2)}`)
+        }
     }
 }
