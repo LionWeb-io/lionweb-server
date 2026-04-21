@@ -30,6 +30,7 @@ export const DeltaErrorCodes = [
     "messageKindUnknown",
     "undefinedReferenceTarget",
     "referenceTargetOrResolveInfoMismatch",
+    "parentMismatch",
     "generic"
 ] as const
 
@@ -39,4 +40,21 @@ export function isDeltaErrorCode(v: string): v is DeltaErrorCode {
     const s: readonly string[] = DeltaErrorCodes
     return s.includes(v)
 }
+/*
+ErrorDefinition "unknownNode" (nodeId: LionWebId)
+    Node with id { nodeId } does not exist.
 
+ErrorDefinition "incorrectIndex" (nodeId: LionWebId, index: Number) {
+    Node with id { nodeId } does not exist at index { index }
+
+
+message {
+    child: LionWebId
+    oldIndex: Number
+
+    errors: [
+        ref unknownNode { childNode: child }  
+        ref incorrectIndex { childNode: child, index: oldIndex } 
+    ]    
+}
+*/

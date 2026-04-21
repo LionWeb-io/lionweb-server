@@ -146,6 +146,9 @@ export type MoveChildFromOtherContainmentCommand = DeltaCommand & {
     newParent: LionWebId;
     newContainment: LionWebJsonMetaPointer;
     newIndex: Number;
+    oldParent: LionWebId;
+    oldContainment: LionWebJsonMetaPointer;
+    oldIndex: Number;
     movedChild: LionWebId;
     messageKind: "MoveChildFromOtherContainment";
 };
@@ -154,8 +157,11 @@ export type MoveChildFromOtherContainmentCommand = DeltaCommand & {
  *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-MoveChildFromOtherContainmentInSameParent
  */
 export type MoveChildFromOtherContainmentInSameParentCommand = DeltaCommand & {
+    parent: LionWebId;
     newContainment: LionWebJsonMetaPointer;
     newIndex: Number;
+    oldContainment: LionWebJsonMetaPointer;
+    oldIndex: Number;
     movedChild: LionWebId;
     messageKind: "MoveChildFromOtherContainmentInSameParent";
 };
@@ -164,7 +170,10 @@ export type MoveChildFromOtherContainmentInSameParentCommand = DeltaCommand & {
  *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-MoveChildInSameContainment
  */
 export type MoveChildInSameContainmentCommand = DeltaCommand & {
+    parent: LionWebId;
+    containment: LionWebJsonMetaPointer;
     newIndex: Number;
+    oldIndex: Number;
     movedChild: LionWebId;
     messageKind: "MoveChildInSameContainment";
 };
@@ -176,6 +185,9 @@ export type MoveAndReplaceChildFromOtherContainmentCommand = DeltaCommand & {
     newParent: LionWebId;
     newContainment: LionWebJsonMetaPointer;
     newIndex: Number;
+    oldParent: LionWebId;
+    oldContainment: LionWebJsonMetaPointer;
+    oldIndex: Number;
     replacedChild: LionWebId;
     movedChild: LionWebId;
     messageKind: "MoveAndReplaceChildFromOtherContainment";
@@ -185,8 +197,11 @@ export type MoveAndReplaceChildFromOtherContainmentCommand = DeltaCommand & {
  *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-MoveAndReplaceChildFromOtherContainmentInSameParent
  */
 export type MoveAndReplaceChildFromOtherContainmentInSameParentCommand = DeltaCommand & {
+    parent: LionWebId;
     newContainment: LionWebJsonMetaPointer;
     newIndex: Number;
+    oldContainment: LionWebJsonMetaPointer;
+    oldIndex: Number;
     replacedChild: LionWebId;
     movedChild: LionWebId;
     messageKind: "MoveAndReplaceChildFromOtherContainmentInSameParent";
@@ -196,7 +211,10 @@ export type MoveAndReplaceChildFromOtherContainmentInSameParentCommand = DeltaCo
  *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-MoveAndReplaceChildInSameContainment
  */
 export type MoveAndReplaceChildInSameContainmentCommand = DeltaCommand & {
+    parent: LionWebId;
+    containment: LionWebJsonMetaPointer;
     newIndex: Number;
+    oldIndex: Number;
     replacedChild: LionWebId;
     movedChild: LionWebId;
     messageKind: "MoveAndReplaceChildInSameContainment";
@@ -241,6 +259,8 @@ export type ReplaceAnnotationCommand = DeltaCommand & {
 export type MoveAnnotationFromOtherParentCommand = DeltaCommand & {
     newParent: LionWebId;
     newIndex: Number;
+    oldParent: LionWebId;
+    oldIndex: Number;
     movedAnnotation: LionWebId;
     messageKind: "MoveAnnotationFromOtherParent";
 };
@@ -249,7 +269,9 @@ export type MoveAnnotationFromOtherParentCommand = DeltaCommand & {
  *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-MoveAnnotationInSameParent
  */
 export type MoveAnnotationInSameParentCommand = DeltaCommand & {
+    parent: LionWebId;
     newIndex: Number;
+    oldIndex: Number;
     movedAnnotation: LionWebId;
     messageKind: "MoveAnnotationInSameParent";
 };
@@ -260,6 +282,8 @@ export type MoveAnnotationInSameParentCommand = DeltaCommand & {
 export type MoveAndReplaceAnnotationFromOtherParentCommand = DeltaCommand & {
     newParent: LionWebId;
     newIndex: Number;
+    oldParent: LionWebId;
+    oldIndex: Number;
     replacedAnnotation: LionWebId;
     movedAnnotation: LionWebId;
     messageKind: "MoveAndReplaceAnnotationFromOtherParent";
@@ -269,7 +293,9 @@ export type MoveAndReplaceAnnotationFromOtherParentCommand = DeltaCommand & {
  *  @see https://lionWeb.io/specification/delta/delta-api.html#cmd-MoveAndReplaceAnnotationInSameParent
  */
 export type MoveAndReplaceAnnotationInSameParentCommand = DeltaCommand & {
+    parent: LionWebId;
     newIndex: Number;
+    oldIndex: Number;
     replacedAnnotation: LionWebId;
     movedAnnotation: LionWebId;
     messageKind: "MoveAndReplaceAnnotationInSameParent";

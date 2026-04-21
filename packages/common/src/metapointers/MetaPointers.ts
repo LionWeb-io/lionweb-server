@@ -70,9 +70,14 @@ export function cleanGlobalPointersMap(repositoryName: string) {
  * This class is used to collect the MetaPointers to then collect at once.
  */
 export class MetaPointersCollector {
-    // Given the set of LionWebJsonMetaPointers would not recognize duplicate, we store also
-    // keys for each metapointer, in order to catch duplicates
+    /*
+     * Given the set of LionWebJsonMetaPointers would not recognize duplicate, we store also
+     * keys for each metapointer that already has an id, in order to catch duplicates
+     */
     private keysOfMetaPointers: Set<string> = new Set<string>()
+    /**
+     * The set of metapointers that are not in the globalMetaPointers map, and have no index (yet)
+     */
     metaPointers = new Set<LionWebJsonMetaPointer>()
 
     constructor(private repositoryData: RepositoryData) {}
@@ -92,7 +97,7 @@ export class MetaPointersCollector {
     /**
      * Check whether the `metaPointer` is already in the global metapointers map.
      * If so, do nothing, otherwise add the metapointers to `this.metapointers`
-     * @param node
+     * @param metaPointer
      */
     considerAddingMetaPointer(metaPointer: LionWebJsonMetaPointer) {
         const key = `${metaPointer.language}@${metaPointer.version}@${metaPointer.key}`
@@ -108,6 +113,11 @@ export class MetaPointersCollector {
         }
     }
 
+    /**
+     * Ifv there are metapointers without an id, insert them in the database and get their index.
+     * When done, put the metapointer in the global metapointer map and add it to the keysOfMetaPointers.
+     * @param task
+     */
     async obtainIndexes(task: LionWebTask): Promise<void> {
         if (this.metaPointers.size == 0) {
             return
@@ -119,7 +129,10 @@ export class MetaPointersCollector {
         dbLogger.debug(
             `> obtainindices for repo ${this.repositoryData.repository.repository_name} query is: SELECT toMetaPointerIDs(${mpLanguages},${mpVersions},${mpKeys});`
         )
-        const raw_res: { tometapointerids: string }[] = await task.query(this.repositoryData, `SELECT toMetaPointerIDs(${mpLanguages},${mpVersions},${mpKeys});`)
+        const raw_res: { tometapointerids: string }[] = await task.query(
+            this.repositoryData,
+            `SELECT toMetaPointerIDs(${mpLanguages},${mpVersions},${mpKeys});`
+        )
         dbLogger.debug(`> obtainindices for repo ${this.repositoryData.repository.repository_name} rawres is ${raw_res.length}`)
         raw_res.forEach(el => {
             if (el === undefined) {

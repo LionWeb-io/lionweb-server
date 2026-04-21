@@ -1,4 +1,5 @@
 import { isEqualMetaPointer } from "@lionweb/json"
+import { NodeUtils } from "@lionweb/json-utils"
 import { ChildAdded, Missing, ChildRemoved } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
 import {
@@ -96,7 +97,7 @@ const DeleteChild = async (
     msg: DeleteChildCommand,
     ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorDelta> => {
-    deltaLogger.debug("Called DeleteChild " + msg.messageKind)
+    deltaLogger.debug("DeleteChild " + msg.deletedChild)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
             msg.parent, msg.deletedChild
@@ -234,14 +235,23 @@ const MoveChildFromOtherContainment = async (
     deltaLogger.debug("Called MoveChildFromOtherContainment " + msg.messageKind)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
-            msg.newParent, msg.movedChild
+            msg.newParent, msg.movedChild, msg.oldParent
         ])
         const newParentNode = findAndValidateNodeExists(msg.newParent, nodesFromDB, msg, participation)
         const movedChildNode = findAndValidateNodeExists(msg.movedChild, nodesFromDB, msg, participation)
-        const oldParentFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
+        const oldParentFromCommand = findAndValidateNodeExists(msg.oldParent, nodesFromDB, msg, participation)
+        const oldParentFromCmdContainment = NodeUtils.findContainment(oldParentFromCommand, msg.oldContainment)
+        if (
+            oldParentFromCmdContainment === undefined ||
+            msg.oldIndex > oldParentFromCmdContainment.children.length ||
+            oldParentFromCmdContainment?.children[msg.oldIndex] !== msg.movedChild
+        ) {
+            throw newErrorDelta("indexEntryMismatch", `child is not at oldIndex`, msg, participation)
+        }
+        const oldMovedChildParentFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
             movedChildNode.parent!
         ])
-        const oldParentNode = findAndValidateNodeExists(movedChildNode.parent!, oldParentFromDB, msg, participation)
+        const oldParentNode = findAndValidateNodeExists(movedChildNode.parent!, oldMovedChildParentFromDB, msg, participation)
         if (newParentNode.id === oldParentNode.id) {
             throw newErrorDelta(
                 "haveTheSameParents",
@@ -250,7 +260,16 @@ const MoveChildFromOtherContainment = async (
                 participation
             )
         }
+        if (msg.oldParent !== movedChildNode.parent) {
+            throw newErrorDelta(
+                "parentMismatch",
+                `Parent in message is not the parent of the child in the repository`,
+                msg,
+                participation
+            )
+        }
         const newContainment = validateContainment(newParentNode, msg.newContainment, msg.newIndex, "Add", undefined, msg, participation)
+        
         const oldContainment = oldParentNode.containments.find(cont => cont.children.includes(msg.movedChild))
         if (oldContainment === undefined) {
             throw newErrorDelta("moveWithoutParent", `Internal error: (old) parent of ${msg.movedChild} does not have a containment with this node.`, msg, participation)

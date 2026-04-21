@@ -11,7 +11,7 @@ import {
     ReferenceChange
 } from "@lionweb/json-diff"
 import { DbConnection, LionWebTask } from "@lionweb/server-database"
-import { dbLogger, queryLogger } from "@lionweb/server-shared"
+import { dbLogger, queryLogger, toJsonString } from "@lionweb/server-shared"
 import pgPromise, { ColumnSet } from "pg-promise"
 import pg from "pg-promise/typescript/pg-subset.js"
 import { UnknownObjectType } from "../apiutil/index.js"
@@ -145,7 +145,11 @@ export class DbChanges {
                 case "TargetAdded":
                 case "TargetRemoved":
                 case "TargetOrderChanged": {
-                    queryLogger.info(`==> ${change.changeType}: ${change.changeMsg()}`)
+                    queryLogger.info(
+                        `==> ${change.changeType}: ${change.changeMsg()} targets '${
+                            toJsonString((change as ReferenceChange).afterReference?.targets ?? [])
+                        }'`
+                    )
                     const update: DbReferenceUpdate = {
                         node_id: (change as ReferenceChange).node.id,
                         reference: (change as ReferenceChange).beforeReference.reference,
@@ -177,7 +181,7 @@ export class DbChanges {
                       `
         })
         this.updatesReferenceTable.values().forEach((values: DbReferenceUpdate[]) => {
-            const tmp = `updatesReferenceTable ${values.map(v => JSON.stringify(v))}`
+            const tmp = `updatesReferenceTable ${values.map(v => toJsonString(v))}`
             result += `-- ${tmp}
             `
             // Ensure that there is at most one query created for each reference metapointer
@@ -305,14 +309,6 @@ export class DbChanges {
             case Missing.MissingBefore:
                 result += `-- insert new feature for existing node
                                 ${this.pgp.helpers.insert(data, columnSet)};`
-                // result += `-- insert new feature for existing node
-                //                 ${this.pgp.helpers.insert(data, columnSet)}
-                //                 ON CONFLICT ON CONSTRAINT ${tableName}_pkey DO
-                //                     UPDATE 
-                //                     SET ${this.pgp.helpers.sets(data, columnSet)}
-                //                 WHERE
-                //                     ${tableName}.node_id = '${data["node_id"]}' AND
-                //                     ${tableName}.${metapointerColumn} = ${data[metapointerColumn]};`
                 break
             case Missing.MissingAfter:
                 result += `-- delete feature for existing node

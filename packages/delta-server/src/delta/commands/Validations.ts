@@ -10,7 +10,7 @@ import {
     LionWebJsonReference,
     LionWebJsonReferenceTarget
 } from "@lionweb/server-delta-shared"
-import { isEqualMetaPointer, LionWebJsonNode } from "@lionweb/json"
+import { isEqualMetaPointer, isEqualReferenceTarget, LionWebJsonNode } from "@lionweb/json"
 import { newErrorDelta } from "../events.js"
 import { Participation } from "../participation/index.js"
 import { issuesToProtocolMessages } from "./DeltaUtil.js"
@@ -40,7 +40,7 @@ export function validateProperTree(nodes: LionWebDeltaJsonChunk, parent: LionWeb
         // TODO this check can be moved to the ReferenceValidator by giving the `parent` as parameter
         throw newErrorDelta("childNotFound", `The newChild chunk does not contain a node with parent ${parent}`, msg, participation)
     }
-    return rootNode
+    return rootNode!
 }
 
 /**
@@ -99,16 +99,16 @@ export function validateContainment(
 }
 
 /**
- * Validate whether `parentNode` has a `containment` with a valid `index`, and currently `expectedChild` at `index`
+ * Validate whether `parentNode` has a `containment` with a valid `index`, and currently `expectedReference` at `index`
  * @param parentNode    The node in which the containment is to be changed.
- * @param containment   The containment which is to be changed
+ * @param reference     The containment which is to be changed
  * @param index         The index of the child to be changed / added deleted
- * @param expectedChild The current child at `index`
+ * @param expectedReference The current reference at `index`
  * @param msg
  * @param participation
  * @throws              ErrorEvent
  * @throws              ErrorResponse
- * @returns             The containment of the parent node, or a copy of it
+ * @returns             The reference of the parent node, or a copy of it
  */
 export function validateReference(
     parentNode: LionWebJsonNode,
@@ -186,8 +186,13 @@ export function validateReference(
         }
     }
     // Check whether the replaced child is at the given index
-    if (expectedReference !== undefined && foundReference.targets[index] !== expectedReference) {
-        throw newErrorDelta("indexEntryMismatch", `The child '${expectedReference}' is not at index ${index} `, msg, participation)
+    if (expectedReference !== undefined && !isEqualReferenceTarget(foundReference.targets[index], expectedReference)) {
+        throw newErrorDelta(
+            "indexEntryMismatch",
+            `The reference '${expectedReference.reference}, ${expectedReference.resolveInfo}' is not at index ${index} `,
+            msg,
+            participation
+        )
     }
     return foundReference
 }

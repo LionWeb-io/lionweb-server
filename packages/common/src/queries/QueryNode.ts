@@ -1,7 +1,7 @@
 import { DbConnection, LionWebTask, RepositoryData } from "@lionweb/server-database"
 import { InternalQueryError } from "./GuardFunctions.js"
 import { LionWebJsonNode } from "@lionweb/json"
-import { dbLogger, ResponseMessage } from "@lionweb/server-shared"
+import { dbLogger, ResponseMessage, toJsonString } from "@lionweb/server-shared"
 import { CONTAINMENTS_TABLE, METAPOINTERS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "../database/index.js"
 import { isLionWebJsonNode } from "./GuardFunctions.js"
 import { sqlArrayFromNodeIdArray } from "./PgHelpers.js"
@@ -46,16 +46,16 @@ export const retrieveFullNodesFromQueryDB = async (dbConnection: DbConnection, r
     if (is_NodesForQueryQuery_ResultType(queryResult)) {
         return queryResult
     } else {
-        throw InternalQueryError(`Query return type incorrect, expected NodesForQueryQuery_ResultType`,
-            [{
+        throw InternalQueryError(`Query return type incorrect, expected NodesForQueryQuery_ResultType`, [
+            {
                 key: "query",
                 value: retrieveFullNodesFromQuerySQL(nodeQuery)
-                },
-                {
-                    key: "queryResult",
-                    value: JSON.stringify(queryResult)
-                }
-            ])
+            },
+            {
+                key: "queryResult",
+                value: toJsonString(queryResult)
+            }
+        ])
     }
 }
 

@@ -18,6 +18,10 @@ export function isLionWebJsonNode(o: unknown): o is LionWebJsonNode {
     return !validator.validationResult.hasErrors()
 }
 
+/**
+ * 
+ * @param deltaChunk
+ */
 export function isProperTree(deltaChunk: LionWebDeltaJsonChunk): ValidationIssue[] {
     validator = new LionWebValidator({}, null)
     // Create a full LionWebChunk for the validator

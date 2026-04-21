@@ -108,11 +108,21 @@ const ChangeReference = async (participation: Participation, msg: ChangeReferenc
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [msg.parent])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
-        const beforeReference = validateReference(parentNode, msg.reference, msg.index, undefined, msg, participation)
-        const afterReference = { reference: msg.reference, targets: beforeReference.targets.splice(msg.index, 1, { 
+        const beforeReference = validateReference(
+            parentNode,
+            msg.reference,
+            msg.index,
+            // @ts-ignore
+            { resolveInfo: msg.oldResolveInfo ?? null, reference: msg.oldTarget ?? null },
+            msg,
+            participation
+        )
+        const newTargets = [...beforeReference.targets]
+        newTargets.splice(msg.index, 1, {
             resolveInfo: msg.newResolveInfo ?? null,
             reference: msg.newTarget ?? null
-        } as LionWebJsonReferenceTarget)}
+        } as LionWebJsonReferenceTarget)
+        const afterReference = { reference: msg.reference, targets: newTargets }
         
         const changes = new DbChanges(TableHelpers.pgp)
         changes.addChanges(
