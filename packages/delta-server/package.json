@@ -29,10 +29,10 @@
         "lint": "eslint src"
     },
     "dependencies": {
-        "@lionweb/json": "0.10.0-beta.0",
-        "@lionweb/json-diff": "0.10.0-beta.0",
-        "@lionweb/json-utils": "0.10.0-beta.0",
-        "@lionweb/validation": "0.10.0-beta.0",
+        "@lionweb/json": "0.10.0-alpha.0",
+        "@lionweb/json-diff": "0.10.0-alpha.0",
+        "@lionweb/json-utils": "0.10.0-alpha.0",
+        "@lionweb/validation": "0.10.0-alpha.0",
         "@lionweb/server-shared": "0.4.0-beta.5",
         "@lionweb/server-database": "0.4.0-beta.5",
         "@lionweb/server-common": "0.4.0-beta.5",
