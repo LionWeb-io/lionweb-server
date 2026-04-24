@@ -59,7 +59,6 @@ export class LionWebTreeConverter {
             }
             const containmentMP = this.getContainment(key)
             if (containmentMP !== undefined) {
-                console.log(`Found containment ${key}`)
                 const newContainment: LionWebJsonContainment = {
                     containment: containmentMP,
                     children: [],
@@ -78,7 +77,6 @@ export class LionWebTreeConverter {
             }
             const propertyMP = this.getProperty(key)
             if (propertyMP !== undefined) {
-                console.log(`Found property ${key}`)
                 const newProperty: LionWebJsonProperty = {
                     property: propertyMP,
                     // @ts-ignore
@@ -89,7 +87,6 @@ export class LionWebTreeConverter {
             }
             const referenceMP = this.getReference(key)
             if (referenceMP !== undefined) {
-                console.log(`Found reference ${key}`)
                 const newReference: LionWebJsonReference = {
                     reference: referenceMP,
                     targets: []
@@ -114,7 +111,7 @@ export class LionWebTreeConverter {
             if (name === cont) {
                 // @ts-ignore
                 const CLS = CONTAINMENT[cont]
-                console.log(`Found ${name} in containments: ${JSON.stringify(CLS)}`)
+                // console.log(`Found ${name} in containments: ${JSON.stringify(CLS)}`)
                 return CLS
             }
         }
@@ -125,7 +122,7 @@ export class LionWebTreeConverter {
             if (name === cont) {
                 // @ts-ignore
                 const CLS = REFERENCE[cont]
-                console.log(`Found ${name} in references: ${JSON.stringify(CLS)}`)
+                // console.log(`Found ${name} in references: ${JSON.stringify(CLS)}`)
                 return CLS
             }
         }
@@ -136,7 +133,7 @@ export class LionWebTreeConverter {
             if (name === cont) {
                 // @ts-ignore
                 const CLS = PROPERTY[cont]
-                console.log(`Found ${name} in properties: ${JSON.stringify(CLS)}`)
+                // console.log(`Found ${name} in properties: ${JSON.stringify(CLS)}`)
                 return CLS
             }
         }

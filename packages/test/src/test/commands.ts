@@ -296,6 +296,20 @@ export class Commands {
         return command
     }
 
+    addFullPartitionCmd = (client: DeltaClient, partition: LionWebJsonNode[]): AddPartitionCommand => {
+        const command: AddPartitionCommand = {
+            messageKind: "AddPartition",
+            commandId: `command-id-${queryId++}`,
+            newPartition: { nodes: partition },
+            additionalInfos: []
+        }
+        return command
+    }
+    
+    addFullPartition = (client: DeltaClient, partition: LionWebJsonNode[]): AddPartitionCommand => {
+        return client.sendCommand(this.addFullPartitionCmd(client, partition)) as AddPartitionCommand
+    }
+
     addPartition = (client: DeltaClient, partition: PartitionType): AddPartitionCommand => {
         return client.sendCommand(this.addPartitionCmd(client, partition)) as AddPartitionCommand
     }
@@ -323,10 +337,14 @@ export class Commands {
             newParent: params.newParent,
             additionalInfos: []
         }
-        return client.sendCommand(command)
+        return client.sendCommand(command) as MoveChildFromOtherContainmentCommand
     }
 
-    addChildCmd = (client: DeltaClient, child: NewChild, extra?: Partial<AddChildCommand>): DeltaCommand => {
+    // moveChildFromOtherContainment = (client: DeltaClient, params: Partial<MoveChildFromOtherContainmentCommand>): DeltaCommand => {
+    //     return client.sendC
+    // })
+
+        addChildCmd = (client: DeltaClient, child: NewChild, extra?: Partial<AddChildCommand>): DeltaCommand => {
         const command: AddChildCommand = {
             messageKind: "AddChild",
             commandId: `command-id-${queryId++}`,

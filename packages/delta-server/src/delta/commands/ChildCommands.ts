@@ -1,6 +1,6 @@
 import { isEqualMetaPointer } from "@lionweb/json"
 import { NodeUtils } from "@lionweb/json-utils"
-import { ChildAdded, Missing, ChildRemoved } from "@lionweb/json-diff"
+import { ChildAdded, Missing, ChildRemoved, ParentChanged } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
 import {
     DbChanges,
@@ -227,7 +227,7 @@ const ReplaceChild = async (
     return result
 }
 
-const MoveChildFromOtherContainment = async (
+const MoveChildFromOtherContainmentFunction = async (
     participation: Participation,
     msg: MoveChildFromOtherContainmentCommand,
     ctx: DeltaContext
@@ -281,11 +281,12 @@ const MoveChildFromOtherContainment = async (
         // add moivedChild to newParent comntainment.
         const changes = new DbChanges(TableHelpers.pgp)
         newContainment.children.splice(msg.newIndex, 0, movedChildNode.id)
-        oldContainment.children.splice(oldIndex, 0)
+        oldContainment.children.splice(oldIndex, 1)
         changes.addChanges(
             [
+                new ParentChanged(new JsonContext(null, ["delta"]), movedChildNode, oldParentNode.id, newParentNode.id),
                 new ChildAdded(new JsonContext(null, ["delta"]), newParentNode, msg.newContainment, newContainment, movedChildNode.id, Missing.MissingBefore),
-                new ChildRemoved(new JsonContext(null, ["delta"]), oldParentNode, oldContainment.containment, oldContainment, movedChildNode.id, Missing.MissingAfter),
+                new ChildRemoved(new JsonContext(null, ["delta"]), oldParentNode, oldContainment.containment, oldContainment, movedChildNode.id, Missing.NotMissing),
             ]
         )
         // Add child nodes to database
@@ -315,7 +316,7 @@ const MoveChildFromOtherContainment = async (
             ]
         } as ChildMovedFromOtherContainmentEvent
     })
-    return errorEvent(msg)
+    return result
 }
 
 const MoveChildFromOtherContainmentInSameParent = async (
@@ -379,33 +380,33 @@ export const childFunctions: DeltaFunction[] = [
         processor: ReplaceChild
     },
     {
-        messageKind: "DeletePartition",
+        messageKind: "MoveChildFromOtherContainment",
         // @ts-expect-error TS2332
-        processor: MoveChildFromOtherContainment
+        processor: MoveChildFromOtherContainmentFunction
     },
     {
-        messageKind: "DeletePartition",
+        messageKind: "MoveChildInSameContainment",
         // @ts-expect-error TS2332
         processor: MoveChildInSameContainment
     },
     {
-        messageKind: "DeletePartition",
+        messageKind: "MoveChildFromOtherContainmentInSameParent",
         // @ts-expect-error TS2332
         processor: MoveChildFromOtherContainmentInSameParent
     },
     {
-        messageKind: "DeletePartition",
+        messageKind: "MoveAndReplaceChildFromOtherContainment",
         // @ts-expect-error TS2332
         processor: MoveAndReplaceChildFromOtherContainment
     },
     {
-        messageKind: "DeletePartition",
-        // @ts-expect-error TS2332
-        processor: MoveAndReplaceChildInSameContainment
-    },
-    {
-        messageKind: "DeletePartition",
+        messageKind: "MoveAndReplaceChildFromOtherContainmentInSameParent",
         // @ts-expect-error TS2332
         processor: MoveAndReplaceChildFromOtherContainmentInSameParent
+    },
+    {
+        messageKind: "MoveAndReplaceChildInSameContainment",
+        // @ts-expect-error TS2332
+        processor: MoveAndReplaceChildInSameContainment
     }
 ]

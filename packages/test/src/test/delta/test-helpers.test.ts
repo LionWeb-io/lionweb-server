@@ -91,7 +91,7 @@ export async function logProtocol(client: DeltaClient, checkClient: RepositoryCl
         console.log(`ReceivedMessages ${client.clientId}`)
         // console.log(client.receivedMessageHistory)
 
-        const chunk = await checkClient.bulk.retrieve(rootIds)
+        const chunk = await checkClient.bulk.retrieve(rootIds, 100000)
 
         // console.log(ast2dot(rootIds[0], chunk.body.chunk.nodes))
         const snapshot = await makeSnapShot(checkClient, rootIds)
@@ -106,8 +106,9 @@ export async function logProtocol(client: DeltaClient, checkClient: RepositoryCl
                     languages: collectUsedLanguages(model.nodes()),
                     nodes: model.nodes(),
                 }
-            diff.diffLwChunk(logoChunk, chunk.body.chunk)
-            // diff.diffLwChunk(chunk.body.chunk, logoChunk)
+            // diff.diffLwChunk(logoChunk, chunk.body.chunk)
+            diff.diffLwChunk(chunk.body.chunk, logoChunk)
+            console.log(`RETRIEVED CHUNK ${JSON.stringify(chunk.body.chunk, null, 2)}`)
             console.log(`Diff has changes ${diff.diffResult.hasChanges()}`)
             diff.diffResult.changes.forEach(ch => {
                 console.log(`change ${ch.changeMsg()}`)

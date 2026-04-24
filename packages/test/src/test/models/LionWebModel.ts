@@ -70,7 +70,7 @@ export class LionWebModel {
      */
     private addNodes(nodes: LionWebJsonNode[]) {
         nodes.forEach((node) => {
-            console.log(`Add node ${node.id} cls: ${JSON.stringify(node.classifier)}`)
+            // console.log(`Add node ${node.id} cls: ${JSON.stringify(node.classifier)}`)
             this.nodesIdMap.set(node.id, node)
         })
     }
@@ -512,15 +512,15 @@ export class LionWebModel {
     }
 
     private recursiveToString(node: LionWebJsonNode | undefined, depth: number): string {
-        console.log(`recursiveToString ${depth} : ${node.id} cls: ${JSON.stringify(node.classifier)}`)
+        // console.log(`recursiveToString ${depth} : ${node.id} cls: ${JSON.stringify(node.classifier)}`)
         if (node === undefined) {
             return ""
         }
         let result: string = ""
-        console.log(`RECURSIVE ${JSON.stringify(node)}`)
+        // console.log(`RECURSIVE ${JSON.stringify(node)}`)
         const nameProperty = NodeUtils.findProperty(node, MetaPointers.INamedName)
         const name = nameProperty === undefined ? "" : " " + nameProperty.value
-        result += this.indent(depth) + "(" + node.id + ")" + name + "\n"
+        result += this.indent(depth) + " (" + node.id + ")" + name + "\n"
         if (node.annotations !== undefined && node.annotations.length !== 0) {
             result += this.indent(depth + 1) + "*Annotations*" + "\n"
             node.annotations.forEach((ann) => {

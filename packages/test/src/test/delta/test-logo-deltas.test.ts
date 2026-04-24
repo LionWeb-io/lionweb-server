@@ -6,8 +6,10 @@ import {
 } from "@lionweb/server-delta-shared"
 import { HttpSuccessCodes  } from "@lionweb/server-shared"
 import { test, describe, beforeAll, beforeEach, afterAll } from "vitest"
+import { LionWebTreeConverter } from "../models/LionWebTree.js"
+import { LibraryModel, LibraryTree, ProgramModel, ProgramTree } from "../models/testmodel.js"
 import { reportHTML } from "./helpers.js"
-import { CLASSIFIER as CLS, CONTAINMENT, CONTAINMENT as CON, PROPERTY as PROP, REFERENCE as REF } from "../models/keys.js"
+import { CLASSIFIER as CLS, CONTAINMENT, CONTAINMENT as CON, LibraryProcedures, ProgramCommands, PROPERTY as PROP, REFERENCE as REF } from "../models/keys.js"
 import { LionWebModel } from "../models/LionWebModel.js"
 import { CoverageMap, cmd, expectError, expectEvent, expectResponse, logProtocol } from "./test-helpers.test.js"
 
@@ -353,6 +355,33 @@ collection.forEach(withoutHistory => {
             await logProtocol(client, bulkApiClient, ["Program-01", "Library-01"], log, logoModel)
             // const snapshot = await makeSnapShot()
             // expect(snapshot).toMatchSnapshot
+        })
+        test("MoveChildren", async () => {
+            const partitionP = cmd.addFullPartition(client, ProgramModel.nodes())
+            const partitionL = cmd.addFullPartition(client, LibraryModel.nodes())
+            console.log(ProgramModel.asString())
+            const ifC = ProgramModel.getNode("id-if")
+            const lib = LibraryModel.getNode("id-library")
+            const converter = new LionWebTreeConverter()
+            converter.convert(LibraryTree)
+            ProgramModel.addPartition(converter.getConvertedNodes())
+
+            console.log(`MY ProgramModel ${ProgramModel.asString()}`)
+
+            const move = cmd.moveChildFromOtherContainment(client, {
+                movedChild: "id-if",
+                oldParent: ifC.parent,
+                oldContainment: ProgramCommands,
+                oldIndex: 3,
+                newIndex: 0,
+                newParent: "id-library",
+                newContainment: LibraryProcedures
+            })
+            await expectEvent(client, move, "ChildMovedFromOtherContainment")
+            ProgramModel.applyDelta(move)
+            console.log(`QAFTER ProgramModel ${ProgramModel.asString()}`)
+            await logProtocol(client, bulkApiClient, ["id-program", "id-library"], log, ProgramModel)
+
         })
     })
 })
