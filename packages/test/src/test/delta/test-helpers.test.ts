@@ -84,7 +84,7 @@ export async function makeSnapShot(bulkApiClient: RepositoryClient, rootIds: Lio
     return string
 }
 
-export async function logProtocol(client: DeltaClient, checkClient: RepositoryClient, rootIds: LionWebId[], log: boolean, model?: LionWebModel): Promise<void> {
+export async function logProtocol(client: DeltaClient, checkClient: RepositoryClient, rootIds: LionWebId[], log: boolean, expectedModel?: LionWebModel): Promise<void> {
     if (log) {
         console.log(`SentMessages ${client.clientId}`)
         // console.log(client.sentMessageHistory)
@@ -92,30 +92,28 @@ export async function logProtocol(client: DeltaClient, checkClient: RepositoryCl
         // console.log(client.receivedMessageHistory)
 
         const chunk = await checkClient.bulk.retrieve(rootIds, 100000)
+        const string = new Logo2String(chunk.body.chunk.nodes).logo2string()
+        console.log("Repo to string")
+        console.log(string)
 
-        // console.log(ast2dot(rootIds[0], chunk.body.chunk.nodes))
-        const snapshot = await makeSnapShot(checkClient, rootIds)
-
-        if (model !== undefined) {
+        if (expectedModel !== undefined) {
             console.log("Model to string")
-            console.log(model.asString())
+            const string = new Logo2String(expectedModel.nodes()).logo2string()
+            console.log(string)
+            console.log("=============")
+            console.log(expectedModel.asString())
             console.log("Model diff")
             const diff = new LionWebJsonDiff()
-            const logoChunk = {
-                    serializationFormatVersion: "2023.1",
-                    languages: collectUsedLanguages(model.nodes()),
-                    nodes: model.nodes(),
-                }
-            // diff.diffLwChunk(logoChunk, chunk.body.chunk)
-            diff.diffLwChunk(chunk.body.chunk, logoChunk)
-            console.log(`RETRIEVED CHUNK ${JSON.stringify(chunk.body.chunk, null, 2)}`)
+            // diff.diffLwChunk(expectedModel.asChunk(), chunk.body.chunk)
+            diff.diffLwChunk(chunk.body.chunk, expectedModel.asChunk())
+            // console.log(`RETRIEVED CHUNK ${JSON.stringify(chunk.body.chunk, null, 2)}`)
             console.log(`Diff has changes ${diff.diffResult.hasChanges()}`)
-            diff.diffResult.changes.forEach(ch => {
+            diff.diffResult.changes.forEach((ch) => {
                 console.log(`change ${ch.changeMsg()}`)
             })
+            console.log(`logoModel ${JSON.stringify(chunk.body.chunk, null, 2)}`)
             expect(diff.diffResult.changes).toStrictEqual([])
             // console.log(`logoModel ${JSON.stringify(logoChunk, null, 2)}`)
-            // console.log(`logoModel ${JSON.stringify(chunk.body.chunk, null, 2)}`)
         }
     }
 }

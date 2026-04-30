@@ -1,6 +1,16 @@
-import { isEqualMetaPointer, LionWebId, LionWebJsonContainment, LionWebJsonMetaPointer, LionWebJsonNode, LionWebJsonReference, LionWebJsonReferenceTarget } from "@lionweb/json"
+import {
+    isEqualMetaPointer,
+    LionWebId,
+    LionWebJsonChunk,
+    LionWebJsonContainment,
+    LionWebJsonMetaPointer,
+    LionWebJsonNode,
+    LionWebJsonReference,
+    LionWebJsonReferenceTarget,
+    LionWebSerializationFormatVersion
+} from "@lionweb/json"
 import { MetaPointers, NodeUtils } from "@lionweb/json-utils"
-import { isProperTree } from "@lionweb/server-common"
+import { collectUsedLanguages, isProperTree } from "@lionweb/server-common"
 import {
     AddAnnotationCommand,
     AddChildCommand,
@@ -28,17 +38,8 @@ import {
     ReplaceAnnotationCommand,
     ReplaceChildCommand,
 } from "@lionweb/server-delta-shared"
-import { asMinimalJsonString } from "@lionweb/ts-utils"
 import { pull } from "es-toolkit"
 
-// export type PartialNode = {
-//     id: LionWebId,
-//     classifier: LionWebJsonMetaPointer,
-//     annotations?: LionWebId[],
-//     properties: LionWebJsonProperty[]
-//     containments: LionWebJsonContainment[]
-//     references: LionWebJsonReference[]
-// } 
 /**
  * Represents a complete model consisting of LionWebJsonNode objects.
  * Allows us to use a collection of LionWebJsonNodes to be accessed as a tree.
@@ -324,6 +325,15 @@ export class LionWebModel {
 
     nodes(): LionWebJsonNode[] {
         return Array.from(this.nodesIdMap.values())
+    }
+    
+    asChunk(serializationVersion: LionWebSerializationFormatVersion = "2023.1" ): LionWebJsonChunk {
+        const nodes = this.nodes()
+        return {
+            serializationFormatVersion: serializationVersion,
+            languages: collectUsedLanguages(this.nodes()),
+            nodes: this.nodes(),
+        }
     }
 
     applyDelta(delta: DeltaCommand): void {

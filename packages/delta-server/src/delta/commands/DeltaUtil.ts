@@ -1,4 +1,5 @@
 import { LionWebJsonNode } from "@lionweb/json"
+import { JsonContext } from "@lionweb/json-utils"
 import { LionWebTask } from "@lionweb/server-database"
 import { dbLogger, deltaLogger } from "@lionweb/server-shared"
 import { ValidationIssue } from "@lionweb/validation"
@@ -79,7 +80,7 @@ export const retrieveNodeFromDB = async(id: string, delta: DeltaCommand | DeltaR
         })
     }
     if (queryResult === undefined || queryResult.length === 0) {
-        throw newErrorDelta("nodeDoesNotExist", `The node with id '${id}' does not exist result ${queryResult}`, delta, participation)
+        throw newErrorDelta("unknownNode", `The node with id '${id}' does not exist result ${queryResult}`, delta, participation)
     }
     if (queryResult.length > 1) {
         throw newErrorDelta("TwoNodesWithSameId", `There are two nodes with id '${id}' in the repository`, delta, participation, {
@@ -103,4 +104,8 @@ export async function affectedPartition(task: LionWebTask, nodeid: LionWebId, pa
     deltaLogger.debug(`affectedPartition: PARENT CHAIN IS ${JSON.stringify(parentChain)}`)
     const affectedPartition = parentChain[parentChain.length - 1] ?? ({ id: nodeid, parent: null } as NodeWithParent)
     return affectedPartition.id
+}
+
+export function deltaContext(): JsonContext {
+    return new JsonContext(null, ["delta"])
 }

@@ -85,18 +85,8 @@ const DeleteAnnotation = async (
     deltaLogger.info("Called DeleteAnnotation " + msg.messageKind)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [msg.parent, msg.deletedAnnotation])
-        const parentNode = nodesFromDB.find(n => n.id === msg.parent)
-
-        // Check whether parent exists
-        if (parentNode === undefined) {
-            return newErrorDelta("unknownNode", `Parent '${msg.parent}' does not exist`, msg, participation)
-        }
-        // Check whether child exists
-        const annotationNode = nodesFromDB.find(n => n.id === msg.deletedAnnotation)
-        // validateExists(childNode, "unknownNode", `Child '${msg.deletedChild}' does not exist`, msg, participation)
-        if (annotationNode === undefined) {
-            return newErrorDelta("unknownNode", `Annotation '${msg.deletedAnnotation}' does not exist`, msg, participation)
-        }
+        const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
+        const annotationNode = findAndValidateNodeExists(msg.deletedAnnotation, nodesFromDB, msg, participation)
 
         if (msg.index > parentNode.annotations.length - 1) {
             return newErrorDelta("unknownIndex", "TODO", msg, participation)

@@ -1,4 +1,4 @@
-import { CLASSIFIER, GreaterThan, If, Left, Library, MoveCommand, NumbericLiteral, Program } from "./keys.js"
+import { CLASSIFIER, GreaterThan, If, Left, Library, MoveCommand, NumbericLiteral, Procedure, Program } from "./keys.js"
 import { LionWebModel } from "./LionWebModel.js"
 import { LionWebTree, LionWebTreeConverter } from "./LionWebTree.js"
 
@@ -50,18 +50,34 @@ export const ProgramTree: LionWebTree = {
 export const LibraryTree: LionWebTree = {
     type: Library,
     id: "id-library",
-    INamedName: "Library One"
+    INamedName: "Library One",
+    LibraryProcedures: [
+        {
+            type: Procedure,
+            id: "id-procedure",
+            INamedName: "DoSomething"
+        }
+    ]
 }
- 
-const converter = new LionWebTreeConverter()
 
-converter.convert(ProgramTree)
-export const ProgramModel = new LionWebModel(converter.getConvertedNodes())
-export const newModel = ProgramModel.nodes()
-console.log(`Model ${ProgramModel.asString()}`)
+export let ProgramModel: LionWebModel = new LionWebModel([])
+export let LibraryModel: LionWebModel = new LionWebModel([])
+export let programNodes = ProgramModel.nodes()
+export let libraryNodes = LibraryModel.nodes()
 
-converter.convert(LibraryTree)
-export const LibraryModel = new LionWebModel(converter.getConvertedNodes())
+export function resetModels(): void {
+    const converter = new LionWebTreeConverter()
+    converter.convert(ProgramTree)
+    ProgramModel = new LionWebModel(converter.getConvertedNodes())
+    converter.convert(LibraryTree)
+    LibraryModel = new LionWebModel(converter.getConvertedNodes())
+    programNodes = ProgramModel.nodes()
+    programNodes = ProgramModel.nodes()
+    libraryNodes = LibraryModel.nodes()
+}
+
+
+
 // ProgramModel.addPartition(converter.getConvertedNodes())
 // console.log(`LibraryModel ${ProgramModel.asString()}`)
 //

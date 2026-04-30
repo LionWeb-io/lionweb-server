@@ -18,7 +18,7 @@ import { DeltaContext } from "../DeltaContext.js"
 import { affectedNodeMessage, affectedPartitionMessage, ErrorDelta, newErrorDelta } from "../events.js"
 import { Participation } from "../participation/index.js"
 import { affectedPartition, DeltaFunction } from "./DeltaUtil.js"
-import { findAndValidateNodeExists, validateReference } from "./Validations.js"
+import { findAndValidateNodeExists, findAndValidateReference } from "./Validations.js"
 
 const AddReference = async (participation: Participation, msg: AddReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorEvent> => {
     deltaLogger.info("Called AddReference " + msg.newResolveInfo)
@@ -28,7 +28,7 @@ const AddReference = async (participation: Participation, msg: AddReferenceComma
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [msg.parent])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
-        const beforeReference = validateReference(parentNode, msg.reference, msg.index,undefined, msg, participation)
+        const beforeReference = findAndValidateReference(parentNode, msg.reference, msg.index,undefined, msg, participation)
         const afterReference = { reference: beforeReference.reference, targets: [...beforeReference.targets]}
         afterReference.targets.splice(msg.index, 0, { resolveInfo: msg.newResolveInfo ?? null, reference: msg.newTarget!})
 
@@ -70,7 +70,7 @@ const DeleteReference = async (participation: Participation, msg: DeleteReferenc
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [msg.parent])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
-        const beforeReference = validateReference(parentNode, msg.reference, msg.index, undefined, msg, participation)
+        const beforeReference = findAndValidateReference(parentNode, msg.reference, msg.index, undefined, msg, participation)
         const afterTargets = [...beforeReference.targets]
         afterTargets.splice(msg.index, 1)
         const afterReference = { reference: beforeReference.reference, targets: afterTargets}
@@ -108,7 +108,7 @@ const ChangeReference = async (participation: Participation, msg: ChangeReferenc
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [msg.parent])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
-        const beforeReference = validateReference(
+        const beforeReference = findAndValidateReference(
             parentNode,
             msg.reference,
             msg.index,

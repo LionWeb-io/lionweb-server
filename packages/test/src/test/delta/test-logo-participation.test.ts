@@ -5,7 +5,7 @@ import { HttpSuccessCodes  } from "@lionweb/server-shared"
 import { test, describe, beforeAll, beforeEach, afterAll } from "vitest"
 import { reportHTML } from "./helpers.js"
 import { CLASSIFIER as CLS, CONTAINMENT as CON } from "../models/keys.js"
-import { newModel } from "../models/testmodel.js"
+import { programNodes, resetModels } from "../models/testmodel.js"
 import { Logo2String } from "../models/Logo2String.js"
 import { CoverageMap, cmd, expectEvent, expectResponse, expectError, logProtocol } from "./test-helpers.test.js"
 
@@ -183,8 +183,9 @@ collection.forEach((withoutHistory) => {
 
             })
             test("AddPartition with depth", async () => {
+                resetModels()
                 const addPartition = cmd.addPartitionCmd(client2, { id: "Program", classifier: CLS.Program })
-                addPartition.newPartition.nodes = newModel
+                addPartition.newPartition.nodes = programNodes
                 client2.sendCommand(addPartition)
                 
                 await expectEvent(client2, addPartition, "PartitionAdded")
