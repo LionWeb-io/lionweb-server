@@ -14,6 +14,7 @@ import {
     ChildAddedEvent,
     ChildDeletedEvent,
     ChildMovedAndReplacedFromOtherContainmentEvent,
+    ChildMovedAndReplacedFromOtherContainmentInSameParentEvent,
     ChildMovedFromOtherContainmentEvent,
     ChildMovedFromOtherContainmentInSameParentEvent,
     ChildReplacedEvent,
@@ -368,11 +369,8 @@ const MoveAndReplaceChildFromOtherContainment = async (
         const newParentNode = findAndValidateNodeExists(msg.newParent, nodesFromDB, msg, participation)
         const movedChildNode = findAndValidateNodeExists(msg.movedChild, nodesFromDB, msg, participation)
         const replacedChildNode = findAndValidateNodeExists(msg.replacedChild, nodesFromDB, msg, participation)
-        console.log("======================= 0")
         const oldContainment = findAndValidateContainment(oldParentNode, msg.oldContainment, msg, participation)
-        console.log("======================= 3")
         validateChildInContainment(oldParentNode, oldContainment, msg.oldIndex, msg.movedChild, msg, participation)
-        console.log("======================= 1")
         const newContainment = validateContainment(
             newParentNode,
             msg.newContainment,
@@ -382,8 +380,6 @@ const MoveAndReplaceChildFromOtherContainment = async (
             msg,
             participation
         )
-        console.log("======================= 2")
-
         // Get the subtree of `deletedChild` from the database to remove them
         const subtreeNodes = await DB.retrieveNodeTreeDB(task, participation.repositoryData!, [msg.replacedChild], Number.MAX_SAFE_INTEGER)
         const deleteSql = SQL.deleteFullNodesSQL(subtreeNodes.map(n => n.id))
@@ -427,15 +423,77 @@ const MoveAndReplaceChildFromOtherContainment = async (
             additionalInfos: [affectedNodeMessage(msg.oldParent), affectedPartitionMessage(partition)]
         } as ChildMovedAndReplacedFromOtherContainmentEvent
     })
-    return result}
+    return result
+}
 
 const MoveAndReplaceChildFromOtherContainmentInSameParent = async (
     participation: Participation,
     msg: MoveAndReplaceChildFromOtherContainmentInSameParentCommand,
-    _ctx: DeltaContext
+    ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorEvent> => {
     deltaLogger.debug("Called MoveAndReplaceChildFromOtherContainmentInSameParent " + msg.messageKind)
-    return errorEvent(msg)
+    const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
+        const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
+            msg.replacedChild,
+            msg.movedChild,
+            msg.parent
+        ])
+        const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
+        const movedChildNode = findAndValidateNodeExists(msg.movedChild, nodesFromDB, msg, participation)
+        const replacedChildNode = findAndValidateNodeExists(msg.replacedChild, nodesFromDB, msg, participation)
+        const oldContainment = findAndValidateContainment(parentNode, msg.oldContainment, msg, participation)
+        validateChildInContainment(parentNode, oldContainment, msg.oldIndex, msg.movedChild, msg, participation)
+        const newContainment = validateContainment(
+            parentNode,
+            msg.newContainment,
+            msg.newIndex,
+            "Replace",
+            msg.replacedChild,
+            msg,
+            participation
+        )
+        // Get the subtree of `deletedChild` from the database to remove them
+        const subtreeNodes = await DB.retrieveNodeTreeDB(task, participation.repositoryData!, [msg.replacedChild], Number.MAX_SAFE_INTEGER)
+        const deleteSql = SQL.deleteFullNodesSQL(subtreeNodes.map(n => n.id))
+
+        //// Execute ////
+        const changes = new DbChanges(TableHelpers.pgp)
+        newContainment.children.splice(msg.newIndex, 1, movedChildNode.id)
+        oldContainment.children.splice(msg.oldIndex, 1)
+        changes.addChanges([
+            new ChildRemoved(deltaContext(), parentNode, msg.oldContainment, oldContainment, movedChildNode.id, Missing.NotMissing),
+            new ChildRemoved(
+                deltaContext(),
+                parentNode,
+                newContainment.containment,
+                newContainment,
+                replacedChildNode.id,
+                Missing.NotMissing
+            ),
+            new ChildAdded(deltaContext(), parentNode, msg.newContainment, newContainment, movedChildNode.id, Missing.NotMissing)
+        ])
+        const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
+        // TODO Check: not needed as there are no new nodes or containments.
+        // await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [], task)
+        await task.query(participation.repositoryData!, deleteSql + changes.createPostgresQuery(metaPointerTracker))
+        const partition = await affectedPartition(task, parentNode.id, participation)
+
+        return {
+            messageKind: "ChildMovedAndReplacedFromOtherContainmentInSameParent",
+            parent: msg.parent,
+            movedChild: msg.movedChild,
+            newContainment: msg.newContainment,
+            newIndex: msg.newIndex,
+            oldContainment: msg.oldContainment,
+            oldIndex: msg.oldIndex,
+            replacedChild: msg.replacedChild,
+            replacedDescendants: subtreeNodes.map(n => n.id),
+            originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
+            sequenceNumber: 0, // dummy, will be changed for each participation before sending
+            additionalInfos: [affectedNodeMessage(msg.parent), affectedPartitionMessage(partition)]
+        } as ChildMovedAndReplacedFromOtherContainmentInSameParentEvent
+    })
+    return result
 }
 
 const MoveAndReplaceChildInSameContainment = async (

@@ -66,7 +66,7 @@ export function reportHTML(CoverageMap: Map<CommandMessageKind | RequestMessageK
 </head>
 <table border="1">
 <thead>
-<tr><th>Command</th><th>Server</th><th>Freon</th><th>Freon</th><th>Tests Ok</th><th>Expected Errors</th></tr>
+<tr><th>Command</th><th>Server</th><th>Freon</th><th>Freon</th><th>Tests Ok</th><th>Expected Errors Tested</th></tr>
 </thead>
 <tbody>
 `

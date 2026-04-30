@@ -43,7 +43,8 @@ import {
     MoveChildFromOtherContainmentCommand,
     MoveChildFromOtherContainmentInSameParentCommand,
     ReplaceChildCommand,
-    MoveAndReplaceChildFromOtherContainmentCommand
+    MoveAndReplaceChildFromOtherContainmentCommand,
+    MoveAndReplaceChildFromOtherContainmentInSameParentCommand
 } from "@lionweb/server-delta-shared"
 import { waitFor } from "./delta/helpers.js"
 import {} from "./utils.js"
@@ -379,6 +380,25 @@ export class Commands {
             additionalInfos: []
         }
         return client.sendCommand(command) as MoveAndReplaceChildFromOtherContainmentCommand
+    }
+
+    moveAndReplaceChildFromOtherContainmentInSameParent = (
+        client: DeltaClient,
+        params: Partial<MoveAndReplaceChildFromOtherContainmentInSameParentCommand>
+    ): MoveAndReplaceChildFromOtherContainmentInSameParentCommand => {
+        const command: MoveAndReplaceChildFromOtherContainmentInSameParentCommand = {
+            messageKind: "MoveAndReplaceChildFromOtherContainmentInSameParent",
+            commandId: `command-id-${queryId++}`,
+            movedChild: params.movedChild,
+            parent: params.parent,
+            oldContainment: params.oldContainment,
+            oldIndex: params.oldIndex,
+            newContainment: params.newContainment,
+            newIndex: params.newIndex,
+            replacedChild: params.replacedChild,
+            additionalInfos: []
+        }
+        return client.sendCommand(command) as MoveAndReplaceChildFromOtherContainmentInSameParentCommand
     }
 
     replaceChildCmd = (

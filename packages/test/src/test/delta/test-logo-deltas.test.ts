@@ -608,6 +608,62 @@ collection.forEach(withoutHistory => {
             ProgramModel.applyDelta(move)
             await logProtocol(client, bulkApiClient, ["id-program", "id-library"], log, ProgramModel)
         })
+
+        test("MoveAndReplaceChildFromOtherContainmentInSameParent", async () => {
+            resetModels()
+            const delProgram = cmd.deletePartition(client, "id-program")
+            const delLibrary = cmd.deletePartition(client, "id-library")
+            await expectEvent(client, delProgram, "PartitionDeleted")
+            await expectEvent(client, delLibrary, "PartitionDeleted")
+
+            const partitionP = cmd.addFullPartition(client, programNodes)
+            const partitionL = cmd.addFullPartition(client, libraryNodes)
+            await expectEvent(client, partitionP, "PartitionAdded")
+            await expectEvent(client, partitionL, "PartitionAdded")
+            // console.log(ProgramModel.asString())
+            const ifC = ProgramModel.getNode("id-if")
+            const lib = LibraryModel.getNode("id-library")
+            // const converter = new LionWebTreeConverter()
+            // converter.convert(LibraryTree)
+            ProgramModel.addPartition(libraryNodes)
+
+            console.log(`MY ProgramModel ${ProgramModel.asString()}`)
+
+            const moveErr1 = cmd.moveAndReplaceChildFromOtherContainmentInSameParent(client, {
+                movedChild: "id-never", // incorrect
+                parent: ifC.parent,
+                oldContainment: ProgramCommands,
+                oldIndex: 3,
+                newContainment: ProcedureBody,
+                newIndex: 0,
+                replacedChild: "id-any",
+            })
+            await expectError(client, moveErr1, "unknownNode")
+            const moveErr3 = cmd.moveAndReplaceChildFromOtherContainmentInSameParent(client, {
+                movedChild: "id-if",
+                parent: "id-program", // incorrect
+                oldContainment: ProgramCommands,
+                oldIndex: 1,
+                newContainment: ProcedureBody,
+                newIndex: 0,
+                replacedChild: "id-procedure",
+            })
+            await expectError(client, moveErr3, "indexEntryMismatch")
+
+            const move = cmd.moveAndReplaceChildFromOtherContainmentInSameParent(client, {
+                movedChild: "id-p1-param1",
+                parent: "id-procedure", // incorrect
+                oldContainment: CONTAINMENT.ProcedureParameter,
+                oldIndex: 0,
+                newContainment: CONTAINMENT.ProcedureBody,
+                newIndex: 0,
+                replacedChild: "id-p1-home",
+            })
+
+            await expectEvent(client, move, "ChildMovedAndReplacedFromOtherContainmentInSameParent")
+            ProgramModel.applyDelta(move)
+            await logProtocol(client, bulkApiClient, ["id-program", "id-library"], log, ProgramModel)
+        })
     })
 })
 /**

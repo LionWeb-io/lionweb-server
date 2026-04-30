@@ -53,9 +53,27 @@ export const LibraryTree: LionWebTree = {
     INamedName: "Library One",
     LibraryProcedures: [
         {
-            type: Procedure,
+            type: CLASSIFIER.Procedure,
             id: "id-procedure",
-            INamedName: "DoSomething"
+            INamedName: "DoSomething",
+            ProcedureBody: [
+                {
+                    type: CLASSIFIER.HomeCommand,
+                    id: "id-p1-home"
+                }
+            ],
+            ProcedureParameter: [
+                {
+                    type: CLASSIFIER.Parameter,
+                    id: "id-p1-param1",
+                    INamedName: "param1"
+                },
+                {
+                    type: CLASSIFIER.Parameter,
+                    id: "id-p1-param2",
+                    INamedName: "param2"
+                }
+            ]
         }
     ]
 }
