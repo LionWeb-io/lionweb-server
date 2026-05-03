@@ -7,7 +7,8 @@ import { reportHTML } from "./helpers.js"
 import { CLASSIFIER as CLS, CONTAINMENT as CON } from "../models/keys.js"
 import { programNodes, resetModels } from "../models/testmodel.js"
 import { Logo2String } from "../models/Logo2String.js"
-import { CoverageMap, cmd, expectEvent, expectResponse, expectError, logProtocol } from "./test-helpers.test.js"
+import { beforeAllTests } from "./SharedTest.js"
+import { CoverageMap, cmd, expectEvent, expectResponse, expectError, logProtocol } from "./test-helpers.js"
 
 // TOPO Delta : primary key exception when nohistory = false 
 const collection = [true]
@@ -37,6 +38,7 @@ collection.forEach((withoutHistory) => {
         client4.repository = repository + "_other"
 
         beforeAll(async function () {
+            await beforeAllTests(withoutHistory)
             bulkApiClient.repository = repository
             const delResponse = await bulkApiClient.dbAdmin.deleteRepository(repository, "delete at start og test")
             const initResponse = await bulkApiClient.dbAdmin.createRepository(repository, !withoutHistory, "2023.1")
@@ -169,7 +171,7 @@ collection.forEach((withoutHistory) => {
                 // addP.additionalInfos = undefined
                 composite.parts.push(addP)
                 const nestedComposite = cmd.compositeCommandCmd()
-                const addChildCommand1 = cmd.addChildCmd(client2, { id: "Move-022", cls: CLS.MoveCommand, parent: "Program-022", containment: CON.ProgramCommands, props: [] })
+                const addChildCommand1 = cmd.addChildCmd(client2, { id: "Move-022", cls: CLS.MoveCommand, parent: "Program-022", containment: CON.ProgramCommands, index: 0, props: [] })
                 nestedComposite.parts.push(addChildCommand1)
                 composite.parts.push(nestedComposite)
                 client2.sendCommand(composite)

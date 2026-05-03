@@ -44,7 +44,9 @@ import {
     MoveChildFromOtherContainmentInSameParentCommand,
     ReplaceChildCommand,
     MoveAndReplaceChildFromOtherContainmentCommand,
-    MoveAndReplaceChildFromOtherContainmentInSameParentCommand
+    MoveAndReplaceChildFromOtherContainmentInSameParentCommand,
+    AddAnnotationCommand,
+    DeleteAnnotationCommand
 } from "@lionweb/server-delta-shared"
 import { waitFor } from "./delta/helpers.js"
 import {} from "./utils.js"
@@ -63,9 +65,18 @@ export type NewChild = {
     cls: LionWebJsonMetaPointer
     parent: LionWebId
     containment: LionWebJsonMetaPointer
+    index: number,
     props: PropValue[]
 }
 export type PropValue = { prop: LionWebJsonMetaPointer; value: string }
+
+export type AddAnnotationType = {
+    id: LionWebId
+    cls: LionWebJsonMetaPointer
+    parent: LionWebId
+    index: number,
+    props: PropValue[]
+}
 
 
 export type DeleteChildType = {
@@ -80,8 +91,6 @@ export type AddReferenceType = {
     index: number
     target: LionWebId
     resolveInfo: string
-    // newTarget: LionWebId
-    // newResolveInfo: string
     reference: LionWebJsonMetaPointer
 }
 
@@ -404,7 +413,6 @@ export class Commands {
     replaceChildCmd = (
         client: DeltaClient,
         child: NewChild,
-        index: number,
         replacedChild: LionWebId,
         extra?: Partial<ReplaceChildCommand>
     ): ReplaceChildCommand => {
@@ -412,7 +420,7 @@ export class Commands {
             messageKind: "ReplaceChild",
             commandId: `command-id-${queryId++}`,
             containment: child.containment,
-            index: index,
+            index: child.index,
             parent: child.parent,
             replacedChild: replacedChild,
             newChild: {
@@ -441,11 +449,10 @@ export class Commands {
     replaceChild = (
         client: DeltaClient,
         child: NewChild,
-        index: number,
         replacedChild: LionWebId,
         extra?: Partial<ReplaceChildCommand>
     ): DeltaCommand => {
-        return client.sendCommand(this.replaceChildCmd(client, child, index, replacedChild, extra))
+        return client.sendCommand(this.replaceChildCmd(client, child, replacedChild, extra))
     }
 
     addChildCmd = (client: DeltaClient, child: NewChild, extra?: Partial<AddChildCommand>): DeltaCommand => {
@@ -453,7 +460,8 @@ export class Commands {
             messageKind: "AddChild",
             commandId: `command-id-${queryId++}`,
             containment: child.containment,
-            index: 0,
+            // TODO add to NewChild
+            index: child.index,
             parent: child.parent,
             newChild: {
                 nodes: [
@@ -471,9 +479,6 @@ export class Commands {
                 ]
             },
             additionalInfos: []
-        }
-        if (extra?.index) {
-            command.index = extra.index
         }
         return command
     }
@@ -620,6 +625,44 @@ export class Commands {
                 return response.messageKind
             }
         }
+    }
+
+    addAnnotation = (client: DeltaClient, annotation: AddAnnotationType, extra?: Partial<AddAnnotationCommand>): AddAnnotationCommand => {
+        const command: AddAnnotationCommand = {
+            messageKind: "AddAnnotation",
+            commandId: `command-id-${queryId++}`,
+            index: 0,
+            parent: annotation.parent,
+            newAnnotation: {
+                nodes: [
+                    {
+                        id: annotation.id,
+                        parent: annotation.parent,
+                        properties: annotation.props.map(p => {
+                            return { property: p.prop, value: p.value }
+                        }),
+                        containments: [],
+                        references: [],
+                        classifier: annotation.cls,
+                        annotations: []
+                    }
+                ]
+            },
+            additionalInfos: []
+        }
+        return client.sendCommand(command) as AddAnnotationCommand
+    }
+
+    deleteAnnotation = (client: DeltaClient, parent: LionWebId, annotation: LionWebId, index: number): DeleteAnnotationCommand => {
+        const command: DeleteAnnotationCommand = {
+            messageKind: "DeleteAnnotation",
+            commandId: `command-id-${queryId++}`,
+            index: index,
+            parent: parent,
+            deletedAnnotation: annotation,
+            additionalInfos: []
+        }
+        return client.sendCommand(command) as DeleteAnnotationCommand
     }
 }
 
