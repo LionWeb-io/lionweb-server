@@ -158,7 +158,7 @@ class DeltaProcessor {
                 const errorDelta = newErrorDelta("queryError", e.message, delta, participation!, {
                     additionalInfos: [
                         {
-                            data: e.data,
+                            data: e.data ?? [],
                             kind: e.name,
                             message: "Additional data"
                         }

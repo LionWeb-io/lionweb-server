@@ -4,7 +4,7 @@ import { CONTAINMENT, LibraryProcedures, ProcedureBody, ProgramCommands } from "
 import { cmd, expectError, expectEvent, logProtocol } from "./test-helpers.js"
 import { client, beforeAllTests, bulkApiClient, log, afterAllTests, withoutHistoryList } from "./SharedTest.js"
 
-describe.each(withoutHistoryList)("MoveAndReplaceChildFromOtherContainment-$withoutHistory ", async ({ withoutHistory }) => {
+describe.each(withoutHistoryList)("MoveAndReplaceChildFromOtherContainment-$withoutHistory", async ({ withoutHistory }) => {
     let a=""
     beforeAll(async function (ctx) {
         a= ctx.name

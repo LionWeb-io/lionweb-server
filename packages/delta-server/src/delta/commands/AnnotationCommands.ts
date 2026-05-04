@@ -18,8 +18,8 @@ import {
 import { DeltaContext } from "../DeltaContext.js"
 import { affectedNodeMessage, affectedPartitionMessage, ErrorDelta, newErrorDelta } from "../events.js"
 import { Participation } from "../participation/index.js"
-import { affectedPartition, DeltaFunction, errorEvent } from "./DeltaUtil.js"
-import { findAndValidateNodeExists, validateProperTree } from "./Validations.js"
+import { affectedPartition, deltaContext, DeltaFunction, errorEvent } from "./DeltaUtil.js"
+import { findAndValidateNodeExists, validateExistingNodesIsEmpty, validateProperTree } from "./Validations.js"
 
 const AddAnnotation = async (participation: Participation, msg: AddAnnotationCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
     deltaLogger.info(`Called AddAnnotation to node ${msg.parent}`)
@@ -35,19 +35,16 @@ const AddAnnotation = async (participation: Participation, msg: AddAnnotationCom
             return nn.id !== msg.parent
         })
         // node alreadyExists
-        deltaLogger.debug("EXISTING annotation nodes " + existingChildNodes.map(n => n.id))
-        if (existingChildNodes.length > 0) {
-            const existingIds = existingChildNodes.map(n => n.id)
-            throw newErrorDelta("nodeAlreadyExists", `Nodes '${existingIds}' already exist`, msg, participation)
-        }
+        validateExistingNodesIsEmpty(existingChildNodes, msg, participation)
+
         const newParentNode = structuredClone(parentNode)
         newParentNode.annotations.splice(msg.index, 0, newAnnotationNode!.id)
         // Check done, do the work
         const changes = new DbChanges(TableHelpers.pgp)
         changes.addChanges([
             new AnnotationAdded(
-                new JsonContext(null, ["delta"]),
-                parentNode!,
+                deltaContext(),
+                parentNode,
                 newParentNode,
                 newAnnotationNode!.id,
                 msg.index
@@ -179,37 +176,37 @@ const MoveAndReplaceAnnotationInSameParent = async (
 
 export const annotationFunctions: DeltaFunction[] = [
     {
-        messageKind: "",
+        messageKind: "AddAnnotation",
         // @ts-expect-error TS2332
         processor: AddAnnotation
     },
     {
-        messageKind: "",
+        messageKind: "DeleteAnnotation",
         // @ts-expect-error TS2332
         processor: DeleteAnnotation
     },
     {
-        messageKind: "",
+        messageKind: "ReplaceAnnotation",
         // @ts-expect-error TS2332
         processor: ReplaceAnnotation
     },
     {
-        messageKind: "",
+        messageKind: "MoveAnnotationInSameParent",
         // @ts-expect-error TS2332
         processor: MoveAnnotationInSameParent
     },
     {
-        messageKind: "",
+        messageKind: "MoveAnnotationFromOtherParent",
         // @ts-expect-error TS2332
         processor: MoveAnnotationFromOtherParent
     },
     {
-        messageKind: "",
+        messageKind: "MoveAndReplaceAnnotationInSameParent",
         // @ts-expect-error TS2332
         processor: MoveAndReplaceAnnotationInSameParent
     },
     {
-        messageKind: "",
+        messageKind: "MoveAndReplaceAnnotationFromOtherParent",
         // @ts-expect-error TS2332
         processor: MoveAndReplaceAnnotationFromOtherParent
     },

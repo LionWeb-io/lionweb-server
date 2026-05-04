@@ -219,7 +219,7 @@ const GetAvailableIdsRequestFunction = async (
     msg: GetAvailableIdsRequest,
     ctx: DeltaContext
 ): Promise<DeltaEvent | DeltaResponse> => {
-    deltaLogger.info("Called GetAvailableIdsRequestFunction " + msg.messageKind)
+    deltaLogger.info(`Called GetAvailableIdsRequestFunction participation '${JSON.stringify(participation)}'`)
     const ids = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const result = await DB.getAvailableIds(task, participation.repositoryData!, msg.count)
         return result

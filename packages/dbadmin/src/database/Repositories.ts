@@ -26,7 +26,7 @@ export async function getRepositoryData(task: LionWebTask, request: Request, def
                 success: false,
                 error: {
                     kind: `RepositoryUnknown-ParameterIncorrect`,
-                    message: `Repository ${repoName} not found`
+                    message: `Repository data ${repoName} not found`
                 }
             }
         }

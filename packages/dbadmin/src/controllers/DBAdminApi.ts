@@ -218,7 +218,7 @@ export class DBAdminApiImpl implements DBAdminApi {
             lionwebResponse<ListPartitionsResponse>(response, HttpClientErrors.PreconditionFailed, {
                 success: false,
                 chunk: null,
-                messages: [{ kind: "RepositoryNotFound", message: `Repository ${getRepositoryParameter(request)} not found` }]
+                messages: [{ kind: "RepositoryNotFound", message: `Repository to be deleted ${getRepositoryParameter(request)} not found` }]
             })
         } else {
             await this.ctx.dbConnection.tx(async (task: LionWebTask) => {

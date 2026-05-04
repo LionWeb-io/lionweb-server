@@ -1,25 +1,15 @@
-import { RepositoryClient } from "@lionweb/server-http-client"
-import { adminResponseFunctions, DeltaClient, eventFunctions, responseFunctions } from "@lionweb/server-delta-client"
 import {
     GetAvailableIdsResponse,
     ListPartitionsResponse
 } from "@lionweb/server-delta-shared"
-import { HttpSuccessCodes  } from "@lionweb/server-shared"
 import { test, describe, beforeAll, beforeEach, afterAll } from "vitest"
-import { LionWebTreeConverter } from "../models/LionWebTree.js"
-import { LibraryModel, libraryNodes, LibraryTree, ProgramModel, programNodes, ProgramTree, resetModels } from "../models/testmodel.js"
-import { reportHTML } from "./helpers.js"
 import { CLASSIFIER as CLS, CONTAINMENT, CONTAINMENT as CON, LibraryProcedures, ProcedureBody, ProgramCommands, PROPERTY as PROP, REFERENCE as REF } from "../models/keys.js"
-import { LionWebModel } from "../models/LionWebModel.js"
 import { CoverageMap, cmd, expectError, expectEvent, expectResponse, logProtocol } from "./test-helpers.js"
 
-import { client, checkClient, logoModel, log, beforeAllTests, bulkApiClient, repository, afterAllTests } from "./SharedTest.js"
+import { client, checkClient, logoModel, log, beforeAllTests, bulkApiClient, repository, afterAllTests, withoutHistoryList } from "./SharedTest.js"
 
-describe.each([
-    { withoutHistory: true },
-    { withoutHistory: false }
-])
-("Delta tests without history: $withoutHistory ", async ({withoutHistory}) => {
+describe.each(withoutHistoryList)
+("Delta-tests-without-history-$withoutHistory", async ({withoutHistory}) => {
     beforeAll(async function () {
         await beforeAllTests(withoutHistory)
     })

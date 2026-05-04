@@ -5,6 +5,7 @@ import { DeltaClient } from "@lionweb/server-delta-client"
 import {
     CommandMessageKind,
     DeltaCommand,
+    ErrorEvent,
     DeltaCommandMessageKinds,
     DeltaErrorCode,
     DeltaRequest,
@@ -14,6 +15,7 @@ import {
     RequestMessageKind,
     ResponseMessageKind,
     SubscribeToPartitionContentsResponse,
+    ErrorResponse,
 } from "@lionweb/server-delta-shared"
 import { ast2dot } from "../../Ast2Dot.js"
 import { Commands } from "../commands.js"
@@ -67,12 +69,14 @@ export async function expectError(client: DeltaClient, delta: DeltaCommand | Del
 
 export async function expectEvent(client: DeltaClient, delta: DeltaCommand, eventKind: EventMessageKind): Promise<void> {
     console.log(`expect for ${delta.messageKind}-${delta.commandId} event ${eventKind}`)
-    expect((await cmd.eventFor(client, delta)).messageKind).toEqual(eventKind)
+    const event = await  cmd.eventFor(client, delta)
+    expect(event.messageKind, `ErrorEvent: ${(event as ErrorEvent)?.message}`).toEqual(eventKind)
     CoverageMap.get(delta.messageKind).receivedEvents++
 }
 
 export async function expectResponse(client: DeltaClient, delta: DeltaRequest, requestKind: ResponseMessageKind): Promise<void> {
-    expect((await cmd.responseFor(client, delta)).messageKind).toEqual(requestKind)
+    const response = await cmd.responseFor(client, delta)
+    expect(response.messageKind, `ErrorResponse: ${(response as ErrorResponse)?.message}`).toEqual(requestKind)
     CoverageMap.get(delta.messageKind).receivedEvents++
 }
 
