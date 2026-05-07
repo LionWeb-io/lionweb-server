@@ -39,7 +39,7 @@
         "@lionweb/server-dbadmin": "0.4.0-beta.5",
         "@lionweb/server-delta-shared": "0.4.0-beta.5",
         "@lionweb/server-delta-definitions": "0.4.0-beta.5",
-        "es-toolkit": "^1.41.0",
+        "es-toolkit": "1.46.1",
         "pg-promise": "11.7.8",
         "ws": "8.20.0"
     },
