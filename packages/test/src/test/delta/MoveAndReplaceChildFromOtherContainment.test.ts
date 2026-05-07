@@ -6,9 +6,8 @@ import { client, beforeAllTests, bulkApiClient, log, afterAllTests, withoutHisto
 
 describe.each(withoutHistoryList)("MoveAndReplaceChildFromOtherContainment-$withoutHistory", async ({ withoutHistory }) => {
     let a=""
-    beforeAll(async function (ctx) {
-        a= ctx.name
-        await beforeAllTests(withoutHistory, ctx.name)
+    beforeAll(async function () {
+        await beforeAllTests(withoutHistory, "REPO")
     })
 
     afterAll(async function () {
@@ -24,7 +23,7 @@ describe.each(withoutHistoryList)("MoveAndReplaceChildFromOtherContainment-$with
     
     test("MoveAndReplaceChildFromOtherContainment", async () => {
         resetModels()
-        console.log(`suitw ${JSON.stringify( suite("33").name)}`)
+        // console.log(`suitw ${JSON.stringify( suite("33").name)}`)
         const partitionP = cmd.addFullPartition(client, programNodes)
         const partitionL = cmd.addFullPartition(client, libraryNodes)
         await expectEvent(client, partitionP, "PartitionAdded")

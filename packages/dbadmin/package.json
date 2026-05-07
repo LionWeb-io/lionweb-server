@@ -25,15 +25,16 @@
         "republish-local": "npm run unpublish-local && npm run publish-local"
     },
     "dependencies": {
-        "@lionweb/json-diff": "0.10.0-alpha.1",
-        "@lionweb/server-common": "0.4.0-beta.5",
-        "@lionweb/server-shared": "0.4.0-beta.5",
-        "@lionweb/server-database": "0.4.0-beta.5",
-        "@lionweb/validation": "0.10.0-alpha.1",
         "@lionweb/json": "0.10.0-alpha.1",
+        "@lionweb/json-diff": "0.10.0-alpha.1",
         "@lionweb/json-utils": "0.10.0-alpha.1",
+        "@lionweb/server-common": "0.4.0-beta.5",
+        "@lionweb/server-database": "0.4.0-beta.5",
+        "@lionweb/server-shared": "0.4.0-beta.5",
+        "@lionweb/validation": "0.10.0-alpha.1",
         "@types/express": "4.17.21",
+        "express": "^4.22.1",
         "pg-promise": "11.7.8",
-        "express": "4.21.2"
+        "protobufjs": "8.0.3"
     }
 }

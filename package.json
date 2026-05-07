@@ -26,30 +26,28 @@
         "unpublish-local": "npm run unpublish-local -w packages --if-present",
         "republish-local": "npm run republish-local -w packages --if-present",
         "publish-docker": "bash scripts/tag-and-release-docker-image.sh",
-        "dependency-graph": "monorepo-mapper",
+        "dependency-graph": "npx monorepo-mapper",
         "check-dependencies": "npx  syncpack lint --source 'package.json' --source 'packages/*/package.json'",
         "list-dependencies": "npx  syncpack list --source 'package.json' --source 'packages/*/package.json'"
     },
     "devDependencies": {
-        "@changesets/cli": "2.27.11",
+        "@changesets/cli": "^2.31.0",
         "@changesets/config": "3.0.0",
         "@eslint/compat": "2.0.2",
         "@eslint/eslintrc": "3.3.3",
         "@eslint/js": "10.0.1",
         "@types/chai": "4.3.11",
-        "@typescript-eslint/eslint-plugin": "8.57.2",
-        "@typescript-eslint/parser": "8.57.2",
         "@types/pg": "8.20.0",
         "@types/ws": "^8.18.1",
+        "@typescript-eslint/eslint-plugin": "8.57.2",
+        "@typescript-eslint/parser": "8.57.2",
         "@vitest/eslint-plugin": "^1.6.13",
         "chai": "4.3.10",
         "changesets": "1.0.2",
-        "dependency-cruiser": "^17.3.9",
         "eslint": "10.1.0",
         "eslint-config-prettier": "10.1.8",
         "eslint-plugin-n": "17.24.0",
         "eslint-plugin-node": "11.1.0",
-        "monorepo-mapper": "^1.0.5",
         "prettier": "3.1.0",
         "ts-protoc-gen": "0.15.0",
         "typescript": "5.9.3",
@@ -84,7 +82,9 @@
         "."
     ],
     "dependencies": {
-        "pg-monitor": "^3.1.0"
+        "express": "4.22.1",
+        "pg-monitor": "^3.1.0",
+        "protobufjs": "8.0.3"
     },
     "engines": {
         "npm": ">=11.0.0",
