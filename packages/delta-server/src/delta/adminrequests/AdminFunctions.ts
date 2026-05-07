@@ -47,7 +47,7 @@ const CreateRepository = async (participation: Participation, msg: CreateReposit
         additionalInfos: [ {
             kind: "Info",
             message: "NOT IMPLEMENTED YET",
-            data: []
+            data: {}
         }]
     } as CreateRepositoryAdminResponse
 }
@@ -61,7 +61,7 @@ const DeleteRepository = async (participation: Participation, msg: DeleteReposit
         additionalInfos: [ {
             kind: "Info",
             message: "NOT IMPLEMENTED YET",
-            data: []
+            data: {}
         }]
     } as DeleteRepositoryAdminResponse
 }
@@ -76,7 +76,7 @@ const RenameRepository = async (participation: Participation, msg: DeleteReposit
         additionalInfos: [ {
             kind: "Info",
             message: "NOT IMPLEMENTED YET",
-            data: []
+            data: {}
         }]
     } as RenameRepositoryAdminResponse
 }

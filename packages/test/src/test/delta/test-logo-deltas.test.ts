@@ -57,8 +57,9 @@ describe.each(withoutHistoryList)
 
             const availableIds = cmd.availableIds(client)
             await expectResponse(client, availableIds, "GetAvailableIdsResponse")
+            
             const ids = (await cmd.responseFor(client, availableIds)) as GetAvailableIdsResponse
-            expect(ids.ids.length).toEqual(25)
+            expect(ids.ids.length).toEqual(2)
         })
         test("AddPartition", async () => {
             // assert(initError === "", initError)
@@ -238,7 +239,7 @@ describe.each(withoutHistoryList)
         const delRef4 = cmd.deleteReference(client, {
             parent: "PCall-01",
             index: 0,
-            deletedTarget: "Procedure-01",
+            deletedReference: "Procedure-01",
             deletedResolveInfo: "PROC-01",
             reference: REF.ProcedureCallProcedure,
         })
@@ -248,12 +249,12 @@ describe.each(withoutHistoryList)
         const delRef5 = cmd.deleteReference(client, {
             parent: "PCall-01",
             index: 0,
-            deletedTarget: "newTarget",
+            deletedReference: "newTarget",
             deletedResolveInfo: null,
             reference: REF.ProcedureCallProcedure,
         })
-        const delRef6 = cmd.deleteReference(client, { parent: "PCall-01", index: 0, deletedTarget: null, deletedResolveInfo: null, reference: REF.ProcedureCallProcedure })
-        const delRef7 = cmd.deleteReference(client, { parent: "PCall-000", index: 0, deletedTarget: "target", deletedResolveInfo: null, reference: REF.ProcedureCallProcedure })
+        const delRef6 = cmd.deleteReference(client, { parent: "PCall-01", index: 0, deletedReference: null, deletedResolveInfo: null, reference: REF.ProcedureCallProcedure })
+        const delRef7 = cmd.deleteReference(client, { parent: "PCall-000", index: 0, deletedReference: "target", deletedResolveInfo: null, reference: REF.ProcedureCallProcedure })
 
         await expectError(client, delRef6, "undefinedReferenceTarget")
         await expectError(client, delRef5, "unknownIndex")
@@ -269,9 +270,9 @@ describe.each(withoutHistoryList)
             parent: "PCall-01",
             index: 0,
             reference: REF.ProcedureCallProcedure,
-            oldTarget: "Procedure-02",
+            oldReference: "Procedure-02",
             oldResolveInfo: "PROC-02",
-            newTarget: "Procedure-00",
+            newReference: "Procedure-00",
             newResolveInfo: "PROC-00",
         })
 
@@ -279,26 +280,26 @@ describe.each(withoutHistoryList)
             parent: "PCall-01",
             index: 0,
             reference: REF.ProcedureCallProcedure,
-            oldTarget: "Procedure-incorrect",
+            oldReference: "Procedure-incorrect",
             oldResolveInfo: null,
-            newTarget: "newTarget",
+            newReference: "newTarget",
             newResolveInfo: null,
         })
         const changeRef6 = cmd.changeReference(client, {
             parent: "PCall-01",
             index: 0,
-            oldTarget: null,
+            oldReference: null,
             oldResolveInfo: null,
-            newTarget: null,
+            newReference: null,
             newResolveInfo: null,
             reference: REF.ProcedureCallProcedure,
         })
         const changeRef7 = cmd.changeReference(client, {
             parent: "PCall-000",
             index: 0,
-            oldTarget: "target",
+            oldReference: "target",
             oldResolveInfo: null,
-            newTarget: "target",
+            newReference: "target",
             newResolveInfo: null,
             reference: REF.ProcedureCallProcedure,
         })

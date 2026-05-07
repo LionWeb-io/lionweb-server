@@ -16,20 +16,20 @@ export function initSchemaWithoutHistory(schemaName: string): string {
     return `-- Create schema
     
     -- Delete tables and functions first, so that we can then delete the schema
-    DROP TABLE IF EXISTS "${schemaName}".${NODES_TABLE};
-    DROP TABLE IF EXISTS "${schemaName}".${PROPERTIES_TABLE};
-    DROP TABLE IF EXISTS "${schemaName}".${CONTAINMENTS_TABLE};
-    DROP TABLE IF EXISTS "${schemaName}".${REFERENCES_TABLE};
-    
-    DROP TABLE IF EXISTS "${schemaName}".${METAPOINTERS_TABLE};
-    
-    DROP TABLE IF EXISTS "${schemaName}".${RESERVED_IDS_TABLE};
-    DROP TABLE IF EXISTS "${schemaName}".${REPO_VERSIONS};
-    DROP TABLE IF EXISTS "${schemaName}".${CURRENT_DATA};
-    
-    DROP FUNCTION IF EXISTS "${schemaName}".nextrepoversion;
-    DROP FUNCTION IF EXISTS "${schemaName}".currentrepoversion;
-    DROP FUNCTION IF EXISTS "${schemaName}".tometapointerids;
+    -- DROP TABLE IF EXISTS "${schemaName}".${NODES_TABLE};
+    -- DROP TABLE IF EXISTS "${schemaName}".${PROPERTIES_TABLE};
+    -- DROP TABLE IF EXISTS "${schemaName}".${CONTAINMENTS_TABLE};
+    -- DROP TABLE IF EXISTS "${schemaName}".${REFERENCES_TABLE};
+
+    -- DROP TABLE IF EXISTS "${schemaName}".${METAPOINTERS_TABLE};
+
+    -- DROP TABLE IF EXISTS "${schemaName}".${RESERVED_IDS_TABLE};
+    -- DROP TABLE IF EXISTS "${schemaName}".${REPO_VERSIONS};
+    -- DROP TABLE IF EXISTS "${schemaName}".${CURRENT_DATA};
+
+    -- DROP FUNCTION IF EXISTS "${schemaName}".nextrepoversion;
+    -- DROP FUNCTION IF EXISTS "${schemaName}".currentrepoversion;
+    -- DROP FUNCTION IF EXISTS "${schemaName}".tometapointerids;
     
     -- Drop indices
     -- DROP INDEX IF EXISTS ContainmentsNodesIndex;
@@ -39,7 +39,7 @@ export function initSchemaWithoutHistory(schemaName: string): string {
     -- DROP INDEX IF EXISTS MpsIdIndex;
     
     -- drop if empty, otherwise fail
-    DROP SCHEMA IF EXISTS "${schemaName}" RESTRICT;
+    DROP SCHEMA IF EXISTS "${schemaName}" CASCADE;
     CREATE SCHEMA "${schemaName}";
     SET search_path TO "${schemaName}";
     

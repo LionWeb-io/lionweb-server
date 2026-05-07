@@ -89,6 +89,9 @@ export type SignOffRequest = DeltaRequest & {
 export type ReconnectRequest = DeltaRequest & {
     participationId: ParticipationId;
     lastReceivedSequenceNumber: SequenceNumber;
+    deltaProtocolVersion: String;
+    clientId: ClientId;
+    repositoryId: String;
     messageKind: "ReconnectRequest";
 };
 

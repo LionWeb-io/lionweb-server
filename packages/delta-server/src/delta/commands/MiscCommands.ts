@@ -1,5 +1,5 @@
 import { deltaLogger } from "@lionweb/server-shared"
-import { ChangeClassifierCommand, DeltaEvent, CompositeCommand, ChunkedCommand } from "@lionweb/server-delta-shared"
+import { ChangeClassifierCommand, DeltaEvent, CompositeCommand, ContinuedCommand } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
 import { Participation } from "../participation/index.js"
 import { DeltaFunction, errorEvent } from "./DeltaUtil.js"
@@ -18,8 +18,8 @@ const CompositeCommandFunction = (participation: Participation, msg: CompositeCo
     return errorEvent(msg)
 }
 
-const ChunkedCommandFunction = (participation: Participation, msg: ChunkedCommand, _ctx: DeltaContext, _socket?: WebSocket): DeltaEvent => {
-    deltaLogger.info("Called ChunkedCommandFunction " + msg.messageKind)
+const ContinuedCommandFunction = (participation: Participation, msg: ContinuedCommand, _ctx: DeltaContext, _socket?: WebSocket): DeltaEvent => {
+    deltaLogger.info("Called ContinuedCommandFunction " + msg.messageKind)
     // for(const cmd of msg.parts) {
     //     deltaProcessor.processDelta(socket!, cmd)
     // }
@@ -33,9 +33,9 @@ export const miscFunctions: DeltaFunction[] = [
         processor: ChangeClassifierFunction
     },
     {
-        messageKind: "ChunkedCommand",
+        messageKind: "ContinuedCommand",
         // @ts-expect-error TS2332
-        processor: ChunkedCommandFunction
+        processor: ContinuedCommandFunction
     },
     {
         messageKind: "CompositeCommand",

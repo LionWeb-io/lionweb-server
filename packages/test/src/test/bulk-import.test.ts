@@ -77,7 +77,8 @@ describe("Repository tests for bulkImport API", () => {
             attachPoints: []
         };
 
-        await client.additional.bulkImport(bulkImport, TransferFormat.JSON, false)
+        const importResuilt = await client.additional.bulkImport(bulkImport, TransferFormat.JSON, false)
+        console.log(`IMPORT ${JSON.stringify(importResuilt)}`)
         const retrievedNodes = (await client.bulk.retrieve(["node1"])).body.chunk.nodes
         deepEqual(retrievedNodes, [
             {

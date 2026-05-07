@@ -378,7 +378,7 @@ export class LionWebModel {
             }
             case "AddReference": {
                 const cmd = delta as AddReferenceCommand
-                this.addReference(cmd.parent, cmd.reference, { reference: cmd.newTarget, resolveInfo: cmd.newResolveInfo }, cmd.index)
+                this.addReference(cmd.parent, cmd.reference, { reference: cmd.newReference, resolveInfo: cmd.newResolveInfo }, cmd.index)
                 break
             }
             case "DeleteReference": {
@@ -392,7 +392,7 @@ export class LionWebModel {
                     cmd.parent,
                     cmd.reference,
                     {
-                        reference: cmd.newTarget,
+                        reference: cmd.newReference,
                         resolveInfo: cmd.newResolveInfo,
                     },
                     cmd.index,

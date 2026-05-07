@@ -163,7 +163,7 @@ const ChangePropertyFunction = async (
             additionalInfos: [affectedNodeMessage(node.id), affectedPartitionMessage(partition), {
                 kind: "query",
                 message: JSON.stringify(dbResult),
-                data: []
+                data: {}
             }],
             oldValue: oldProperty.value
         } as PropertyChangedEvent

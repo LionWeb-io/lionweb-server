@@ -8,11 +8,12 @@ export type Number = number;
 export type QueryId = string;
 export type Boolean = boolean;
 export type ClientId = string;
+export type Dictionary = object;
 
 export type AdditionalInfo = {
     kind: String;
     message: String;
-    data: KeyValuePair[];
+    data: Dictionary;
     distribute?: Boolean;
 };
 

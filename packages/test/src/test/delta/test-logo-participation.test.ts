@@ -12,7 +12,7 @@ import { CoverageMap, cmd, expectEvent, expectResponse, expectError, logProtocol
 
 // TOPO Delta : primary key exception when nohistory = false 
 const collection = [true]
-const log: boolean = false
+const log: boolean = true
 
 const config = {
     // hostname: "192.168.100.1",
@@ -71,7 +71,7 @@ collection.forEach((withoutHistory) => {
                 queryId: signOn.queryId,
                 additionalInfos: [
                     {
-                        data: [],
+                        data: {},
                         kind: "Info",
                         message: "SignOnRequest received ok",
                     },

@@ -89,7 +89,7 @@ const DeletePartitionFunction = async (participation: Participation, msg: Delete
                 {
                     kind: "AffectedNode",
                     message: `Node ${msg.deletedPartition} has been changed`,
-                    data: [{ key: "node", value: msg.deletedPartition }]
+                    data: { node: msg.deletedPartition }
                 }
             ]
         } as PartitionDeletedEvent

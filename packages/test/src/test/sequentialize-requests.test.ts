@@ -17,9 +17,12 @@ describe("Transaction isolation tests", () => {
         const delRepo = await t.dbAdmin.listRepositories()
         console.log(`delRepo ${JSON.stringify(delRepo)}`)
         
-        await t.dbAdmin.deleteRepository("isolation")
-        await t.dbAdmin.createRepository("isolation", true, "2023.1")
+        const deleteResult = await t.dbAdmin.deleteRepository("isolation")
+        const createResult = await t.dbAdmin.createRepository("isolation", true, "2023.1")
 
+        console.log(`deleteResult ${JSON.stringify(deleteResult)}`)
+        console.log(`createResult ${JSON.stringify(createResult)}`)
+        
         const delRepo2 = await t.dbAdmin.listRepositories()
         console.log(`delRepo ${JSON.stringify(delRepo2)}`)
         

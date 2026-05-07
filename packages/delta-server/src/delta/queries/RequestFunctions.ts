@@ -134,7 +134,7 @@ const SignOnRequestFunction = async (
         messageKind: "SignOnResponse",
         participationId: participation.participationId,
         queryId: msg.queryId,
-        additionalInfos: [{ data: [], kind: "Info", message: "SignOnRequest received ok" }]
+        additionalInfos: [{ data: {}, kind: "Info", message: "SignOnRequest received ok" }]
     } as SignOnResponse
 }
 

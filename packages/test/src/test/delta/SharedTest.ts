@@ -65,7 +65,7 @@ console.log(`beforeAllTests ${name}`)
         queryId: signOn.queryId,
         additionalInfos: [
             {
-                data: [],
+                data: {},
                 kind: "Info",
                 message: "SignOnRequest received ok",
             },

@@ -22,7 +22,7 @@ import { findAndValidateNodeExists, findAndValidateReference } from "./Validatio
 
 const AddReference = async (participation: Participation, msg: AddReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorEvent> => {
     deltaLogger.info("Called AddReference " + msg.newResolveInfo)
-    if (isNullOrUndefined(msg.newResolveInfo) && isNullOrUndefined(msg.newTarget)) {
+    if (isNullOrUndefined(msg.newResolveInfo) && isNullOrUndefined(msg.newReference)) {
         throw newErrorDelta("undefinedReferenceTarget", "resolveInfo and target are both null", msg, participation)
     }
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
@@ -30,14 +30,14 @@ const AddReference = async (participation: Participation, msg: AddReferenceComma
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
         const beforeReference = findAndValidateReference(parentNode, msg.reference, msg.index,undefined, msg, participation)
         const afterReference = { reference: beforeReference.reference, targets: [...beforeReference.targets]}
-        afterReference.targets.splice(msg.index, 0, { resolveInfo: msg.newResolveInfo ?? null, reference: msg.newTarget!})
+        afterReference.targets.splice(msg.index, 0, { resolveInfo: msg.newResolveInfo ?? null, reference: msg.newReference!})
 
         const changes = new DbChanges(TableHelpers.pgp)
         const missing: Missing = parentNode.references.find(c => isEqualMetaPointer(c.reference, msg.reference)) === undefined ? Missing.MissingBefore : Missing.NotMissing
 
         deltaLogger.debug(`AddReference missing ${missing}`)
         changes.addChanges(
-            [new TargetAdded(new JsonContext(null, ["delta"]), parentNode!, beforeReference, afterReference, { resolveInfo: msg.newResolveInfo  ?? null, reference: msg.newTarget!}, missing)]
+            [new TargetAdded(new JsonContext(null, ["delta"]), parentNode!, beforeReference, afterReference, { resolveInfo: msg.newResolveInfo  ?? null, reference: msg.newReference!}, missing)]
         )
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [], task)
@@ -48,15 +48,16 @@ const AddReference = async (participation: Participation, msg: AddReferenceComma
         return {
             messageKind: "ReferenceAdded",
             newResolveInfo: msg.newResolveInfo,
-            newTarget: msg.newTarget,
+            newReference: msg.newReference,
             reference: msg.reference,
             index: msg.index,
             parent: msg.parent,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0, // dummy, will be changed for each participation before sending
             additionalInfos: [affectedNodeMessage(parentNode!.id), affectedPartitionMessage(partition),
-                { kind: "MISSING", message: `AddReference missing ${missing}`, data: [] },
-                {kind: "query", message: "AddReference query", data: [{key: "query", value: changesQuery}]}]
+                { kind: "MISSING", message: `AddReference missing ${missing}`, data: {} },
+                { kind: "query", message: "AddReference query", data: {query: changesQuery}}
+            ]
         } as ReferenceAddedEvent
     })
     return result
@@ -64,7 +65,7 @@ const AddReference = async (participation: Participation, msg: AddReferenceComma
 
 const DeleteReference = async (participation: Participation, msg: DeleteReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent> => {
     deltaLogger.debug("Called DeleteReference " + msg.messageKind)
-    if (isNullOrUndefined(msg.deletedResolveInfo) && isNullOrUndefined(msg.deletedTarget)) {
+    if (isNullOrUndefined(msg.deletedResolveInfo) && isNullOrUndefined(msg.deletedReference)) {
         throw newErrorDelta("undefinedReferenceTarget", "resolveInfo and target are both null", msg, participation)
     }
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
@@ -77,7 +78,7 @@ const DeleteReference = async (participation: Participation, msg: DeleteReferenc
         deltaLogger.debug(`REFERENCE DEL index ${msg.index} before ${JSON.stringify(beforeReference.targets)} after ${JSON.stringify(afterReference.targets)}`)
         const changes = new DbChanges(TableHelpers.pgp)
         changes.addChanges(
-            [new TargetRemoved(new JsonContext(null, ["delta"]), parentNode, beforeReference, afterReference, { resolveInfo: msg.deletedResolveInfo ?? null, reference: msg.deletedTarget!}, Missing.NotMissing)]
+            [new TargetRemoved(new JsonContext(null, ["delta"]), parentNode, beforeReference, afterReference, { resolveInfo: msg.deletedResolveInfo ?? null, reference: msg.deletedReference!}, Missing.NotMissing)]
         )
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [], task)
@@ -91,7 +92,7 @@ const DeleteReference = async (participation: Participation, msg: DeleteReferenc
             index: msg.index,
             reference: msg.reference,
             deletedResolveInfo: msg.deletedResolveInfo,
-            deletedTarget: msg.deletedTarget,
+            deletedReference: msg.deletedReference,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,          // dummy, will be changed for each participation before sending
             additionalInfos: [affectedNodeMessage(msg.parent), affectedPartitionMessage(partition)]
@@ -101,7 +102,7 @@ const DeleteReference = async (participation: Participation, msg: DeleteReferenc
 }
 
 const ChangeReference = async (participation: Participation, msg: ChangeReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
-    if (isNullOrUndefined(msg.newResolveInfo) && isNullOrUndefined(msg.newTarget)) {
+    if (isNullOrUndefined(msg.newResolveInfo) && isNullOrUndefined(msg.newReference)) {
         throw newErrorDelta("undefinedReferenceTarget", "resolveInfo and target are both null", msg, participation)
     }
     deltaLogger.debug("Called ChangeReference " + msg.reference.key)
@@ -113,21 +114,21 @@ const ChangeReference = async (participation: Participation, msg: ChangeReferenc
             msg.reference,
             msg.index,
             // @ts-ignore
-            { resolveInfo: msg.oldResolveInfo ?? null, reference: msg.oldTarget ?? null },
+            { resolveInfo: msg.oldResolveInfo ?? null, reference: msg.oldReference ?? null },
             msg,
             participation
         )
         const newTargets = [...beforeReference.targets]
         newTargets.splice(msg.index, 1, {
             resolveInfo: msg.newResolveInfo ?? null,
-            reference: msg.newTarget ?? null
+            reference: msg.newReference ?? null
         } as LionWebJsonReferenceTarget)
         const afterReference = { reference: msg.reference, targets: newTargets }
         
         const changes = new DbChanges(TableHelpers.pgp)
         changes.addChanges(
             [
-                new TargetAdded(new JsonContext(null, ["delta"]), parentNode, beforeReference, afterReference, { resolveInfo: msg.newResolveInfo ?? null, reference: msg.newTarget!}, Missing.NotMissing)
+                new TargetAdded(new JsonContext(null, ["delta"]), parentNode, beforeReference, afterReference, { resolveInfo: msg.newResolveInfo ?? null, reference: msg.newReference!}, Missing.NotMissing)
             ]
         )
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
@@ -142,13 +143,14 @@ const ChangeReference = async (participation: Participation, msg: ChangeReferenc
             index: msg.index,
             reference: msg.reference,
             oldResolveInfo: msg.oldResolveInfo,
-            oldTarget: msg.oldTarget,
+            oldReference: msg.oldReference,
             newResolveInfo: msg.newResolveInfo,
-            newTarget: msg.newTarget,
+            newReference: msg.newReference,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0,          // dummy, will be changed for each participation before sending
             additionalInfos: [affectedNodeMessage(msg.parent), affectedPartitionMessage(partition),
-                {kind: "query", message: "AddReference query", data: [{key: "query", value: changesQuery}]}]
+                {kind: "query", message: "AddReference query", data: {query: changesQuery}}
+            ]
 
         } as ReferenceChangedEvent
     })

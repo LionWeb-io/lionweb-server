@@ -175,7 +175,7 @@ export function findAndValidateReference(
                 {additionalInfos: [{
                     kind: msg.messageKind,
                         message: "",
-                        data: []
+                        data: {}
                 }]}
             )
         }
@@ -191,7 +191,7 @@ export function findAndValidateReference(
             if (msg.messageKind === "ChangeReference") {
                 const change = msg as ChangeReferenceCommand
                 if (
-                    change.oldTarget !== foundReference.targets[change.index].reference ||
+                    change.oldReference !== foundReference.targets[change.index].reference ||
                     change.oldResolveInfo !== foundReference.targets[change.index].resolveInfo
                 ) {
                     throw newErrorDelta(
@@ -205,7 +205,7 @@ export function findAndValidateReference(
             if (msg.messageKind === "DeleteReference") {
                 const change = msg as DeleteReferenceCommand
                 if (
-                    change.deletedTarget !== foundReference.targets[change.index].reference ||
+                    change.deletedReference !== foundReference.targets[change.index].reference ||
                     change.deletedResolveInfo !== foundReference.targets[change.index].resolveInfo
                 ) {
                     throw newErrorDelta(

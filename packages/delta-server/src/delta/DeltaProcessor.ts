@@ -130,7 +130,8 @@ class DeltaProcessor {
                     deltaLogger.info(`looking for affected partitions in ${response}`)
                     const affectedPartitionData = response.additionalInfos.find(m => m.kind == "AffectedPartition")
                     // TODO can be more than one affected partition
-                    const affectedPartition = affectedPartitionData?.data?.find(kv => kv.key === "node")?.value
+                    const affectedPartition = (affectedPartitionData?.data as {[key: string]: string})["node"]
+                    // const affectedPartition = (affectedPartitionData?.data as any)?.["node"]
                     if (affectedPartition === undefined) {
                         deltaLogger.info("No affected partition found, not sending delta's")
                     } else {
@@ -158,7 +159,7 @@ class DeltaProcessor {
                 const errorDelta = newErrorDelta("queryError", e.message, delta, participation!, {
                     additionalInfos: [
                         {
-                            data: e.data ?? [],
+                            data: e.data ?? {},
                             kind: e.name,
                             message: "Additional data"
                         }
@@ -172,7 +173,7 @@ class DeltaProcessor {
                         {
                             kind: "Extra",
                             message: "stacktrace",
-                            data: [{ key: "TRACE", value: e.stack ?? "NO TRACE" }]
+                            data: { TRACE: e.stack }
                         }
                     ]
                 })
@@ -258,12 +259,10 @@ class DeltaProcessor {
                         {
                             kind: "reason",
                             message: "Participation status incorrect, should be SignedOn",
-                            data: [
-                                {
-                                    key: "participationStatus",
-                                    value: participation.participationStatus
-                                }
-                            ]
+                            data: {
+                                participationStatus: participation.participationStatus
+                            }
+                            
                         }
                     ]
                 }
@@ -297,7 +296,7 @@ class DeltaProcessor {
             deltaLogger.info(`    buffering event ${responseOrEvent.messageKind}`)
             this.eventBuffers.activeBuffer().addEvent(participation!, (originalMessage as DeltaCommand), responseOrEvent as DeltaEvent)
         } else {
-            deltaLogger.info(`    sending event ${responseOrEvent.messageKind}`)
+            deltaLogger.info(`    sending event/response ${JSON.stringify(responseOrEvent)}`)
             this.applySequenceNumbers(participation!, responseOrEvent)
             socket.send(JSON.stringify(responseOrEvent))
         }

@@ -56,7 +56,7 @@ export const issuesToProtocolMessages = (issues: ValidationIssue[]): AdditionalI
         return {
             kind: issue.issueType,
             message: issue.errorMsg(),
-            data: []
+            data: {}
         }
     })
 }

@@ -54,14 +54,14 @@ export function affectedNodeMessage(nodeid: LionWebId): AdditionalInfo {
     return {
         kind: "AffectedNode",
         message: `Node ${nodeid} has been changed`,
-        data: [ { key: "node", value: nodeid}]
+        data: { node: nodeid}
     }
 }
 export function affectedPartitionMessage(nodeid: LionWebId): AdditionalInfo {
     return {
         kind: "AffectedPartition",
         message: `Partition ${nodeid} has a delta change`,
-        data: [ { key: "node", value: nodeid}]
+        data: { node: nodeid}
     }
 }
 
@@ -70,16 +70,10 @@ export function queryData(query: string, queryResult: unknown): AdditionalInfo[]
         {
             kind: "QueryInfo",
             message: "The following queryt was incorrect",
-            data: [
-                {
-                    key: "Query",
-                    value: query
-                },
-                {
-                    key: "QueryResult",
-                    value: JSON.stringify(queryResult)
-                }
-            ]
+            data: {
+                Query: query,
+                QueryResult: JSON.stringify(queryResult)
+            }
         }
     ]
 }

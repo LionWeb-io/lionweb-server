@@ -131,6 +131,9 @@ export class Commands {
             messageKind: "ReconnectRequest",
             queryId: "",
             participationId: participationId,
+            clientId: "",
+            deltaProtocolVersion: "2023.1",
+            repositoryId: "",
             additionalInfos: [],
             lastReceivedSequenceNumber: 0
         }
@@ -226,7 +229,7 @@ export class Commands {
         const request: GetAvailableIdsRequest = {
             messageKind: "GetAvailableIdsRequest",
             queryId: "",
-            count: 25,
+            count: 2,
             additionalInfos: []
         }
         return client.sendRequest(request)
@@ -348,7 +351,7 @@ export class Commands {
             newContainment: params.newContainment,
             newIndex: params.newIndex,
             newParent: params.newParent,
-            additionalInfos: []
+            additionalInfos: [ { kind: "info", message: "a message", data: {}}]
         }
         return client.sendCommand(command) as MoveChildFromOtherContainmentCommand
     }
@@ -494,7 +497,7 @@ export class Commands {
             parent: addRef.id,
             reference: addRef.reference,
             index: addRef.index,
-            newTarget: addRef.target,
+            newReference: addRef.target,
             newResolveInfo: addRef.resolveInfo,
             additionalInfos: []
         }
@@ -511,9 +514,9 @@ export class Commands {
             parent: addRef.parent,
             reference: addRef.reference,
             index: addRef.index ?? 0,
-            oldTarget: addRef.oldTarget,
+            oldReference: addRef.oldReference,
             oldResolveInfo: addRef.oldResolveInfo,
-            newTarget: addRef.newTarget,
+            newReference: addRef.newReference,
             newResolveInfo: addRef.newResolveInfo,
             additionalInfos: []
         }
@@ -526,7 +529,7 @@ export class Commands {
             commandId: `command-id-${queryId++}`,
             parent: ref.parent,
             reference: ref.reference,
-            deletedTarget: ref.deletedTarget,
+            deletedReference: ref.deletedReference,
             deletedResolveInfo: ref.deletedResolveInfo,
             index: ref.index,
             additionalInfos: []
@@ -589,13 +592,16 @@ export class Commands {
         return tmp
     }
     responseFor = async (client: DeltaClient, query: DeltaRequest | DeltaAdminRequest): Promise<DeltaResponse | DeltaAdminResponse> => {
-        return await waitFor<DeltaResponse | DeltaAdminResponse>(
+        console.log(`WAIT ${client.clientId}  ${JSON.stringify(query)}`)
+        const result =  await waitFor<DeltaResponse | DeltaAdminResponse>(
             () => client.receivedResponses.get(query.queryId),
             result => result === undefined,
             50,
             10,
             `query ${query.queryId} ${query.messageKind}`
         )
+        console.log(`${client.receivedMessageHistory}`)
+        return result
     }
     errorFor = async (client: DeltaClient, command: MessageFromClient): Promise<string> => {
         if (isDeltaCommand(command)) {

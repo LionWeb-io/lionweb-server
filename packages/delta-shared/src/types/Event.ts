@@ -34,7 +34,7 @@ export const DeltaEventMessageKinds = [
     "ReferenceAdded",
     "ReferenceDeleted",
     "ReferenceChanged",
-    "ChunkedEvent",
+    "ContinuedEvent",
     "CompositeEvent",
     "NoOp",
     "ErrorEvent",
@@ -144,6 +144,7 @@ export type ChildReplacedEvent = DeltaEvent & {
     replacedChild: LionWebId;
     replacedDescendants: LionWebId[];
     newChild: LionWebDeltaJsonChunk;
+    split?: Boolean;
     messageKind: "ChildReplaced";
 };
 
@@ -239,6 +240,7 @@ export type AnnotationAddedEvent = DeltaEvent & {
     parent: LionWebId;
     newAnnotation: LionWebDeltaJsonChunk;
     index: Number;
+    split?: Boolean;
     messageKind: "AnnotationAdded";
 };
 
@@ -323,7 +325,7 @@ export type ReferenceAddedEvent = DeltaEvent & {
     parent: LionWebId;
     index: Number;
     reference: LionWebJsonMetaPointer;
-    newTarget?: LionWebId | null;
+    newReference?: LionWebId | null;
     newResolveInfo?: String | null;
     messageKind: "ReferenceAdded";
 };
@@ -335,7 +337,7 @@ export type ReferenceDeletedEvent = DeltaEvent & {
     parent: LionWebId;
     index: Number;
     reference: LionWebJsonMetaPointer;
-    deletedTarget?: LionWebId | null;
+    deletedReference?: LionWebId | null;
     deletedResolveInfo?: String | null;
     messageKind: "ReferenceDeleted";
 };
@@ -347,21 +349,22 @@ export type ReferenceChangedEvent = DeltaEvent & {
     parent: LionWebId;
     index: Number;
     reference: LionWebJsonMetaPointer;
-    newTarget?: LionWebId | null;
+    newReference?: LionWebId | null;
     newResolveInfo?: String | null;
-    oldTarget?: LionWebId | null;
+    oldReference?: LionWebId | null;
     oldResolveInfo?: String | null;
     messageKind: "ReferenceChanged";
 };
 
 /**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ChunkedEvent
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-ContinuedEvent
  */
-export type ChunkedEvent = DeltaEvent & {
+export type ContinuedEvent = DeltaEvent & {
     chunk: LionWebDeltaJsonChunk;
     continuedChunkCompleted: Boolean;
     continuedChunkSequenceNumber: Number;
-    messageKind: "ChunkedEvent";
+    continuedEventSequenceNumber: Number;
+    messageKind: "ContinuedEvent";
 };
 
 /**
