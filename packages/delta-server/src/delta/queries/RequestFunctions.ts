@@ -22,12 +22,13 @@ import {
     SubscribeToPartitionContentsRequest,
     SubscribeToPartitionContentsResponse,
     UnsubscribeFromPartitionContentsRequest,
-    UnsubscribeFromPartitionContentsResponse
+    UnsubscribeFromPartitionContentsResponse,
+    type ErrorDelta
 } from "@lionweb/server-delta-shared"
 import { deltaLogger } from "@lionweb/server-shared"
 import { DeltaFunction } from "../commands/index.js"
 import { DeltaContext } from "../DeltaContext.js"
-import { newErrorDelta, ErrorDelta } from "../events.js"
+import { newErrorDelta } from "../events.js"
 import { Participation, ChangingPartitionsSubscription, PARTICIPATIONS } from "../participation/index.js"
 
 /**

@@ -11,11 +11,12 @@ import {
     LionWebJsonReferenceTarget,
     ReferenceAddedEvent,
     ReferenceChangedEvent,
-    ReferenceDeletedEvent
+    ReferenceDeletedEvent,
+    type ErrorDelta
 } from "@lionweb/server-delta-shared"
 import { deltaLogger } from "@lionweb/server-shared"
 import { DeltaContext } from "../DeltaContext.js"
-import { affectedNodeMessage, affectedPartitionMessage, ErrorDelta, newErrorDelta } from "../events.js"
+import { affectedNodeMessage, affectedPartitionMessage, newErrorDelta } from "../events.js"
 import { Participation } from "../participation/index.js"
 import { affectedPartition, DeltaFunction } from "./DeltaUtil.js"
 import { findAndValidateNodeExists, findAndValidateReference } from "./Validations.js"

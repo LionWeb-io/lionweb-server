@@ -8,15 +8,6 @@ import {
 } from "@lionweb/server-delta-shared"
 import { Participation } from "./participation/index.js"
 
-export type ErrorDelta = ErrorEvent | ErrorResponse
-
-export function isErrorEvent(object: unknown): object is ErrorEvent {
-    return (object as ErrorEvent).messageKind === "ErrorEvent"
-}
-export function isErrorResponse(object: unknown): object is ErrorResponse {
-    return (object as ErrorResponse).messageKind === "ErrorResponse"
-}
-
 export const newErrorDelta = (
     errorCode: DeltaErrorCode,
     message: string,

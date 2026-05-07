@@ -1,6 +1,5 @@
 import { LionWebJsonNode } from "@lionweb/json"
 import { DeltaClient } from "@lionweb/server-delta-client"
-import { isErrorEvent, isErrorResponse } from "@lionweb/delta-server"
 import {
     SignOnRequest,
     AddPropertyCommand,
@@ -46,7 +45,9 @@ import {
     MoveAndReplaceChildFromOtherContainmentCommand,
     MoveAndReplaceChildFromOtherContainmentInSameParentCommand,
     AddAnnotationCommand,
-    DeleteAnnotationCommand
+    DeleteAnnotationCommand,
+    isErrorEvent,
+    isErrorResponse
 } from "@lionweb/server-delta-shared"
 import { waitFor } from "./delta/helpers.js"
 import {} from "./utils.js"

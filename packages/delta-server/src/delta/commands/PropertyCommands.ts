@@ -10,11 +10,12 @@ import {
     DeltaEvent,
     PropertyAddedEvent,
     PropertyChangedEvent,
-    PropertyDeletedEvent
+    PropertyDeletedEvent,
+    type ErrorDelta
 } from "@lionweb/server-delta-shared"
 import { deltaLogger } from "@lionweb/server-shared"
 import { DeltaContext } from "../DeltaContext.js"
-import { affectedNodeMessage, newErrorDelta, ErrorDelta, affectedPartitionMessage } from "../events.js"
+import { affectedNodeMessage, newErrorDelta, affectedPartitionMessage } from "../events.js"
 import { Participation } from "../participation/index.js"
 import { affectedPartition, DeltaFunction, retrieveNodeFromDB } from "./DeltaUtil.js"
 

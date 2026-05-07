@@ -20,7 +20,9 @@ import {
     CompositeCommand,
     DeltaEvent,
     CompositeEvent,
-    DeltaCommand
+    DeltaCommand,
+    isErrorEvent,
+    isErrorResponse
 } from "@lionweb/server-delta-shared"
 import { MessageFromClient } from "@lionweb/server-delta-shared"
 import { deltaLogger, toJsonString } from "@lionweb/server-shared"
@@ -39,7 +41,7 @@ import {
     propertyFunctions,
     referenceFunctions
 } from "./commands/index.js"
-import { affectedPartitionMessage, isErrorEvent, isErrorResponse, newErrorDelta } from "./events.js"
+import { affectedPartitionMessage, newErrorDelta } from "./events.js"
 import { requestFunctions } from "./queries/index.js"
 import { Participation, PARTICIPATIONS } from "./participation/index.js"
 import { CompositeEventBufferStack } from "./CompositeEventBuffer.js"

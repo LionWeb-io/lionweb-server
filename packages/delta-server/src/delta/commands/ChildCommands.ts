@@ -29,11 +29,12 @@ import {
     MoveChildFromOtherContainmentCommand,
     MoveChildFromOtherContainmentInSameParentCommand,
     MoveChildInSameContainmentCommand,
-    ReplaceChildCommand
+    ReplaceChildCommand,
+    type ErrorDelta
 } from "@lionweb/server-delta-shared"
 import { deltaLogger } from "@lionweb/server-shared"
 import { DeltaContext } from "../DeltaContext.js"
-import { affectedNodeMessage, newErrorDelta, type ErrorDelta, affectedPartitionMessage } from "../events.js"
+import { affectedNodeMessage, newErrorDelta, affectedPartitionMessage } from "../events.js"
 import { Participation } from "../participation/index.js"
 import { affectedPartition, deltaContext, DeltaFunction, errorEvent } from "./DeltaUtil.js"
 import {

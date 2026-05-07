@@ -13,10 +13,11 @@ import {
     MoveAndReplaceAnnotationInSameParentCommand,
     MoveAnnotationFromOtherParentCommand,
     MoveAnnotationInSameParentCommand,
-    ReplaceAnnotationCommand
+    ReplaceAnnotationCommand,
+    ErrorDelta
 } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
-import { affectedNodeMessage, affectedPartitionMessage, ErrorDelta, newErrorDelta } from "../events.js"
+import { affectedNodeMessage, affectedPartitionMessage, newErrorDelta } from "../events.js"
 import { Participation } from "../participation/index.js"
 import { affectedPartition, deltaContext, DeltaFunction, errorEvent } from "./DeltaUtil.js"
 import { findAndValidateNodeExists, validateExistingNodesIsEmpty, validateProperTree } from "./Validations.js"
