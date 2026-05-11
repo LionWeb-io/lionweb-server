@@ -213,8 +213,8 @@ export type MoveAndReplaceChildFromOtherContainmentInSameParentCommand = DeltaCo
 export type MoveAndReplaceChildInSameContainmentCommand = DeltaCommand & {
     parent: LionWebId;
     containment: LionWebJsonMetaPointer;
-    newIndex: Number;
     oldIndex: Number;
+    indexOffset: Number;
     replacedChild: LionWebId;
     movedChild: LionWebId;
     messageKind: "MoveAndReplaceChildInSameContainment";
@@ -294,8 +294,8 @@ export type MoveAndReplaceAnnotationFromOtherParentCommand = DeltaCommand & {
  */
 export type MoveAndReplaceAnnotationInSameParentCommand = DeltaCommand & {
     parent: LionWebId;
-    newIndex: Number;
     oldIndex: Number;
+    indexOffset: Number;
     replacedAnnotation: LionWebId;
     movedAnnotation: LionWebId;
     messageKind: "MoveAndReplaceAnnotationInSameParent";
