@@ -10,7 +10,7 @@ import { MetaPointersTracker } from "../metapointers/MetaPointers.js"
  * in their respective tables.
  * @param tbsNodesToCreate
  */
-export function insertNodeArraySQL(tbsNodesToCreate: LionWebJsonNode[], metaPointersTracker: MetaPointersTracker): string {
+export function SQL_insertNodeArray(tbsNodesToCreate: LionWebJsonNode[], metaPointersTracker: MetaPointersTracker): string {
     dbLogger.debug("Queries insert new nodes " + tbsNodesToCreate.map(n => n.id))
     {
         let query = "-- create new nodes\n"
@@ -26,7 +26,7 @@ export function insertNodeArraySQL(tbsNodesToCreate: LionWebJsonNode[], metaPoin
             }
         })
         query += TableHelpers.pgp.helpers.insert(node_rows, TableHelpers.NODES_COLUMN_SET) + ";\n"
-        query += insertContainmentsSQL(tbsNodesToCreate, metaPointersTracker)
+        query += SQL_insertContainments(tbsNodesToCreate, metaPointersTracker)
 
         // INSERT Properties
         const insertProperties = tbsNodesToCreate.flatMap(node =>
@@ -55,7 +55,7 @@ export function insertNodeArraySQL(tbsNodesToCreate: LionWebJsonNode[], metaPoin
     }
 }
 
-export function insertContainmentsSQL(tbsNodesToCreate: LionWebJsonNode[], metaPointersTracker: MetaPointersTracker): string {
+export function SQL_insertContainments(tbsNodesToCreate: LionWebJsonNode[], metaPointersTracker: MetaPointersTracker): string {
     let query = "-- insert containments for new node\n"
     // INSERT Containments
     const insertRowData = tbsNodesToCreate.flatMap(node =>
@@ -71,7 +71,3 @@ export function insertContainmentsSQL(tbsNodesToCreate: LionWebJsonNode[], metaP
     return query
 }
 
-export const QUERIES = {
-    insertNodeArraySQL,
-    insertContainmentsSQL,
-}

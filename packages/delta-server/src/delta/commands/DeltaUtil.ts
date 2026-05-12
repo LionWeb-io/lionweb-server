@@ -3,7 +3,12 @@ import { JsonContext } from "@lionweb/json-utils"
 import { LionWebTask } from "@lionweb/server-database"
 import { dbLogger, deltaLogger } from "@lionweb/server-shared"
 import { ValidationIssue } from "@lionweb/validation"
-import { SQL, DB, NodeWithParent } from "@lionweb/server-common"
+import {
+    NodeWithParent,
+    DB_retrieveSingleFullNode,
+    DB_retrieveParents,
+    is_NodesForQueryQuery_ResultType
+} from "@lionweb/server-common"
 import {
     AdditionalInfo,
     CommandId,
@@ -40,18 +45,7 @@ export const errorEvent = (msg: DeltaCommand): ErrorEvent => ({
     additionalInfos: []
 })
 
-export const errorNotImplementedEvent = (msg: DeltaRequest): ErrorEvent => (
-    {
-        message: `${msg.messageKind}: Not implemented yet`,
-        sequenceNumber: 0,
-        originCommands: [ { commandId: msg.queryId, participationId: "error"}],
-        errorCode: "generic",
-        messageKind: "ErrorEvent",
-        additionalInfos: []
-    }
-)
-
-export const issuesToProtocolMessages = (issues: ValidationIssue[]): AdditionalInfo[] => {
+export const issuesToAdditionalInfo = (issues: ValidationIssue[]): AdditionalInfo[] => {
     return issues.map(issue => {
         return {
             kind: issue.issueType,
@@ -62,19 +56,19 @@ export const issuesToProtocolMessages = (issues: ValidationIssue[]): AdditionalI
 }
 
 /**
- * Retrieve full node, (without children) with `id` from the database.
+ * Retrieve full LionWebJsonNode, (without children) with `id` from the database.
  * Throw an exception of type `ErrorEvent` if the node does not exist, or there is more than one node with `id`.
  * @param id            The id of the node to be retrieved
  * @param delta         The delta command for which the node is to be found.
  * @param participation The participation info of the delta command
  * @param ctx           The database context to enable database calls
  */
-export const retrieveNodeFromDB = async(id: string, delta: DeltaCommand | DeltaRequest, participation: Participation, task: LionWebTask): Promise<LionWebJsonNode> => {
-    const queryResult = await DB.retrieveSingleFullNodeDB(task, participation.repositoryData!, id)
+export const DB_retrieveNode = async(id: string, delta: DeltaCommand | DeltaRequest, participation: Participation, task: LionWebTask): Promise<LionWebJsonNode> => {
+    const queryResult = await DB_retrieveSingleFullNode(task, participation.repositoryData!, id)
     dbLogger.info(`Result of retrieveNode: '${JSON.stringify(queryResult)}'`) 
 
     // Validate return type
-    if (!SQL.is_NodesForQueryQuery_ResultType(queryResult)) {
+    if (!is_NodesForQueryQuery_ResultType(queryResult)) {
         throw newErrorDelta("queryError", "Query result has incorrect type", delta, participation, {
             additionalInfos: queryData("empty", queryResult)
         })
@@ -96,8 +90,8 @@ export const retrieveNodeFromDB = async(id: string, delta: DeltaCommand | DeltaR
  * @param participation
  * @param ctx
  */
-export async function affectedPartition(task: LionWebTask, nodeid: LionWebId, participation: Participation): Promise<LionWebId> {
-    const parentChain = await DB.retrieveParentsDB(task, participation!.repositoryData!, nodeid)
+export async function DB_affectedPartition(task: LionWebTask, nodeid: LionWebId, participation: Participation): Promise<LionWebId> {
+    const parentChain = await DB_retrieveParents(task, participation!.repositoryData!, nodeid)
     if (parentChain === undefined) {
         throw new Error("affectedPartition: Internal Error: PARENT CHAIN UNDEFINED")
     }

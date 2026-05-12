@@ -41,15 +41,15 @@ export function is_NodesForQueryQuery_ResultType(o: unknown): o is NodesForQuery
  * @param nodesQuery string SQL query to select the set of nodes to retrieve.
  *                   Must have an `id` property.
  */
-export const retrieveFullNodesFromQueryDB = async (dbConnection: DbConnection, repo: RepositoryData, nodeQuery: string): Promise<LionWebJsonNode[]> => {
-    const queryResult =  await dbConnection.query(repo, retrieveFullNodesFromQuerySQL(nodeQuery))
+export const DB_retrieveFullNodesFromQuery = async (dbConnection: DbConnection, repo: RepositoryData, nodeQuery: string): Promise<LionWebJsonNode[]> => {
+    const queryResult =  await dbConnection.query(repo, SQL_retrieveFullNodesFromQuery(nodeQuery))
     if (is_NodesForQueryQuery_ResultType(queryResult)) {
         return queryResult
     } else {
         throw InternalQueryError(`Query return type incorrect, expected NodesForQueryQuery_ResultType`, [
             {
                 key: "query",
-                value: retrieveFullNodesFromQuerySQL(nodeQuery)
+                value: SQL_retrieveFullNodesFromQuery(nodeQuery)
             },
             {
                 key: "queryResult",
@@ -65,7 +65,7 @@ export const retrieveFullNodesFromQueryDB = async (dbConnection: DbConnection, r
  * @param nodesQuery string SQL query to select the set of nodes to retrieve.
  *                   Must have an `id` property.
  */
-export const retrieveFullNodesFromQuerySQL = (nodesQuery: string): string => {
+export const SQL_retrieveFullNodesFromQuery = (nodesQuery: string): string => {
     // language=SQL
     return `-- Get the nodes for the nodes query
     WITH relevant_nodes AS (
@@ -170,9 +170,9 @@ left join ${METAPOINTERS_TABLE} classifier on classifier.id = relevant_nodes.cla
 `
 }
 
-export const retrieveFullNodesFromIdListSQL = (nodeid: string[]): string => {
+export const SQL_retrieveFullNodesFromIdList = (nodeid: string[]): string => {
     const sqlNodeCollection = sqlArrayFromNodeIdArray(nodeid)
-    return retrieveFullNodesFromQuerySQL(`SELECT * FROM ${NODES_TABLE} WHERE id IN ${sqlNodeCollection}\n`)
+    return SQL_retrieveFullNodesFromQuery(`SELECT * FROM ${NODES_TABLE} WHERE id IN ${sqlNodeCollection}\n`)
 }
 
 /**
@@ -181,7 +181,7 @@ export const retrieveFullNodesFromIdListSQL = (nodeid: string[]): string => {
  * @param repositoryData
  * @param nodeIdList
  */
-export async function retrieveFullNodesFromIdListDB(
+export async function DB_retrieveFullNodesFromIdList(
     task: LionWebTask,
     repositoryData: RepositoryData,
     nodeIdList: string[]
@@ -191,6 +191,6 @@ export async function retrieveFullNodesFromIdListDB(
     if (nodeIdList.length == 0) {
         return []
     }
-    return await task.query(repositoryData, retrieveFullNodesFromIdListSQL(nodeIdList))
+    return await task.query(repositoryData, SQL_retrieveFullNodesFromIdList(nodeIdList))
 }
 

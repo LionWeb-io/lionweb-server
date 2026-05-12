@@ -34,7 +34,7 @@ import {
     annotationFunctions,
     childFunctions,
     DeltaFunction, errorEvent,
-    issuesToProtocolMessages,
+    issuesToAdditionalInfo,
     MessageFunction,
     miscFunctions,
     partitionFunctions,
@@ -99,7 +99,7 @@ class DeltaProcessor {
                 deltaLogger.error(issue.errorMsg())
             })
             const response = newErrorDelta("messageSyntaxIncorrect", "Validation errors", delta, participation, {
-                additionalInfos: issuesToProtocolMessages(this.deltaValidator.validationResult.issues)
+                additionalInfos: issuesToAdditionalInfo(this.deltaValidator.validationResult.issues)
             })
             this.sendDelta(socket, participation, delta, response)
             return

@@ -22,6 +22,7 @@ import { Commands } from "../commands.js"
 import { TestCoverage } from "./helpers.js"
 import { LionWebModel } from "../models/LionWebModel.js"
 import { Logo2String } from "../models/Logo2String.js"
+import { test, describe, beforeAll, beforeEach, afterAll, it, expect } from "vitest"
 
 export const cmd: Commands = new Commands()
 
@@ -98,14 +99,14 @@ export async function logProtocol(client: DeltaClient, checkClient: RepositoryCl
         const chunk = await checkClient.bulk.retrieve(rootIds, 100000)
         console.log(`Retrieveresponse ${JSON.stringify(chunk, null, 2)}`)
         const string = new Logo2String(chunk.body.chunk.nodes).logo2string()
-        console.log("Repo to string")
+        console.log("ACTUAL Repo to string")
         console.log(string)
 
         if (expectedModel !== undefined) {
-            console.log("Model to string")
+            console.log("EXPECTED Model to string")
             const string = new Logo2String(expectedModel.nodes()).logo2string()
             console.log(string)
-            console.log("=============")
+            console.log("============= EXPECTED ")
             console.log(expectedModel.asString())
             console.log("Model diff")
             const diff = new LionWebJsonDiff()
@@ -116,7 +117,7 @@ export async function logProtocol(client: DeltaClient, checkClient: RepositoryCl
             diff.diffResult.changes.forEach((ch) => {
                 console.log(`change ${ch.changeMsg()}`)
             })
-            console.log(`logoModel ${JSON.stringify(chunk.body.chunk, null, 2)}`)
+            console.log(`ACTUAL logoModel ${JSON.stringify(chunk.body.chunk, null, 2)}`)
             expect(diff.diffResult.changes).toStrictEqual([])
             // console.log(`logoModel ${JSON.stringify(logoChunk, null, 2)}`)
         }

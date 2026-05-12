@@ -47,7 +47,8 @@ import {
     AddAnnotationCommand,
     DeleteAnnotationCommand,
     isErrorEvent,
-    isErrorResponse
+    isErrorResponse,
+    ReplaceAnnotationCommand
 } from "@lionweb/server-delta-shared"
 import { waitFor } from "./delta/helpers.js"
 import {} from "./utils.js"
@@ -658,6 +659,33 @@ export class Commands {
             additionalInfos: []
         }
         return client.sendCommand(command) as AddAnnotationCommand
+    }
+
+    replaceAnnotation = (client: DeltaClient, replaced: LionWebId, annotation: AddAnnotationType, extra?: Partial<AddAnnotationCommand>): ReplaceAnnotationCommand => {
+        const command: ReplaceAnnotationCommand = {
+            messageKind: "ReplaceAnnotation",
+            commandId: `command-id-${queryId++}`,
+            index: 0,
+            parent: annotation.parent,
+            replacedAnnotation: replaced,
+            newAnnotation: {
+                nodes: [
+                    {
+                        id: annotation.id,
+                        parent: annotation.parent,
+                        properties: annotation.props.map(p => {
+                            return { property: p.prop, value: p.value }
+                        }),
+                        containments: [],
+                        references: [],
+                        classifier: annotation.cls,
+                        annotations: []
+                    }
+                ]
+            },
+            additionalInfos: []
+        }
+        return client.sendCommand(command) as ReplaceAnnotationCommand
     }
 
     deleteAnnotation = (client: DeltaClient, parent: LionWebId, annotation: LionWebId, index: number): DeleteAnnotationCommand => {

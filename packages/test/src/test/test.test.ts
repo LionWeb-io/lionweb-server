@@ -3,12 +3,8 @@ import { getVersionFromResponse, RepositoryClient } from "@lionweb/server-http-c
 import { LionWebJsonChunk } from "@lionweb/json"
 import { LanguageChange, LionWebJsonDiff } from "@lionweb/json-diff"
 import { readModel } from "./utils.js"
+import { describe, afterEach, beforeAll, beforeEach, it, expect } from "vitest"
 
-import { assert } from "chai"
-const { deepEqual, equal } = assert
-// import sm from "source-map-support"
-//
-// sm.install()
 const DATA: string = "./data/"
 
 const collection = [true, false]
@@ -89,53 +85,48 @@ collection.forEach(withoutHistory => {
 
         describe("Repository does not exist", () => {
             it("repository may not be null", async () => {
-                // assert(initError === "", initError)
                 client.repository = null
                 const retrieve = await client.bulk.retrieve(["ID-2"])
                 console.log("Retrieve Result: " + JSON.stringify(JSON.stringify(retrieve.body.messages)))
-                assert(retrieve.body.success === false, "Repository === null failed")
+                expect(retrieve.body.success, "Repository === null failed").toBe(false)
             })
             it("repository name must exist", async () => {
-                // assert(initError === "", initError)
                 client.repository = "nothing"
                 const retrieve = await client.bulk.retrieve(["ID-2"])
                 console.log("Retrieve Result: " + JSON.stringify(JSON.stringify(retrieve.body.messages)))
-                assert(retrieve.body.success === false, "Non existing repository should fail")
+                expect(retrieve.body.success, "Non existing repository should fail").toBe(false)
             })
         })
 
         describe("Partition tests", () => {
             it("retrieve nodes", async () => {
-                // assert(initError === "", initError)
-                // client.repository =  repository
                 const retrieve = await client.bulk.retrieve(["ID-2"])
                 console.log("Retrieve Result: " + JSON.stringify(JSON.stringify(retrieve.body.messages)))
                 const retrieveResponse = retrieve.body as RetrieveResponse
                 const diff = new LionWebJsonDiff()
                 diff.diffLwChunk(baseFullChunk, retrieveResponse.chunk)
-                deepEqual(diff.diffResult.changes, [])
+                expect(diff.diffResult.changes).toEqual([])
             })
 
             it("retrieve partitions", async () => {
-                // assert(initError === "", initError)
                 const model = structuredClone(baseFullChunk)
                 model.nodes = model.nodes.filter(node => node.parent === null)
                 const partitions = await client.bulk.listPartitions()
                 console.log("Retrieve partitions Result: " + JSON.stringify(partitions))
                 const diff = new LionWebJsonDiff()
                 diff.diffLwChunk(model, partitions.body.chunk)
-                deepEqual(diff.diffResult.changes, [])
+                expect(diff.diffResult.changes).toEqual([])
             })
 
             it("delete partitions", async () => {
-                assert(initError === "", initError)
+                expect(initError, initError).toBe("")
                 await client.bulk.deletePartitions(["ID-2"])
                 const partitions = await client.bulk.listPartitions()
-                deepEqual(partitions.body.chunk, { serializationFormatVersion: "2023.1", languages: [], nodes: [] })
+                expect(partitions.body.chunk).toEqual({ serializationFormatVersion: "2023.1", languages: [], nodes: [] })
             })
 
             it("recreate partitions", async () => {
-                assert(initError === "", initError)
+                expect(initError).toBe("")
 
                 const partResult = await client.bulk.createPartitions(initialPartition)
                 if (partResult.status !== HttpSuccessCodes.Ok) {
@@ -150,7 +141,7 @@ collection.forEach(withoutHistory => {
                 console.log("Retrieve partitions Result: " + JSON.stringify(partitions))
                 const diff = new LionWebJsonDiff()
                 diff.diffLwChunk(model, partitions.body.chunk)
-                deepEqual(diff.diffResult.changes, [])
+                expect(diff.diffResult.changes).toEqual([])
             })
         })
 
@@ -415,27 +406,27 @@ collection.forEach(withoutHistory => {
                     ],
                     serializationFormatVersion: "2023.1"
                 })
-                equal(testIncorrect.status, HttpClientErrors.PreconditionFailed, "Failed reserved id")
+                expect(testIncorrect.status, "Failed reserved id").toEqual(HttpClientErrors.PreconditionFailed)
             })
         })
 
         describe("Multi-repo test", () => {
             it("Check current repository", async () => {
-                assert(initError === "", initError)
+                expect(initError).toBe("")
                 const currentrepo = withoutHistory ? "MyFirstRepo" : "MyFirstHistoryRepo"
                 {
                     const repositories = await client.dbAdmin.listRepositories()
                     console.log(`multi repo test repositores ${JSON.stringify(repositories)}`)
                     console.log(`length ${repositories?.body?.repositories?.length}`)
-                    assert(repositories.body.repositories.length === 1, "There should be exactly one repository")
-                    assert(
+                    expect(repositories.body.repositories.length, "There should be exactly one repository").toBe(1)
+                    expect(
                         repositories.body.repositories.some(repo => repo.name === currentrepo),
                         "Incorrect repository found: " + JSON.stringify(repositories.body.repositories)
-                    )
-                    assert(
+                    ).toBe(true)
+                    expect(
                         repositories.body.repositories.some(repo => repo.history === !withoutHistory),
                         "Incorrect repository found: " + JSON.stringify(repositories.body.repositories)
-                    )
+                    ).toBe(true)
                 }
                 // console.log(`listRepositories 1a: ${repositories.body.repositories.map(r => r.name)}`)
                 await client.dbAdmin.createRepository("Repo2", !withoutHistory, "2023.1")                    
@@ -445,55 +436,55 @@ collection.forEach(withoutHistory => {
                 {
                     const repositories = await client.dbAdmin.listRepositories()
                     console.log(`listRepositories 1c ${repositories.body.repositories.map(r => r.name)}`)
-                    assert(repositories.body.repositories.length === 2, "There should be exactly two repositories")
-                    assert(
+                    expect(repositories.body.repositories.length, "There should be exactly two repositories").toBe(2)
+                    expect(
                         repositories.body.repositories.every(repo => repo.name === currentrepo || repo.name === "Repo2"),
                         "Incorrect repository found: " + JSON.stringify(repositories.body.repositories)
-                    )
-                    assert(
+                    ).toBe(true)
+                    expect(
                         repositories.body.repositories.every(repo => repo.name === currentrepo || repo.lionweb_version === "2023.1"),
                         "Incorrect repository found: " + JSON.stringify(repositories.body.repositories)
-                    )
-                    assert(
+                    ).toBe(true)
+                    expect(
                         repositories.body.repositories.every(repo => repo.name === currentrepo || repo.history === !withoutHistory),
                         "Incorrect repository found: " + JSON.stringify(repositories.body.repositories)
-                    )
+                    ).toBe(true)
                 }
 
                 const createResult = await client.dbAdmin.createRepository("Repo2", true, "2023.1")
-                assert(createResult.body.success === false, "Should not be able to create existing repo")
+                expect(createResult.body.success, "Should not be able to create existing repo").toBe(false)
                 const delete2 = await client.dbAdmin.deleteRepository("Repo2")
                 {
-                    assert(delete2.body.success === true, "Should be able to delete existiung repository")
+                    expect(delete2.body.success, "Should be able to delete existiung repository").toBe(true)
                     const repositories = await client.dbAdmin.listRepositories()
                     console.log(`listRepositories 3: ${repositories.body.repositories.map(r => r.name)}`)
-                    assert(repositories.body.repositories.length === 1, "There should be exactly one repository")
-                    assert(
+                    expect(repositories.body.repositories.length, "There should be exactly one repository").toBe(1)
+                    expect(
                         repositories.body.repositories.some(repo => repo.name === currentrepo),
                         "Incorrect repository found: " + JSON.stringify(repositories.body.repositories)
-                    )
+                    ).toBe(true)
                 }
                 const createResult2 = await client.dbAdmin.createRepository("Repo2", !withoutHistory, "2023.1")
                 console.log(`createREsult ${JSON.stringify(createResult2)}`)
                 {
-                    assert(
-                        createResult2.body.success === true,
+                    expect(
+                        createResult2.body.success,
                         "Should  be able to create new repository: " + JSON.stringify(createResult2.body.messages)
-                    )
+                    ).toBe(true)
                     const repositories = await client.dbAdmin.listRepositories()
                     console.log(`Repositories 22: ${JSON.stringify(repositories)}`)
-                    assert(repositories.body.repositories.length === 2, "There should be exactly two repositories")
-                    assert(
+                    expect(repositories.body.repositories.length, "There should be exactly two repositories").toBe(2)
+                    expect(
                         repositories.body.repositories.every(repo => repo.name === currentrepo || repo.name === "Repo2"),
                         "Incorrect repository found: " + JSON.stringify(repositories.body.repositories)
-                    )
+                    ).toBe(true)
                 }
             })
         })
 
         describe("Multiple LionWeb versions test", () => {
             it("Check repository LionWeb versions does not accept other versions", async () => {
-                assert(initError === "", initError)
+                expect(initError).toBe("")
                 const incorrectVersion: LionWebJsonChunk = {
                     serializationFormatVersion: "2024.1",
                     nodes: [],
@@ -510,31 +501,31 @@ collection.forEach(withoutHistory => {
                     languages: []
                 }
                 const incorrect = await client.bulk.createPartitions(incorrectVersion)
-                assert(
-                    incorrect.body.success === false,
+                expect(
+                    incorrect.body.success,
                     "incorrect LionWeb version should be refused: " + +incorrect.body.messages.map(m => m.message)
-                )
+                ).toBe(false)
                 const nonsense = await client.bulk.createPartitions(nonsenseVersion)
-                assert(
-                    nonsense.body.success === false,
+                expect(
+                    nonsense.body.success,
                     "nonsense LionWeb version should be refused: " + nonsense.body.messages.map(m => m.message)
-                )
+                ).toBe(false)
                 const correct = await client.bulk.createPartitions(correctVersion)
-                assert(
-                    correct.body.success === true,
+                expect(
+                    correct.body.success,
                     "correct LionWeb version should be accepted: " + correct.body.messages.map(m => m.message)
-                )
+                ).toBe(true)
             })
         })
 
         async function testResult(originalJsonFile: string, changesFile: string) {
             console.log(`Test result of '${originalJsonFile}' with '${changesFile}'`)
-            assert(initError === "", initError)
+            expect(initError).toBe("")
             const changesChunk = readModel(changesFile) as LionWebJsonChunk
 
             const result = await client.bulk.store(changesChunk)
             console.log(`============ ${JSON.stringify(result)}`)
-            assert(result.status === HttpSuccessCodes.Ok)
+            expect(result.status).toEqual(HttpSuccessCodes.Ok)
 
             const jsonModelFull = readModel(originalJsonFile) as LionWebJsonChunk
             const afterRetrieve = await client.bulk.retrieve(["ID-2"])
@@ -542,14 +533,11 @@ collection.forEach(withoutHistory => {
             const retrieveResponse = afterRetrieve.body as RetrieveResponse
             if (!retrieveResponse.success) {
                 console.log(retrieveResponse.messages)
-                deepEqual(afterRetrieve.status, HttpSuccessCodes.Ok)
+                expect(afterRetrieve.status).toBe(HttpSuccessCodes.Ok)
             } else {
                 const diff2 = new LionWebJsonDiff()
                 diff2.diffLwChunk(jsonModelFull, retrieveResponse.chunk)
-                deepEqual(
-                    diff2.diffResult.changes.filter(ch => !(ch instanceof LanguageChange)),
-                    []
-                )
+                expect(diff2.diffResult.changes.filter(ch => !(ch instanceof LanguageChange))).toEqual([])
             }
         }
 
@@ -561,19 +549,12 @@ collection.forEach(withoutHistory => {
             const repoAt_1 = await client.history.listPartitions(initialPartitionVersion)
             const diff = new LionWebJsonDiff()
             diff.diffLwChunk(initialPartition, repoAt_1.body.chunk)
-            deepEqual(
-                diff.diffResult.changes.filter(ch => !(ch instanceof LanguageChange)),
-                []
-                    , "one"
-            )
+            expect(diff.diffResult.changes.filter(ch => !(ch instanceof LanguageChange)), "one").toEqual([])
+            
             const repoAt_2 = await client.history.retrieve(baseFullChunkVersion, ["ID-2"])
             const diff2 = new LionWebJsonDiff()
             diff2.diffLwChunk(baseFullChunk, repoAt_2.body.chunk)
-            deepEqual(
-                diff2.diffResult.changes.filter(ch => !(ch instanceof LanguageChange)),
-                [],
-                "two"
-            )
+            expect(diff2.diffResult.changes.filter(ch => !(ch instanceof LanguageChange)), "two").toEqual([])
         }
     })
 })

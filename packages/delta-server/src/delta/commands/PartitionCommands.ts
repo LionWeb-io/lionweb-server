@@ -1,7 +1,10 @@
 import {
     MetaPointersTracker,
-    SQL,
-    DB
+    DB_retrieveNodeTree,
+    DB_nodeIdsInUse,
+    SQL_nextRepoVersion,
+    SQL_insertNodeArray,
+    SQL_deleteFullNodes
 } from "@lionweb/server-common"
 import { LionWebTask } from "@lionweb/server-database"
 import {
@@ -17,7 +20,7 @@ import { DeltaContext } from "../DeltaContext.js"
 import { affectedNodeMessage, newErrorDelta, affectedPartitionMessage } from "../events.js"
 import { Participation } from "../participation/index.js"
 import { DeltaFunction } from "./DeltaUtil.js"
-import { validateProperTree } from "./Validations.js"
+import { validateExistingIdsIsEmpty, validateExistingNodesIsEmpty, validateProperTree } from "./Validations.js"
 
 const AddPartitionFunction = async (
     participation: Participation,
@@ -28,25 +31,17 @@ const AddPartitionFunction = async (
     const rootNode = validateProperTree(msg.newPartition, null, msg, participation)
 
     const result = await _ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const existingNodes = await DB.nodeIdsInUseDB(
+        const existingNodes = await DB_nodeIdsInUse(
             task,
             participation.repositoryData!,
             msg.newPartition.nodes.map(n => n.id)
         )
-        if (existingNodes.length > 0) {
-            deltaLogger.debug(`Cannot add partition, node ids ${existingNodes.map(n => n.id)} already in use`)
-            return newErrorDelta(
-                "idsAlreadyInUse",
-                `Cannot add partition, node ids ${existingNodes.map(n => n.id)} already in use`,
-                msg,
-                participation
-            )
-        }
+        validateExistingIdsIsEmpty(existingNodes, msg, participation)
         const metaPointersTracker = new MetaPointersTracker(participation.repositoryData!)
         await metaPointersTracker.populateFromNodes(msg.newPartition.nodes, task)
 
-        let query = SQL.nextRepoVersionSQL(participation.participationId)
-        query += SQL.insertNodeArraySQL(msg.newPartition.nodes, metaPointersTracker)
+        let query = SQL_nextRepoVersion(participation.participationId)
+        query += SQL_insertNodeArray(msg.newPartition.nodes, metaPointersTracker)
         // deltaLogger.info(`db add partition result is ${JSON.stringify(insert)}`)
         const dbResult = await task.query(participation.repositoryData!, query)
         // deltaLogger.info(`db add partition result is ${JSON.stringify(dbResult)}`)
@@ -72,13 +67,13 @@ const AddPartitionFunction = async (
 const DeletePartitionFunction = async (participation: Participation, msg: DeletePartitionCommand, _ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
     deltaLogger.debug("Called DeletePartitionFunction " + msg.messageKind)
     const result = await _ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const queryResult = await DB.retrieveNodeTreeDB(task, participation.repositoryData!, [msg.deletedPartition], Number.MAX_SAFE_INTEGER)
+        const queryResult = await DB_retrieveNodeTree(task, participation.repositoryData!, [msg.deletedPartition], Number.MAX_SAFE_INTEGER)
         if (queryResult.length === 0) {
             return newErrorDelta("unknownNode", `Partition node with id ${msg.deletedPartition} does not exist`, msg, participation)
         }
         const nodesToDelete = queryResult.map(qr => qr.id)
-        let query = SQL.nextRepoVersionSQL(participation.participationId)
-        query += SQL.deleteFullNodesSQL(nodesToDelete)
+        let query = SQL_nextRepoVersion(participation.participationId)
+        query += SQL_deleteFullNodes(nodesToDelete)
         const deleteResult = await task.query(participation.repositoryData!, query)
         return {
             messageKind: "PartitionDeleted",

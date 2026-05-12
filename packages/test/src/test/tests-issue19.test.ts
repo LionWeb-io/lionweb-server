@@ -1,10 +1,8 @@
 import { HttpSuccessCodes } from "@lionweb/server-shared"
 import { RepositoryClient } from "@lionweb/server-http-client"
 import { LionWebJsonChunk } from "@lionweb/json"
-import { afterEach } from "vitest"
 import { readModel } from "./utils.js"
-
-import { assert } from "chai"
+import { describe, afterEach, beforeEach, it, expect } from "vitest"
 const DATA: string = "./data/"
 
 describe("Repository tests", () => {
@@ -41,7 +39,7 @@ describe("Repository tests", () => {
         for (const file of files) {
             const changesChunk = readModel(file) as LionWebJsonChunk
             const result = await t.bulk.store(changesChunk)
-            assert.isTrue(result.status === HttpSuccessCodes.Ok, "Incorrect HTTP status: something went wrong")
+            expect(result.status, "Incorrect HTTP status: something went wrong").toEqual(HttpSuccessCodes.Ok)
         }
     }
 })

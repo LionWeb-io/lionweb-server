@@ -1,7 +1,7 @@
 import { adminResponseFunctions, DeltaClient, eventFunctions, responseFunctions } from "@lionweb/server-delta-client"
 import { RepositoryClient } from "@lionweb/server-http-client"
 import { HttpSuccessCodes } from "@lionweb/server-shared"
-import { afterAll } from "vitest"
+import { afterAll, expect } from "vitest"
 import { LionWebModel } from "../models/LionWebModel.js"
 import { reportHTML } from "./helpers.js"
 import { cmd, CoverageMap, expectResponse } from "./test-helpers.js"

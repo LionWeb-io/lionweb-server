@@ -1,4 +1,4 @@
-import { DB } from "@lionweb/server-common"
+import { DB_retrievePartitionNodes, DB_retrieveFullNodesRecursive, DB_getAvailableIds } from "@lionweb/server-common"
 import { LionWebTask } from "@lionweb/server-database"
 import {
     DeltaEvent,
@@ -89,7 +89,7 @@ const SubscribeToPartitionContentsRequestFunction = async (
             return newErrorDelta("alreadySubscribed", `Already subscribed to partition ${msg.partition}`, msg, participation)
         }
         participation.subscribedPartitions.add(msg.partition)
-        const queryResult = await DB.retrieveFullNodesRecursive(task, participation.repositoryData!, [msg.partition], Number.MAX_SAFE_INTEGER)
+        const queryResult = await DB_retrieveFullNodesRecursive(task, participation.repositoryData!, [msg.partition], Number.MAX_SAFE_INTEGER)
         return {
             messageKind: "SubscribeToPartitionContentsResponse",
             contents: { nodes: queryResult },
@@ -169,8 +169,8 @@ const ListPartitionsRequestFunction = async (
 ): Promise<DeltaEvent | DeltaResponse> => {
     deltaLogger.info("Called ListPartitionsRequestFunction " + msg.messageKind)
     const partitionsContents = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const partitions = await DB.retrievePartitionNodes(task, participation.repositoryData!)
-        const partitionsContents = await DB.retrieveFullNodesRecursive(
+        const partitions = await DB_retrievePartitionNodes(task, participation.repositoryData!)
+        const partitionsContents = await DB_retrieveFullNodesRecursive(
             task,
             participation.repositoryData!,
             partitions.nodes.map(n => n.id),
@@ -195,8 +195,8 @@ const ListAndSubscribePartitionsRequestFunction = async (
 ): Promise<DeltaEvent | DeltaResponse> => {
     deltaLogger.info("Called ListAndSubscribePartitionsRequestFunction " + msg.messageKind)
     const partitionsContents = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const partitions = await DB.retrievePartitionNodes(task, participation.repositoryData!)
-        const partitionsContents = await DB.retrieveFullNodesRecursive(
+        const partitions = await DB_retrievePartitionNodes(task, participation.repositoryData!)
+        const partitionsContents = await DB_retrieveFullNodesRecursive(
             task,
             participation.repositoryData!,
             partitions.nodes.map(n => n.id),
@@ -222,7 +222,7 @@ const GetAvailableIdsRequestFunction = async (
 ): Promise<DeltaEvent | DeltaResponse> => {
     deltaLogger.info(`Called GetAvailableIdsRequestFunction participation '${JSON.stringify(participation)}'`)
     const ids = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const result = await DB.getAvailableIds(task, participation.repositoryData!, msg.count)
+        const result = await DB_getAvailableIds(task, participation.repositoryData!, msg.count)
         return result
     })
     const response: GetAvailableIdsResponse = {

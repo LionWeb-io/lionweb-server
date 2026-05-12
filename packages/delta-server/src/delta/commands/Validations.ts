@@ -1,4 +1,4 @@
-import { DB, isProperTree } from "@lionweb/server-common"
+import { isNullOrUndefined, isProperTree, notNullOrUndefined } from "@lionweb/server-common"
 import {
     ChangeReferenceCommand,
     DeleteReferenceCommand,
@@ -10,10 +10,10 @@ import {
     LionWebJsonReference,
     LionWebJsonReferenceTarget
 } from "@lionweb/server-delta-shared"
-import { isEqualMetaPointer, isEqualReferenceTarget, LionWebJsonNode } from "@lionweb/json"
+import { isEqualMetaPointer, isEqualReferenceTarget, LionWebJsonNode, LionWebJsonProperty } from "@lionweb/json"
 import { newErrorDelta } from "../events.js"
 import { Participation } from "../participation/index.js"
-import { issuesToProtocolMessages } from "./DeltaUtil.js"
+import { issuesToAdditionalInfo } from "./DeltaUtil.js"
 
 export type ChangeType = "Add" | "Replace" | "Delete"
 
@@ -23,16 +23,16 @@ export type ChangeType = "Add" | "Replace" | "Delete"
  * @param parent
  * @param msg
  * @param participation
- * @returns             The parent of the root node of the tree built from `nodes`
+ * @returns             The root node of the tree built from `nodes`
  */
-export function validateProperTree(nodes: LionWebDeltaJsonChunk, parent: LionWebId | null, msg: DeltaCommand, participation: Participation): LionWebJsonNode | undefined {
+export function validateProperTree(nodes: LionWebDeltaJsonChunk, parent: LionWebId | null, msg: DeltaCommand, participation: Participation): LionWebJsonNode {
     // - There is exactly one node with parent `parentNode`, called `rootNode`
     // - All nodes together form a proper tree with root `rootNode`, i.e. no orphans allowed
     //   This can be done through the LionwebReferenceValidator.
     const issues = isProperTree(nodes)
     if (issues.length > 0) {
         throw newErrorDelta("chunkIsNotATree", `the newChild chunk is not a proper tree`, msg, participation, {
-            additionalInfos: issuesToProtocolMessages(issues)
+            additionalInfos: issuesToAdditionalInfo(issues)
         })
     }
     const rootNode = nodes.nodes.find(node => node.parent === parent )
@@ -40,7 +40,7 @@ export function validateProperTree(nodes: LionWebDeltaJsonChunk, parent: LionWeb
         // TODO this check can be moved to the ReferenceValidator by giving the `parent` as parameter
         throw newErrorDelta("childNotFound", `The newChild chunk does not contain a node with parent ${parent}`, msg, participation)
     }
-    return rootNode!
+    return rootNode
 }
 
 /**
@@ -76,6 +76,58 @@ export function findAndValidateContainment(
         )
     }
     return containment
+}
+
+export function validatePropertyDoesNotExist(
+    node: LionWebJsonNode,
+    propertyMP: LionWebJsonMetaPointer,
+    msg: DeltaCommand,
+    participation: Participation
+): void {
+    const property = node.properties.find(c => isEqualMetaPointer(c.property, propertyMP))
+        if (notNullOrUndefined(property) && notNullOrUndefined(property.value)) {
+        throw newErrorDelta(
+            "propertyAlreadyExists",
+            `Property '${JSON.stringify(propertyMP)}' already exists in node '${node.id}'`,
+            msg,
+            participation
+        )
+    }
+}
+
+/**
+ * Find ` containment` within `node`, throw an exception if there is no such containment.
+ * @param node
+ * @param containmentMP
+ */
+export function findAndValidateProperty(
+    node: LionWebJsonNode,
+    propertyMP: LionWebJsonMetaPointer,
+    msg: DeltaCommand,
+    participation: Participation
+): LionWebJsonProperty {
+    const property = node.properties.find(c => isEqualMetaPointer(c.property, propertyMP))
+    if (property === undefined) {
+        throw newErrorDelta(
+            "unknownProperty",
+            `Property '${JSON.stringify(propertyMP)}' does not exists in node '${node.id}'`,
+            msg,
+            participation
+        )
+    }
+    return property
+}
+
+export function validatePropertyHasChanged(property: LionWebJsonProperty, newValue: string, msg: DeltaCommand, participation: Participation): void {
+    if (property.value === newValue) {
+        throw newErrorDelta(
+            "generic",
+            `The property with key '${property.property.key}' already has value ${property.value}`,
+            msg,
+            participation
+        )
+    }
+
 }
 
 /**
@@ -277,10 +329,41 @@ export const validateChildInContainment = (
     }
 }
 
+export const validateChildInAnnotation = (
+    parent: LionWebJsonNode,
+    index: number,
+    child: LionWebId,
+    msg: DeltaCommand,
+    participation: Participation
+): void => {
+    if (index > parent.annotations.length || parent.annotations[index] !== child) {
+        throw newErrorDelta("indexEntryMismatch", `child ${child} is not at oldIndex ${index}`, msg, participation)
+    }
+}
+
+export function validateAnnotationIndex(parentNode: LionWebJsonNode, index: number, msg: DeltaCommand, participation: Participation): void {
+    if (index > parentNode.annotations.length - 1) {
+        throw newErrorDelta("unknownIndex", `Index ${index} out of range for ${parentNode.id} annotations`, msg, participation)
+    }
+}
+
+
 export function validateExistingNodesIsEmpty(existingNodes: LionWebJsonNode[], msg: DeltaCommand, participation: Participation): void {
     if (existingNodes.length > 0) {
         const existingIds = existingNodes.map(n => n.id)
         throw newErrorDelta("nodeAlreadyExists", `Nodes '${existingIds}' already exist`, msg, participation)
+    }
+}
+
+export function validateExistingIdsIsEmpty(existingIds: LionWebId[], msg: DeltaCommand, participation: Participation): void {
+    if (existingIds.length > 0) {
+        throw newErrorDelta("idsAlreadyInUse", `Nodes '${existingIds}' already exist`, msg, participation)
+    }
+}
+
+export function validateReferenceTarget(resolveInfo: string | null | undefined, reference: LionWebId | null | undefined, msg: DeltaCommand, participation: Participation): void {
+    if (isNullOrUndefined(resolveInfo) && isNullOrUndefined(reference)) {
+        throw newErrorDelta("undefinedReferenceTarget", "resolveInfo and target are both null", msg, participation)
     }
 }
 

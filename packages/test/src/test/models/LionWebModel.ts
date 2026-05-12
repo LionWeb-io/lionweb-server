@@ -81,7 +81,7 @@ export class LionWebModel {
     }
 
     findNodesOfClassifier(concept: LionWebJsonMetaPointer): LionWebJsonNode[] {
-        return Array.from(this.nodesIdMap.values()).filter((node) => isEqualMetaPointer(node.classifier, concept))
+        return this.nodes().filter((node) => isEqualMetaPointer(node.classifier, concept))
     }
 
     /**
@@ -161,7 +161,7 @@ export class LionWebModel {
 
     /**
      * Remove child from its parent, but do not delete the child node
-     * Always a temporary situation, therefore this remains priovate
+     * Always a temporary situation, therefore this remains private
      * @param nodeId
      * @param mp
      * @param index
@@ -331,9 +331,13 @@ export class LionWebModel {
         const nodes = this.nodes()
         return {
             serializationFormatVersion: serializationVersion,
-            languages: collectUsedLanguages(this.nodes()),
-            nodes: this.nodes(),
+            languages: collectUsedLanguages(nodes),
+            nodes: nodes,
         }
+    }
+    
+    getPartitions(): LionWebJsonNode[] {
+        return this.nodes().filter(node => node.parent === null)
     }
 
     applyDelta(delta: DeltaCommand): void {
@@ -437,7 +441,7 @@ export class LionWebModel {
                 const cmd = delta as MoveAndReplaceChildInSameContainmentCommand
                 const movedChildNode = this.getNode(cmd.movedChild)
                 // Add to new containment, do this first, otherwise the replacedNode's index may be changed.
-                this.replaceChild(cmd.parent, cmd.containment, [movedChildNode], cmd.newIndex)
+                this.replaceChild(cmd.parent, cmd.containment, [movedChildNode], cmd.oldIndex + cmd.indexOffset)
                 // Afterwards remove from old containment
                 this.getContainment(cmd.parent, cmd.containment).children.splice(cmd.oldIndex, 1)
                 break
@@ -483,7 +487,7 @@ export class LionWebModel {
                 const parentNode = this.getNode(annotationNode.parent)
                 // Don't use deleteAnnotation, as it will remove the children as well.
                 pull(parentNode.annotations, [cmd.movedAnnotation])
-                this.replaceAnnotation(parentNode.id, [annotationNode], cmd.newIndex)
+                this.replaceAnnotation(parentNode.id, [annotationNode], cmd.oldIndex + cmd.indexOffset)
                 break
             }
             case "MoveAnnotationFromOtherParent": {
@@ -513,8 +517,7 @@ export class LionWebModel {
 
     asString(): string {
         let result = ""
-        const partitions = Array.from(this.nodesIdMap.values()).filter((n) => n.parent === null)
-        partitions.forEach((partition) => {
+        this.getPartitions().forEach((partition) => {
             const pString = this.recursiveToString(partition, 1)
             result += pString
         })
@@ -558,6 +561,13 @@ export class LionWebModel {
                 })
             }
         })
+        // if (node.annotations.length > 0) { 
+        //     result += "annotations: "
+        //     node.annotations.forEach(ann => {
+        //         result += ann +  " "
+        //     })
+        //     result += "\n"
+        // }
         return result
     }
 

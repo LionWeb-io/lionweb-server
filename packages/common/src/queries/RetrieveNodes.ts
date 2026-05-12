@@ -1,13 +1,11 @@
 import { LionWebJsonNode } from "@lionweb/json"
-import { DbConnection, LionWebTask, RepositoryData } from "@lionweb/server-database"
+import { LionWebTask, RepositoryData } from "@lionweb/server-database"
 import { KeyValuePair } from "@lionweb/server-delta-shared"
 import { dbLogger } from "@lionweb/server-shared"
-import { asError } from "../apiutil/index.js"
-import {
-    InternalQueryError,
-    SQL,
-    sqlArrayFromNodeIdArray
-} from "./index.js"
+import { asError } from "../apiutil/functions.js"
+import { sqlArrayFromNodeIdArray } from "./PgHelpers.js"
+import { InternalQueryError } from "./GuardFunctions.js"
+import { is_NodesForQueryQuery_ResultType, SQL_retrieveFullNodesFromQuery } from "./QueryNode.js"
 import { NODES_TABLE } from "../database/TableNames.js"
 
 /**
@@ -16,11 +14,11 @@ import { NODES_TABLE } from "../database/TableNames.js"
  * @param nodeid        A list of all node id's that need to be retrieved
  * @param depthLimit    The depth of the subtree that needs to be retrived
  */
-const retrieveFullNodesRecursiveSQL = (nodeid: string[], depthLimit: number): string => {
+export const SQL_retrieveFullNodesRecursive = (nodeid: string[], depthLimit: number): string => {
     const sqlArray = sqlArrayFromNodeIdArray(nodeid)
     // Now query the full nodes, based on the list
     // language=SQL
-    return SQL.retrieveFullNodesFromQuerySQL(`--
+    return SQL_retrieveFullNodesFromQuery(`--
             WITH RECURSIVE tmp AS (
                 SELECT id, parent, 0 as depth
                 FROM ${NODES_TABLE}
@@ -39,19 +37,19 @@ const retrieveFullNodesRecursiveSQL = (nodeid: string[], depthLimit: number): st
 /**
  *
  */
-const retrieveFullNodesRecursive = async (
+export const DB_retrieveFullNodesRecursive = async (
     task: LionWebTask,
     repoData: RepositoryData,
     nodeid: string[],
     depthLimit: number
 ): Promise<LionWebJsonNode[]> => {
-    const query = retrieveFullNodesRecursiveSQL(nodeid, depthLimit)
+    const query = SQL_retrieveFullNodesRecursive(nodeid, depthLimit)
     const result = await task.multi(repoData, query)
-    if (!SQL.is_NodesForQueryQuery_ResultType(result[0])) {
+    if (!is_NodesForQueryQuery_ResultType(result[0])) {
         const data: KeyValuePair[] = [
             {
                 key: "query",
-                value: dbLogger.isEnabledFor("debug") ? SQL.retrieveFullNodesFromQuerySQL(query) : "no debug logging"
+                value: dbLogger.isEnabledFor("debug") ? SQL_retrieveFullNodesFromQuery(query) : "no debug logging"
             },
             {
                 key: "queryResult",
@@ -79,7 +77,7 @@ function isNodeWithParent(o: unknown): o is NodeWithParent {
  * @returns Query resulting in Nodes-table rows: {id, classifier, parent}[] 
  * @param nodeid
  */
-const retrieveParentsSQL = (nodeid: string): string => {
+const SQL_retrieveParents = (nodeid: string): string => {
     // const sqlArray = sqlArrayFromNodeIdArray(nodeid)
     // language=SQL
     return `--
@@ -101,9 +99,8 @@ const retrieveParentsSQL = (nodeid: string): string => {
  * @param nodeid
  * @returns Nodes-table rows: {id, classifier, parent}[] 
  */
-const retrieveParentsDB = async (task: LionWebTask, repoData: RepositoryData, nodeid: string): Promise<NodeWithParent[]> => {
-    const result = await task.manyOrNone(repoData, retrieveParentsSQL(nodeid))
-    // deltaLogger.info(`Parents of '${nodeid} are '${JSON.stringify(result)}'`)
+export const DB_retrieveParents = async (task: LionWebTask, repoData: RepositoryData, nodeid: string): Promise<NodeWithParent[]> => {
+    const result = await task.manyOrNone(repoData, SQL_retrieveParents(nodeid))
     if (Array.isArray(result) && result.every(n => isNodeWithParent(n))) {
         // deltaLogger.info(`found parent`)
         return result as NodeWithParent[]
@@ -125,7 +122,7 @@ export type NodeTreeResultType = {
  * @param nodeidlist
  * @param depthLimit
  */
-const retrieveNodeTreeForIdListSQL = (nodeidlist: string[], depthLimit: number): string => {
+const SQL_retrieveNodeTreeForIdList = (nodeidlist: string[], depthLimit: number): string => {
     const sqlArray = sqlArrayFromNodeIdArray(nodeidlist)
     // language=SQL
     return `-- Recursively retrieve node tree
@@ -148,7 +145,7 @@ const retrieveNodeTreeForIdListSQL = (nodeidlist: string[], depthLimit: number):
  * @param nodeIdList
  * @param depthLimit
  */
-async function retrieveNodeTreeDB(
+export async function DB_retrieveNodeTree(
     task: LionWebTask,
     repositoryData: RepositoryData,
     nodeIdList: string[],
@@ -160,7 +157,7 @@ async function retrieveNodeTreeDB(
         if (nodeIdList.length === 0) {
             return []
         }
-        query = retrieveNodeTreeForIdListSQL(nodeIdList, depthLimit)
+        query = SQL_retrieveNodeTreeForIdList(nodeIdList, depthLimit)
         return await task.query(repositoryData, query)
     } catch (e) {
         const error = asError(e)
@@ -170,14 +167,3 @@ async function retrieveNodeTreeDB(
     }
 }
 
-export const RETRIEVE_NODES_SQL = {
-    retrieveParentsSQL,
-    retrieveFullNodesRecursiveSQL,
-    retrieveNodeTreeForIdListSQL
-}
-
-export const RETRIEVE_NODES_DB = {
-    retrieveNodeTreeDB,
-    retrieveParentsDB,
-    retrieveFullNodesRecursive
-}

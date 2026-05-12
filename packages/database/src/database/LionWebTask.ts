@@ -1,6 +1,6 @@
-import { queryLogger, toJsonArray, toJsonString, traceLogger } from "@lionweb/server-shared"
+import { queryLogger, toJsonArray } from "@lionweb/server-shared"
 import pgPromise from "pg-promise"
-import { addRepositorySchema, RepositoryData } from "./DbConnection.js"
+import { addRepositorySchema, RepositoryData } from "./Repositories.js"
 
 /**
  * All database transactions will go through an instance of this class.

@@ -44,6 +44,13 @@ export const ProgramTree: LionWebTree = {
                 }
             ]
         }
+    ],
+    annotations: [
+        {
+            id: "id-annotation",
+            type: CLASSIFIER.HomeCommand,
+            INamedName: "HomeCommand as Annotation"
+        }
     ]
 }
 

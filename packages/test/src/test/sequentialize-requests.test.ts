@@ -1,19 +1,23 @@
 import { ClientResponse, RepositoryClient } from "@lionweb/server-http-client"
 import { StoreResponse } from "@lionweb/server-shared"
 import { LionWebJsonChunk } from "@lionweb/json"
-import { assert } from "chai"
+import { VAR } from "../data.js"
 
 // import sm from "source-map-support"
-import { afterEach } from "vitest"
+import { afterEach, describe, beforeEach, it, expect } from "vitest"
 import { readModel } from "./utils.js"
+
+console.log(`Var 1 is '${VAR.value}'`)
 
 // sm.install()
 
 describe("Transaction isolation tests", () => {
     const t = new RepositoryClient({ clientId: "TestClient", repository: "isolation" })
     t.loggingOn = true
+    console.log(`Var 2 is '${VAR.value}'`)
 
     beforeEach(async function () {
+        console.log(`Var 3 is '${VAR.value}'`)
         const delRepo = await t.dbAdmin.listRepositories()
         console.log(`delRepo ${JSON.stringify(delRepo)}`)
         
@@ -36,6 +40,7 @@ describe("Transaction isolation tests", () => {
 
     describe("Nowait", () => {
         it("test sending requests without waiting, so they will be sequentialized.", async () => {
+            console.log(`Var is '${VAR.value}'`)
             await storeFiles([
                 "./data/Disk_A.json",
                 "./data/add-new-annotation/Disk-add-new-annotation-partition.json",
@@ -59,7 +64,8 @@ describe("Transaction isolation tests", () => {
         }
         for (const result of results) {
             result.then(answer => {
-                assert(answer.body.success, `Request should be done correctly: ${JSON.stringify(answer)}`)
+                expect(answer.body.success).toBeTruthy()
+                // assert(answer.body.success, `Request should be done correctly: ${JSON.stringify(answer)}`)
                 // console.log(`===== Result ok: ${answer.body.success}, messages: ${answer.body.messages.map(m => m.kind + ": " + m.message) + "\n"}`)
             })
         }

@@ -2,7 +2,7 @@ import { LionWebTask, RepositoryData } from "@lionweb/server-database"
 import { CONTAINMENTS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "../database/index.js"
 import { InternalQueryError } from "./GuardFunctions.js"
 import { sqlArrayFromNodeIdArray } from "./PgHelpers.js"
-import { is_NodesForQueryQuery_ResultType, NodesForQueryQuery_ResultType, retrieveFullNodesFromQuerySQL } from "./QueryNode.js"
+import { is_NodesForQueryQuery_ResultType, NodesForQueryQuery_ResultType, SQL_retrieveFullNodesFromQuery } from "./QueryNode.js"
 
 // import pkg from "pg-promise"
 // const { PreparedStatement } = pkg
@@ -13,7 +13,7 @@ import { is_NodesForQueryQuery_ResultType, NodesForQueryQuery_ResultType, retrie
  * Retrieve a node from the nodes tabel in the database whose id is `id`.
  * @param idList
  */
-const retrieveSingleNodeSQL = (id: string): string => {
+export const SQL_retrieveSingleNode = (id: string): string => {
     const query = `SELECT * FROM ${NODES_TABLE} nt WHERE nt.id = '${id}'`
     return query
 }
@@ -22,8 +22,8 @@ const retrieveSingleNodeSQL = (id: string): string => {
  * select a node from the database whose id is `id`.
  * @param idList
  */
-const retrieveSingleFullNodeSQL = (id: string): string => {
-    const query = retrieveFullNodesFromQuerySQL(retrieveSingleNodeSQL(id))
+export const SQL_retrieveSingleFullNode = (id: string): string => {
+    const query = SQL_retrieveFullNodesFromQuery(SQL_retrieveSingleNode(id))
     return query
 }
 
@@ -31,8 +31,8 @@ const retrieveSingleFullNodeSQL = (id: string): string => {
  * Retrieve a single full node from the database whose id is `id`.
  * @param idList
  */
-const retrieveSingleFullNodeDB = async (task: LionWebTask, repo: RepositoryData, id: string): Promise<NodesForQueryQuery_ResultType> => {
-    const query = retrieveFullNodesFromQuerySQL(retrieveSingleNodeSQL(id))
+export const DB_retrieveSingleFullNode = async (task: LionWebTask, repo: RepositoryData, id: string): Promise<NodesForQueryQuery_ResultType> => {
+    const query = SQL_retrieveFullNodesFromQuery(SQL_retrieveSingleNode(id))
     const queryResult = await task.query(repo, query)
     if (is_NodesForQueryQuery_ResultType(queryResult)) {
         return queryResult
@@ -40,7 +40,7 @@ const retrieveSingleFullNodeDB = async (task: LionWebTask, repo: RepositoryData,
         throw InternalQueryError(`retrieveSingleFullNodeDB() returns type incorrect, expected NodesForQueryQuery_ResultType`,
             [{
                 key: "query",
-                value: retrieveFullNodesFromQuerySQL(query)
+                value: SQL_retrieveFullNodesFromQuery(query)
             },
                 {
                     key: "queryResult",
@@ -61,7 +61,7 @@ const retrieveSingleFullNodeDB = async (task: LionWebTask, repo: RepositoryData,
  * Delete all nodes with id in `nodeIds`, including all of their features
  * @param nodeIds
  */ 
-function deleteFullNodesSQL(nodeIds: string[]) {
+export function SQL_deleteFullNodes(nodeIds: string[]) {
     if (nodeIds.length === 0) {
         return ""
     }
@@ -82,11 +82,7 @@ function deleteFullNodesSQL(nodeIds: string[]) {
 }
 
 export const QUERIES_SQL = {
-    deleteFullNodesSQL,
-    retrieveSingleFullNodeSQL,
-    retrieveFullNodesFromQuerySQL
+    deleteFullNodesSQL: SQL_deleteFullNodes,
+    retrieveFullNodesFromQuerySQL: SQL_retrieveFullNodesFromQuery
 }
 
-export const QUERIES_DB = {
-     retrieveSingleFullNodeDB
-}

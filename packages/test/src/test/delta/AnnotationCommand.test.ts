@@ -38,7 +38,7 @@ describe.each(withoutHistoryList)("Annotations-$withoutHistory", async ({ withou
             parent: "id-none",      // incorrect
             index: 0,
             cls: CLASSIFIER.HomeCommand,
-            id: "id-annotation",
+            id: "id-annotation2",
             props: []
             
         })
@@ -48,7 +48,7 @@ describe.each(withoutHistoryList)("Annotations-$withoutHistory", async ({ withou
             parent: "id-if",      // incorrect
             index: 0,
             cls: CLASSIFIER.HomeCommand,
-            id: "id-annotation",
+            id: "id-annotation2",
             props: []
 
         })
@@ -68,12 +68,45 @@ describe.each(withoutHistoryList)("Annotations-$withoutHistory", async ({ withou
 
         console.log(`MY ProgramModel ${ProgramModel.asString()}`)
 
-        const annErr = cmd.deleteAnnotation(client, "id-none", "id-annotation", 0)
+        const annErr = cmd.deleteAnnotation(client, "id-none", "id-annotation2", 0)
         await expectError(client, annErr, "unknownNode")
 
-        const annDeleted = cmd.deleteAnnotation(client, "id-if", "id-annotation", 0)
+        const annDeleted = cmd.deleteAnnotation(client, "id-if", "id-annotation2", 0)
         await expectEvent(client, annDeleted, "AnnotationDeleted")
         ProgramModel.applyDelta(annDeleted)
         await logProtocol(client, bulkApiClient, ["id-program", "id-library"], log, ProgramModel)
     })
+
+    test("ReplaceAnnotation", async () => {
+        resetModels()
+        const partitionP = cmd.addFullPartition(client, ProgramModel.nodes())
+        const partitionL = cmd.addFullPartition(client, LibraryModel.nodes())
+        console.log(ProgramModel.asString())
+        const ifC = ProgramModel.getNode("id-if")
+        const lib = LibraryModel.getNode("id-library")
+        ProgramModel.addPartition(libraryNodes)
+
+        const annErr = cmd.replaceAnnotation(client, "id-annotation", {
+            parent: "id-none",      // incorrect
+            index: 0,
+            cls: CLASSIFIER.NumbericLiteral,
+            id: "id-annotation2",
+            props: []
+
+        })
+        await expectError(client, annErr, "unknownNode")
+
+        const annCmd = cmd.replaceAnnotation(client, "id-annotation", {
+            parent: "id-program",      // incorrect
+            index: 0,
+            cls: CLASSIFIER.NumbericLiteral,
+            id: "id-annotation2",
+            props: []
+
+        })
+        await expectEvent(client, annCmd, "AnnotationReplaced")
+        ProgramModel.applyDelta(annCmd)
+        await logProtocol(client, bulkApiClient, ["id-program", "id-library"], log, ProgramModel)
+    })
+
 })

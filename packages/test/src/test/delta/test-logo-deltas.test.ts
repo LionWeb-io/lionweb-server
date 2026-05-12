@@ -2,7 +2,7 @@ import {
     GetAvailableIdsResponse,
     ListPartitionsResponse
 } from "@lionweb/server-delta-shared"
-import { test, describe, beforeAll, beforeEach, afterAll } from "vitest"
+import { test, describe, beforeAll, beforeEach, afterAll, it, expect } from "vitest"
 import { CLASSIFIER as CLS, CONTAINMENT, CONTAINMENT as CON, LibraryProcedures, ProcedureBody, ProgramCommands, PROPERTY as PROP, REFERENCE as REF } from "../models/keys.js"
 import { CoverageMap, cmd, expectError, expectEvent, expectResponse, logProtocol } from "./test-helpers.js"
 

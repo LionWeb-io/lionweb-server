@@ -1,12 +1,16 @@
-import { isEqualMetaPointer, LionWebId, LionWebJsonContainment } from "@lionweb/json"
+import { isEqualMetaPointer } from "@lionweb/json"
 import { NodeUtils } from "@lionweb/json-utils"
 import { ChildAdded, Missing, ChildRemoved, ParentChanged } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
 import {
     DbChanges,
-    SQL, DB,
     MetaPointersTracker,
-    TableHelpers
+    TableHelpers,
+    DB_retrieveNodeTree,
+    DB_retrieveFullNodesFromIdList,
+    SQL_nextRepoVersion,
+    SQL_deleteFullNodes,
+    SQL_insertNodeArray
 } from "@lionweb/server-common"
 import { LionWebTask } from "@lionweb/server-database"
 import {
@@ -19,10 +23,8 @@ import {
     ChildMovedFromOtherContainmentInSameParentEvent,
     ChildReplacedEvent,
     DeleteChildCommand,
-    DeltaCommand,
     DeltaEvent,
     ErrorEvent,
-    LionWebJsonNode,
     MoveAndReplaceChildFromOtherContainmentCommand,
     MoveAndReplaceChildFromOtherContainmentInSameParentCommand,
     MoveAndReplaceChildInSameContainmentCommand,
@@ -34,9 +36,9 @@ import {
 } from "@lionweb/server-delta-shared"
 import { deltaLogger } from "@lionweb/server-shared"
 import { DeltaContext } from "../DeltaContext.js"
-import { affectedNodeMessage, newErrorDelta, affectedPartitionMessage } from "../events.js"
+import { affectedNodeMessage, affectedPartitionMessage } from "../events.js"
 import { Participation } from "../participation/index.js"
-import { affectedPartition, deltaContext, DeltaFunction, errorEvent } from "./DeltaUtil.js"
+import { DB_affectedPartition, deltaContext, DeltaFunction, errorEvent } from "./DeltaUtil.js"
 import {
     findAndValidateNodeExists,
     validateChildInContainment,
@@ -54,7 +56,7 @@ const AddChild = async (participation: Participation, msg: AddChildCommand, ctx:
     deltaLogger.info(`Called AddChild ${msg.newChild.nodes.map(n => n.id)}`)
     const newChildNode = validateProperTree(msg.newChild, msg.parent, msg, participation)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
             ...(msg.newChild.nodes.map(n => n.id)), msg.parent
         ])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
@@ -84,13 +86,13 @@ const AddChild = async (participation: Participation, msg: AddChildCommand, ctx:
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await metaPointerTracker.populateFromNodes(msg.newChild.nodes, task)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, msg.newChild.nodes, task)
-        const nextVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
-        const addNodesquery = SQL.insertNodeArraySQL(msg.newChild.nodes, metaPointerTracker)
+        const nextVersionSql = SQL_nextRepoVersion(participation.participationId)
+        const addNodesquery = SQL_insertNodeArray(msg.newChild.nodes, metaPointerTracker)
         const addChildQuery = changes.createPostgresQuery(metaPointerTracker)
         deltaLogger.debug(`ADD NODES QUERY '${addNodesquery}`)
         deltaLogger.debug(`ADD CHILD QUERY '${addChildQuery}`)
         const queryResult = await task.query(participation.repositoryData!, nextVersionSql + addNodesquery + addChildQuery)
-        const partition = await affectedPartition(task, parentNode!.id, participation)
+        const partition = await DB_affectedPartition(task, parentNode!.id, participation)
         return {
             messageKind: "ChildAdded",
             containment: msg.containment,
@@ -112,7 +114,7 @@ const DeleteChild = async (
 ): Promise<DeltaEvent | ErrorDelta> => {
     deltaLogger.debug("DeleteChild " + msg.deletedChild)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
             msg.parent, msg.deletedChild
         ])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
@@ -124,17 +126,17 @@ const DeleteChild = async (
         // All ok, now prepare the deletion query
         containment.children.splice(msg.index, 1)
         // Get the subtree of `deletedChild` from the database to remove them
-        const subtreeNodes = await DB.retrieveNodeTreeDB(task, participation.repositoryData!, [msg.deletedChild], Number.MAX_SAFE_INTEGER)
-        const deleteSql = SQL.deleteFullNodesSQL(subtreeNodes.map(n => n.id))
+        const subtreeNodes = await DB_retrieveNodeTree(task, participation.repositoryData!, [msg.deletedChild], Number.MAX_SAFE_INTEGER)
+        const deleteSql = SQL_deleteFullNodes(subtreeNodes.map(n => n.id))
         const dbChanges = new DbChanges(TableHelpers.pgp)
         dbChanges.addChanges(            
             [new ChildRemoved(new JsonContext(null, ["delta"]), parentNode, msg.containment, containment, msg.deletedChild, Missing.NotMissing)]
         ) 
         // Run the query with metapointers as a dummy, there are no metapointers being added
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
-        const nextVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
+        const nextVersionSql = SQL_nextRepoVersion(participation.participationId)
         const execute = task.query(participation.repositoryData!, nextVersionSql + deleteSql + dbChanges.createPostgresQuery(metaPointerTracker))
-        const partition = await affectedPartition(task, parentNode!.id, participation)
+        const partition = await DB_affectedPartition(task, parentNode!.id, participation)
         return {
             messageKind: "ChildDeleted",
             deletedChild: msg.deletedChild,
@@ -156,30 +158,17 @@ const ReplaceChild = async (
     ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorDelta> => {
     deltaLogger.debug("Called ReplaceChild " + msg.messageKind)
-    validateProperTree(msg.newChild, msg.parent, msg, participation)
+    const newChildNode = validateProperTree(msg.newChild, msg.parent, msg, participation)
     
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
             msg.parent,
             msg.replacedChild,
             ...msg.newChild.nodes.map(n => n.id)
         ])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
-
         const existingChildNodes = nodesFromDB.filter(n => n.id !== msg.parent && n.id !== msg.replacedChild)
         validateExistingNodesIsEmpty(existingChildNodes, msg, participation)
-
-        // Find the new child node
-        const newChildNode = msg.newChild.nodes.find(node => node.parent === msg.parent)
-        if (newChildNode === undefined) {
-            // TODO this check can be moved to the ReferenceValidator by giving the `parent` as parameter
-            return newErrorDelta(
-                "childNotFound",
-                `The newChild chunk does not contain a node with parent ${msg.parent}`,
-                msg,
-                participation
-            )
-        }
 
         const containment = validateContainment(parentNode, msg.containment, msg.index, "Replace", msg.replacedChild, msg, participation)
         validateChildInContainment(parentNode, containment, msg.index, msg.replacedChild, msg, participation)
@@ -187,7 +176,7 @@ const ReplaceChild = async (
         
         // Checks done, do the work
         const changes = new DbChanges(TableHelpers.pgp)
-        const replacedTree = await DB.retrieveNodeTreeDB(task, participation.repositoryData!, [msg.replacedChild], Number.MAX_SAFE_INTEGER)
+        const replacedTree = await DB_retrieveNodeTree(task, participation.repositoryData!, [msg.replacedChild], Number.MAX_SAFE_INTEGER)
 
         const missing: Missing =
             parentNode.containments.find(c => isEqualMetaPointer(c.containment, msg.containment)) === undefined
@@ -200,12 +189,12 @@ const ReplaceChild = async (
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await metaPointerTracker.populateFromNodes(msg.newChild.nodes, task)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, msg.newChild.nodes, task)
-        const addNodesquery = SQL.insertNodeArraySQL(msg.newChild.nodes, metaPointerTracker)
-        const deleteNodes = SQL.deleteFullNodesSQL(replacedTree.map(node => node.id))
+        const addNodesquery = SQL_insertNodeArray(msg.newChild.nodes, metaPointerTracker)
+        const deleteNodes = SQL_deleteFullNodes(replacedTree.map(node => node.id))
         const addChildQuery = changes.createPostgresQuery(metaPointerTracker)
-        const nextVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
+        const nextVersionSql = SQL_nextRepoVersion(participation.participationId)
         const queryResult = await task.query(participation.repositoryData!, nextVersionSql + addNodesquery + deleteNodes + addChildQuery)
-        const partition = await affectedPartition(task, parentNode!.id, participation)
+        const partition = await DB_affectedPartition(task, parentNode!.id, participation)
         return {
             messageKind: "ChildReplaced",
             parent: msg.parent,
@@ -230,7 +219,7 @@ const MoveChildFromOtherContainmentFunction = async (
 ): Promise<DeltaEvent | ErrorEvent> => {
     deltaLogger.debug("Called MoveChildFromOtherContainment " + msg.messageKind)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
             msg.newParent, msg.movedChild, msg.oldParent
         ])
         const newParentNode = findAndValidateNodeExists(msg.newParent, nodesFromDB, msg, participation)
@@ -238,7 +227,7 @@ const MoveChildFromOtherContainmentFunction = async (
         const oldParentFromCommand = findAndValidateNodeExists(msg.oldParent, nodesFromDB, msg, participation)
         const oldParentFromCmdContainment = NodeUtils.findContainment(oldParentFromCommand, msg.oldContainment)
         validateChildInContainment(oldParentFromCommand, oldParentFromCmdContainment, msg.oldIndex, msg.movedChild, msg, participation)
-        const oldMovedChildParentFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
+        const oldMovedChildParentFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
             movedChildNode.parent!
         ])
         const oldParentNode = findAndValidateNodeExists(movedChildNode.parent!, oldMovedChildParentFromDB, msg, participation)
@@ -269,8 +258,8 @@ const MoveChildFromOtherContainmentFunction = async (
         // await metaPointerTracker.populateFromNodes([newParentNode], task)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [newParentNode], task)
         await task.query(participation.repositoryData!, changes.createPostgresQuery(metaPointerTracker))
-        const oldPartition = await affectedPartition(task, oldParentNode!.id, participation)
-        const newPartition = await affectedPartition(task, newParentNode!.id, participation)
+        const oldPartition = await DB_affectedPartition(task, oldParentNode!.id, participation)
+        const newPartition = await DB_affectedPartition(task, newParentNode!.id, participation)
         return {
             messageKind: "ChildMovedFromOtherContainment",
             newParent: newParentNode.id,
@@ -300,7 +289,7 @@ const MoveChildFromOtherContainmentInSameParent = async (
 ): Promise<DeltaEvent | ErrorEvent> => {
     deltaLogger.debug("Called MoveChildFromOtherContainmentInSameParent " + msg.messageKind)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
             msg.parent, msg.movedChild
         ])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
@@ -323,7 +312,7 @@ const MoveChildFromOtherContainmentInSameParent = async (
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [parentNode], task)
         await task.query(participation.repositoryData!, changes.createPostgresQuery(metaPointerTracker))
-        const partition = await affectedPartition(task, parentNode.id, participation)
+        const partition = await DB_affectedPartition(task, parentNode.id, participation)
 
         return {
             messageKind: "ChildMovedFromOtherContainmentInSameParent",
@@ -360,7 +349,7 @@ const MoveAndReplaceChildFromOtherContainment = async (
 ): Promise<DeltaEvent | ErrorEvent> => {
     deltaLogger.debug("Called MoveAndReplaceChildFromOtherContainment " + msg.messageKind)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
             msg.replacedChild,
             msg.movedChild,
             msg.oldParent,
@@ -382,8 +371,8 @@ const MoveAndReplaceChildFromOtherContainment = async (
             participation
         )
         // Get the subtree of `deletedChild` from the database to remove them
-        const subtreeNodes = await DB.retrieveNodeTreeDB(task, participation.repositoryData!, [msg.replacedChild], Number.MAX_SAFE_INTEGER)
-        const deleteSql = SQL.deleteFullNodesSQL(subtreeNodes.map(n => n.id))
+        const subtreeNodes = await DB_retrieveNodeTree(task, participation.repositoryData!, [msg.replacedChild], Number.MAX_SAFE_INTEGER)
+        const deleteSql = SQL_deleteFullNodes(subtreeNodes.map(n => n.id))
 
         //// Execute ////
         const changes = new DbChanges(TableHelpers.pgp)
@@ -406,7 +395,7 @@ const MoveAndReplaceChildFromOtherContainment = async (
         // TODO Check: not needed as there are no new nodes or containments.
         // await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [], task)
         await task.query(participation.repositoryData!, deleteSql + changes.createPostgresQuery(metaPointerTracker))
-        const partition = await affectedPartition(task, oldParentNode.id, participation)
+        const partition = await DB_affectedPartition(task, oldParentNode.id, participation)
 
         return {
             messageKind: "ChildMovedAndReplacedFromOtherContainment",
@@ -434,7 +423,7 @@ const MoveAndReplaceChildFromOtherContainmentInSameParent = async (
 ): Promise<DeltaEvent | ErrorEvent> => {
     deltaLogger.debug("Called MoveAndReplaceChildFromOtherContainmentInSameParent " + msg.messageKind)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
             msg.replacedChild,
             msg.movedChild,
             msg.parent
@@ -454,8 +443,8 @@ const MoveAndReplaceChildFromOtherContainmentInSameParent = async (
             participation
         )
         // Get the subtree of `deletedChild` from the database to remove them
-        const subtreeNodes = await DB.retrieveNodeTreeDB(task, participation.repositoryData!, [msg.replacedChild], Number.MAX_SAFE_INTEGER)
-        const deleteSql = SQL.deleteFullNodesSQL(subtreeNodes.map(n => n.id))
+        const subtreeNodes = await DB_retrieveNodeTree(task, participation.repositoryData!, [msg.replacedChild], Number.MAX_SAFE_INTEGER)
+        const deleteSql = SQL_deleteFullNodes(subtreeNodes.map(n => n.id))
 
         //// Execute ////
         const changes = new DbChanges(TableHelpers.pgp)
@@ -477,7 +466,7 @@ const MoveAndReplaceChildFromOtherContainmentInSameParent = async (
         // TODO Check: not needed as there are no new nodes or containments.
         // await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [], task)
         await task.query(participation.repositoryData!, deleteSql + changes.createPostgresQuery(metaPointerTracker))
-        const partition = await affectedPartition(task, parentNode.id, participation)
+        const partition = await DB_affectedPartition(task, parentNode.id, participation)
 
         return {
             messageKind: "ChildMovedAndReplacedFromOtherContainmentInSameParent",

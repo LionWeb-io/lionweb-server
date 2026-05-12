@@ -1,12 +1,22 @@
-import { AnnotationAdded, AnnotationRemoved } from "@lionweb/json-diff"
+import { AnnotationAdded, AnnotationOrderChanged, AnnotationRemoved, ChildAdded, Missing } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
-import { DB, DbChanges, MetaPointersTracker, SQL, TableHelpers } from "@lionweb/server-common"
+import {
+    DB_retrieveFullNodesFromIdList,
+    DB_retrieveNodeTree,
+    DbChanges,
+    MetaPointersTracker,
+    SQL_deleteFullNodes,
+    SQL_insertNodeArray,
+    SQL_nextRepoVersion,
+    TableHelpers
+} from "@lionweb/server-common"
 import { LionWebTask } from "@lionweb/server-database"
 import { deltaLogger } from "@lionweb/server-shared"
 import {
     AddAnnotationCommand,
     AnnotationAddedEvent,
     AnnotationDeletedEvent,
+    AnnotationReplacedEvent,
     DeleteAnnotationCommand,
     DeltaEvent,
     MoveAndReplaceAnnotationFromOtherParentCommand,
@@ -14,19 +24,29 @@ import {
     MoveAnnotationFromOtherParentCommand,
     MoveAnnotationInSameParentCommand,
     ReplaceAnnotationCommand,
-    ErrorDelta
+    ErrorDelta,
+    AnnotationMovedFromOtherParentEvent,
+    AnnotationMovedInSameParentEvent,
+    AnnotationMovedAndReplacedFromOtherParentEvent,
+    AnnotationMovedAndReplacedInSameParentEvent
 } from "@lionweb/server-delta-shared"
 import { DeltaContext } from "../DeltaContext.js"
-import { affectedNodeMessage, affectedPartitionMessage, newErrorDelta } from "../events.js"
+import { affectedNodeMessage, affectedPartitionMessage } from "../events.js"
 import { Participation } from "../participation/index.js"
-import { affectedPartition, deltaContext, DeltaFunction, errorEvent } from "./DeltaUtil.js"
-import { findAndValidateNodeExists, validateExistingNodesIsEmpty, validateProperTree } from "./Validations.js"
+import { DB_affectedPartition, deltaContext, DeltaFunction } from "./DeltaUtil.js"
+import {
+    findAndValidateNodeExists,
+    validateAnnotationIndex,
+    validateChildInAnnotation,
+    validateExistingNodesIsEmpty,
+    validateProperTree
+} from "./Validations.js"
 
 const AddAnnotation = async (participation: Participation, msg: AddAnnotationCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
     deltaLogger.info(`Called AddAnnotation to node ${msg.parent}`)
     const newAnnotationNode = validateProperTree(msg.newAnnotation, msg.parent, msg, participation)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
             ...msg.newAnnotation.nodes.map(n => n.id),
             msg.parent
         ])
@@ -55,13 +75,13 @@ const AddAnnotation = async (participation: Participation, msg: AddAnnotationCom
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await metaPointerTracker.populateFromNodes(msg.newAnnotation.nodes, task)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, msg.newAnnotation.nodes, task)
-        const nextVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
-        const addNodesquery = SQL.insertNodeArraySQL(msg.newAnnotation.nodes, metaPointerTracker)
+        const nextVersionSql = SQL_nextRepoVersion(participation.participationId)
+        const addNodesquery = SQL_insertNodeArray(msg.newAnnotation.nodes, metaPointerTracker)
         const addChildQuery = changes.createPostgresQuery(metaPointerTracker)
         deltaLogger.debug(`ADD NODES QUERY '${addNodesquery}`)
         deltaLogger.debug(`ADD CHILD QUERY '${addChildQuery}`)
         const queryResult = await task.query(participation.repositoryData!, nextVersionSql + addNodesquery + addChildQuery)
-        const partition = await affectedPartition(task, parentNode!.id, participation)
+        const partition = await DB_affectedPartition(task, parentNode!.id, participation)
         return {
             messageKind: "AnnotationAdded",
             newAnnotation: msg.newAnnotation,
@@ -82,23 +102,17 @@ const DeleteAnnotation = async (
 ): Promise<DeltaEvent | ErrorDelta> => {
     deltaLogger.info("Called DeleteAnnotation " + msg.messageKind)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [msg.parent, msg.deletedAnnotation])
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [msg.parent, msg.deletedAnnotation])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
         const annotationNode = findAndValidateNodeExists(msg.deletedAnnotation, nodesFromDB, msg, participation)
-
-        if (msg.index > parentNode.annotations.length - 1) {
-            return newErrorDelta("unknownIndex", "TODO", msg, participation)
-        }
-        if (parentNode.annotations[msg.index] !== msg.deletedAnnotation) {
-            return newErrorDelta("indexEntryMismatch", "TODO", msg, participation)
-        }
+        validateChildInAnnotation(parentNode, msg.index, msg.deletedAnnotation, msg, participation)
 
         // All ok, now prepare the deletion query
         const afterNode = structuredClone(parentNode)
         afterNode.annotations.splice(msg.index, 1)
         // Get the subtree of `deletedChild` from the database to remove them
-        const subtreeNodes = await DB.retrieveNodeTreeDB(task, participation.repositoryData!, [msg.deletedAnnotation], Number.MAX_SAFE_INTEGER)
-        const deleteSql = SQL.deleteFullNodesSQL(subtreeNodes.map(n => n.id))
+        const subtreeNodes = await DB_retrieveNodeTree(task, participation.repositoryData!, [msg.deletedAnnotation], Number.MAX_SAFE_INTEGER)
+        const deleteSql = SQL_deleteFullNodes(subtreeNodes.map(n => n.id))
         const dbChanges = new DbChanges(TableHelpers.pgp)
         dbChanges.addChanges([
             new AnnotationRemoved(
@@ -111,12 +125,12 @@ const DeleteAnnotation = async (
         ])
         // Run the query with metapointers as a dummy, there are no metapointers being added
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
-        const nextVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
+        const nextVersionSql = SQL_nextRepoVersion(participation.participationId)
         const execute = await task.query(
             participation.repositoryData!,
             nextVersionSql + deleteSql + dbChanges.createPostgresQuery(metaPointerTracker)
         )
-        const partition = await affectedPartition(task, parentNode!.id, participation)
+        const partition = await DB_affectedPartition(task, parentNode!.id, participation)
         return {
             messageKind: "AnnotationDeleted",
             deletedAnnotation: msg.deletedAnnotation,
@@ -133,46 +147,250 @@ const DeleteAnnotation = async (
 const ReplaceAnnotation = async (
     participation: Participation,
     msg: ReplaceAnnotationCommand,
-    _ctx: DeltaContext
+    ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorDelta> => {
     deltaLogger.info("Called ReplaceAnnotation " + msg.messageKind)
-    return errorEvent(msg)
+    const newAnnotationNode = validateProperTree(msg.newAnnotation, msg.parent, msg, participation)
+
+    const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
+            msg.parent,
+            msg.replacedAnnotation,
+            ...msg.newAnnotation.nodes.map(n => n.id)
+        ])
+        const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
+
+        const existingChildNodes = nodesFromDB.filter(n => n.id !== msg.parent && n.id !== msg.replacedAnnotation)
+        validateExistingNodesIsEmpty(existingChildNodes, msg, participation)
+
+        // const containment = validateContainment(parentNode, msg.containment, msg.index, "Replace", msg.replacedChild, msg, participation)
+        validateChildInAnnotation(parentNode, msg.index, msg.replacedAnnotation, msg, participation)
+        const newParentNode = structuredClone(parentNode)
+        newParentNode.annotations.splice(msg.index, 1, newAnnotationNode.id)
+
+        // Checks done, do the work
+        const changes = new DbChanges(TableHelpers.pgp)
+        const replacedTree = await DB_retrieveNodeTree(task, participation.repositoryData!, [msg.replacedAnnotation], Number.MAX_SAFE_INTEGER)
+
+        // TODO: The resr
+        changes.addChanges([
+            new AnnotationRemoved(deltaContext(), parentNode, newParentNode, msg.replacedAnnotation, msg.index),
+            new AnnotationAdded(deltaContext(), parentNode, newParentNode, newAnnotationNode.id, msg.index),
+        ])
+        // Add child nodes to database
+        const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
+        await metaPointerTracker.populateFromNodes(msg.newAnnotation.nodes, task)
+        await changes.populateMetaPointersFromDbChanges(metaPointerTracker, msg.newAnnotation.nodes, task)
+        const addNodesquery = SQL_insertNodeArray(msg.newAnnotation.nodes, metaPointerTracker)
+        const deleteNodes = SQL_deleteFullNodes(replacedTree.map(node => node.id))
+        const addChildQuery = changes.createPostgresQuery(metaPointerTracker)
+        const nextVersionSql = SQL_nextRepoVersion(participation.participationId)
+        const queryResult = await task.query(participation.repositoryData!, nextVersionSql + addNodesquery + deleteNodes + addChildQuery)
+        const partition = await DB_affectedPartition(task, parentNode!.id, participation)
+        return {
+            messageKind: "AnnotationReplaced",
+            parent: msg.parent,
+            index: msg.index,
+            newAnnotation: msg.newAnnotation,
+            replacedAnnotation: msg.replacedAnnotation,
+            replacedDescendants: replacedTree.map(node => node.id),
+            originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
+            sequenceNumber: 0, // dummy, will be changed for each participation before sending
+            additionalInfos: [affectedNodeMessage(parentNode.id), affectedPartitionMessage(partition)]
+        } as AnnotationReplacedEvent
+    })
+
+    return result
 }
 
 const MoveAnnotationFromOtherParent = async (
     participation: Participation,
     msg: MoveAnnotationFromOtherParentCommand,
-    _ctx: DeltaContext
-): Promise<DeltaEvent | ErrorDelta> => {
+    ctx: DeltaContext
+): Promise<AnnotationMovedFromOtherParentEvent | ErrorDelta> => {
     deltaLogger.info("Called MoveAnnotationFromOtherParent " + msg.messageKind)
-    return errorEvent(msg)
+    const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
+            ...msg.movedAnnotation, msg.oldParent, msg.newParent
+        ])
+        const oldParentNode = findAndValidateNodeExists(msg.oldParent, nodesFromDB, msg, participation)
+        const newParentNode = findAndValidateNodeExists(msg.newParent, nodesFromDB, msg, participation)
+
+        validateChildInAnnotation(oldParentNode, msg.oldIndex, msg.movedAnnotation, msg, participation)
+        validateAnnotationIndex(newParentNode, msg.newIndex, msg, participation)
+        const changedNewParentNode = structuredClone(newParentNode)
+        changedNewParentNode.annotations.splice(msg.newIndex, 0, msg.movedAnnotation)
+        const changedOldParentNode = structuredClone(oldParentNode)
+        changedOldParentNode.annotations.splice(msg.oldIndex, 1)
+        
+        // Check done, do the work
+        const changes = new DbChanges(TableHelpers.pgp)
+        changes.addChanges([
+            new AnnotationRemoved(deltaContext(),oldParentNode,changedOldParentNode,msg.movedAnnotation,msg.oldIndex),
+            new AnnotationAdded(deltaContext(),newParentNode,changedNewParentNode,msg.movedAnnotation,msg.newIndex)
+        ])
+        const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
+        const nextVersionSql = SQL_nextRepoVersion(participation.participationId)
+        const query = changes.createPostgresQuery(metaPointerTracker)
+        const queryResult = await task.query(participation.repositoryData!, nextVersionSql + query)
+        // TODO Second participation should be added if needed
+        const partition = await DB_affectedPartition(task, oldParentNode.id, participation)
+        return {
+            messageKind: "AnnotationMovedFromOtherParent",
+            movedAnnotation: msg.movedAnnotation,
+            oldParent: msg.oldParent,
+            oldIndex: msg.oldIndex,
+            newParent: msg.newParent,
+            newIndex: msg.newIndex,
+            originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
+            sequenceNumber: 0, // dummy, will be changed for each participation before sending
+            additionalInfos: [affectedNodeMessage(newParentNode.id), affectedPartitionMessage(partition)]
+        } as AnnotationMovedFromOtherParentEvent
+    })
+    return result
 }
 
 const MoveAnnotationInSameParent = async (
     participation: Participation,
     msg: MoveAnnotationInSameParentCommand,
-    _ctx: DeltaContext
-): Promise<DeltaEvent | ErrorDelta> => {
+    ctx: DeltaContext
+): Promise<AnnotationMovedInSameParentEvent | ErrorDelta> => {
     deltaLogger.info("Called MoveAnnotationInSameParent " + msg.messageKind)
-    return errorEvent(msg)
+    const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
+            ...msg.movedAnnotation, msg.parent
+        ])
+        const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
+
+        validateChildInAnnotation(parentNode, msg.oldIndex, msg.movedAnnotation, msg, participation)
+        validateAnnotationIndex(parentNode, msg.newIndex, msg, participation)
+        const changedParentNode = structuredClone(parentNode)
+        changedParentNode.annotations.splice(msg.newIndex, 0, msg.movedAnnotation)
+
+        // Check done, do the work
+        const changes = new DbChanges(TableHelpers.pgp)
+        changes.addChanges([
+            new AnnotationOrderChanged(deltaContext(),parentNode,changedParentNode,msg.movedAnnotation,msg.newIndex)
+        ])
+        const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
+        const nextVersionSql = SQL_nextRepoVersion(participation.participationId)
+        const query = changes.createPostgresQuery(metaPointerTracker)
+        const queryResult = await task.query(participation.repositoryData!, nextVersionSql + query)
+        const partition = await DB_affectedPartition(task, parentNode.id, participation)
+        return {
+            messageKind: "AnnotationMovedInSameParent",
+            movedAnnotation: msg.movedAnnotation,
+            parent: msg.parent,
+            oldIndex: msg.oldIndex,
+            newIndex: msg.newIndex,
+            originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
+            sequenceNumber: 0, // dummy, will be changed for each participation before sending
+            additionalInfos: [affectedNodeMessage(parentNode.id), affectedPartitionMessage(partition)]
+        } as AnnotationMovedInSameParentEvent
+    })
+    return result
 }
 
 const MoveAndReplaceAnnotationFromOtherParent = async (
     participation: Participation,
     msg: MoveAndReplaceAnnotationFromOtherParentCommand,
-    _ctx: DeltaContext
-): Promise<DeltaEvent | ErrorDelta> => {
+    ctx: DeltaContext
+): Promise<AnnotationMovedAndReplacedFromOtherParentEvent | ErrorDelta> => {
     deltaLogger.info("Called MoveAndReplaceAnnotationFromOtherParent " + msg.messageKind)
-    return errorEvent(msg)
+    const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
+            ...msg.movedAnnotation, msg.oldParent, msg.newParent
+        ])
+        const oldParentNode = findAndValidateNodeExists(msg.oldParent, nodesFromDB, msg, participation)
+        const newParentNode = findAndValidateNodeExists(msg.newParent, nodesFromDB, msg, participation)
+
+        validateChildInAnnotation(oldParentNode, msg.oldIndex, msg.movedAnnotation, msg, participation)
+        validateChildInAnnotation(newParentNode, msg.newIndex, msg.replacedAnnotation, msg, participation)
+        const changedNewParentNode = structuredClone(newParentNode)
+        changedNewParentNode.annotations.splice(msg.newIndex, 0, msg.movedAnnotation)
+        const changedOldParentNode = structuredClone(oldParentNode)
+        changedOldParentNode.annotations.splice(msg.oldIndex, 1, msg.movedAnnotation)
+
+        const replacedTree = await DB_retrieveNodeTree(task, participation.repositoryData!, [msg.replacedAnnotation], Number.MAX_SAFE_INTEGER)
+
+        // Check done, do the work
+        const changes = new DbChanges(TableHelpers.pgp)
+        changes.addChanges([
+            new AnnotationRemoved(deltaContext(),oldParentNode,changedOldParentNode,msg.movedAnnotation,msg.oldIndex),
+            new AnnotationRemoved(deltaContext(),newParentNode,changedNewParentNode,msg.replacedAnnotation,msg.newIndex),
+            new AnnotationAdded(deltaContext(),newParentNode,changedNewParentNode,msg.movedAnnotation,msg.newIndex)
+        ])
+        const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
+        const nextVersionSql = SQL_nextRepoVersion(participation.participationId)
+        const deleteNodes = SQL_deleteFullNodes(replacedTree.map(node => node.id))
+        const query = changes.createPostgresQuery(metaPointerTracker)
+        const queryResult = await task.query(participation.repositoryData!, nextVersionSql + deleteNodes + query)
+        // TODO Second participation should be added if needed
+        const partition = await DB_affectedPartition(task, oldParentNode.id, participation)
+        return {
+            messageKind: "AnnotationMovedAndReplacedFromOtherParent",
+            movedAnnotation: msg.movedAnnotation,
+            oldParent: msg.oldParent,
+            oldIndex: msg.oldIndex,
+            newParent: msg.newParent,
+            newIndex: msg.newIndex,
+            replacedAnnotation: msg.replacedAnnotation,
+            replacedDescendants: replacedTree.map(node => node.id),
+            originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
+            sequenceNumber: 0, // dummy, will be changed for each participation before sending
+            additionalInfos: [affectedNodeMessage(newParentNode.id), affectedPartitionMessage(partition)]
+        } as AnnotationMovedAndReplacedFromOtherParentEvent
+    })
+    return result
 }
 
 const MoveAndReplaceAnnotationInSameParent = async (
     participation: Participation,
     msg: MoveAndReplaceAnnotationInSameParentCommand,
-    _ctx: DeltaContext
-): Promise<DeltaEvent | ErrorDelta> => {
+    ctx: DeltaContext
+): Promise<AnnotationMovedAndReplacedInSameParentEvent | ErrorDelta> => {
     deltaLogger.info("Called MoveAndReplaceAnnotationInSameParent " + msg.messageKind)
-    return errorEvent(msg)
+    const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
+            ...msg.movedAnnotation, msg.parent
+        ])
+        const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
+
+        validateChildInAnnotation(parentNode, msg.oldIndex, msg.movedAnnotation, msg, participation)
+        validateChildInAnnotation(parentNode, msg.oldIndex + msg.indexOffset, msg.replacedAnnotation, msg, participation)
+        const changedParentNode = structuredClone(parentNode)
+        changedParentNode.annotations.splice(msg.oldIndex + msg.indexOffset, 0, msg.movedAnnotation)
+        changedParentNode.annotations.splice(msg.oldIndex, 0)
+
+        const replacedTree = await DB_retrieveNodeTree(task, participation.repositoryData!, [msg.replacedAnnotation], Number.MAX_SAFE_INTEGER)
+
+        // Check done, do the work
+        const changes = new DbChanges(TableHelpers.pgp)
+        changes.addChanges([
+            new AnnotationRemoved(deltaContext(),parentNode,changedParentNode,msg.movedAnnotation,msg.oldIndex),
+            new AnnotationAdded(deltaContext(),parentNode,changedParentNode,msg.movedAnnotation,msg.oldIndex + msg.indexOffset)
+        ])
+        const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
+        const nextVersionSql = SQL_nextRepoVersion(participation.participationId)
+        const deleteNodes = SQL_deleteFullNodes(replacedTree.map(node => node.id))
+        const query = changes.createPostgresQuery(metaPointerTracker)
+        const queryResult = await task.query(participation.repositoryData!, nextVersionSql + deleteNodes + query)
+        // TODO Second participation should be added if needed
+        const partition = await DB_affectedPartition(task, parentNode.id, participation)
+        return {
+            messageKind: "AnnotationMovedAndReplacedInSameParent",
+            movedAnnotation: msg.movedAnnotation,
+            parent: msg.parent,
+            oldIndex: msg.oldIndex,
+            newIndex: msg.oldIndex + msg.indexOffset,
+            replacedAnnotation: msg.replacedAnnotation,
+            replacedDescendants: replacedTree.map(node => node.id),
+            originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
+            sequenceNumber: 0, // dummy, will be changed for each participation before sending
+            additionalInfos: [affectedNodeMessage(parentNode.id), affectedPartitionMessage(partition)]
+        } as AnnotationMovedAndReplacedInSameParentEvent
+    })
+    return result
 }
 
 export const annotationFunctions: DeltaFunction[] = [

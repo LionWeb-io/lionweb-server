@@ -1,7 +1,7 @@
 import { isEqualMetaPointer } from "@lionweb/json"
 import { Missing, PropertyValueChanged } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
-import { DbChanges, MetaPointersTracker, SQL, TableHelpers } from "@lionweb/server-common"
+import { DbChanges, MetaPointersTracker, SQL_nextRepoVersion, TableHelpers } from "@lionweb/server-common"
 import { LionWebTask } from "@lionweb/server-database"
 import {
     AddPropertyCommand,
@@ -15,9 +15,10 @@ import {
 } from "@lionweb/server-delta-shared"
 import { deltaLogger } from "@lionweb/server-shared"
 import { DeltaContext } from "../DeltaContext.js"
-import { affectedNodeMessage, newErrorDelta, affectedPartitionMessage } from "../events.js"
+import { affectedNodeMessage, affectedPartitionMessage } from "../events.js"
 import { Participation } from "../participation/index.js"
-import { affectedPartition, DeltaFunction, retrieveNodeFromDB } from "./DeltaUtil.js"
+import { DB_affectedPartition, DeltaFunction, DB_retrieveNode } from "./DeltaUtil.js"
+import { findAndValidateProperty, validatePropertyDoesNotExist, validatePropertyHasChanged } from "./Validations.js"
 
 const AddPropertyFunction = async (
     participation: Participation,
@@ -26,12 +27,9 @@ const AddPropertyFunction = async (
 ): Promise<PropertyAddedEvent | ErrorDelta> => {
     deltaLogger.debug(`Called AddPropertyFunction command id ${msg.commandId}`)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const node = await retrieveNodeFromDB(msg.node, msg, participation, task)
+        const node = await DB_retrieveNode(msg.node, msg, participation, task)
         console.log("PropertyAdded: retrieve done")
-        const oldProperty = node.properties.find(prop => isEqualMetaPointer(prop.property, msg.property))
-        if (oldProperty !== undefined && oldProperty.value !== null && oldProperty.value !== undefined) {
-            return newErrorDelta("propertyAlreadyExists", `The property with key '${msg.property.key}' already exist`, msg, participation)
-        }
+        validatePropertyDoesNotExist(node, msg.property, msg, participation)
     
         // OKI, now store the new value
         const change = new PropertyValueChanged(
@@ -48,11 +46,11 @@ const AddPropertyFunction = async (
         await changes.populateMetaPointersFromDbChanges(metaPointersTracker, [], task)
         console.log("PropertyAdded: populate done")
         deltaLogger.debug(`query: ${changes.createPostgresQuery(metaPointersTracker)}`)
-        let query = SQL.nextRepoVersionSQL(participation.participationId) 
+        let query = SQL_nextRepoVersion(participation.participationId) 
         query += changes.createPostgresQuery(metaPointersTracker)
         const dbResult = await task.query(participation.repositoryData!, query)
         console.log(`PropertyAdded: db add dor ${msg.newValue} result is ${JSON.stringify(dbResult)}`)
-        const partition = await affectedPartition(task, msg.node, participation)
+        const partition = await DB_affectedPartition(task, msg.node, participation)
         return {
             messageKind: "PropertyAdded",
             newValue: msg.newValue,
@@ -73,11 +71,8 @@ const DeletePropertyFunction = async (
 ): Promise<PropertyDeletedEvent | ErrorDelta> => {
     deltaLogger.debug(`Called DeletePropertyFunction command id ${msg.commandId}`)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const node = await retrieveNodeFromDB(msg.node, msg, participation, task)
-        const oldProperty = node.properties.find(prop => isEqualMetaPointer(prop.property, msg.property))
-        if (oldProperty === undefined || oldProperty.value === null || oldProperty.value === undefined) {
-            return newErrorDelta("unknownProperty", `The property with key '${msg.property.key}' does not exist`, msg, participation)
-        }
+        const node = await DB_retrieveNode(msg.node, msg, participation, task)
+        const oldProperty = findAndValidateProperty(node, msg.property, msg, participation)
         // OKI, now store the new value
         const change = new PropertyValueChanged(
             new JsonContext(null, ["delta"]),
@@ -91,11 +86,11 @@ const DeletePropertyFunction = async (
         changes.addChanges([change])
         const metaPointersTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointersTracker, [], task)
-        const nextRepoVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
+        const nextRepoVersionSql = SQL_nextRepoVersion(participation.participationId)
         const addPropSql= changes.createPostgresQuery(metaPointersTracker)
         const dbResult = await task.query(participation.repositoryData!, nextRepoVersionSql + addPropSql )
         deltaLogger.debug(`db delete is ${JSON.stringify(dbResult)}`)
-        const partition = await affectedPartition(task, msg.node, participation)
+        const partition = await DB_affectedPartition(task, msg.node, participation)
 
         return {
             messageKind: "PropertyDeleted",
@@ -119,20 +114,9 @@ const ChangePropertyFunction = async (
         `Called ChangePropertyFunction ${msg.node} pinfo ${JSON.stringify(participation.repositoryData)} command id ${msg.commandId}`
     )
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const node = await retrieveNodeFromDB(msg.node, msg, participation, task)
-        const oldProperty = node.properties.find(prop => isEqualMetaPointer(prop.property, msg.property))
-        if (oldProperty === undefined || oldProperty.value === null || oldProperty.value === undefined) {
-            return newErrorDelta("unknownProperty", `The property with key '${msg.property.key}' does not exist`, msg, participation)
-        }
-        if (oldProperty.value === msg.newValue) {
-            // TODO delta send a NoOp
-            return newErrorDelta(
-                "generic",
-                `The property with key '${msg.property.key}' already has value ${msg.newValue}`,
-                msg,
-                participation
-            )
-        }
+        const node = await DB_retrieveNode(msg.node, msg, participation, task)
+        const oldProperty = findAndValidateProperty(node, msg.property, msg, participation)
+        validatePropertyHasChanged(oldProperty, msg.newValue, msg, participation)
 
         // OKI, now store the new value
         const change = new PropertyValueChanged(
@@ -148,11 +132,11 @@ const ChangePropertyFunction = async (
         const metaPointersTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointersTracker, [], task)
         // console.log(`META ${changes.createPostgresQuery(metaPointersTracker)}`)
-        const nextRepoVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
+        const nextRepoVersionSql = SQL_nextRepoVersion(participation.participationId)
         const addPropSql = changes.createPostgresQuery(metaPointersTracker)
         const dbResult = await task.query(participation.repositoryData!, nextRepoVersionSql + addPropSql)
         // deltaLogger.debug(`Result is ${JSON.stringify(dbResult)}`)
-        const partition = await affectedPartition(task, msg.node, participation)
+        const partition = await DB_affectedPartition(task, msg.node, participation)
 
         return {
             messageKind: "PropertyChanged",

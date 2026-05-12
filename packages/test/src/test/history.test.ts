@@ -2,11 +2,9 @@ import { CreatePartitionsResponse, HttpSuccessCodes, ListPartitionsResponse } fr
 import { ClientResponse, RepositoryClient } from "@lionweb/server-http-client"
 import { LionWebJsonChunk, LionWebJsonNode } from "@lionweb/json"
 import { LanguageChange, LionWebJsonDiff } from "@lionweb/json-diff"
-import { afterAll } from "vitest"
+import { afterAll, describe, beforeAll, it, expect } from "vitest"
 import { readModel } from "./utils.js"
 
-import { assert, expect } from "chai"
-const { deepEqual, fail } = assert
 import sm from "source-map-support"
 
 sm.install()
@@ -90,12 +88,12 @@ describe("Repository tests", () => {
             }
 
             function getRepoVersion(response: ClientResponse<ListPartitionsResponse | CreatePartitionsResponse>): number {
-                assert(response.body.success)
+                expect(response.body.success).toBe(true)
                 return Number.parseInt(response.body.messages.find(m => m.kind === "RepoVersion")?.data?.version)
             }
 
             function idsInChunk(response: ClientResponse<ListPartitionsResponse>): Set<string> {
-                assert(response.body.success)
+                expect(response.body.success).toBe(true)
                 return new Set<string>(response.body.chunk.nodes.map(n => n.id))
             }
 
@@ -116,14 +114,14 @@ describe("Repository tests", () => {
             const v2 = getRepoVersion(await client.bulk.deletePartitions(["id-abc"]))
             const v3 = getRepoVersion(await client.bulk.deletePartitions(["id-bcd"]))
             const v4 = getRepoVersion(await client.bulk.deletePartitions(["id-cde"]))
-            expect(v2).to.equal(v1 + 1)
-            expect(v3).to.equal(v2 + 1)
-            expect(v4).to.equal(v3 + 1)
-            expect(idsInChunk(await client.history.listPartitions(0))).to.deep.equal(new Set<string>([]))
-            expect(idsInChunk(await client.history.listPartitions(v1))).to.deep.equal(new Set<string>(["id-abc", "id-bcd", "id-cde"]))
-            expect(idsInChunk(await client.history.listPartitions(v2))).to.deep.equal(new Set<string>(["id-bcd", "id-cde"]))
-            expect(idsInChunk(await client.history.listPartitions(v3))).to.deep.equal(new Set<string>(["id-cde"]))
-            expect(idsInChunk(await client.history.listPartitions(v4))).to.deep.equal(new Set<string>([]))
+            expect(v2).toEqual(v1 + 1)
+            expect(v3).toEqual(v2 + 1)
+            expect(v4).toEqual(v3 + 1)
+            expect(idsInChunk(await client.history.listPartitions(0))).toEqual(new Set<string>([]))
+            expect(idsInChunk(await client.history.listPartitions(v1))).toEqual(new Set<string>(["id-abc", "id-bcd", "id-cde"]))
+            expect(idsInChunk(await client.history.listPartitions(v2))).toEqual(new Set<string>(["id-bcd", "id-cde"]))
+            expect(idsInChunk(await client.history.listPartitions(v3))).toEqual(new Set<string>(["id-cde"]))
+            expect(idsInChunk(await client.history.listPartitions(v4))).toEqual(new Set<string>([]))
         })
     })
 
@@ -140,14 +138,9 @@ describe("Repository tests", () => {
     async function testHistory(v: StoredAst): Promise<void> {
         console.log("TEST HISTORY version " + v.version)
         const repoAt_version = await client.history.retrieve(v.version, ["ID-2"])
-        if (repoAt_version.body.success === false) {
-            fail("Repo call failed with error: " + repoAt_version.body.messages.find(m => m.kind === "error")?.message)
-        }
+        expect(repoAt_version.body.success, "Repo call failed with error: " + repoAt_version.body.messages.find(m => m.kind === "error")?.message).toBe(true)
         const diff2 = new LionWebJsonDiff()
         diff2.diffLwChunk(v.chunk, repoAt_version.body.chunk)
-        deepEqual(
-            diff2.diffResult.changes.filter(ch => !(ch instanceof LanguageChange)),
-            []
-        )
+        expect(diff2.diffResult.changes.filter(ch => !(ch instanceof LanguageChange))).toEqual([])
     }
 })

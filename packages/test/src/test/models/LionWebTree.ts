@@ -62,10 +62,10 @@ export class LionWebTreeConverter {
                 const newContainment: LionWebJsonContainment = {
                     containment: containmentMP,
                     children: [],
-                }
+                };
 
                 // @ts-ignore
-                ;(tree[key] as LionWebTree[]).forEach((childNode) => {
+                (tree[key] as LionWebTree[]).forEach((childNode) => {
                     const child = this.treeToNode(childNode)
                     if (child !== null) {
                         child.parent = node.id
@@ -90,13 +90,21 @@ export class LionWebTreeConverter {
                 const newReference: LionWebJsonReference = {
                     reference: referenceMP,
                     targets: []
-                }
+                };
 
                 // @ts-ignore
-                ;(tree[key] as LionWebJsonReferenceTarget[]).forEach(refTarget => {
+                (tree[key] as LionWebJsonReferenceTarget[]).forEach(refTarget => {
                     newReference.targets.push({ resolveInfo: "", reference: "" })
                 })
                 node.references.push(newReference)
+                return
+            }
+            if (key === "annotations") {
+                tree.annotations.forEach(ann => {
+                    const annotationNode = this.treeToNode(ann)
+                    annotationNode.parent = node.id
+                    node.annotations.push(ann.id)
+                })
                 return
             }
             console.log(`Nothing found: ${key}`)

@@ -1,4 +1,10 @@
-import { DB, DbChanges, isNullOrUndefined, MetaPointersTracker, SQL, TableHelpers } from "@lionweb/server-common"
+import {
+    DB_retrieveFullNodesFromIdList,
+    DbChanges,
+    MetaPointersTracker,
+    SQL_nextRepoVersion,
+    TableHelpers
+} from "@lionweb/server-common"
 import { TargetAdded, TargetRemoved, Missing } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
 import { isEqualMetaPointer } from "@lionweb/json"
@@ -16,18 +22,16 @@ import {
 } from "@lionweb/server-delta-shared"
 import { deltaLogger } from "@lionweb/server-shared"
 import { DeltaContext } from "../DeltaContext.js"
-import { affectedNodeMessage, affectedPartitionMessage, newErrorDelta } from "../events.js"
+import { affectedNodeMessage, affectedPartitionMessage } from "../events.js"
 import { Participation } from "../participation/index.js"
-import { affectedPartition, DeltaFunction } from "./DeltaUtil.js"
-import { findAndValidateNodeExists, findAndValidateReference } from "./Validations.js"
+import { DB_affectedPartition, DeltaFunction } from "./DeltaUtil.js"
+import { findAndValidateNodeExists, findAndValidateReference, validateReferenceTarget } from "./Validations.js"
 
 const AddReference = async (participation: Participation, msg: AddReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorEvent> => {
     deltaLogger.info("Called AddReference " + msg.newResolveInfo)
-    if (isNullOrUndefined(msg.newResolveInfo) && isNullOrUndefined(msg.newReference)) {
-        throw newErrorDelta("undefinedReferenceTarget", "resolveInfo and target are both null", msg, participation)
-    }
+    validateReferenceTarget(msg.newResolveInfo, msg.newReference, msg, participation)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [msg.parent])
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [msg.parent])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
         const beforeReference = findAndValidateReference(parentNode, msg.reference, msg.index,undefined, msg, participation)
         const afterReference = { reference: beforeReference.reference, targets: [...beforeReference.targets]}
@@ -42,10 +46,10 @@ const AddReference = async (participation: Participation, msg: AddReferenceComma
         )
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [], task)
-        const nextVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
+        const nextVersionSql = SQL_nextRepoVersion(participation.participationId)
         const changesQuery = changes.createPostgresQuery(metaPointerTracker)
         const queryResult = await task.query(participation.repositoryData!, nextVersionSql + changesQuery)
-        const partition = await affectedPartition(task, msg.parent, participation)
+        const partition = await DB_affectedPartition(task, msg.parent, participation)
         return {
             messageKind: "ReferenceAdded",
             newResolveInfo: msg.newResolveInfo,
@@ -66,11 +70,9 @@ const AddReference = async (participation: Participation, msg: AddReferenceComma
 
 const DeleteReference = async (participation: Participation, msg: DeleteReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent> => {
     deltaLogger.debug("Called DeleteReference " + msg.messageKind)
-    if (isNullOrUndefined(msg.deletedResolveInfo) && isNullOrUndefined(msg.deletedReference)) {
-        throw newErrorDelta("undefinedReferenceTarget", "resolveInfo and target are both null", msg, participation)
-    }
+    validateReferenceTarget(msg.deletedReference, msg.deletedReference, msg, participation)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [msg.parent])
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [msg.parent])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
         const beforeReference = findAndValidateReference(parentNode, msg.reference, msg.index, undefined, msg, participation)
         const afterTargets = [...beforeReference.targets]
@@ -84,9 +86,9 @@ const DeleteReference = async (participation: Participation, msg: DeleteReferenc
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [], task)
         const changesQuery = changes.createPostgresQuery(metaPointerTracker)
-        const nextVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
+        const nextVersionSql = SQL_nextRepoVersion(participation.participationId)
         const queryResult = await task.query(participation.repositoryData!, nextVersionSql + changesQuery)
-        const partition = await affectedPartition(task, msg.parent, participation)
+        const partition = await DB_affectedPartition(task, msg.parent, participation)
         return {
             messageKind: "ReferenceDeleted",
             parent: msg.parent,
@@ -103,12 +105,10 @@ const DeleteReference = async (participation: Participation, msg: DeleteReferenc
 }
 
 const ChangeReference = async (participation: Participation, msg: ChangeReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent | ErrorDelta> => {
-    if (isNullOrUndefined(msg.newResolveInfo) && isNullOrUndefined(msg.newReference)) {
-        throw newErrorDelta("undefinedReferenceTarget", "resolveInfo and target are both null", msg, participation)
-    }
     deltaLogger.debug("Called ChangeReference " + msg.reference.key)
+    validateReferenceTarget(msg.newResolveInfo, msg.newReference, msg, participation)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
-        const nodesFromDB = await DB.retrieveFullNodesFromIdListDB(task, participation.repositoryData!, [msg.parent])
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [msg.parent])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
         const beforeReference = findAndValidateReference(
             parentNode,
@@ -135,9 +135,9 @@ const ChangeReference = async (participation: Participation, msg: ChangeReferenc
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [], task)
         const changesQuery = changes.createPostgresQuery(metaPointerTracker)
-        const nextVersionSql = SQL.nextRepoVersionSQL(participation.participationId)
+        const nextVersionSql = SQL_nextRepoVersion(participation.participationId)
         await task.query(participation!.repositoryData!, nextVersionSql + changesQuery)
-        const partition = await affectedPartition(task, msg.parent, participation)
+        const partition = await DB_affectedPartition(task, msg.parent, participation)
         return {
             messageKind: "ReferenceChanged",
             parent: msg.parent,
