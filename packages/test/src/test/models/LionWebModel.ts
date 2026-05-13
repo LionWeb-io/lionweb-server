@@ -38,6 +38,7 @@ import {
     ReplaceAnnotationCommand,
     ReplaceChildCommand,
 } from "@lionweb/server-delta-shared"
+import { toJsonString } from "@lionweb/server-shared"
 import { pull } from "es-toolkit"
 
 /**
@@ -533,7 +534,7 @@ export class LionWebModel {
         // console.log(`RECURSIVE ${JSON.stringify(node)}`)
         const nameProperty = NodeUtils.findProperty(node, MetaPointers.INamedName)
         const name = nameProperty === undefined ? "" : " " + nameProperty.value
-        result += this.indent(depth) + " (" + node.id + ")" + name + "\n"
+        result += `${this.indent(depth)} (${node.id}) ${name} : ${node.classifier.key}\n`
         if (node.annotations !== undefined && node.annotations.length !== 0) {
             result += this.indent(depth + 1) + "*Annotations*" + "\n"
             node.annotations.forEach((ann) => {

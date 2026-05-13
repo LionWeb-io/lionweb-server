@@ -307,6 +307,17 @@ export function findAndValidateNodeExists(
     return result
 }
 
+export function validateNodeExists(
+    id: string,
+    node: LionWebJsonNode,
+    msg: DeltaCommand,
+    participation: Participation
+): void {
+    if (isNullOrUndefined(node)) {
+        throw newErrorDelta("unknownNode", `Node ${id} does not exist`, msg, participation)
+    }
+}
+
 /**
  * Throw an error if `parent.containment[index] !== child`
  * @param parent

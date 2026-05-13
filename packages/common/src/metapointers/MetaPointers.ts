@@ -28,10 +28,18 @@ export async function initializeGlobalMetaPointersMap(task: LionWebTask | DbConn
     const queryResult = await task.query(repositoryData, `SELECT id, language, _version, key from ${METAPOINTERS_TABLE}`)
     const map = globalMetaPointersMap.get(repositoryData.repository.repository_name)
     for(const mp of queryResult) {
-        const mpKey = `${mp.language}@${mp._version}@${mp.key}`
+        const mpKey = keyForMp(mp)
         map.set(mpKey, mp.id)
         // deltaLogger.info(`Initializing key '${mpKey}' with id '${mp.id}'`)
     }
+}
+
+export function keyForMp(metapointer:LionWebJsonMetaPointer): string {
+    return keyFromFields(metapointer.language, metapointer.version, metapointer.key)
+}
+
+function keyFromFields(field1: string, field2: string, field3: string): string {
+    return `${field1}@${field2}@${field3}`
 }
 
 // TODO Why is this function async? It does nothing asyn and doesn't call an async function.
@@ -53,7 +61,16 @@ function hasInGlobalMetaPointersMap(repositoryName: string, key: string): boolea
     }
 }
 
-function getFromGlobalMetaPointersMap(repositoryName: string, key: string): number {
+/**
+ * Get the id of `metapointer` from the global metapointer map.
+ * @param repositoryName
+ * @param metapointer
+ */
+export function getFromGlobalMetaPointersMap(repositoryName: string, metapointer: LionWebJsonMetaPointer): number {
+    return getFromGlobalMetaPointersMapIntern(repositoryName, keyForMp(metapointer))
+}
+
+function getFromGlobalMetaPointersMapIntern(repositoryName: string, key: string): number {
     const map = globalMetaPointersMap.get(repositoryName)
     if (map !== undefined && map.has(key)) {
         return map.get(key)
@@ -100,7 +117,7 @@ export class MetaPointersCollector {
      * @param metaPointer
      */
     considerAddingMetaPointer(metaPointer: LionWebJsonMetaPointer) {
-        const key = `${metaPointer.language}@${metaPointer.version}@${metaPointer.key}`
+        const key = keyForMp(metaPointer)
         // deltaLogger.info(`considerAddingMetaPointer ${key}`)
 
         if (hasInGlobalMetaPointersMap(this.repositoryData.repository.repository_name, key) || this.keysOfMetaPointers.has(key)) {
@@ -143,7 +160,7 @@ export class MetaPointersCollector {
                 throw new Error("VALUE IS UNDEFINED")
             }
             const parts = value.substring(1, value.length - 1).split(",")
-            insertInGlobalMetaPointersMap(this.repositoryData, `${parts[1]}@${parts[2]}@${parts[3]}`, Number(parts[0]))
+            insertInGlobalMetaPointersMap(this.repositoryData, keyFromFields(parts[1], parts[2], parts[3]), Number(parts[0]))
         })
     }
 }
@@ -188,10 +205,10 @@ export class MetaPointersTracker {
      */
     forMetaPointer(metaPointer: LionWebJsonMetaPointer): number {
         // deltaLogger.info("forMetaPointer")
-        const key = `${metaPointer.language}@${metaPointer.version}@${metaPointer.key}`
+        const key = keyForMp(metaPointer)
         if (!hasInGlobalMetaPointersMap(this.repositoryData.repository.repository_name, key)) {
             throw new Error(`MetaPointer not found: '${key}' language '${metaPointer.language}'`)
         }
-        return getFromGlobalMetaPointersMap(this.repositoryData.repository.repository_name, key)
+        return getFromGlobalMetaPointersMapIntern(this.repositoryData.repository.repository_name, key)
     }
 }
