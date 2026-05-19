@@ -224,7 +224,7 @@ export type ChildMovedAndReplacedFromOtherContainmentInSameParentEvent = DeltaEv
  */
 export type ChildMovedAndReplacedInSameContainmentEvent = DeltaEvent & {
     parent: LionWebId;
-    newIndex: Number;
+    indexOffset: Number;
     containment: LionWebJsonMetaPointer;
     movedChild: LionWebId;
     oldIndex: Number;
@@ -310,7 +310,7 @@ export type AnnotationMovedAndReplacedFromOtherParentEvent = DeltaEvent & {
  */
 export type AnnotationMovedAndReplacedInSameParentEvent = DeltaEvent & {
     parent: LionWebId;
-    newIndex: Number;
+    indexOffset: Number;
     movedAnnotation: LionWebId;
     oldIndex: Number;
     replacedAnnotation: LionWebId;

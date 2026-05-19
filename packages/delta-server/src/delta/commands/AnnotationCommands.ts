@@ -1,4 +1,4 @@
-import { AnnotationAdded, AnnotationOrderChanged, AnnotationRemoved, ChildAdded, Missing } from "@lionweb/json-diff"
+import { AnnotationAdded, AnnotationOrderChanged, AnnotationRemoved, ChildAdded, Missing, ParentChanged } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
 import {
     DB_retrieveFullNodesFromIdList,
@@ -265,6 +265,7 @@ const MoveAnnotationInSameParent = async (
         validateChildInAnnotation(parentNode, msg.oldIndex, msg.movedAnnotation, msg, participation)
         validateAnnotationIndex(parentNode, msg.newIndex, msg, participation)
         const changedParentNode = structuredClone(parentNode)
+        changedParentNode.annotations.splice(msg.oldIndex, 1)
         changedParentNode.annotations.splice(msg.newIndex, 0, msg.movedAnnotation)
 
         // Check done, do the work
@@ -299,23 +300,25 @@ const MoveAndReplaceAnnotationFromOtherParent = async (
     deltaLogger.info("Called MoveAndReplaceAnnotationFromOtherParent " + msg.messageKind)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
-            ...msg.movedAnnotation, msg.oldParent, msg.newParent
+            msg.movedAnnotation, msg.oldParent, msg.newParent
         ])
         const oldParentNode = findAndValidateNodeExists(msg.oldParent, nodesFromDB, msg, participation)
         const newParentNode = findAndValidateNodeExists(msg.newParent, nodesFromDB, msg, participation)
+        const movedAnnotationNode = findAndValidateNodeExists(msg.movedAnnotation, nodesFromDB, msg, participation)
 
         validateChildInAnnotation(oldParentNode, msg.oldIndex, msg.movedAnnotation, msg, participation)
         validateChildInAnnotation(newParentNode, msg.newIndex, msg.replacedAnnotation, msg, participation)
         const changedNewParentNode = structuredClone(newParentNode)
-        changedNewParentNode.annotations.splice(msg.newIndex, 0, msg.movedAnnotation)
+        changedNewParentNode.annotations.splice(msg.newIndex, 1, msg.movedAnnotation)
         const changedOldParentNode = structuredClone(oldParentNode)
-        changedOldParentNode.annotations.splice(msg.oldIndex, 1, msg.movedAnnotation)
+        changedOldParentNode.annotations.splice(msg.oldIndex, 1)
 
         const replacedTree = await DB_retrieveNodeTree(task, participation.repositoryData!, [msg.replacedAnnotation], Number.MAX_SAFE_INTEGER)
 
         // Check done, do the work
         const changes = new DbChanges(TableHelpers.pgp)
         changes.addChanges([
+            new ParentChanged(deltaContext(), movedAnnotationNode, msg.oldParent, msg.newParent),
             new AnnotationRemoved(deltaContext(),oldParentNode,changedOldParentNode,msg.movedAnnotation,msg.oldIndex),
             new AnnotationRemoved(deltaContext(),newParentNode,changedNewParentNode,msg.replacedAnnotation,msg.newIndex),
             new AnnotationAdded(deltaContext(),newParentNode,changedNewParentNode,msg.movedAnnotation,msg.newIndex)
@@ -359,8 +362,12 @@ const MoveAndReplaceAnnotationInSameParent = async (
         validateChildInAnnotation(parentNode, msg.oldIndex, msg.movedAnnotation, msg, participation)
         validateChildInAnnotation(parentNode, msg.oldIndex + msg.indexOffset, msg.replacedAnnotation, msg, participation)
         const changedParentNode = structuredClone(parentNode)
-        changedParentNode.annotations.splice(msg.oldIndex + msg.indexOffset, 0, msg.movedAnnotation)
-        changedParentNode.annotations.splice(msg.oldIndex, 0)
+        changedParentNode.annotations.splice(msg.oldIndex, 1)
+        if (msg.indexOffset < 0) {
+            changedParentNode.annotations.splice(msg.oldIndex + msg.indexOffset, 1, msg.movedAnnotation)
+        } else {
+            changedParentNode.annotations.splice(msg.oldIndex + msg.indexOffset - 1, 2, msg.movedAnnotation)
+        }
 
         const replacedTree = await DB_retrieveNodeTree(task, participation.repositoryData!, [msg.replacedAnnotation], Number.MAX_SAFE_INTEGER)
 
@@ -382,7 +389,7 @@ const MoveAndReplaceAnnotationInSameParent = async (
             movedAnnotation: msg.movedAnnotation,
             parent: msg.parent,
             oldIndex: msg.oldIndex,
-            newIndex: msg.oldIndex + msg.indexOffset,
+            indexOffset:msg.indexOffset,
             replacedAnnotation: msg.replacedAnnotation,
             replacedDescendants: replacedTree.map(node => node.id),
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],

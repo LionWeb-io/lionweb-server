@@ -25,7 +25,7 @@
         "republish-local": "npm run unpublish-local && npm run publish-local"
     },
     "dependencies": {
-        "@lionweb/json": "0.10.0-alpha.1",
+        "@lionweb/json": "0.10.0-alpha.3",
         "@logtape/file": "2.0.5",
         "@logtape/logtape": "2.0.5",
         "@logtape/pretty": "2.0.5",

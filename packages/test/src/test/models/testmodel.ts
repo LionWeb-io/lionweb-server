@@ -50,6 +50,11 @@ export const ProgramTree: LionWebTree = {
             id: "id-annotation",
             type: CLASSIFIER.HomeCommand,
             INamedName: "HomeCommand as Annotation"
+        },
+        {
+            id: "id-annotation-penup",
+            type: CLASSIFIER.PenUp,
+            INamedName: "PenUp as Annotation"
         }
     ]
 }
@@ -82,7 +87,12 @@ export const LibraryTree: LionWebTree = {
                 }
             ]
         }
-    ]
+    ],
+    annotations: [ {
+        id: "id-annotation-pendown",
+        type: CLASSIFIER.PenDown,
+        INamedName: "PenDown as Annotation"
+    }]
 }
 
 export let ProgramModel: LionWebModel = new LionWebModel([])

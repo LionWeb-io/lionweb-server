@@ -97,9 +97,9 @@ export async function logProtocol(client: DeltaClient, checkClient: RepositoryCl
         // console.log(client.receivedMessageHistory)
 
         const chunk = await checkClient.bulk.retrieve(rootIds, 100000)
-        console.log(`Retrieveresponse ${JSON.stringify(chunk, null, 2)}`)
+        // console.log(`Retrieveresponse ${JSON.stringify(chunk, null, 2)}`)
         const string = new Logo2String(chunk.body.chunk.nodes).logo2string()
-        console.log("ACTUAL Repo to string")
+        // console.log("ACTUAL Repo to string")
         console.log(string)
 
         if (expectedModel !== undefined) {

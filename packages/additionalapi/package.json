@@ -30,7 +30,7 @@
         "ts-proto": "^1.181.1"
     },
     "dependencies": {
-        "@lionweb/json": "0.10.0-alpha.1",
+        "@lionweb/json": "0.10.0-alpha.3",
         "@lionweb/server-common": "0.4.0-beta.5",
         "@lionweb/server-database": "0.4.0-beta.5",
         "@lionweb/server-dbadmin": "0.4.0-beta.5",

@@ -347,14 +347,14 @@ export const validateChildInAnnotation = (
     msg: DeltaCommand,
     participation: Participation
 ): void => {
-    if (index > parent.annotations.length || parent.annotations[index] !== child) {
-        throw newErrorDelta("indexEntryMismatch", `child ${child} is not at oldIndex ${index}`, msg, participation)
+    if (index > (parent.annotations.length -1) || parent.annotations[index] !== child) {
+        throw newErrorDelta("indexEntryMismatch", `child ${child} is not at oldIndex ${index} in ${parent.annotations}`, msg, participation)
     }
 }
 
 export function validateAnnotationIndex(parentNode: LionWebJsonNode, index: number, msg: DeltaCommand, participation: Participation): void {
-    if (index > parentNode.annotations.length - 1) {
-        throw newErrorDelta("unknownIndex", `Index ${index} out of range for ${parentNode.id} annotations`, msg, participation)
+    if (index > parentNode.annotations.length) {
+        throw newErrorDelta("unknownIndex", `Index ${index} out of range for ${parentNode.id} annotations: '${parentNode.annotations}'`, msg, participation)
     }
 }
 

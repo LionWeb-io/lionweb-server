@@ -1,6 +1,6 @@
 import { isEqualMetaPointer } from "@lionweb/json"
 import { NodeUtils } from "@lionweb/json-utils"
-import { ChildAdded, Missing, ChildRemoved, ParentChanged } from "@lionweb/json-diff"
+import { ChildAdded, Missing, ChildRemoved, ParentChanged, ChildOrderChanged } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
 import {
     DbChanges,
@@ -32,7 +32,9 @@ import {
     MoveChildFromOtherContainmentInSameParentCommand,
     MoveChildInSameContainmentCommand,
     ReplaceChildCommand,
-    type ErrorDelta
+    type ErrorDelta,
+    ChildMovedAndReplacedInSameContainmentEvent,
+    ChildMovedInSameContainmentEvent
 } from "@lionweb/server-delta-shared"
 import { deltaLogger } from "@lionweb/server-shared"
 import { DeltaContext } from "../DeltaContext.js"
@@ -336,10 +338,50 @@ const MoveChildFromOtherContainmentInSameParent = async (
 const MoveChildInSameContainment = async (
     participation: Participation,
     msg: MoveChildInSameContainmentCommand,
-    _ctx: DeltaContext
+    ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorEvent> => {
     deltaLogger.debug("Called MoveChildInSameContainment " + msg.messageKind)
-    return errorEvent(msg)
+    const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
+            msg.movedChild,
+            msg.parent
+        ])
+        const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
+        const movedChildNode = findAndValidateNodeExists(msg.movedChild, nodesFromDB, msg, participation)
+        const containment = findAndValidateContainment(parentNode, msg.containment, msg, participation)
+        validateChildInContainment(parentNode, containment, msg.oldIndex, msg.movedChild, msg, participation)
+        // TODO validate new index
+
+        //// Execute ////
+        const changes = new DbChanges(TableHelpers.pgp)
+        const changedContainment = structuredClone(containment)
+        if (msg.oldIndex > msg.newIndex) {
+            changedContainment.children.splice(msg.newIndex, 0, movedChildNode.id)
+        } else {
+            changedContainment.children.splice(msg.newIndex - 1, 0, movedChildNode.id)
+        }
+        changes.addChanges([
+            new ChildOrderChanged(deltaContext(), parentNode, msg.containment, changedContainment, msg.movedChild, Missing.NotMissing)
+        ])
+        const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
+        // TODO Check: not needed as there are no new nodes or containments.
+        // await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [], task)
+        await task.query(participation.repositoryData!, changes.createPostgresQuery(metaPointerTracker))
+        const partition = await DB_affectedPartition(task, parentNode.id, participation)
+
+        return {
+            messageKind: "ChildMovedInSameContainment",
+            parent: msg.parent,
+            movedChild: msg.movedChild,
+            containment: msg.containment,
+            oldIndex: msg.oldIndex,
+            newIndex: msg.newIndex,
+            originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
+            sequenceNumber: 0, // dummy, will be changed for each participation before sending
+            additionalInfos: [affectedNodeMessage(msg.parent), affectedPartitionMessage(partition)]
+        } as ChildMovedInSameContainmentEvent
+    })
+    return result
 }
 
 const MoveAndReplaceChildFromOtherContainment = async (
@@ -489,10 +531,59 @@ const MoveAndReplaceChildFromOtherContainmentInSameParent = async (
 const MoveAndReplaceChildInSameContainment = async (
     participation: Participation,
     msg: MoveAndReplaceChildInSameContainmentCommand,
-    _ctx: DeltaContext
+    ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorEvent> => {
     deltaLogger.debug("Called MoveAndReplaceChildInSameContainment " + msg.messageKind)
-    return errorEvent(msg)
+    const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
+        const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
+            msg.replacedChild,
+            msg.movedChild,
+            msg.parent
+        ])
+        const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
+        const movedChildNode = findAndValidateNodeExists(msg.movedChild, nodesFromDB, msg, participation)
+        const replacedChildNode = findAndValidateNodeExists(msg.replacedChild, nodesFromDB, msg, participation)
+        const containment = findAndValidateContainment(parentNode, msg.containment, msg, participation)
+        validateChildInContainment(parentNode, containment, msg.oldIndex, msg.movedChild, msg, participation)
+        validateChildInContainment(parentNode, containment, msg.oldIndex + msg.indexOffset, msg.replacedChild, msg, participation)
+        // Get the subtree of `deletedChild` from the database to remove them
+        const subtreeNodes = await DB_retrieveNodeTree(task, participation.repositoryData!, [msg.replacedChild], Number.MAX_SAFE_INTEGER)
+        const deleteSql = SQL_deleteFullNodes(subtreeNodes.map(n => n.id))
+
+        //// Execute ////
+        const changes = new DbChanges(TableHelpers.pgp)
+        const changedContainment = structuredClone(containment)
+        changedContainment.children.splice(msg.oldIndex, 1)
+        if (msg.indexOffset < 0) {
+            changedContainment.children.splice(msg.oldIndex + msg.indexOffset, 1, movedChildNode.id)
+        } else {
+            changedContainment.children.splice(msg.oldIndex + msg.indexOffset - 1, 1, movedChildNode.id)
+        }
+        changes.addChanges([
+            new ChildRemoved(deltaContext(), parentNode, msg.containment, changedContainment, msg.replacedChild, Missing.NotMissing),
+            new ChildAdded(deltaContext(), parentNode, msg.containment, changedContainment, movedChildNode.id, Missing.NotMissing)
+        ])
+        const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
+        // TODO Check: not needed as there are no new nodes or containments.
+        // await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [], task)
+        await task.query(participation.repositoryData!, deleteSql + changes.createPostgresQuery(metaPointerTracker))
+        const partition = await DB_affectedPartition(task, parentNode.id, participation)
+
+        return {
+            messageKind: "ChildMovedAndReplacedInSameContainment",
+            parent: msg.parent,
+            movedChild: msg.movedChild,
+            containment: msg.containment,
+            oldIndex: msg.oldIndex,
+            indexOffset: msg.indexOffset,
+            replacedChild: msg.replacedChild,
+            replacedDescendants: subtreeNodes.map(n => n.id),
+            originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
+            sequenceNumber: 0, // dummy, will be changed for each participation before sending
+            additionalInfos: [affectedNodeMessage(msg.parent), affectedPartitionMessage(partition)]
+        } as ChildMovedAndReplacedInSameContainmentEvent
+    })
+    return result
 }
 
 export const childFunctions: DeltaFunction[] = [

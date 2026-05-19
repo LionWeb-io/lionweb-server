@@ -29,7 +29,7 @@
         "republish-local": "npm run unpublish-local && npm run publish-local"
     },
     "dependencies": {
-        "@lionweb/json": "0.10.0-alpha.1",
-        "@lionweb/validation": "0.10.0-alpha.1"
+        "@lionweb/json": "0.10.0-alpha.3",
+        "@lionweb/validation": "0.10.0-alpha.3"
     }
 }

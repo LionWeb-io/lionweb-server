@@ -59,8 +59,11 @@ describe.each(withoutHistoryList)("Annotations-$withoutHistory", async ({ withou
 
     test("DeleteAnnotation", async () => {
         resetModels()
+        cmd.deletePartition(client, "id-program")
+        cmd.deletePartition(client, "id-library")
         const partitionP = cmd.addFullPartition(client, ProgramModel.nodes())
         const partitionL = cmd.addFullPartition(client, LibraryModel.nodes())
+        // await expectError(client, partitionP, "idsAlreadyInUse")
         console.log(ProgramModel.asString())
         const ifC = ProgramModel.getNode("id-if")
         const lib = LibraryModel.getNode("id-library")
@@ -71,7 +74,7 @@ describe.each(withoutHistoryList)("Annotations-$withoutHistory", async ({ withou
         const annErr = cmd.deleteAnnotation(client, "id-none", "id-annotation2", 0)
         await expectError(client, annErr, "unknownNode")
 
-        const annDeleted = cmd.deleteAnnotation(client, "id-if", "id-annotation2", 0)
+        const annDeleted = cmd.deleteAnnotation(client, "id-program", "id-annotation", 0)
         await expectEvent(client, annDeleted, "AnnotationDeleted")
         ProgramModel.applyDelta(annDeleted)
         await logProtocol(client, bulkApiClient, ["id-program", "id-library"], log, ProgramModel)
@@ -79,6 +82,8 @@ describe.each(withoutHistoryList)("Annotations-$withoutHistory", async ({ withou
 
     test("ReplaceAnnotation", async () => {
         resetModels()
+        cmd.deletePartition(client, "id-program")
+        cmd.deletePartition(client, "id-library")
         const partitionP = cmd.addFullPartition(client, ProgramModel.nodes())
         const partitionL = cmd.addFullPartition(client, LibraryModel.nodes())
         console.log(ProgramModel.asString())
@@ -109,4 +114,87 @@ describe.each(withoutHistoryList)("Annotations-$withoutHistory", async ({ withou
         await logProtocol(client, bulkApiClient, ["id-program", "id-library"], log, ProgramModel)
     })
 
+    test("MoveAnnotationFromOther", async () => {
+        resetModels()
+        cmd.deletePartition(client, "id-program")
+        cmd.deletePartition(client, "id-library")
+
+        const partitionP = cmd.addFullPartition(client, ProgramModel.nodes())
+        const partitionL = cmd.addFullPartition(client, LibraryModel.nodes())
+        console.log(ProgramModel.asString())
+        const ifC = ProgramModel.getNode("id-if")
+        const lib = LibraryModel.getNode("id-library")
+        ProgramModel.addPartition(libraryNodes)
+
+        const annErr = cmd.moveAnnotationFromOther(client, "id-annotation-none", 0, "id-program", 0, "id-library")
+        await expectError(client, annErr, "indexEntryMismatch")
+
+        const annCmd = cmd.moveAnnotationFromOther(client, "id-annotation", 0, "id-program", 0, "id-library")
+        await expectEvent(client, annCmd, "AnnotationMovedFromOtherParent")
+        ProgramModel.applyDelta(annCmd)
+        await logProtocol(client, bulkApiClient, ["id-program", "id-library"], log, ProgramModel)
+    })
+
+    test("MoveAnnotationFromSameParent", async () => {
+        resetModels()
+        cmd.deletePartition(client, "id-program")
+        cmd.deletePartition(client, "id-library")
+
+        const partitionP = cmd.addFullPartition(client, ProgramModel.nodes())
+        const partitionL = cmd.addFullPartition(client, LibraryModel.nodes())
+        console.log(ProgramModel.asString())
+        const ifC = ProgramModel.getNode("id-if")
+        const lib = LibraryModel.getNode("id-library")
+        ProgramModel.addPartition(libraryNodes)
+
+        const annErr = cmd.moveAnnotationInSameParent(client, "id-annotation-none", "id-program", 0, 1)
+        await expectError(client, annErr, "indexEntryMismatch")
+
+        const annCmd = cmd.moveAnnotationInSameParent(client, "id-annotation", "id-program", 0, 1)
+        await expectEvent(client, annCmd, "AnnotationMovedInSameParent")
+        ProgramModel.applyDelta(annCmd)
+        await logProtocol(client, bulkApiClient, ["id-program", "id-library"], log, ProgramModel)
+    })
+
+    test("MoveAndReplaceAnnotationFromOtherParent", async () => {
+        resetModels()
+        cmd.deletePartition(client, "id-program")
+        cmd.deletePartition(client, "id-library")
+
+        const partitionP = cmd.addFullPartition(client, ProgramModel.nodes())
+        const partitionL = cmd.addFullPartition(client, LibraryModel.nodes())
+        console.log(ProgramModel.asString())
+        const ifC = ProgramModel.getNode("id-if")
+        const lib = LibraryModel.getNode("id-library")
+        ProgramModel.addPartition(libraryNodes)
+
+        const annErr = cmd.moveAndReplaceAnnotationFromOtherParent(client, "id-annotation-none", 0, "id-program", 0, "id-library", "id-annotation")
+        await expectError(client, annErr, "unknownNode")
+
+        const annCmd = cmd.moveAndReplaceAnnotationFromOtherParent(client, "id-annotation", 0, "id-program", 0, "id-library", "id-annotation-pendown")
+        await expectEvent(client, annCmd, "AnnotationMovedAndReplacedFromOtherParent")
+        ProgramModel.applyDelta(annCmd)
+        await logProtocol(client, bulkApiClient, ["id-program", "id-library"], log, ProgramModel)
+    })
+
+    test("MoveAndReplaceAnnotationInSameParent", async () => {
+        resetModels()
+        cmd.deletePartition(client, "id-program")
+        cmd.deletePartition(client, "id-library")
+
+        const partitionP = cmd.addFullPartition(client, ProgramModel.nodes())
+        const partitionL = cmd.addFullPartition(client, LibraryModel.nodes())
+        console.log(ProgramModel.asString())
+        const ifC = ProgramModel.getNode("id-if")
+        const lib = LibraryModel.getNode("id-library")
+        ProgramModel.addPartition(libraryNodes)
+
+        const annErr = cmd.moveAndReplaceAnnotationInSameParent(client, "id-annotation-none","id-program", 0, 1, "id-annotation")
+        await expectError(client, annErr, "indexEntryMismatch")
+
+        const annCmd = cmd.moveAndReplaceAnnotationInSameParent(client, "id-annotation","id-program", 0, 1, "id-annotation-penup")
+        await expectEvent(client, annCmd, "AnnotationMovedAndReplacedInSameParent")
+        ProgramModel.applyDelta(annCmd)
+        await logProtocol(client, bulkApiClient, ["id-program", "id-library"], log, ProgramModel)
+    })
 })

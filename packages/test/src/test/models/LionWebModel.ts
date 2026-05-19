@@ -479,6 +479,7 @@ export class LionWebModel {
                 const oldParentNode = this.getNode(annotationNode.parent)
                 // Don't use deleteAnnotation, as it will remove the children as well.
                 pull(oldParentNode.annotations, [cmd.movedAnnotation])
+                annotationNode.parent = cmd.newParent
                 this.replaceAnnotation(cmd.newParent, [annotationNode], cmd.newIndex)
                 break
             }
@@ -488,7 +489,11 @@ export class LionWebModel {
                 const parentNode = this.getNode(annotationNode.parent)
                 // Don't use deleteAnnotation, as it will remove the children as well.
                 pull(parentNode.annotations, [cmd.movedAnnotation])
-                this.replaceAnnotation(parentNode.id, [annotationNode], cmd.oldIndex + cmd.indexOffset)
+                if (cmd.indexOffset < 0) {
+                    this.replaceAnnotation(parentNode.id, [annotationNode], cmd.oldIndex + cmd.indexOffset)
+                } else {
+                    this.replaceAnnotation(parentNode.id, [annotationNode], cmd.oldIndex + cmd.indexOffset - 1)
+                }
                 break
             }
             case "MoveAnnotationFromOtherParent": {
