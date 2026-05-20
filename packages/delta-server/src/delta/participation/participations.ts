@@ -1,8 +1,18 @@
 import { LionWebTask, RepositoryData } from "@lionweb/server-database"
 import { deltaLogger } from "@lionweb/server-shared"
 import { repositoryStore } from "@lionweb/server-dbadmin"
-import { DeltaAdminResponse, DeltaEvent, DeltaResponse, isDeltaEvent } from "@lionweb/server-delta-shared"
+import {
+    DeltaAdminResponse,
+    DeltaEvent,
+    DeltaResponse,
+    ErrorEvent,
+    ErrorResponse,
+    isDeltaAdminRequest,
+    isDeltaEvent,
+    MessageFromClient
+} from "@lionweb/server-delta-shared"
 import WebSocket from "ws"
+import { newErrorDelta } from "../events.js"
 
 /**
  * Allowed state transitions:
@@ -149,3 +159,49 @@ export class Participation {
         this.socket.send(JSON.stringify(msg))
     }
 }
+
+/**
+ * Check whether the `participation` is correct for executing the `delta` command/request.
+ * @param delta
+ * @param participation
+ */
+export const validateParticipation = (
+    delta: MessageFromClient,
+    participation: Participation | undefined
+): ErrorEvent | ErrorResponse | undefined => {
+    if (delta.messageKind === "SignOnRequest" || delta.messageKind === "ReconnectRequest") {
+        return undefined
+    }
+    if (participation === undefined) {
+        return newErrorDelta(
+            "invalidParticipation",
+            "Cannot perform delta request because there is no participation",
+            delta,
+            participation
+        )
+    } else if (isDeltaAdminRequest(delta)) {
+        // Always ok, does not have tom be signedOn
+        return undefined
+    } else if (participation.participationStatus !== "signedOn" && delta.messageKind !== "SignOffRequest") {
+        return newErrorDelta(
+            "invalidParticipation",
+            `Cannot perform ${delta.messageKind} command/request because participation status is ${participation.participationStatus}`,
+            delta,
+            participation,
+            {
+                additionalInfos: [
+                    {
+                        kind: "reason",
+                        message: "Participation status incorrect, should be SignedOn",
+                        data: {
+                            participationStatus: participation.participationStatus
+                        }
+
+                    }
+                ]
+            }
+        )
+    }
+    return undefined
+}
+

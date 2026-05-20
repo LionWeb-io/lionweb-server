@@ -22,13 +22,17 @@ import {
     CompositeEvent,
     DeltaCommand,
     isErrorEvent,
-    isErrorResponse
+    isErrorResponse,
+    isSplitCommand,
+    ContinuedCommand,
+    isContinuedCommand
 } from "@lionweb/server-delta-shared"
 import { MessageFromClient } from "@lionweb/server-delta-shared"
 import { deltaLogger, toJsonString } from "@lionweb/server-shared"
 import { ValidationResult } from "@lionweb/validation"
 import WebSocket from 'ws';
 import { adminRequestFunctions } from "./adminrequests/AdminFunctions.js"
+import { SplitCommands } from "./commands/SplitCommand.js"
 import { DeltaContext } from "./DeltaContext.js"
 import {
     annotationFunctions,
@@ -43,13 +47,14 @@ import {
 } from "./commands/index.js"
 import { affectedPartitionMessage, newErrorDelta } from "./events.js"
 import { requestFunctions } from "./queries/index.js"
-import { Participation, PARTICIPATIONS } from "./participation/index.js"
+import { Participation, PARTICIPATIONS, validateParticipation } from "./participation/index.js"
 import { CompositeEventBufferStack } from "./CompositeEventBuffer.js"
 
 class DeltaProcessor {
     processingFunctions: Map<string, MessageFunction> = new Map<string, MessageFunction>()
     deltaValidator = new DeltaValidator(new ValidationResult())
     context: DeltaContext | undefined
+    splitCommands = new SplitCommands()
 
     constructor(pfs: DeltaFunction[][]) {
         this.initialize(pfs)
@@ -105,7 +110,7 @@ class DeltaProcessor {
             return
         }
         // Check participation status
-        const errorDelta = this.validateParticipation(delta, participation)
+        const errorDelta = validateParticipation(delta, participation)
         if (errorDelta !== undefined) {
             deltaLogger.error(`error event/response ${toJsonString(errorDelta)}`)
             this.sendDelta(socket, participation, delta, errorDelta)
@@ -114,10 +119,22 @@ class DeltaProcessor {
 
         // Finally ok, process the delta and send the response
         try {
-            if (delta.messageKind === "CompositeCommand") {
-                await this.CompositeCommandFunction(participation!, delta as CompositeCommand, this.context!, socket)
+            if (participation === undefined) {
+                return
+            } else if (delta.messageKind === "CompositeCommand") {
+                // Special case
+                await this.CompositeCommandFunction(participation, delta as CompositeCommand, this.context!, socket)
+            } else if (isSplitCommand(delta)) {
+                // There is only one split command active, per participation, save it
+                this.splitCommands.addSplitCommand(participation, delta)
+            } else if(isContinuedCommand(delta)) {
+                // add nodes to current split command
+                this.splitCommands.addContinuedCommand(participation, delta)
+                if (delta.continuedChunkCompleted) {
+                    this.processDelta(socket, this.splitCommands.getSplitCommand(participation))                          
+                }
             } else {
-                const response = await func(participation!, delta, this.context!, socket)
+                const response = await func!(participation, delta, this.context!, socket)
                 // Errors and responses to requests only need to be sent to the client that sent the message
                 if (response.messageKind === "ErrorEvent" || isDeltaResponse(response) || isDeltaAdminResponse(response)) {
                     deltaLogger.info(`Sending Error Event or Response: ${toJsonString(response)}`)
@@ -185,8 +202,16 @@ class DeltaProcessor {
     }
 
     eventBuffers: CompositeEventBufferStack = new CompositeEventBufferStack() 
-    
-     CompositeCommandFunction = async (
+
+    ContinuedCommand(        participation: Participation,
+                             msg: CompositeCommand,
+                             _ctx: DeltaContext,
+                             socket?: WebSocket
+    ){
+        
+    }
+
+    CompositeCommandFunction = async (
         participation: Participation,
         msg: CompositeCommand,
         _ctx: DeltaContext,
@@ -226,51 +251,6 @@ class DeltaProcessor {
         }
         // ensure originationg client will get the response
         return errorEvent(msg)
-    }
-
-    /**
-     * Check whether the `participation` is correct for executing the `delta` command/request.
-     * @param delta
-     * @param participation
-     */
-    validateParticipation = (
-        delta: MessageFromClient,
-        participation: Participation | undefined
-    ): ErrorEvent | ErrorResponse | undefined => {
-        if (delta.messageKind === "SignOnRequest" || delta.messageKind === "ReconnectRequest") {
-            return undefined
-        }
-        if (participation === undefined) {
-            return newErrorDelta(
-                "invalidParticipation",
-                "Cannot perform delta request because there is no participation",
-                delta,
-                participation
-            )
-        } else if (isDeltaAdminRequest(delta)) {
-            // Always ok, does not have tom be signedOn
-            return undefined
-        } else if (participation.participationStatus !== "signedOn" && delta.messageKind !== "SignOffRequest") {
-            return newErrorDelta(
-                "invalidParticipation",
-                `Cannot perform ${delta.messageKind} command/request because participation status is ${participation.participationStatus}`,
-                delta,
-                participation,
-                {
-                    additionalInfos: [
-                        {
-                            kind: "reason",
-                            message: "Participation status incorrect, should be SignedOn",
-                            data: {
-                                participationStatus: participation.participationStatus
-                            }
-                            
-                        }
-                    ]
-                }
-            )
-        }
-        return undefined
     }
     
     sendDelta(

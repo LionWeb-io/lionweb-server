@@ -31,6 +31,8 @@ export const DeltaErrorCodes = [
     "undefinedReferenceTarget",
     "referenceTargetOrResolveInfoMismatch",
     "parentMismatch",
+    "noActiveSplitCommand",
+    "incorrectSequenceNumber",
     "generic"
 ] as const
 
