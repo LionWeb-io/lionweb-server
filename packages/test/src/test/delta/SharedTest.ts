@@ -49,7 +49,7 @@ console.log(`beforeAllTests ${name}`)
     if (initResponse.status !== HttpSuccessCodes.Ok) {
         console.log(`Cannot create repository (${repository}): ` + JSON.stringify(initResponse.body))
     } else {
-        console.log(`Created repository (${repository}): ` + JSON.stringify(initResponse.body))
+        // console.log(`Created repository (${repository}): ` + JSON.stringify(initResponse.body))
     }
     await client.connect()
     const listReposRequest = cmd.listRepositories(client)

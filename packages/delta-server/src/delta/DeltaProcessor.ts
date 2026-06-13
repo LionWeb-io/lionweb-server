@@ -131,7 +131,10 @@ class DeltaProcessor {
                 // add nodes to current split command
                 this.splitCommands.addContinuedCommand(participation, delta)
                 if (delta.continuedChunkCompleted) {
-                    this.processDelta(socket, this.splitCommands.getSplitCommand(participation))                          
+                    const command = this.splitCommands.getSplitCommand(participation)
+                    command.split = false
+                    console.log(`run split command ${JSON.stringify(command)}`)
+                    this.processDelta(socket, command)                          
                 }
             } else {
                 const response = await func!(participation, delta, this.context!, socket)
@@ -261,7 +264,7 @@ class DeltaProcessor {
     ) {
         deltaLogger.info(`Send delta ${responseOrEvent.messageKind} to ${participation?.repositoryData?.clientId}`)
         if (responseOrEvent.messageKind === "ErrorEvent") {
-            deltaLogger.info(`Sending ERROR message ${toJsonString(responseOrEvent)}`)
+            deltaLogger.info(`Sending ERROR message ${JSON.stringify(responseOrEvent)}`)
         }
         if (isDeltaEvent(responseOrEvent) && isDeltaCommand(originalMessage)) {
             responseOrEvent.originCommands.forEach(cmd => (cmd.commandId = originalMessage.commandId))

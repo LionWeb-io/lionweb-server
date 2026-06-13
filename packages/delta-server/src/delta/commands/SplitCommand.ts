@@ -3,13 +3,14 @@ import {
     DeltaCommand,
     isAddPartitionCommand,
     isNewAnnotationCommand,
-    isNewChildCommand
+    isNewChildCommand,
+    SplitCommandType
 } from "@lionweb/server-delta-shared"
 import { newErrorDelta } from "../events.js"
 import { Participation } from "../participation/index.js"
 
 export type SplitCommand = {
-    delta: DeltaCommand
+    delta: SplitCommandType
     lastSequenceNumber: number
 }
 export class SplitCommands {
@@ -18,11 +19,13 @@ export class SplitCommands {
      */
     unfinishedSplitCommands: Map<string, SplitCommand> = new Map<string, SplitCommand>()
 
-    addSplitCommand(participation: Participation, cmd: DeltaCommand): void {
+    addSplitCommand(participation: Participation, cmd: SplitCommandType): void {
+        console.log(`SPLIT add command ${cmd.messageKind}`)
         this.unfinishedSplitCommands.set(participation.participationId, { delta: cmd, lastSequenceNumber: -1} )
     }
 
     addContinuedCommand(participation: Participation, continuedCommand: ContinuedCommand): void {
+        console.log(`SPLIT add contunuation ${continuedCommand.messageKind} seq ${continuedCommand.continuedChunkSequenceNumber}`)
         const unfinishedSplitCommand = this.unfinishedSplitCommands.get(participation.participationId)
         if (unfinishedSplitCommand === undefined) {
             throw newErrorDelta("noActiveSplitCommand", "Incorrect continued command, there is no split command active", continuedCommand, participation)
@@ -35,6 +38,7 @@ export class SplitCommands {
                 participation
                 )
         }
+        unfinishedSplitCommand.lastSequenceNumber++
         if (isAddPartitionCommand(unfinishedSplitCommand.delta)) {
             unfinishedSplitCommand.delta.newPartition.nodes.push(...continuedCommand.chunk.nodes)
         } else if (isNewChildCommand(unfinishedSplitCommand.delta)) {
@@ -51,7 +55,7 @@ export class SplitCommands {
      * Throws an exception if there is no split command for `participation`
      * @param participation
      */
-    getSplitCommand(participation: Participation): DeltaCommand {
+    getSplitCommand(participation: Participation): SplitCommandType {
         const result = this.unfinishedSplitCommands.get(participation.participationId)
         if (result === undefined) {
             // @ts-ignore

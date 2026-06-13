@@ -37,6 +37,9 @@ export function isErrorResponse(object: unknown): object is ErrorResponse {
 export function isAddPartitionCommand(object: DeltaCommand): object is AddPartitionCommand {
     return object.messageKind === "AddPartition"
 }
+
+export type SplitCommandType = AddPartitionCommand | AddChildCommand | ReplaceChildCommand | AddAnnotationCommand | ReplaceAnnotationCommand
+
 export function isNewChildCommand(object: DeltaCommand): object is AddChildCommand | ReplaceChildCommand {
     return object.messageKind === "AddChild" || object.messageKind === "ReplaceChild"
 }
@@ -47,7 +50,7 @@ export function isContinuedCommand(object: MessageFromClient): object is Continu
     return object.messageKind === "ContinuedCommand" 
 }
     
-export function isSplitCommand(object: MessageFromClient): object is AddPartitionCommand | AddChildCommand | ReplaceChildCommand | AddAnnotationCommand | ReplaceAnnotationCommand {
+export function isSplitCommand(object: MessageFromClient): object is SplitCommandType {
     return (object as any)["split"] === true
 }
 

@@ -54,7 +54,8 @@ import {
     MoveAndReplaceAnnotationFromOtherParentCommand,
     MoveAndReplaceAnnotationInSameParentCommand,
     MoveAndReplaceChildInSameContainmentCommand,
-    MoveChildInSameContainmentCommand
+    MoveChildInSameContainmentCommand,
+    ContinuedCommand
 } from "@lionweb/server-delta-shared"
 import { waitFor } from "./delta/helpers.js"
 import {} from "./utils.js"
@@ -103,12 +104,9 @@ export type AddReferenceType = {
 }
 
 /**
- * Test utility class to easily send commands to the server
+ * Test utility class to easily ctreate and send commands or requests from a client to the server
  */
 export class Commands {
-    /**
-     * The client used to send the commands
-     */
     constructor() {}
 
     nodes: LionWebJsonNode[] = []
@@ -700,7 +698,7 @@ export class Commands {
         }
     }
 
-    addAnnotation = (client: DeltaClient, annotation: AddAnnotationType, extra?: Partial<AddAnnotationCommand>): AddAnnotationCommand => {
+    addAnnotationCmd = (client: DeltaClient, annotation: AddAnnotationType, extra?: Partial<AddAnnotationCommand>): AddAnnotationCommand => {
         const command: AddAnnotationCommand = {
             messageKind: "AddAnnotation",
             commandId: `command-id-${queryId++}`,
@@ -723,7 +721,11 @@ export class Commands {
             },
             additionalInfos: []
         }
-        return client.sendCommand(command) as AddAnnotationCommand
+        return command
+    }
+
+    addAnnotation = (client: DeltaClient, annotation: AddAnnotationType, extra?: Partial<AddAnnotationCommand>): AddAnnotationCommand => {
+        return client.sendCommand(this.addAnnotationCmd(client, annotation, extra)) as AddAnnotationCommand
     }
 
     replaceAnnotation = (
@@ -852,6 +854,17 @@ export class Commands {
             additionalInfos: []
         }
         return client.sendCommand(command) as DeleteAnnotationCommand
+    }
+    
+    continuedCommand = (nr: number, nodes: LionWebJsonNode[], complete: boolean): ContinuedCommand => {
+        return {
+            messageKind: "ContinuedCommand",
+            continuedChunkSequenceNumber: nr,
+            chunk: {  nodes: nodes },
+            continuedChunkCompleted: complete,
+            additionalInfos: [],
+            commandId: `command-id-${queryId++}`
+        }
     }
 }
 

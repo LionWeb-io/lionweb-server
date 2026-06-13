@@ -20,6 +20,7 @@ import {
     ChangeClassifierCommand,
     ChangePropertyCommand,
     ChangeReferenceCommand,
+    CompositeCommand,
     DeleteAnnotationCommand,
     DeleteChildCommand,
     DeletePartitionCommand,
@@ -36,7 +37,7 @@ import {
     MoveChildFromOtherContainmentInSameParentCommand,
     MoveChildInSameContainmentCommand,
     ReplaceAnnotationCommand,
-    ReplaceChildCommand,
+    ReplaceChildCommand
 } from "@lionweb/server-delta-shared"
 import { toJsonString } from "@lionweb/server-shared"
 import { pull } from "es-toolkit"
@@ -517,6 +518,16 @@ export class LionWebModel {
                 const cmd = delta as ChangeClassifierCommand
                 this.getNode(cmd.node).classifier = cmd.newClassifier
                 break
+            }
+            case "CompositeCommand": {
+                const cmd = delta as CompositeCommand
+                for(const part of cmd.parts) {
+                    this.applyDelta(part)
+                }
+                break
+            }
+            default: {
+                throw new Error(`Unknown delta type in LionWebModel.applyDelta: ${delta.messageKind}`)
             }
         }
     }
