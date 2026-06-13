@@ -1,13 +1,9 @@
-import { RepositoryClient } from "@lionweb/server-http-client"
-import { adminResponseFunctions, DeltaClient, eventFunctions, responseFunctions } from "@lionweb/server-delta-client"
-import { ChangeClassifierCommand, GetAvailableIdsResponse, ListPartitionsResponse } from "@lionweb/server-delta-shared"
-import { HttpSuccessCodes } from "@lionweb/server-shared"
+import { ChangeClassifierCommand } from "@lionweb/server-delta-shared"
 import { test, describe, beforeAll, beforeEach, afterAll } from "vitest"
-import { LionWebTreeConverter } from "../models/LionWebTree.js"
-import { LibraryModel, libraryNodes, LibraryTree, ProgramModel, programNodes, ProgramTree, resetModels } from "../models/testmodel.js"
-import { CLASSIFIER, ProcedureBody, ProgramCommands } from "../models/keys.js"
-import { CoverageMap, cmd, expectEvent, expectResponse, logProtocol } from "./test-helpers.js"
-import { client, checkClient, logoModel, beforeAllTests, bulkApiClient, log, afterAllTests, withoutHistoryList } from "./SharedTest.js"
+import { LibraryModel, libraryNodes, ProgramModel, resetModels } from "../models/testmodel.js"
+import { CLASSIFIER } from "../models/keys.js"
+import { cmd, expectEvent, logProtocol } from "./test-helpers.js"
+import { client, beforeAllTests, bulkApiClient, log, afterAllTests, withoutHistoryList } from "./SharedTest.js"
 
 describe.each(withoutHistoryList)("ChangeClassifier-$withoutHistory", async ({ withoutHistory }) => {
     beforeAll(async function () {

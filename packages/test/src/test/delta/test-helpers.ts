@@ -129,31 +129,32 @@ export async function logProtocol(client: DeltaClient, checkClient: RepositoryCl
         // console.log(client.sentMessageHistory)
         console.log(`ReceivedMessages ${client.clientId}`)
         // console.log(client.receivedMessageHistory)
-
-        const chunk = await checkClient.bulk.retrieve(rootIds, 100000)
-        // console.log(`Retrieveresponse ${JSON.stringify(chunk, null, 2)}`)
+    }
+    const chunk = await checkClient.bulk.retrieve(rootIds, 100000)
+    if (log) {
         const string = new Logo2String(chunk.body.chunk.nodes).logo2string()
         // console.log("ACTUAL Repo to string")
         console.log(string)
+    }
 
-        if (expectedModel !== undefined) {
+    if (expectedModel !== undefined) {
+        const diff = new LionWebJsonDiff()
+        diff.diffLwChunk(chunk.body.chunk, expectedModel.asChunk())
+        if (log) {
             console.log("EXPECTED Model to string")
             const string = new Logo2String(expectedModel.nodes()).logo2string()
             console.log(string)
             console.log("============= EXPECTED ")
             console.log(expectedModel.asString())
             console.log("Model diff")
-            const diff = new LionWebJsonDiff()
-            // diff.diffLwChunk(expectedModel.asChunk(), chunk.body.chunk)
-            diff.diffLwChunk(chunk.body.chunk, expectedModel.asChunk())
-            // console.log(`RETRIEVED CHUNK ${JSON.stringify(chunk.body.chunk, null, 2)}`)
-            console.log(`Diff has changes ${diff.diffResult.hasChanges()}`)
-            diff.diffResult.changes.forEach((ch) => {
-                console.log(`change ${ch.changeMsg()}`)
-            })
-            console.log(`ACTUAL logoModel ${JSON.stringify(chunk.body.chunk, null, 2)}`)
-            expect(diff.diffResult.changes).toStrictEqual([])
-            // console.log(`logoModel ${JSON.stringify(logoChunk, null, 2)}`)
         }
+        console.log(`Diff has changes ${diff.diffResult.hasChanges()}`)
+        diff.diffResult.changes.forEach((ch) => {
+            console.log(`change ${ch.changeMsg()}`)
+        })
+        if (log) {
+            console.log(`ACTUAL logoModel ${JSON.stringify(chunk.body.chunk, null, 2)}`)
+        }
+        expect(diff.diffResult.changes).toStrictEqual([])
     }
 }

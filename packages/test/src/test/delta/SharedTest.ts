@@ -11,7 +11,7 @@ import { cmd, CoverageMap, expectResponse } from "./test-helpers.js"
  */
 // export const withoutHistoryList = [{ withoutHistory: true }, { withoutHistory: false }]
 export const withoutHistoryList = [{ withoutHistory: true }]
-export const log: boolean = true
+export const log: boolean = false
 
 export const config = {
     // hostname: "192.168.100.1",
@@ -22,7 +22,7 @@ export const config = {
 
 // Run all, tests with and without history
 export const client = new DeltaClient("test-logo", config, [eventFunctions, responseFunctions, adminResponseFunctions])
-client.loggingOn = true
+client.loggingOn = log
 export const checkClient = new DeltaClient("check-logo", config, [eventFunctions, responseFunctions, adminResponseFunctions])
 
 export let repository = "dummy"

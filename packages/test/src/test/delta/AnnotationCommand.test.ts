@@ -1,13 +1,8 @@
-import { RepositoryClient } from "@lionweb/server-http-client"
-import { adminResponseFunctions, DeltaClient, eventFunctions, responseFunctions } from "@lionweb/server-delta-client"
-import { GetAvailableIdsResponse, ListPartitionsResponse } from "@lionweb/server-delta-shared"
-import { HttpSuccessCodes } from "@lionweb/server-shared"
 import { test, describe, beforeAll, beforeEach, afterAll } from "vitest"
-import { LionWebTreeConverter } from "../models/LionWebTree.js"
-import { LibraryModel, libraryNodes, LibraryTree, ProgramModel, programNodes, ProgramTree, resetModels } from "../models/testmodel.js"
-import { CLASSIFIER, ProcedureBody, ProgramCommands } from "../models/keys.js"
-import { CoverageMap, cmd, expectError, expectEvent, expectResponse, logProtocol } from "./test-helpers.js"
-import { client, checkClient, logoModel, beforeAllTests, bulkApiClient, log, afterAllTests, withoutHistoryList } from "./SharedTest.js"
+import { LibraryModel, libraryNodes, ProgramModel, resetModels } from "../models/testmodel.js"
+import { CLASSIFIER } from "../models/keys.js"
+import { cmd, expectError, expectEvent, logProtocol } from "./test-helpers.js"
+import { client, beforeAllTests, bulkApiClient, log, afterAllTests, withoutHistoryList } from "./SharedTest.js"
 
 describe.each(withoutHistoryList)("Annotations-$withoutHistory", async ({ withoutHistory }) => {
     beforeAll(async function () {
@@ -27,12 +22,7 @@ describe.each(withoutHistoryList)("Annotations-$withoutHistory", async ({ withou
         resetModels()
         const partitionP = cmd.addFullPartition(client, ProgramModel.nodes())
         const partitionL = cmd.addFullPartition(client, LibraryModel.nodes())
-        console.log(ProgramModel.asString())
-        const ifC = ProgramModel.getNode("id-if")
-        const lib = LibraryModel.getNode("id-library")
         ProgramModel.addPartition(libraryNodes)
-
-        console.log(`MY ProgramModel ${ProgramModel.asString()}`)
 
         const annErr = cmd.addAnnotation(client, {
             parent: "id-none",      // incorrect
@@ -64,12 +54,7 @@ describe.each(withoutHistoryList)("Annotations-$withoutHistory", async ({ withou
         const partitionP = cmd.addFullPartition(client, ProgramModel.nodes())
         const partitionL = cmd.addFullPartition(client, LibraryModel.nodes())
         // await expectError(client, partitionP, "idsAlreadyInUse")
-        console.log(ProgramModel.asString())
-        const ifC = ProgramModel.getNode("id-if")
-        const lib = LibraryModel.getNode("id-library")
         ProgramModel.addPartition(libraryNodes)
-
-        console.log(`MY ProgramModel ${ProgramModel.asString()}`)
 
         const annErr = cmd.deleteAnnotation(client, "id-none", "id-annotation2", 0)
         await expectError(client, annErr, "unknownNode")
@@ -86,9 +71,6 @@ describe.each(withoutHistoryList)("Annotations-$withoutHistory", async ({ withou
         cmd.deletePartition(client, "id-library")
         const partitionP = cmd.addFullPartition(client, ProgramModel.nodes())
         const partitionL = cmd.addFullPartition(client, LibraryModel.nodes())
-        console.log(ProgramModel.asString())
-        const ifC = ProgramModel.getNode("id-if")
-        const lib = LibraryModel.getNode("id-library")
         ProgramModel.addPartition(libraryNodes)
 
         const annErr = cmd.replaceAnnotation(client, "id-annotation", {
@@ -121,9 +103,6 @@ describe.each(withoutHistoryList)("Annotations-$withoutHistory", async ({ withou
 
         const partitionP = cmd.addFullPartition(client, ProgramModel.nodes())
         const partitionL = cmd.addFullPartition(client, LibraryModel.nodes())
-        console.log(ProgramModel.asString())
-        const ifC = ProgramModel.getNode("id-if")
-        const lib = LibraryModel.getNode("id-library")
         ProgramModel.addPartition(libraryNodes)
 
         const annErr = cmd.moveAnnotationFromOther(client, "id-annotation-none", 0, "id-program", 0, "id-library")
@@ -142,9 +121,6 @@ describe.each(withoutHistoryList)("Annotations-$withoutHistory", async ({ withou
 
         const partitionP = cmd.addFullPartition(client, ProgramModel.nodes())
         const partitionL = cmd.addFullPartition(client, LibraryModel.nodes())
-        console.log(ProgramModel.asString())
-        const ifC = ProgramModel.getNode("id-if")
-        const lib = LibraryModel.getNode("id-library")
         ProgramModel.addPartition(libraryNodes)
 
         const annErr = cmd.moveAnnotationInSameParent(client, "id-annotation-none", "id-program", 0, 1)
@@ -163,9 +139,6 @@ describe.each(withoutHistoryList)("Annotations-$withoutHistory", async ({ withou
 
         const partitionP = cmd.addFullPartition(client, ProgramModel.nodes())
         const partitionL = cmd.addFullPartition(client, LibraryModel.nodes())
-        console.log(ProgramModel.asString())
-        const ifC = ProgramModel.getNode("id-if")
-        const lib = LibraryModel.getNode("id-library")
         ProgramModel.addPartition(libraryNodes)
 
         const annErr = cmd.moveAndReplaceAnnotationFromOtherParent(client, "id-annotation-none", 0, "id-program", 0, "id-library", "id-annotation")
@@ -184,9 +157,6 @@ describe.each(withoutHistoryList)("Annotations-$withoutHistory", async ({ withou
 
         const partitionP = cmd.addFullPartition(client, ProgramModel.nodes())
         const partitionL = cmd.addFullPartition(client, LibraryModel.nodes())
-        console.log(ProgramModel.asString())
-        const ifC = ProgramModel.getNode("id-if")
-        const lib = LibraryModel.getNode("id-library")
         ProgramModel.addPartition(libraryNodes)
 
         const annErr = cmd.moveAndReplaceAnnotationInSameParent(client, "id-annotation-none","id-program", 0, 1, "id-annotation")
