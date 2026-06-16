@@ -27,7 +27,8 @@
         "manualtest": "node dist/test/ManualTests.js"
     },
     "devDependencies": {
-        "ts-proto": "2.11.8"
+        "ts-proto": "2.11.8",
+        "chai": "6.2.2"
     },
     "dependencies": {
         "@lionweb/json": "0.10.0-alpha.4",
