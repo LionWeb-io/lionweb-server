@@ -37,6 +37,7 @@
         "@vitest/coverage-v8": "4.1.5",
         "vite-tsconfig-paths": "7.0.0-alpha.1",
         "@vitest/ui": "4.1.5",
+        "chai": "4.3.10",
         "degit": "2.8.4",
         "vitest": "4.1.5"
     },
@@ -56,7 +57,7 @@
         "@types/source-map-support": "0.5.10",
         "body-parser": "2.3.0",
         "cors": "2.8.5",
-        "chai":"6.2.2",
+        "chai": "4.3.10",
         "dotenv": "16.3.1",
         "es-toolkit": "1.46.1",
         "express": "4.22.2",
