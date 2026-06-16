@@ -70,7 +70,7 @@ const AddReference = async (participation: Participation, msg: AddReferenceComma
 
 const DeleteReference = async (participation: Participation, msg: DeleteReferenceCommand, ctx: DeltaContext): Promise<DeltaEvent> => {
     deltaLogger.debug("Called DeleteReference " + msg.messageKind)
-    validateReferenceTarget(msg.deletedReference, msg.deletedReference, msg, participation)
+    validateReferenceTarget(msg.deletedResolveInfo, msg.deletedReference, msg, participation)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [msg.parent])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)

@@ -29,7 +29,7 @@
         "@logtape/file": "2.0.5",
         "@logtape/logtape": "2.0.5",
         "@logtape/pretty": "2.0.5",
-        "protobufjs": "^8.0.0",
+        "protobufjs": "8.6.3",
         "source-map-support": "0.5.21"
     }
 }

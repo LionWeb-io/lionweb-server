@@ -137,7 +137,7 @@ const DeleteChild = async (
         // Run the query with metapointers as a dummy, there are no metapointers being added
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         const nextVersionSql = SQL_nextRepoVersion(participation.participationId)
-        const execute = task.query(participation.repositoryData!, nextVersionSql + deleteSql + dbChanges.createPostgresQuery(metaPointerTracker))
+        const execute = await task.query(participation.repositoryData!, nextVersionSql + deleteSql + dbChanges.createPostgresQuery(metaPointerTracker))
         const partition = await DB_affectedPartition(task, parentNode!.id, participation)
         return {
             messageKind: "ChildDeleted",

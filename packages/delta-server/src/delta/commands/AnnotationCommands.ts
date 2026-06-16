@@ -366,7 +366,7 @@ const MoveAndReplaceAnnotationInSameParent = async (
         if (msg.indexOffset < 0) {
             changedParentNode.annotations.splice(msg.oldIndex + msg.indexOffset, 1, msg.movedAnnotation)
         } else {
-            changedParentNode.annotations.splice(msg.oldIndex + msg.indexOffset - 1, 2, msg.movedAnnotation)
+            changedParentNode.annotations.splice(msg.oldIndex + msg.indexOffset - 1, 1, msg.movedAnnotation)
         }
 
         const replacedTree = await DB_retrieveNodeTree(task, participation.repositoryData!, [msg.replacedAnnotation], Number.MAX_SAFE_INTEGER)

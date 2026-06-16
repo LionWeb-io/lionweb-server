@@ -2,8 +2,7 @@
 import { DeltaValidator } from "@lionweb/server-delta-definitions"
 import { ValidationResult } from "@lionweb/validation"
 import fs from "node:fs"
-import { assert } from "chai"
-import { describe, test } from "vitest";
+import { describe, test, expect } from "vitest";
 
 const addPropertyJson = fs.readFileSync("./src/deltavalidation/addProperty.json").toString()
 const addPropertyTests = JSON.parse(addPropertyJson)
@@ -38,7 +37,7 @@ addPropertyTests.tests.forEach((propTest: unknown, index: number) => {
                     `expected at least 1 error, got ${validator.validationResult.issues.length}`
                 )
                 // @ts-expect-error TS2339
-                assert(validator.validationResult.issues[0].issueType === propTest.expectedError, "unexpected error")
+                expect(validator.validationResult.issues[0].issueType === propTest.expectedError, "unexpected error").toBe(true)
             }
         })
     })

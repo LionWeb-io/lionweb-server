@@ -42,7 +42,7 @@ export interface InternalQueryError extends Error {
 }
 
 export function isInternalQueryError(o: unknown): o is InternalQueryError {
-    return (o as InternalQueryError)?.name !== "InternalQueryError"
+    return (o as InternalQueryError)?.name === "InternalQueryError"
 }
 
 export function InternalQueryError(msg: string, data?: KeyValuePair[]): InternalQueryError {

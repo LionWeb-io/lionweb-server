@@ -20,7 +20,7 @@ export function verbosity(level: LogLevel, defaultValue: LogLevel): LogLevel {
 }
 
 function queryFilter(config: LogRecord): boolean {
-    return config.message.includes("aa")
+    return true
 }
 
 await configure<"console" | "file", string>({
