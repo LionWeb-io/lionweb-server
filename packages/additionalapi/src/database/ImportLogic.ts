@@ -243,8 +243,8 @@ export async function storeNodes(
     bulkImport: BulkImport,
     metaPointersTracker: MetaPointersTracker
 ): Promise<void> {
+    const connected = await context.dbConnection.pgDatabaseConnection.connect()
     try {
-        const connected = await context.dbConnection.pgDatabaseConnection.connect()
         const repositoryName = repositoryData.repository.repository_name
         const schemaName = repositoryData.repository.schema_name
 
@@ -275,7 +275,7 @@ export async function storeNodes(
             `properties ${repositoryName}`
         )
     } finally {
-        // client.release(false)
+        connected.done()
     }
 }
 

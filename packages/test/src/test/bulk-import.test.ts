@@ -18,7 +18,7 @@ describe("Repository tests for bulkImport API", () => {
         initError = ""
         const repos = await client.dbAdmin.listRepositories()
         deepEqual(repos.body.success, true)
-        if (repos.body.repositories.find(r => r.name == repository) != null) {
+        if (repos.body.repositories.find(r => r.name === repository) != null) {
             console.log("Deleting repository " + repository)
             await client.dbAdmin.deleteRepository(repository)
         } else {
