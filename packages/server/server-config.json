@@ -24,8 +24,8 @@
         "bulk": "info",
         "request": "info",
         "trace": "silent",
-        "database": "silent",
-        "query": "silent",
+        "database": "info",
+        "query": "info",
         "express": "silent",
         "delta": "info",
         "message": "silent"

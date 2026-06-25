@@ -33,4 +33,12 @@ export const postgresConnectionWithDatabase = pgp(config)
  */
 export const postgresConnectionWithoutDatabase = pgp(CREATE_CONFIG)
 
-export const postgresPool = new pg.Pool(config)
+export const postgresPool = new pg.Pool({
+
+    host: config.host,
+    user: config.user,
+    max: 20,
+    idleTimeoutMillis: 0,
+    connectionTimeoutMillis: 0,
+    maxLifetimeSeconds: 0,
+})
