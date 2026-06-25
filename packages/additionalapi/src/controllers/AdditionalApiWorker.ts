@@ -24,9 +24,9 @@ export class AdditionalApiWorker {
      * @param repositoryData
      * @param bulkImport
      */
-    bulkImport = async (task: LionWebTask, repositoryData: RepositoryData, bulkImport: BulkImport)=> {
+    bulkImport = async (repositoryData: RepositoryData, bulkImport: BulkImport)=> {
         requestLogger.info("AdditionalApiWorker.bulkImport")
-        return await this.context.queries.bulkImport(task, repositoryData, bulkImport)
+        return await this.context.queries.bulkImport(this.context, repositoryData, bulkImport)
     }
 
 }

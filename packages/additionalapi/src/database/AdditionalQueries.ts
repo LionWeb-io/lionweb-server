@@ -49,9 +49,10 @@ export class AdditionalQueries {
         return { status: HttpSuccessCodes.Ok, query: query, queryResult: await task.query(repositoryData, query) }
     }
 
-    bulkImport = async (task: LionWebTask, repositoryData: RepositoryData, bulkImport: BulkImport): Promise<BulkImportResultType> => {
+    bulkImport = async (context: AdditionalApiContext, repositoryData: RepositoryData, bulkImport: BulkImport): Promise<BulkImportResultType> => {
         requestLogger.info("AdditionalQueries.bulkImport")
 
+        const metaPointersTracker = await this.context.dbConnection.tx(async (task: LionWebTask) => {
         // Check - We verify there are no duplicate IDs in the new nodes
         const newNodesSet = new Set<string>()
         const parentsSet: Set<string> = new Set<string>()
@@ -168,11 +169,17 @@ export class AdditionalQueries {
         })
 
         await populateFromBulkImport(task, metaPointersTracker, bulkImport)
-        await storeNodes(await pool.connect(), repositoryData, bulkImport, metaPointersTracker)
+            return metaPointersTracker
+        }) as MetaPointersTracker
+        
+        if ( !(metaPointersTracker instanceof MetaPointersTracker)) {
+            return metaPointersTracker
+        }
+        await storeNodes(this.context, repositoryData, bulkImport, metaPointersTracker)
 
         // Attach the root of the new nodes to existing containers
         for (const attachPoint of bulkImport.attachPoints) {
-            await task.query(repositoryData, makeQueryToAttachNode(attachPoint, metaPointersTracker))
+            await this.context.dbConnection.query(repositoryData, makeQueryToAttachNode(attachPoint, metaPointersTracker))
         }
 
         return { status: HttpSuccessCodes.Ok, success: true }

@@ -1,11 +1,13 @@
 import { LionWebJsonNode } from "@lionweb/json"
 import { DbConnection, LionWebTask, RepositoryData } from "@lionweb/server-database"
+import { IClient } from "pg-promise/typescript/pg-subset.js"
 import { Duplex } from "stream"
 import { PoolClient } from "pg"
-import { from as copyFrom } from "pg-copy-streams"
+import { CopyStreamQuery, from as copyFrom } from "pg-copy-streams"
 import { MetaPointersTracker, MetaPointersCollector } from "@lionweb/server-common"
 import { BulkImport, HttpClientErrors, HttpSuccessCodes, PBBulkImport, PBLanguage, PBMetaPointer } from "@lionweb/server-shared"
 import { finished } from "stream/promises"
+import { AdditionalApiContext } from "../main.js"
 import { BulkImportResultType } from "./AdditionalQueries.js"
 import { makeQueryToAttachNodeForProtobuf, checkHowManyDoNotExistSQL } from "./QueryNode.js"
 
@@ -211,8 +213,8 @@ function prepareInputStreamContainmentsProtobuf(bulkImport: PBBulkImport, pbInde
     return read_stream_string
 }
 
-async function pipeInputIntoQueryStream(client: PoolClient, query: string, inputStream: Duplex, opDesc: string): Promise<void> {
-    const queryStream = client.query(copyFrom(query));
+async function pipeInputIntoQueryStream(client: IClient, query: string, inputStream: Duplex, opDesc: string): Promise<void> {
+    const queryStream: CopyStreamQuery = client.query(copyFrom(query)) as any as CopyStreamQuery;
 
     // propagate src errors too
     const srcErr = new Promise<never>((_, reject) =>
@@ -235,48 +237,50 @@ async function pipeInputIntoQueryStream(client: PoolClient, query: string, input
 }
 
 export async function storeNodes(
-    client: PoolClient,
+    // client: PoolClient,
+    context: AdditionalApiContext,
     repositoryData: RepositoryData,
     bulkImport: BulkImport,
     metaPointersTracker: MetaPointersTracker
 ): Promise<void> {
     try {
+        const connected = await context.dbConnection.pgDatabaseConnection.connect()
         const repositoryName = repositoryData.repository.repository_name
         const schemaName = repositoryData.repository.schema_name
 
         const nodes = bulkImport.nodes
 
         await pipeInputIntoQueryStream(
-            client,
+            connected.client,
             `COPY "${schemaName}".lionweb_nodes(id,classifier,annotations,parent) FROM STDIN`,
             prepareInputStreamNodes(nodes, metaPointersTracker),
             "nodes insertion"
         )
         await pipeInputIntoQueryStream(
-            client,
+            connected.client,
             `COPY "${schemaName}".lionweb_containments(containment,children,node_id) FROM STDIN`,
             prepareInputStreamContainments(nodes, metaPointersTracker),
             "containments insertion"
         )
         await pipeInputIntoQueryStream(
-            client,
+            connected.client,
             `COPY "${schemaName}".lionweb_references(reference,targets,node_id) FROM STDIN`,
             prepareInputStreamReferences(nodes, metaPointersTracker),
             `references ${repositoryName}`
         )
         await pipeInputIntoQueryStream(
-            client,
+            connected.client,
             `COPY "${schemaName}".lionweb_properties(property,value,node_id) FROM STDIN`,
             prepareInputStreamProperties(nodes, metaPointersTracker),
             `properties ${repositoryName}`
         )
     } finally {
-        client.release(false)
+        // client.release(false)
     }
 }
 
 async function storeNodesThroughProtobuf(
-    client: PoolClient,
+    client: IClient,
     repositoryData: RepositoryData,
     task: LionWebTask,
     bulkImport: PBBulkImport
@@ -323,7 +327,7 @@ async function storeNodesThroughProtobuf(
  * to the "neutral" format and invoke bulkImport. This choice has been made for performance reasons.
  */
 export async function performImportFromProtobuf(
-    client: PoolClient,
+    client: IClient,
     task: LionWebTask,
     bulkImport: PBBulkImport,
     repositoryData: RepositoryData
@@ -410,7 +414,7 @@ export async function performImportFromProtobuf(
 
         return { status: HttpSuccessCodes.Ok, success: true }
     } finally {
-        client.release(false)
+        // client.release(false)
     }
 }
 

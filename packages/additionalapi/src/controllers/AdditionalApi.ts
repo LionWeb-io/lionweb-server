@@ -87,8 +87,10 @@ export class AdditionalApiImpl implements AdditionalApi {
     }
 
     bulkImport = async (request: Request, response: Response): Promise<void> => {
-        await this.context.dbConnection.tx(async (task: LionWebTask) => {
+        const repositoryData = await this.context.dbConnection.tx(async (task: LionWebTask) => {
             const repositoryData = await getRepositoryData(task, request, "Dummy")
+            return repositoryData
+        })
             if (isParameterError(repositoryData)) {
                 lionwebResponse(response, HttpClientErrors.BadRequest, {
                     success: false,
@@ -97,7 +99,7 @@ export class AdditionalApiImpl implements AdditionalApi {
                 return
             }
             if (request.is(JSON_CONTENT_TYPE)) {
-                const result = await this.context.additionalApiWorker.bulkImport(task, repositoryData, request.body)
+                const result = await this.context.additionalApiWorker.bulkImport(repositoryData, request.body)
                 lionwebResponse(response, HttpSuccessCodes.Ok, {
                     success: result.success,
                     messages: [],
@@ -108,7 +110,6 @@ export class AdditionalApiImpl implements AdditionalApi {
                 const bulkImport = PBBulkImport.decode(data)
     
                 const result = await this.context.additionalApiWorker.bulkImport(
-                    task, 
                     repositoryData,
                     this.convertPBBulkImportToBulkImport(bulkImport)
                 )
@@ -120,7 +121,7 @@ export class AdditionalApiImpl implements AdditionalApi {
             } else {
                 throw new Error(`Content-type not recognized. Content-type: ${request.headers["content-type"]}`)
             }
-        })
+        
     }
 
     private convertPBBulkImportToBulkImport(pbBulkImport: PBBulkImport): BulkImport {
