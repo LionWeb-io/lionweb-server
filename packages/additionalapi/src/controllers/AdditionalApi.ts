@@ -1,9 +1,10 @@
+import { LionWebTask } from "@lionweb/server-database"
 import { getRepositoryData } from "@lionweb/server-dbadmin"
 import { Request, Response } from "express"
 import { AdditionalApiContext } from "../main.js"
-import { HttpClientErrors, HttpSuccessCodes, PROTOBUF_CONTENT_TYPE } from "@lionweb/server-shared"
+import { dbLogger, HttpClientErrors, HttpSuccessCodes, PROTOBUF_CONTENT_TYPE } from "@lionweb/server-shared"
 import { lionwebResponse } from "@lionweb/server-common"
-import { dbLogger, getIntegerParam, isParameterError } from "@lionweb/server-common"
+import { getIntegerParam, isParameterError } from "@lionweb/server-common"
 import { BulkImport, PBBulkImport } from "@lionweb/server-shared"
 import {
     LionWebId,
@@ -56,64 +57,71 @@ export class AdditionalApiImpl implements AdditionalApi {
             })
             return
         }
-        const repositoryData = await getRepositoryData(request)
-        if (isParameterError(repositoryData)) {
-            lionwebResponse(response, HttpClientErrors.BadRequest, {
-                success: false,
-                messages: [repositoryData.error]
-            })
-            return
-        } else {
-            const depthLimit = getIntegerParam(request, "depthLimit", Number.MAX_SAFE_INTEGER)
-            if (isParameterError(depthLimit)) {
-                lionwebResponse(response, HttpClientErrors.PreconditionFailed, {
+        await this.context.dbConnection.tx(async (task: LionWebTask) => {
+            const repositoryData = await getRepositoryData(task, request)
+            if (isParameterError(repositoryData)) {
+                lionwebResponse(response, HttpClientErrors.BadRequest, {
                     success: false,
-                    messages: [depthLimit.error]
+                    messages: [repositoryData.error]
                 })
+                return
             } else {
-                dbLogger.info("API.getNodeTree is " + idList)
-                const result = await this.context.additionalApiWorker.getNodeTree(repositoryData, idList, depthLimit)
-                lionwebResponse(response, HttpSuccessCodes.Ok, {
-                    success: true,
-                    messages: [],
-                    data: result.queryResult
-                })
+                const depthLimit = getIntegerParam(request, "depthLimit", Number.MAX_SAFE_INTEGER)
+                if (isParameterError(depthLimit)) {
+                    lionwebResponse(response, HttpClientErrors.PreconditionFailed, {
+                        success: false,
+                        messages: [depthLimit.error]
+                    })
+                } else {
+                    dbLogger.info("API.getNodeTree is " + idList)
+                    const result = await this.context.additionalApiWorker.getNodeTree(task, repositoryData, idList, depthLimit)
+                    lionwebResponse(response, HttpSuccessCodes.Ok, {
+                        success: true,
+                        messages: [],
+                        data: result.queryResult
+                    })
+                }
+                
             }
-        }
+        })
     }
 
     bulkImport = async (request: Request, response: Response): Promise<void> => {
-        const repositoryData = await getRepositoryData(request, "Dummy")
-        if (isParameterError(repositoryData)) {
-            lionwebResponse(response, HttpClientErrors.BadRequest, {
-                success: false,
-                messages: [repositoryData.error]
-            })
-            return
-        }
-        if (request.is(JSON_CONTENT_TYPE)) {
-            const result = await this.context.additionalApiWorker.bulkImport(repositoryData, request.body)
-            lionwebResponse(response, HttpSuccessCodes.Ok, {
-                success: result.success,
-                messages: [],
-                data: []
-            })
-        } else if (request.is(PROTOBUF_CONTENT_TYPE)) {
-            const data = new Uint8Array(request.body.buffer, request.body.byteOffset, request.body.byteLength)
-            const bulkImport = PBBulkImport.decode(data)
-
-            const result = await this.context.additionalApiWorker.bulkImport(
-                repositoryData,
-                this.convertPBBulkImportToBulkImport(bulkImport)
-            )
-            lionwebResponse(response, HttpSuccessCodes.Ok, {
-                success: result.success,
-                messages: [],
-                data: []
-            })
-        } else {
-            throw new Error(`Content-type not recognized. Content-type: ${request.headers["content-type"]}`)
-        }
+        const repositoryData = await this.context.dbConnection.tx(async (task: LionWebTask) => {
+            const repositoryData = await getRepositoryData(task, request, "Dummy")
+            return repositoryData
+        })
+            if (isParameterError(repositoryData)) {
+                lionwebResponse(response, HttpClientErrors.BadRequest, {
+                    success: false,
+                    messages: [repositoryData.error]
+                })
+                return
+            }
+            if (request.is(JSON_CONTENT_TYPE)) {
+                const result = await this.context.additionalApiWorker.bulkImport(repositoryData, request.body)
+                lionwebResponse(response, HttpSuccessCodes.Ok, {
+                    success: result.success,
+                    messages: [],
+                    data: []
+                })
+            } else if (request.is(PROTOBUF_CONTENT_TYPE)) {
+                const data = new Uint8Array(request.body.buffer, request.body.byteOffset, request.body.byteLength)
+                const bulkImport = PBBulkImport.decode(data)
+    
+                const result = await this.context.additionalApiWorker.bulkImport(
+                    repositoryData,
+                    this.convertPBBulkImportToBulkImport(bulkImport)
+                )
+                lionwebResponse(response, HttpSuccessCodes.Ok, {
+                    success: result.success,
+                    messages: [],
+                    data: []
+                })
+            } else {
+                throw new Error(`Content-type not recognized. Content-type: ${request.headers["content-type"]}`)
+            }
+        
     }
 
     private convertPBBulkImportToBulkImport(pbBulkImport: PBBulkImport): BulkImport {

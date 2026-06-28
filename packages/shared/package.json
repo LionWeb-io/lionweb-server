@@ -24,10 +24,12 @@
         "unpublish-local": "npm unpublish --force --registry http://localhost:4873",
         "republish-local": "npm run unpublish-local && npm run publish-local"
     },
-    "devDependencies": {},
     "dependencies": {
-        "@lionweb/json": "0.9.0-beta.3",
-        "source-map-support": "0.5.21",
-        "protobufjs":"8.0.0"
+        "@lionweb/json": "0.10.0-alpha.4",
+        "@logtape/file": "2.0.5",
+        "@logtape/logtape": "2.0.5",
+        "@logtape/pretty": "2.0.5",
+        "protobufjs": "8.6.3",
+        "source-map-support": "0.5.21"
     }
 }

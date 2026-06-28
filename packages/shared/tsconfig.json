@@ -6,6 +6,6 @@
         "resolveJsonModule": true,
         /* Enable importing .json files */
 //        "sourceRoot": "./src",
-        "strict": true
+//        "strict": true
     }
 }

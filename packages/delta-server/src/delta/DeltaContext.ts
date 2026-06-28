@@ -1,6 +1,6 @@
 import pgPromise from "pg-promise"
 import pg from "pg-promise/typescript/pg-subset.js"
-import { DbConnection } from "@lionweb/server-common"
+import { DbConnection } from "@lionweb/server-database"
 import { deltaProcessor } from "./DeltaProcessor.js"
 
 /**

@@ -1,4 +1,12 @@
-import { versiontToHttpResponseMessage } from "@lionweb/server-common"
+import {
+    DB_getAvailableIds,
+    DB_retrieveFullNodesFromIdList,
+    DB_retrievePartitionNodes,
+    SQL_currentRepoVersion,
+    SQL_retrieveFullNodesRecursive,
+    versionResultToResponse,
+    versiontToHttpResponseMessage
+} from "@lionweb/server-common"
 import {
     CreatePartitionsResponse,
     DeletePartitionsResponse,
@@ -6,20 +14,15 @@ import {
     HttpSuccessCodes,
     IdsResponse,
     ListPartitionsResponse,
+    requestLogger,
     ResponseMessage,
     RetrieveResponse,
-    StoreResponse
+    StoreResponse,
+    toJsonString,
+    traceLogger
 } from "@lionweb/server-shared"
-import {
-    EMPTY_CHUNKS,
-    LionWebTask,
-    nodesToChunk,
-    QueryReturnType,
-    RepositoryData,
-    requestLogger,
-    traceLogger,
-    SQL, DB,
-} from "@lionweb/server-common"
+import { EMPTY_CHUNKS, nodesToChunk, QueryReturnType } from "@lionweb/server-common"
+import { LionWebTask, RepositoryData} from "@lionweb/server-database"
 import { LionWebJsonChunk } from "@lionweb/json"
 import { BulkApiContext } from "../main.js"
 
@@ -34,7 +37,7 @@ export class BulkApiWorker {
     }
 
     async bulkPartitions(task: LionWebTask, repositoryData: RepositoryData): Promise<QueryReturnType<ListPartitionsResponse>> {
-        const result = await DB.retrievePartitionNodes(task, repositoryData)
+        const result = await DB_retrievePartitionNodes(task, repositoryData)
         return {
             status: HttpSuccessCodes.Ok,
             query: "query",
@@ -57,7 +60,7 @@ export class BulkApiWorker {
         requestLogger.info(`BulkApiWorker.createPartitions repo [${JSON.stringify(repositoryData)}]`)
         // TODO Optimize: This reuses the "getNodesFromIdList", but that retrieves full nodes, which is not needed here
 
-        const existingNodes = await DB.retrieveFullNodesFromIdListDB(
+        const existingNodes = await DB_retrieveFullNodesFromIdList(
             task,
             repositoryData,
             chunk.nodes.map(n => n.id)
@@ -92,7 +95,7 @@ export class BulkApiWorker {
         idList: string[]
     ): Promise<QueryReturnType<DeletePartitionsResponse>> => {
         // TODO Optimize: only need parent, all features are not needed, can be optimized.
-        const partitions = await DB.retrieveFullNodesFromIdListDB(task, repositoryData, idList)
+        const partitions = await DB_retrieveFullNodesFromIdList(task, repositoryData, idList)
         const issues: ResponseMessage[] = []
         partitions.forEach(part => {
             if (part.parent !== null) {
@@ -146,16 +149,15 @@ export class BulkApiWorker {
                 }
             }
         }
-
-        const [versionResult, nodes] = await task.multi(repositoryData, SQL.currentRepoVersionSQL() + SQL.retrieveFullNodesRecursiveSQL(nodeIdList, depthLimit))
-        requestLogger.info(`VERSION ${JSON.stringify(versionResult)}`)
+        const [versionResult, nodes] = await task.multi(repositoryData, SQL_currentRepoVersion() + SQL_retrieveFullNodesRecursive(nodeIdList, depthLimit))
+        requestLogger.info(`VERSION ${toJsonString(versionResult)}`)
         requestLogger.trace(`NODES ${JSON.stringify(nodes)}`)
         return {
             status: HttpSuccessCodes.Ok,
             query: "",
             queryResult: {
                 success: true,
-                messages: [SQL.versionResultToResponse(versionResult)],
+                messages: [versionResultToResponse(versionResult)],
                 chunk: nodesToChunk(nodes, repositoryData.repository.lionweb_version)
             }
         }
@@ -168,7 +170,7 @@ export class BulkApiWorker {
      */
     ids = async (task: LionWebTask, repositoryData: RepositoryData, count: number): Promise<QueryReturnType<IdsResponse>> => {
         requestLogger.info("Reserve Count ids " + count + " for " + repositoryData.clientId)
-        const result: string[] = await DB.getAvailableIds(task, repositoryData, count)
+        const result: string[] = await DB_getAvailableIds(task, repositoryData, count)
         return {
             status: HttpSuccessCodes.Ok,
             query: "",

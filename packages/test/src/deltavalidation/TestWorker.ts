@@ -1,9 +1,8 @@
 import { DeltaValidator } from "@lionweb/server-delta-definitions"
 import { ValidationResult } from "@lionweb/validation"
-import { assert } from "chai"
 import fs from "fs"
 import { DirectoryWorker } from "./DirectoryWalker.js"
-import { test } from "vitest";
+import { expect, test } from "vitest";
 
 export class TestWorker implements DirectoryWorker {
     validator =  new DeltaValidator(new ValidationResult())
@@ -19,7 +18,7 @@ export class TestWorker implements DirectoryWorker {
             this.validator.validationResult.issues.forEach(issue => {
                 console.log(`ISSIE ISSUE Issue ${issue.issueType}: ${issue.errorMsg()}`)
             })
-            assert(!this.validator.validationResult.hasErrors(), `Command ${file} has errors`)
+            expect(this.validator.validationResult.hasErrors(), `Command ${file} has errors`).toBeFalsy()
         })
     }
 }

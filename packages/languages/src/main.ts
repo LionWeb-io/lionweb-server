@@ -1,8 +1,10 @@
+import { DbConnection } from "@lionweb/server-database"
 import { LanguageRegistry } from "@lionweb/validation";
 import { Express } from "express"
 import pgPromise from "pg-promise"
 import pg from "pg-promise/typescript/pg-subset.js"
-import { DbConnection, requestLogger, runWithTry } from "@lionweb/server-common";
+import { runWithTry } from "@lionweb/server-common"
+import { requestLogger } from "@lionweb/server-shared"
 import { LanguageApiWorker } from "./controllers/LanguageApiWorker.js";
 import { LanguageApiImpl } from "./controllers/index.js";
 

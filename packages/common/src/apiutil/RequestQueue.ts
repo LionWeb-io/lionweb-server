@@ -1,4 +1,4 @@
-import { expressLogger } from "./logging.js"
+import { expressLogger } from "@lionweb/server-shared"
 
 /**
  * The RequestQueue keeps a queue of all requests done to the server and

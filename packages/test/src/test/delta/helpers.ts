@@ -66,20 +66,20 @@ export function reportHTML(CoverageMap: Map<CommandMessageKind | RequestMessageK
 </head>
 <table border="1">
 <thead>
-<tr><th>Command</th><th>Server</th><th>Freon</th><th>Freon</th><th>Tests Ok</th><th>Expected Errors</th></tr>
+<tr><th>Command</th><th>Server</th><th>Tests Ok</th><th>Expected Errors Tested</th></tr>
 </thead>
 <tbody>
 `
     for (const entry of CoverageMap.entries()) {
         const ok = entry[1].receivedEvents > 0 ? "✅" : ""
-        result += `<tr><td class="CMD"> ${entry[0]} </td><td> ${ok} </td><td> </td><td> </td><td> ${entry[1].receivedEvents} </td>
+        result += `<tr><td class="CMD"> ${entry[0]} </td><td> ${ok}  </td><td> ${entry[1].receivedEvents} </td>
             <td class="ERR"> ${entry[1].receivedErrors.map((e) => `${e}` + "<br/>").join(" ")} </td><tr>\n`
     }
     result += `</tbody></table>
 </body>
 </html>
 `
-    console.log(result)
+    // console.log(result)
     fs.writeFileSync("./lionweb-server-test.html", result)
 }
 

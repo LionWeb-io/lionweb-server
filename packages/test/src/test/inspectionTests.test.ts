@@ -1,14 +1,9 @@
 import { HttpSuccessCodes } from "@lionweb/server-shared"
 import { RepositoryClient } from "@lionweb/server-http-client"
 import { LionWebJsonChunk } from "@lionweb/json"
-import { afterAll } from "vitest"
+import { afterAll, describe, it, beforeAll, beforeEach, expect } from "vitest"
 import { readModel } from "./utils.js"
 
-import { assert } from "chai"
-const { deepEqual } = assert
-import sm from "source-map-support"
-
-sm.install()
 const DATA: string = "./data/"
 
 describe("Repository tests for inspection APIs", () => {
@@ -59,7 +54,7 @@ describe("Repository tests for inspection APIs", () => {
     it("nodes by language", async () => {
         const result = await client.inspection.nodesByLanguage()
         result.forEach(e => e.ids.sort((a, b) => a.localeCompare(b)))
-        deepEqual(result, [
+        expect(result).toEqual([
             {
                 language: "-default-key-FileSystem",
                 ids: [
@@ -89,7 +84,7 @@ describe("Repository tests for inspection APIs", () => {
     it("nodes by classifier", async () => {
         const result = await client.inspection.nodesByClassifier()
         result.forEach(e => e.ids.sort((a, b) => a.localeCompare(b)))
-        deepEqual(result, [
+        expect(result).toEqual([
             {
                 language: "-default-key-FileSystem",
                 classifier: "Disk-key",

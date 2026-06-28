@@ -2,8 +2,8 @@
 import { LionWebJsonChunk, LionWebJsonNode } from "@lionweb/json"
 import { LionWebJsonChunkWrapper } from "@lionweb/json-utils"
 import { KeyValuePair, LionWebDeltaJsonChunk } from "@lionweb/server-delta-shared"
+import { deltaLogger } from "@lionweb/server-shared"
 import { LionWebValidator, ValidationIssue } from "@lionweb/validation"
-import { deltaLogger } from "../apiutil/index.js"
 
 let validator = new LionWebValidator({}, null)
 
@@ -18,6 +18,10 @@ export function isLionWebJsonNode(o: unknown): o is LionWebJsonNode {
     return !validator.validationResult.hasErrors()
 }
 
+/**
+ * 
+ * @param deltaChunk
+ */
 export function isProperTree(deltaChunk: LionWebDeltaJsonChunk): ValidationIssue[] {
     validator = new LionWebValidator({}, null)
     // Create a full LionWebChunk for the validator
@@ -38,7 +42,7 @@ export interface InternalQueryError extends Error {
 }
 
 export function isInternalQueryError(o: unknown): o is InternalQueryError {
-    return (o as InternalQueryError)?.name !== "InternalQueryError"
+    return (o as InternalQueryError)?.name === "InternalQueryError"
 }
 
 export function InternalQueryError(msg: string, data?: KeyValuePair[]): InternalQueryError {

@@ -1,44 +1,9 @@
-import { LionWebVersionType } from "@lionweb/server-shared"
+import { dbLogger, LionWebVersionType, queryLogger, requestLogger, toJsonString, traceLogger } from "@lionweb/server-shared"
 import pgPromise from "pg-promise"
-import pg from "pg-promise/typescript/pg-subset.js"
-import { dbLogger, queryLogger, traceLogger } from "../apiutil/index.js"
+import { IClient } from "pg-promise/typescript/pg-subset.js"
 import { Pool } from "pg"
 import { LionWebTask } from "./LionWebTask.js"
-
-/**
- * Data determining the repository and user for which a command should be executed.
- */
-export type RepositoryData = {
-    clientId: string
-    repository: RepositoryInfo
-}
-
-/**
- * Indicates the configuration of a repository that may have yet to be created.
- */
-export type RepositoryInfo = {
-    repository_name: string
-    schema_name: string
-    history: boolean
-    lionweb_version: LionWebVersionType
-    created?: string
-}
-
-/**
- * Adds a SET search_path in from of the query to make it work in the context of the schema of the repository requested.
- * Also checks whether the required schema exists by calling the PSQL `existsschema` function.
- * @param query             The query to adapt
- * @param repositoryData    The data of the repository on which the query should work
- * @returns                 The original query preceded by the set path and exits schema queries
- */
-export function addRepositorySchema(query: string, repositoryData: RepositoryData) {
-    if (!query.startsWith("SET search_path TO")) {
-        query =
-            `SET search_path TO '${repositoryData.repository.schema_name}', 'public';
-                select public.existsschema('${repositoryData.repository.schema_name}'::text);\n` + query
-    }
-    return query
-}
+import { addRepositorySchema, RepositoryData } from "./Repositories.js"
 
 /**
  * All database queries will go through an instance of this class.
@@ -46,13 +11,13 @@ export function addRepositorySchema(query: string, repositoryData: RepositoryDat
  * Current tweak: add the repository schema for each query
  */
 export class DbConnection {
-    postgresConnection: pgPromise.IDatabase<object, pg.IClient>
-    pgDatabaseConnection: pgPromise.IDatabase<object, pg.IClient>
-    private _pgp: pgPromise.IMain<object, pg.IClient>
+    postgresConnection: pgPromise.IDatabase<object, IClient>
+    pgDatabaseConnection: pgPromise.IDatabase<object, IClient>
+    private _pgp: pgPromise.IMain<object, IClient>
     pgPool: Pool
     transactionMode: object
 
-    set pgp(value: pgPromise.IMain<object, pg.IClient>) {
+    set pgp(value: pgPromise.IMain<object, IClient>) {
         this._pgp = value
     }
 
@@ -71,7 +36,7 @@ export class DbConnection {
 
     async queryWithoutRepository(query: string) {
         traceLogger.info("DbConnection.queryWithoutRepository")
-        queryLogger.info(`DbConnection.queryWithoutRepository ${query}`)
+        // requestLogger.info(`DbConnection.queryWithoutRepository ${query}`)
         return await this.pgDatabaseConnection.query(query)
     }
 
@@ -146,15 +111,15 @@ export class DbConnection {
      * @see  IBaseProtocol.tx
      */
     async tx<T>(body: (tsk: LionWebTask) => Promise<T>): Promise<T> {
-        traceLogger.info("DbConnection.tx start with mode " + JSON.stringify(this.transactionMode))
+        dbLogger.debug("DbConnection.tx start with mode " + toJsonString(this.transactionMode))
         try {
             return await this.pgDatabaseConnection.tx({ mode: this.transactionMode as never }, async task => {
-                const tsk = new LionWebTask(task)
+                const lionwebTask = new LionWebTask(task)
                 traceLogger.info("DbConnection.tx return ")
-                return await body(tsk)
+                return await body(lionwebTask)
             })
         } catch (e) {
-            dbLogger.error("DbConnection.tx TRANSACTION ERROR " + JSON.stringify(e))
+            dbLogger.error("DbConnection.tx TRANSACTION ERROR " + toJsonString(e))
             throw e
         }
     }

@@ -1,13 +1,8 @@
 import { HttpSuccessCodes } from "@lionweb/server-shared"
 import { RepositoryClient } from "@lionweb/server-http-client"
 import { LionWebJsonChunk } from "@lionweb/json"
-import * as string_decoder from "node:string_decoder"
-import { afterEach } from "vitest"
 import { readModel } from "./utils.js"
-
-import { assert } from "chai"
-import sm from "source-map-support"
-sm.install()
+import { describe, afterEach, beforeEach, it, expect } from "vitest"
 const DATA: string = "./data/"
 
 describe("Repository tests", () => {
@@ -21,9 +16,12 @@ describe("Repository tests", () => {
         } else {
             console.log("database created: " + JSON.stringify(createResponse.body))
         }
-        await t.dbAdmin.deleteRepository("default")
-        await t.dbAdmin.createRepository("default", true, "2023.1")
-        await t.bulk.createPartitions(readModel(DATA + "Disk_A_partition.json") as LionWebJsonChunk)
+        const delRepo = await t.dbAdmin.deleteRepository("default")
+        console.log(`delRepo ${JSON.stringify(delRepo)}`)
+        const creRepo = await t.dbAdmin.createRepository("default", true, "2023.1")
+        console.log(`creaRepo ${JSON.stringify(creRepo)}`)
+        const createPart = await t.bulk.createPartitions(readModel(DATA + "Disk_A_partition.json") as LionWebJsonChunk)
+        console.log(`createPart ${JSON.stringify(createPart)}`)
     })
 
     afterEach( async function()  {
@@ -41,7 +39,7 @@ describe("Repository tests", () => {
         for (const file of files) {
             const changesChunk = readModel(file) as LionWebJsonChunk
             const result = await t.bulk.store(changesChunk)
-            assert.isTrue(result.status === HttpSuccessCodes.Ok, "Incorrect HTTP status: something went wrong")
+            expect(result.status, "Incorrect HTTP status: something went wrong").toEqual(HttpSuccessCodes.Ok)
         }
     }
 })

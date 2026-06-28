@@ -1,8 +1,10 @@
+import { DbConnection } from "@lionweb/server-database"
+import { requestLogger } from "@lionweb/server-shared"
 import { Express } from "express"
 import pgPromise from "pg-promise"
 import pg from "pg-promise/typescript/pg-subset.js"
 
-import { DbConnection, requestLogger, runWithTry } from "@lionweb/server-common"
+import { runWithTry } from "@lionweb/server-common"
 import { createInspectionApiWorker, InspectionApiWorker } from "./database/InspectionApiWorker.js"
 import { createInspectionApi, InspectionApi } from "./controllers/InspectionApi.js"
 import { InspectionQueries } from "./database/InspectionQueries.js"

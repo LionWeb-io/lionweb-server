@@ -1,6 +1,6 @@
-import { RepositoryData, requestLogger } from "@lionweb/server-common";
+import { LionWebTask, RepositoryData } from "@lionweb/server-database"
 import { AdditionalApiContext } from "../main.js";
-import { BulkImport } from "@lionweb/server-shared"
+import { BulkImport, requestLogger } from "@lionweb/server-shared"
 
 /**
  * Implementations of the additional non-LionWeb methods.
@@ -8,10 +8,10 @@ import { BulkImport } from "@lionweb/server-shared"
 export class AdditionalApiWorker {
     constructor(private context: AdditionalApiContext) {
     }
-    getNodeTree = async (repositoryData: RepositoryData, nodeIds: string[], depthLimit: number)=> {
+    getNodeTree = async (task: LionWebTask, repositoryData: RepositoryData, nodeIds: string[], depthLimit: number)=> {
 
         requestLogger.info("AdditionalApiWorker.getNodeTree for " + nodeIds + " with depth " + depthLimit)
-        return await this.context.queries.getNodeTree(repositoryData, nodeIds, depthLimit)
+        return await this.context.queries.getNodeTree(task, repositoryData, nodeIds, depthLimit)
     }
 
     /**
@@ -26,7 +26,7 @@ export class AdditionalApiWorker {
      */
     bulkImport = async (repositoryData: RepositoryData, bulkImport: BulkImport)=> {
         requestLogger.info("AdditionalApiWorker.bulkImport")
-        return await this.context.queries.bulkImport(repositoryData, bulkImport)
+        return await this.context.queries.bulkImport(this.context, repositoryData, bulkImport)
     }
 
 }

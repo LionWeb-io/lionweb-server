@@ -13,7 +13,7 @@ export const DeltaResponseMessageKinds = [
     "InformAboutChangingPartitionsResponse",
     "SubscribeToPartitionContentsResponse",
     "UnsubscribeFromPartitionContentsResponse",
-    "ChunkedQueryResponse",
+    "ContinuedQueryResponse",
     "SignOnResponse",
     "SignOffResponse",
     "ReconnectResponse",
@@ -64,13 +64,13 @@ export type UnsubscribeFromPartitionContentsResponse = DeltaResponse & {
 };
 
 /**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-ChunkedQueryResponse
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#qry-ContinuedQueryResponse
  */
-export type ChunkedQueryResponse = DeltaResponse & {
+export type ContinuedQueryResponse = DeltaResponse & {
     chunk: LionWebDeltaJsonChunk;
     continuedChunkCompleted: Boolean;
     continuedChunkSequenceNumber: Number;
-    messageKind: "ChunkedQueryResponse";
+    messageKind: "ContinuedQueryResponse";
 };
 
 /**

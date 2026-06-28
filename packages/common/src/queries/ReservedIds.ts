@@ -1,7 +1,7 @@
+import { LionWebId } from "@lionweb/json"
+import { LionWebTask, RepositoryData } from "@lionweb/server-database"
 import { TableHelpers } from "../main.js"
-import { sqlArrayFromNodeIdArray } from "./index.js"
-import { RepositoryData } from "../database/DbConnection.js"
-import { LionWebTask } from "../database/LionWebTask.js"
+import { sqlArrayFromNodeIdArray } from "./PgHelpers.js"
 import { NODES_TABLE, RESERVED_IDS_TABLE } from "../database/TableNames.js"
 import { ReservedIdRecord } from "../database/TableTypes.js"
 
@@ -10,7 +10,7 @@ import { ReservedIdRecord } from "../database/TableTypes.js"
  * @param repositoryData
  * @param nodeIdList
  */
-function retrieveReservedNodesFromIdListSQL(repositoryData: RepositoryData, nodeIdList: string[]): string {
+export function SQL_retrieveReservedNodesFromIdList(repositoryData: RepositoryData, nodeIdList: string[]): string {
     const sqlArray = sqlArrayFromNodeIdArray(nodeIdList)
     // language=SQL
     return `-- Retrieve node tree
@@ -24,7 +24,7 @@ function retrieveReservedNodesFromIdListSQL(repositoryData: RepositoryData, node
  * Return the subset of _nodeIdList_ that are currently in use in the repository.
  * @param nodeIdList The list of node is's to be checked.
  */
-function retrieveNodeIdsInUseSQL(nodeIdList: string[]): string {
+export function SQL_retrieveNodeIdsInUse(nodeIdList: string[]): string {
     // This works ok as along as you don't mix old (deleted) nodes with newer node,
     // because it allows node id's to be reused.
     const sqlArray = sqlArrayFromNodeIdArray(nodeIdList)
@@ -40,7 +40,7 @@ function retrieveNodeIdsInUseSQL(nodeIdList: string[]): string {
  * @param repositoryData
  * @param nodeIdList
  */
-function insertReservedNodeIdsSQL(repositoryData: RepositoryData, nodeIdList: string[]): string {
+export function SQL_insertReservedNodeIds(repositoryData: RepositoryData, nodeIdList: string[]): string {
     const insertReservation: ReservedIdRecord[] = nodeIdList.map(id => ({
         node_id: id,
         client_id: repositoryData.clientId
@@ -52,23 +52,23 @@ function insertReservedNodeIdsSQL(repositoryData: RepositoryData, nodeIdList: st
     return ""
 }
 
-async function nodeIdsInUseDB(task: LionWebTask, repositoryData: RepositoryData, nodeIds: string[]): Promise<{ id: string }[]> {
+export async function DB_nodeIdsInUse(task: LionWebTask, repositoryData: RepositoryData, nodeIds: string[]): Promise<LionWebId[]> {
     if (nodeIds.length > 0) {
-        const query = retrieveNodeIdsInUseSQL(nodeIds)
+        const query = SQL_retrieveNodeIdsInUse(nodeIds)
         const result = (await task.query(repositoryData, query)) as { id: string }[]
-        return result
+        return result.map(obj => obj.id)
     } else {
         return []
     }
 }
 
-async function reservedNodeIdsByOtherClientDB(
+export async function DB_reservedNodeIdsByOtherClient(
     task: LionWebTask,
     repositoryData: RepositoryData,
     addedNodes: string[]
 ): Promise<ReservedIdRecord[]> {
     if (addedNodes.length > 0) {
-        const query = retrieveReservedNodesFromIdListSQL(repositoryData, addedNodes)
+        const query = SQL_retrieveReservedNodesFromIdList(repositoryData, addedNodes)
         const result = (await task.query(repositoryData, query)) as ReservedIdRecord[]
         return result
     } else {
@@ -76,32 +76,3 @@ async function reservedNodeIdsByOtherClientDB(
     }
 }
 
-export const RESERVED_IDS_SQL = {
-    insertReservedNodeIdsSQL,
-    retrieveReservedNodesFromIdListSQL,
-    retrieveNodeIdsInUseSQL,
-}
-
-export const RESERVED_IDS_DB = {
-    reservedNodeIdsByOtherClientDB,
-    nodeIdsInUseDB
-}
-
-// export async function makeNodeIdsReservation(
-//     task: LionWebTask,
-//     repositoryData: RepositoryData,
-//     idsAdded: string[]
-// ): Promise<QueryReturnType<LionwebResponse>> {
-//     if (idsAdded.length > 0) {
-//     const query = insertReservedNodeIdsSQL(repositoryData, idsAdded)
-//     await task.query(repositoryData, query)
-//     return {
-//         status: HttpSuccessCodes.Ok,
-//         query: query,
-//         queryResult: {
-//             success: true,
-//             messages: []
-//         }
-//     }
-// }
-// }

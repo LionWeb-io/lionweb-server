@@ -1,5 +1,5 @@
+import { LionWebJsonNode } from "@lionweb/json"
 import { DeltaClient } from "@lionweb/server-delta-client"
-import { isErrorEvent, isErrorResponse } from "@lionweb/delta-server"
 import {
     SignOnRequest,
     AddPropertyCommand,
@@ -38,7 +38,24 @@ import {
     ReconnectRequest,
     InformAboutChangingPartitionsRequest,
     SubscribeToChangingPartitionsRequest,
-    CompositeCommand
+    CompositeCommand,
+    MoveChildFromOtherContainmentCommand,
+    MoveChildFromOtherContainmentInSameParentCommand,
+    ReplaceChildCommand,
+    MoveAndReplaceChildFromOtherContainmentCommand,
+    MoveAndReplaceChildFromOtherContainmentInSameParentCommand,
+    AddAnnotationCommand,
+    DeleteAnnotationCommand,
+    isErrorEvent,
+    isErrorResponse,
+    ReplaceAnnotationCommand,
+    MoveAnnotationFromOtherParentCommand,
+    MoveAnnotationInSameParentCommand,
+    MoveAndReplaceAnnotationFromOtherParentCommand,
+    MoveAndReplaceAnnotationInSameParentCommand,
+    MoveAndReplaceChildInSameContainmentCommand,
+    MoveChildInSameContainmentCommand,
+    ContinuedCommand
 } from "@lionweb/server-delta-shared"
 import { waitFor } from "./delta/helpers.js"
 import {} from "./utils.js"
@@ -57,9 +74,18 @@ export type NewChild = {
     cls: LionWebJsonMetaPointer
     parent: LionWebId
     containment: LionWebJsonMetaPointer
+    index: number,
     props: PropValue[]
 }
 export type PropValue = { prop: LionWebJsonMetaPointer; value: string }
+
+export type AddAnnotationType = {
+    id: LionWebId
+    cls: LionWebJsonMetaPointer
+    parent: LionWebId
+    index: number,
+    props: PropValue[]
+}
 
 
 export type DeleteChildType = {
@@ -74,19 +100,16 @@ export type AddReferenceType = {
     index: number
     target: LionWebId
     resolveInfo: string
-    // newTarget: LionWebId
-    // newResolveInfo: string
     reference: LionWebJsonMetaPointer
 }
 
 /**
- * Test utility class to easily send commands to the server
+ * Test utility class to easily ctreate and send commands or requests from a client to the server
  */
 export class Commands {
-    /**
-     * The client used to send the commands
-     */
     constructor() {}
+
+    nodes: LionWebJsonNode[] = []
 
     signOnRequest = (client: DeltaClient, repo: string): DeltaRequest => {
         const request: SignOnRequest = {
@@ -114,6 +137,9 @@ export class Commands {
             messageKind: "ReconnectRequest",
             queryId: "",
             participationId: participationId,
+            clientId: "",
+            deltaProtocolVersion: "2023.1",
+            repositoryId: "",
             additionalInfos: [],
             lastReceivedSequenceNumber: 0
         }
@@ -209,7 +235,7 @@ export class Commands {
         const request: GetAvailableIdsRequest = {
             messageKind: "GetAvailableIdsRequest",
             queryId: "",
-            count: 25,
+            count: 2,
             additionalInfos: []
         }
         return client.sendRequest(request)
@@ -273,48 +299,203 @@ export class Commands {
     }
 
     addPartitionCmd = (client: DeltaClient, partition: PartitionType): AddPartitionCommand => {
+        const newNode: LionWebJsonNode = {
+            id: partition.id,
+            parent: null,
+            properties: partition.properties ?? [],
+            containments: [],
+            references: [],
+            classifier: partition.classifier,
+            annotations: []
+        }
+        this.nodes.push(newNode)
         const command: AddPartitionCommand = {
             messageKind: "AddPartition",
             commandId: `command-id-${queryId++}`,
-            newPartition: {
-                nodes: [
-                    {
-                        id: partition.id,
-                        parent: null,
-                        properties: partition.properties ?? [],
-                        containments: [],
-                        references: [],
-                        classifier: partition.classifier,
-                        annotations: []
-                    }
-                ]
-            },
+            newPartition: { nodes: [newNode] },
             additionalInfos: []
         }
         return command
     }
 
-    addPartition = (client: DeltaClient, partition: PartitionType): DeltaCommand => {
-        return client.sendCommand(this.addPartitionCmd(client, partition))
+    addFullPartitionCmd = (client: DeltaClient, partition: LionWebJsonNode[]): AddPartitionCommand => {
+        const command: AddPartitionCommand = {
+            messageKind: "AddPartition",
+            commandId: `command-id-${queryId++}`,
+            newPartition: { nodes: partition },
+            additionalInfos: []
+        }
+        return command
     }
 
-    deletePartition = (client: DeltaClient, partition: LionWebId): DeltaCommand => {
+    addFullPartition = (client: DeltaClient, partition: LionWebJsonNode[]): AddPartitionCommand => {
+        return client.sendCommand(this.addFullPartitionCmd(client, partition)) as AddPartitionCommand
+    }
+
+    addPartition = (client: DeltaClient, partition: PartitionType): AddPartitionCommand => {
+        return client.sendCommand(this.addPartitionCmd(client, partition)) as AddPartitionCommand
+    }
+
+    deletePartition = (client: DeltaClient, partition: LionWebId): DeletePartitionCommand => {
         const command: DeletePartitionCommand = {
             messageKind: "DeletePartition",
             commandId: `command-id-${queryId++}`,
             deletedPartition: partition,
             additionalInfos: []
         }
-        return client.sendCommand(command)
+        return client.sendCommand(command) as DeletePartitionCommand
     }
 
-    addChildCmd = (client: DeltaClient, child: NewChild, extra?: Partial<AddChildCommand>): DeltaCommand => {
-        const command: AddChildCommand = {
-            messageKind: "AddChild",
+    moveChildFromOtherContainment = (client: DeltaClient, params: Partial<MoveChildFromOtherContainmentCommand>): DeltaCommand => {
+        const command: MoveChildFromOtherContainmentCommand = {
+            messageKind: "MoveChildFromOtherContainment",
+            commandId: `command-id-${queryId++}`,
+            movedChild: params.movedChild,
+            oldContainment: params.oldContainment,
+            oldIndex: params.oldIndex,
+            oldParent: params.oldParent,
+            newContainment: params.newContainment,
+            newIndex: params.newIndex,
+            newParent: params.newParent,
+            additionalInfos: [{ kind: "info", message: "a message", data: {} }]
+        }
+        return client.sendCommand(command) as MoveChildFromOtherContainmentCommand
+    }
+
+    moveChildFromOtherContainmentInSameParent = (
+        client: DeltaClient,
+        params: Partial<MoveChildFromOtherContainmentInSameParentCommand>
+    ): DeltaCommand => {
+        const command: MoveChildFromOtherContainmentInSameParentCommand = {
+            messageKind: "MoveChildFromOtherContainmentInSameParent",
+            commandId: `command-id-${queryId++}`,
+            parent: params.parent,
+            movedChild: params.movedChild,
+            oldContainment: params.oldContainment,
+            oldIndex: params.oldIndex,
+            newContainment: params.newContainment,
+            newIndex: params.newIndex,
+            additionalInfos: []
+        }
+        return client.sendCommand(command) as MoveChildFromOtherContainmentInSameParentCommand
+    }
+
+    moveChildInSameContainment = (
+        client: DeltaClient,
+        containment: LionWebJsonMetaPointer,
+        movedChild: LionWebJsonNode,
+        oldIndex: number,
+        newIndex: number
+    ): MoveChildInSameContainmentCommand => {
+        const command: MoveChildInSameContainmentCommand = {
+            messageKind: "MoveChildInSameContainment",
+            commandId: `command-id-${queryId++}`,
+            parent: movedChild.parent,
+            movedChild: movedChild.id,
+            containment: containment,
+            oldIndex: oldIndex,
+            newIndex: newIndex,
+            additionalInfos: []
+        }
+        return client.sendCommand(command) as MoveChildInSameContainmentCommand
+    }
+    
+    moveAndReplaceChildInSameContainment = (
+        client: DeltaClient,
+        containment: LionWebJsonMetaPointer,
+        movedChild: LionWebJsonNode,
+        oldIndex: number,
+        offset: number,
+        replaceChild: LionWebId
+    ): MoveAndReplaceChildInSameContainmentCommand => {
+    const command: MoveAndReplaceChildInSameContainmentCommand = {
+        messageKind: "MoveAndReplaceChildInSameContainment",
+        commandId: `command-id-${queryId++}`,
+        parent: movedChild.parent,
+        movedChild: movedChild.id,
+        containment: containment,
+        oldIndex: oldIndex,
+        indexOffset: offset,
+        replacedChild: replaceChild,
+        additionalInfos: []
+    }
+    return client.sendCommand(command) as MoveAndReplaceChildInSameContainmentCommand
+}
+
+    MoveAndReplaceChildInSameContainment  = (
+        client: DeltaClient,
+        containment: LionWebJsonMetaPointer,
+        movedChild: LionWebJsonNode,
+        oldIndex: number,
+        offset: number,
+        replacedChild: LionWebId
+    ): MoveAndReplaceChildInSameContainmentCommand => {
+        const command: MoveAndReplaceChildInSameContainmentCommand = {
+            messageKind: "MoveAndReplaceChildInSameContainment",
+            commandId: `command-id-${queryId++}`,
+            parent: movedChild.parent,
+            movedChild: movedChild.id,
+            containment: containment,
+            oldIndex: oldIndex,
+            indexOffset: offset,
+            replacedChild: replacedChild,
+            additionalInfos: []
+        }
+        return client.sendCommand(command) as MoveAndReplaceChildInSameContainmentCommand
+    }
+
+    moveAndReplaceChildFromOtherContainment = (
+        client: DeltaClient,
+        params: Partial<MoveAndReplaceChildFromOtherContainmentCommand>
+    ): DeltaCommand => {
+        const command: MoveAndReplaceChildFromOtherContainmentCommand = {
+            messageKind: "MoveAndReplaceChildFromOtherContainment",
+            commandId: `command-id-${queryId++}`,
+            movedChild: params.movedChild,
+            oldParent: params.oldParent,
+            oldContainment: params.oldContainment,
+            oldIndex: params.oldIndex,
+            newParent: params.newParent,
+            newContainment: params.newContainment,
+            newIndex: params.newIndex,
+            replacedChild: params.replacedChild,
+            additionalInfos: []
+        }
+        return client.sendCommand(command) as MoveAndReplaceChildFromOtherContainmentCommand
+    }
+
+    moveAndReplaceChildFromOtherContainmentInSameParent = (
+        client: DeltaClient,
+        params: Partial<MoveAndReplaceChildFromOtherContainmentInSameParentCommand>
+    ): MoveAndReplaceChildFromOtherContainmentInSameParentCommand => {
+        const command: MoveAndReplaceChildFromOtherContainmentInSameParentCommand = {
+            messageKind: "MoveAndReplaceChildFromOtherContainmentInSameParent",
+            commandId: `command-id-${queryId++}`,
+            movedChild: params.movedChild,
+            parent: params.parent,
+            oldContainment: params.oldContainment,
+            oldIndex: params.oldIndex,
+            newContainment: params.newContainment,
+            newIndex: params.newIndex,
+            replacedChild: params.replacedChild,
+            additionalInfos: []
+        }
+        return client.sendCommand(command) as MoveAndReplaceChildFromOtherContainmentInSameParentCommand
+    }
+
+    replaceChildCmd = (
+        client: DeltaClient,
+        child: NewChild,
+        replacedChild: LionWebId,
+        extra?: Partial<ReplaceChildCommand>
+    ): ReplaceChildCommand => {
+        const command: ReplaceChildCommand = {
+            messageKind: "ReplaceChild",
             commandId: `command-id-${queryId++}`,
             containment: child.containment,
-            index: 0,
+            index: child.index,
             parent: child.parent,
+            replacedChild: replacedChild,
             newChild: {
                 nodes: [
                     {
@@ -338,6 +519,38 @@ export class Commands {
         return command
     }
 
+    replaceChild = (client: DeltaClient, child: NewChild, replacedChild: LionWebId, extra?: Partial<ReplaceChildCommand>): DeltaCommand => {
+        return client.sendCommand(this.replaceChildCmd(client, child, replacedChild, extra))
+    }
+
+    addChildCmd = (client: DeltaClient, child: NewChild, extra?: Partial<AddChildCommand>): DeltaCommand => {
+        const command: AddChildCommand = {
+            messageKind: "AddChild",
+            commandId: `command-id-${queryId++}`,
+            containment: child.containment,
+            // TODO add to NewChild
+            index: child.index,
+            parent: child.parent,
+            newChild: {
+                nodes: [
+                    {
+                        id: child.id,
+                        parent: child.parent,
+                        properties: child.props.map(p => {
+                            return { property: p.prop, value: p.value }
+                        }),
+                        containments: [],
+                        references: [],
+                        classifier: child.cls,
+                        annotations: []
+                    }
+                ]
+            },
+            additionalInfos: []
+        }
+        return command
+    }
+
     addChild = (client: DeltaClient, child: NewChild, extra?: Partial<AddChildCommand>): DeltaCommand => {
         return client.sendCommand(this.addChildCmd(client, child, extra))
     }
@@ -349,7 +562,7 @@ export class Commands {
             parent: addRef.id,
             reference: addRef.reference,
             index: addRef.index,
-            newTarget: addRef.target,
+            newReference: addRef.target,
             newResolveInfo: addRef.resolveInfo,
             additionalInfos: []
         }
@@ -366,9 +579,9 @@ export class Commands {
             parent: addRef.parent,
             reference: addRef.reference,
             index: addRef.index ?? 0,
-            oldTarget: addRef.oldTarget,
+            oldReference: addRef.oldReference,
             oldResolveInfo: addRef.oldResolveInfo,
-            newTarget: addRef.newTarget,
+            newReference: addRef.newReference,
             newResolveInfo: addRef.newResolveInfo,
             additionalInfos: []
         }
@@ -381,7 +594,7 @@ export class Commands {
             commandId: `command-id-${queryId++}`,
             parent: ref.parent,
             reference: ref.reference,
-            deletedTarget: ref.deletedTarget,
+            deletedReference: ref.deletedReference,
             deletedResolveInfo: ref.deletedResolveInfo,
             index: ref.index,
             additionalInfos: []
@@ -444,13 +657,16 @@ export class Commands {
         return tmp
     }
     responseFor = async (client: DeltaClient, query: DeltaRequest | DeltaAdminRequest): Promise<DeltaResponse | DeltaAdminResponse> => {
-        return await waitFor<DeltaResponse | DeltaAdminResponse>(
+        console.log(`WAIT ${client.clientId}  ${JSON.stringify(query)}`)
+        const result = await waitFor<DeltaResponse | DeltaAdminResponse>(
             () => client.receivedResponses.get(query.queryId),
             result => result === undefined,
             50,
             10,
             `query ${query.queryId} ${query.messageKind}`
         )
+        console.log(`${client.receivedMessageHistory}`)
+        return result
     }
     errorFor = async (client: DeltaClient, command: MessageFromClient): Promise<string> => {
         if (isDeltaCommand(command)) {
@@ -479,6 +695,175 @@ export class Commands {
             } else {
                 return response.messageKind
             }
+        }
+    }
+
+    addAnnotationCmd = (client: DeltaClient, annotation: AddAnnotationType, extra?: Partial<AddAnnotationCommand>): AddAnnotationCommand => {
+        const command: AddAnnotationCommand = {
+            messageKind: "AddAnnotation",
+            commandId: `command-id-${queryId++}`,
+            index: 0,
+            parent: annotation.parent,
+            newAnnotation: {
+                nodes: [
+                    {
+                        id: annotation.id,
+                        parent: annotation.parent,
+                        properties: annotation.props.map(p => {
+                            return { property: p.prop, value: p.value }
+                        }),
+                        containments: [],
+                        references: [],
+                        classifier: annotation.cls,
+                        annotations: []
+                    }
+                ]
+            },
+            additionalInfos: []
+        }
+        return command
+    }
+
+    addAnnotation = (client: DeltaClient, annotation: AddAnnotationType, extra?: Partial<AddAnnotationCommand>): AddAnnotationCommand => {
+        return client.sendCommand(this.addAnnotationCmd(client, annotation, extra)) as AddAnnotationCommand
+    }
+
+    replaceAnnotation = (
+        client: DeltaClient,
+        replaced: LionWebId,
+        annotation: AddAnnotationType,
+        extra?: Partial<AddAnnotationCommand>
+    ): ReplaceAnnotationCommand => {
+        const command: ReplaceAnnotationCommand = {
+            messageKind: "ReplaceAnnotation",
+            commandId: `command-id-${queryId++}`,
+            index: 0,
+            parent: annotation.parent,
+            replacedAnnotation: replaced,
+            newAnnotation: {
+                nodes: [
+                    {
+                        id: annotation.id,
+                        parent: annotation.parent,
+                        properties: annotation.props.map(p => {
+                            return { property: p.prop, value: p.value }
+                        }),
+                        containments: [],
+                        references: [],
+                        classifier: annotation.cls,
+                        annotations: []
+                    }
+                ]
+            },
+            additionalInfos: []
+        }
+        return client.sendCommand(command) as ReplaceAnnotationCommand
+    }
+
+    moveAnnotationFromOther = (
+        client: DeltaClient,
+        annotation: LionWebId,
+        oldIndex: number,
+        oldParent: LionWebId,
+        newIndex: number,
+        newParent: LionWebId
+    ): MoveAnnotationFromOtherParentCommand => {
+        const command: MoveAnnotationFromOtherParentCommand = {
+            messageKind: "MoveAnnotationFromOtherParent",
+            commandId: `command-id-${queryId++}`,
+            oldIndex: oldIndex,
+            oldParent: oldParent,
+            newIndex: newIndex,
+            newParent: newParent,
+            movedAnnotation: annotation,
+            additionalInfos: []
+        }
+        return client.sendCommand(command) as MoveAnnotationFromOtherParentCommand
+    }
+
+    moveAnnotationInSameParent = (
+        client: DeltaClient,
+        annotation: LionWebId,
+        parent: LionWebId,
+        oldIndex: number,
+        newIndex: number
+    ): MoveAnnotationInSameParentCommand => {
+        const command: MoveAnnotationInSameParentCommand = {
+            messageKind: "MoveAnnotationInSameParent",
+            commandId: `command-id-${queryId++}`,
+            oldIndex: oldIndex,
+            newIndex: newIndex,
+            parent: parent,
+            movedAnnotation: annotation,
+            additionalInfos: []
+        }
+        return client.sendCommand(command) as MoveAnnotationInSameParentCommand
+    }
+
+    moveAndReplaceAnnotationFromOtherParent = (
+        client: DeltaClient,
+        movedAnnotation: LionWebId,
+        oldIndex: number,
+        oldParent: LionWebId,
+        newIndex: number,
+        newParent: LionWebId,
+        replaceAnnotation: LionWebId
+    ): MoveAndReplaceAnnotationFromOtherParentCommand => {
+        const command: MoveAndReplaceAnnotationFromOtherParentCommand = {
+            messageKind: "MoveAndReplaceAnnotationFromOtherParent",
+            commandId: `command-id-${queryId++}`,
+            oldIndex: oldIndex,
+            oldParent: oldParent,
+            newIndex: newIndex,
+            newParent: newParent,
+            replacedAnnotation: replaceAnnotation,
+            movedAnnotation: movedAnnotation,
+            additionalInfos: []
+        }
+        return client.sendCommand(command) as MoveAndReplaceAnnotationFromOtherParentCommand
+    }
+
+    moveAndReplaceAnnotationInSameParent = (
+        client: DeltaClient,
+        movedAnnotation: LionWebId,
+        parent: LionWebId,
+        oldIndex: number,
+        offset: number,
+        replaceAnnotation: LionWebId
+    ): MoveAndReplaceAnnotationInSameParentCommand => {
+        const command: MoveAndReplaceAnnotationInSameParentCommand = {
+            messageKind: "MoveAndReplaceAnnotationInSameParent",
+            commandId: `command-id-${queryId++}`,
+            oldIndex: oldIndex,
+            indexOffset: offset,
+            parent: parent,
+            replacedAnnotation: replaceAnnotation,
+            movedAnnotation: movedAnnotation,
+            additionalInfos: []
+        }
+        return client.sendCommand(command) as MoveAndReplaceAnnotationInSameParentCommand
+    }
+    
+    deleteAnnotation = (client: DeltaClient, parent: LionWebId, annotation: LionWebId, index: number): DeleteAnnotationCommand => {
+        const command: DeleteAnnotationCommand = {
+            messageKind: "DeleteAnnotation",
+            commandId: `command-id-${queryId++}`,
+            index: index,
+            parent: parent,
+            deletedAnnotation: annotation,
+            additionalInfos: []
+        }
+        return client.sendCommand(command) as DeleteAnnotationCommand
+    }
+    
+    continuedCommand = (nr: number, nodes: LionWebJsonNode[], complete: boolean): ContinuedCommand => {
+        return {
+            messageKind: "ContinuedCommand",
+            continuedChunkSequenceNumber: nr,
+            chunk: {  nodes: nodes },
+            continuedChunkCompleted: complete,
+            additionalInfos: [],
+            commandId: `command-id-${queryId++}`
         }
     }
 }

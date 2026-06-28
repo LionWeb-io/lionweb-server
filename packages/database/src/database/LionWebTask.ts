@@ -1,6 +1,6 @@
+import { queryLogger, toJsonArray } from "@lionweb/server-shared"
 import pgPromise from "pg-promise"
-import { queryLogger, traceLogger } from "../apiutil/index.js"
-import { addRepositorySchema, RepositoryData } from "./DbConnection.js"
+import { addRepositorySchema, RepositoryData } from "./Repositories.js"
 
 /**
  * All database transactions will go through an instance of this class.
@@ -10,7 +10,7 @@ import { addRepositorySchema, RepositoryData } from "./DbConnection.js"
  * This is a wrapper for a pg-promise task.
  * @see pgPromise.ITask
  */
-export class    LionWebTask {
+export class LionWebTask {
     task: pgPromise.ITask<object> & object
 
     /**
@@ -27,14 +27,14 @@ export class    LionWebTask {
      * @param query
      */
     async query(repositoryData: RepositoryData, query: string) {
-        traceLogger.info("LionWebTask.query")
+        queryLogger.info(`LionWebTask.query ${query} for repository ${repositoryData.repository.repository_name}`)
         query = addRepositorySchema(query, repositoryData)
-        queryLogger.info(`LionWebTask.query ${query}`)
-        return await this.task.query(query)
+        const result = await this.task.query(query)
+        queryLogger.info(`   LionWebTask.query result ${toJsonArray(result)}`)
+        return result
     }
 
     async queryWithoutRepository(query: string) {
-        traceLogger.info("LionWebTask.queryWithoutRepository")
         queryLogger.info(`LionWebTask.queryWithoutRepository ${query}`)
         return await this.task.query(query)
     }
@@ -45,25 +45,41 @@ export class    LionWebTask {
      * @param query
      */
     async many(repositoryData: RepositoryData, query: string) {
-        traceLogger.info("LionWebTask.many")
+        queryLogger.info(`LionWebTask.many ${query} for repository ${repositoryData.repository.repository_name}`)
         query = addRepositorySchema(query, repositoryData)
-        queryLogger.info(`LionWebTask.many ${query}`)
-        return await this.task.many(query)
+        const result = await this.task.many(query)
+        queryLogger.info(`   LionWebTask.many result ${toJsonArray(result)}`)
+        return result
+    }
+
+    /**
+     * @see IBaseProtocol.manyOrNone
+     * @param repositoryData
+     * @param query
+     */
+    async manyOrNone(repositoryData: RepositoryData, query: string) {
+        queryLogger.info(`LionWebTask.manyOrNone ${query} for repository ${repositoryData.repository.repository_name}`)
+        query = addRepositorySchema(query, repositoryData)
+        const result = await this.task.manyOrNone(query)
+        queryLogger.info(`   LionWebTask.manyOrNone result ${toJsonArray(result)}`)
+        return result
     }
 
     /**
      * @see IBaseProtocol.multi
      * @param repositoryData
      * @param query
+     * <T = any>(query: QueryParam, values?: any): XPromise<Array<T[]>>
      */
-    async multi(repositoryData: RepositoryData, query: string) {
-        traceLogger.info("LionWebTask.multi")
+    async multi<T = any>(repositoryData: RepositoryData, query: string): Promise<Array<T[]>> {
+        queryLogger.info(`LionWebTask.multi ${query} for repository ${repositoryData.repository.repository_name}`)
         query = addRepositorySchema(query, repositoryData)
         queryLogger.info(`LionWebTask.multi ${query}`)
         const multiResult = await this.task.multi(query)
         // Remove first two elements since these are the result of the inserted search_path and schema existence check
         multiResult.shift()
         multiResult.shift()
+        queryLogger.info(`   LionWebTask.multi result ${toJsonArray(multiResult)}`)
         return multiResult
     }
 }

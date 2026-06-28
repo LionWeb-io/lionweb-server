@@ -1,10 +1,13 @@
 import { LionWebJsonNode } from "@lionweb/json"
+import { DbConnection, LionWebTask, RepositoryData } from "@lionweb/server-database"
+import { IClient } from "pg-promise/typescript/pg-subset.js"
 import { Duplex } from "stream"
 import { PoolClient } from "pg"
-import { from as copyFrom } from "pg-copy-streams"
-import { DbConnection, RepositoryData, MetaPointersTracker, MetaPointersCollector } from "@lionweb/server-common"
+import { CopyStreamQuery, from as copyFrom } from "pg-copy-streams"
+import { MetaPointersTracker, MetaPointersCollector } from "@lionweb/server-common"
 import { BulkImport, HttpClientErrors, HttpSuccessCodes, PBBulkImport, PBLanguage, PBMetaPointer } from "@lionweb/server-shared"
 import { finished } from "stream/promises"
+import { AdditionalApiContext } from "../main.js"
 import { BulkImportResultType } from "./AdditionalQueries.js"
 import { makeQueryToAttachNodeForProtobuf, checkHowManyDoNotExistSQL } from "./QueryNode.js"
 
@@ -210,8 +213,8 @@ function prepareInputStreamContainmentsProtobuf(bulkImport: PBBulkImport, pbInde
     return read_stream_string
 }
 
-async function pipeInputIntoQueryStream(client: PoolClient, query: string, inputStream: Duplex, opDesc: string): Promise<void> {
-    const queryStream = client.query(copyFrom(query));
+async function pipeInputIntoQueryStream(client: IClient, query: string, inputStream: Duplex, opDesc: string): Promise<void> {
+    const queryStream: CopyStreamQuery = client.query(copyFrom(query)) as any as CopyStreamQuery;
 
     // propagate src errors too
     const srcErr = new Promise<never>((_, reject) =>
@@ -234,11 +237,13 @@ async function pipeInputIntoQueryStream(client: PoolClient, query: string, input
 }
 
 export async function storeNodes(
-    client: PoolClient,
+    // client: PoolClient,
+    context: AdditionalApiContext,
     repositoryData: RepositoryData,
     bulkImport: BulkImport,
     metaPointersTracker: MetaPointersTracker
 ): Promise<void> {
+    const connected = await context.dbConnection.pgDatabaseConnection.connect()
     try {
         const repositoryName = repositoryData.repository.repository_name
         const schemaName = repositoryData.repository.schema_name
@@ -246,44 +251,44 @@ export async function storeNodes(
         const nodes = bulkImport.nodes
 
         await pipeInputIntoQueryStream(
-            client,
+            connected.client,
             `COPY "${schemaName}".lionweb_nodes(id,classifier,annotations,parent) FROM STDIN`,
             prepareInputStreamNodes(nodes, metaPointersTracker),
             "nodes insertion"
         )
         await pipeInputIntoQueryStream(
-            client,
+            connected.client,
             `COPY "${schemaName}".lionweb_containments(containment,children,node_id) FROM STDIN`,
             prepareInputStreamContainments(nodes, metaPointersTracker),
             "containments insertion"
         )
         await pipeInputIntoQueryStream(
-            client,
+            connected.client,
             `COPY "${schemaName}".lionweb_references(reference,targets,node_id) FROM STDIN`,
             prepareInputStreamReferences(nodes, metaPointersTracker),
             `references ${repositoryName}`
         )
         await pipeInputIntoQueryStream(
-            client,
+            connected.client,
             `COPY "${schemaName}".lionweb_properties(property,value,node_id) FROM STDIN`,
             prepareInputStreamProperties(nodes, metaPointersTracker),
             `properties ${repositoryName}`
         )
     } finally {
-        client.release(false)
+        connected.done()
     }
 }
 
 async function storeNodesThroughProtobuf(
-    client: PoolClient,
+    client: IClient,
     repositoryData: RepositoryData,
-    dbConnection: DbConnection,
+    task: LionWebTask,
     bulkImport: PBBulkImport
 ): Promise<MetaPointersTracker> {
     // We obtain all the indexes for all the MetaPointers we need. We will then use such indexes in successive calls
     // to pipeInputIntoQueryStream, etc.
     const metaPointersTracker = new MetaPointersTracker(repositoryData)
-    await populateThroughProtobuf(metaPointersTracker, bulkImport, repositoryData, dbConnection)
+    await populateThroughProtobuf(metaPointersTracker, bulkImport, repositoryData, task)
 
     const repositoryName = repositoryData.repository.repository_name
     const schemaName = repositoryData.repository.schema_name
@@ -322,8 +327,8 @@ async function storeNodesThroughProtobuf(
  * to the "neutral" format and invoke bulkImport. This choice has been made for performance reasons.
  */
 export async function performImportFromProtobuf(
-    client: PoolClient,
-    dbConnection: DbConnection,
+    client: IClient,
+    task: LionWebTask,
     bulkImport: PBBulkImport,
     repositoryData: RepositoryData
 ): Promise<BulkImportResultType> {
@@ -375,7 +380,7 @@ export async function performImportFromProtobuf(
 
         // Check - verify all the given new nodes are effectively new
         const allNewNodesResult =
-            newNodesSet.size == 0 ? 0 : await dbConnection.query(repositoryData, checkHowManyDoNotExistSQL(newNodesSet))
+            newNodesSet.size == 0 ? 0 : await task.query(repositoryData, checkHowManyDoNotExistSQL(newNodesSet))
         if (allNewNodesResult > 0) {
             return {
                 status: HttpClientErrors.BadRequest,
@@ -388,7 +393,7 @@ export async function performImportFromProtobuf(
         const allExistingNodesResult =
             attachPointContainers.size == 0
                 ? 0
-                : await dbConnection.query(repositoryData, checkHowManyDoNotExistSQL(attachPointContainers))
+                : await task.query(repositoryData, checkHowManyDoNotExistSQL(attachPointContainers))
         if (allExistingNodesResult > 0) {
             return {
                 status: HttpClientErrors.BadRequest,
@@ -398,18 +403,18 @@ export async function performImportFromProtobuf(
         }
 
         // Add all the new nodes
-        const metaPointersTracker = await storeNodesThroughProtobuf(client, repositoryData, dbConnection, bulkImport)
+        const metaPointersTracker = await storeNodesThroughProtobuf(client, repositoryData, task, bulkImport)
 
         // Attach the root of the new nodes to existing containers
         for (let i = 0; i < bulkImport.attachPoints.length; i++) {
             const pbAttachPoint = bulkImport.attachPoints[i]
-            await dbConnection.query(repositoryData, makeQueryToAttachNodeForProtobuf(pbAttachPoint, metaPointersTracker,
+            await task.query(repositoryData, makeQueryToAttachNodeForProtobuf(pbAttachPoint, metaPointersTracker,
                 bulkImport.internedLanguages, bulkImport.internedStrings, bulkImport.internedMetaPointers))
         }
 
         return { status: HttpSuccessCodes.Ok, success: true }
     } finally {
-        client.release(false)
+        // client.release(false)
     }
 }
 
@@ -417,7 +422,7 @@ async function populateThroughProtobuf(
     metaPointersTracker: MetaPointersTracker,
     bulkImport: PBBulkImport,
     repositoryData: RepositoryData,
-    dbConnection: DbConnection
+    task: LionWebTask
 ): Promise<void> {
     await metaPointersTracker.populate((collector: MetaPointersCollector) => {
         function considerAddingPBMetaPointer(metaPointer: PBMetaPointer) {
@@ -455,7 +460,7 @@ async function populateThroughProtobuf(
             const metaPointer = bulkImport.internedMetaPointers[attachPoint.mpiMetaPointer]
             considerAddingPBMetaPointer(metaPointer)
         }
-    }, dbConnection)
+    }, task)
 }
 
 /**
@@ -480,10 +485,10 @@ export function getCorrespondingMetaPointerIDOnTheDB(metaPointersTracker: MetaPo
     })
 }
 
-export async function populateFromBulkImport(metaPointersTracker: MetaPointersTracker, bulkImport: BulkImport, dbConnection: DbConnection) {
+export async function populateFromBulkImport(task: LionWebTask, metaPointersTracker: MetaPointersTracker, bulkImport: BulkImport) {
     await metaPointersTracker.populate((collector: MetaPointersCollector) => {
         const nodes = bulkImport.nodes
         nodes.forEach((node: LionWebJsonNode) => collector.considerNode(node))
         bulkImport.attachPoints.forEach(ap => collector.considerAddingMetaPointer(ap.containment))
-    }, dbConnection)
+    }, task)
 }

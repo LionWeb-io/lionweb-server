@@ -1,8 +1,8 @@
-import { dbLogger, ServerConfig } from "@lionweb/server-common"
-import { CREATE_CONFIG, PostgresConfig, pgSSLConf } from "@lionweb/server-dbadmin"
+import { dbLogger, ServerConfig, toJsonString } from "@lionweb/server-shared"
 import pgPromise from "pg-promise"
 import dotenv from "dotenv"
 import pg from "pg"
+import { CREATE_CONFIG, pgSSLConf, PostgresConfig } from "./database.js"
 
 // Initialize and export the database connection with configuration from _env_
 
@@ -17,7 +17,7 @@ export const config: PostgresConfig = {
     ssl: pgSSLConf
 }
 
-dbLogger.info("POSTGRES CONFIG: " + JSON.stringify(config, null, 2))
+dbLogger.info("POSTGRES CONFIG: " + toJsonString(config, 2))
 
 export const pgp = pgPromise()
 // TODO
@@ -33,4 +33,12 @@ export const postgresConnectionWithDatabase = pgp(config)
  */
 export const postgresConnectionWithoutDatabase = pgp(CREATE_CONFIG)
 
-export const postgresPool = new pg.Pool(config)
+export const postgresPool = new pg.Pool({
+
+    host: config.host,
+    user: config.user,
+    max: 20,
+    idleTimeoutMillis: 0,
+    connectionTimeoutMillis: 0,
+    maxLifetimeSeconds: 0,
+})

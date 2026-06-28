@@ -1,4 +1,4 @@
-import { requestLogger } from "@lionweb/server-common";
+import { requestLogger } from "@lionweb/server-shared"
 import { LanguageApiContext } from "../main.js";
 
 /**

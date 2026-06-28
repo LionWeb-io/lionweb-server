@@ -1,5 +1,4 @@
-// import pgPromise from "pg-promise"
-import { ServerConfig } from "@lionweb/server-common"
+import { ServerConfig } from "@lionweb/server-shared"
 import * as fs from "node:fs"
 
 export type PostgresConfig = {

@@ -79,9 +79,9 @@ export class Logo2String {
         } else if (isEqualMetaPointer(node.classifier, CLASSIFIER.Backward)) {
             result += `BACKWARD ${NodeUtils.findProperty(node, PROPERTY.MoveCommandDistance)?.value}`
         } else if (isEqualMetaPointer(node.classifier, CLASSIFIER.MoveCommand)) {
-            result += `abstract MOVE ${NodeUtils.findProperty(node, PROPERTY.MoveCommandDistance)?.value}`
+            result += `MOVE ${NodeUtils.findProperty(node, PROPERTY.MoveCommandDistance)?.value}`
         } else if (isEqualMetaPointer(node.classifier, CLASSIFIER.Left)) {
-            result += `LEFT ${NodeUtils.findProperty(node, PROPERTY.MoveCommandDistance)?.value}`
+            result += `LEFT`
         } else if (isEqualMetaPointer(node.classifier, CLASSIFIER.Right)) {
             result += `RIGHT ${NodeUtils.findProperty(node, PROPERTY.MoveCommandDistance)?.value}`
         } else if (isEqualMetaPointer(node.classifier, CLASSIFIER.PenUp)) {
@@ -95,7 +95,7 @@ export class Logo2String {
         } else if (isEqualMetaPointer(node.classifier, CLASSIFIER.SetHeading)) {
             result += `HEADING ${NodeUtils.findProperty(node, PROPERTY.HeadingDegrees)!.value}`
         } else if (isEqualMetaPointer(node.classifier, CLASSIFIER.NumbericLiteral)) {
-            result += `NUM ${NodeUtils.findProperty(node, PROPERTY.NumbericLiteralValue)?.value}`
+            return  `NUM ${NodeUtils.findProperty(node, PROPERTY.NumbericLiteralValue)?.value}`
         } else if (isEqualMetaPointer(node.classifier, CLASSIFIER.GreaterThan)) {
             const left = NodeUtils.findContainment(node, CONTAINMENT.GreaterThanLeft)
             if (left !== undefined) {
@@ -125,23 +125,23 @@ export class Logo2String {
             } else {
                 result += `IF <<unknown node>>`
             }
-            const left = NodeUtils.findContainment(node, CONTAINMENT.IfIfTrue)
-            if (left !== undefined) {
-                const leftNode = this.chunkWrapper.getNode(left.children[0])
-                result += `THEN\n${this.cmd2string(leftNode, indent + "    ")}`
+            const then = NodeUtils.findContainment(node, CONTAINMENT.IfIfTrue)
+            if (then !== undefined) {
+                const leftNode = this.chunkWrapper.getNode(then.children[0])
+                result += indent + `THEN\n${this.cmd2string(leftNode, indent + "    ")}\n`
             } else {
-                result += `THEN <<unknown node>>`
+                result += indent + `THEN <<undefined node>>\n`
             }
-            const right = NodeUtils.findContainment(node, CONTAINMENT.IfIfFalse)
-            if (right !== undefined) {
-                const rightNode = this.chunkWrapper.getNode(right.children[0])
-                result += `ELSE\n${this.cmd2string(rightNode, indent + "    ")}`
+            const ifFalse = NodeUtils.findContainment(node, CONTAINMENT.IfIfFalse)
+            if (ifFalse !== undefined) {
+                const rightNode = this.chunkWrapper.getNode(ifFalse.children[0])
+                result += indent + `ELSE\n${this.cmd2string(rightNode, indent + "    ")}`
             } else {
-                result += `ELSE <<unknown node>>`
+                result += indent + `ELSE <<undefined node>>`
             }
             
         } else {
-            result += `UNKNOWM COMMAND ${JSON.stringify(node.classifier)}` 
+            result += indent + `UNKNOWN COMMAND ${JSON.stringify(node.classifier)}` 
         }
         return result + "\n"
     }

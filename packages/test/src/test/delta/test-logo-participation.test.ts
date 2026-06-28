@@ -2,16 +2,17 @@ import { RepositoryClient } from "@lionweb/server-http-client"
 import { adminResponseFunctions, DeltaClient, eventFunctions, responseFunctions } from "@lionweb/server-delta-client"
 import { PartitionAddedEvent } from "@lionweb/server-delta-shared"
 import { HttpSuccessCodes  } from "@lionweb/server-shared"
-import { test, describe, beforeAll, beforeEach, afterAll } from "vitest"
+import { test, describe, beforeAll, beforeEach, afterAll, expect } from "vitest"
 import { reportHTML } from "./helpers.js"
-import { CLASSIFIER as CLS, CONTAINMENT as CON } from "./keys.js"
-import { Logo2String } from "./Logo2String.js"
-import { ProgramNodes } from "./logomodel.js"
-import { CoverageMap, cmd, expectEvent, expectResponse, expectError, logProtocol } from "./test-helpers.test.js"
+import { CLASSIFIER as CLS, CONTAINMENT as CON } from "../models/keys.js"
+import { programNodes, resetModels } from "../models/testmodel.js"
+import { Logo2String } from "../models/Logo2String.js"
+import { beforeAllTests } from "./SharedTest.js"
+import { CoverageMap, cmd, expectEvent, expectResponse, expectError, logProtocol } from "./test-helpers.js"
 
 // TOPO Delta : primary key exception when nohistory = false 
 const collection = [true]
-const log: boolean = false
+const log: boolean = true
 
 const config = {
     // hostname: "192.168.100.1",
@@ -37,6 +38,7 @@ collection.forEach((withoutHistory) => {
         client4.repository = repository + "_other"
 
         beforeAll(async function () {
+            await beforeAllTests(withoutHistory)
             bulkApiClient.repository = repository
             const delResponse = await bulkApiClient.dbAdmin.deleteRepository(repository, "delete at start og test")
             const initResponse = await bulkApiClient.dbAdmin.createRepository(repository, !withoutHistory, "2023.1")
@@ -69,7 +71,7 @@ collection.forEach((withoutHistory) => {
                 queryId: signOn.queryId,
                 additionalInfos: [
                     {
-                        data: [],
+                        data: {},
                         kind: "Info",
                         message: "SignOnRequest received ok",
                     },
@@ -169,7 +171,7 @@ collection.forEach((withoutHistory) => {
                 // addP.additionalInfos = undefined
                 composite.parts.push(addP)
                 const nestedComposite = cmd.compositeCommandCmd()
-                const addChildCommand1 = cmd.addChildCmd(client2, { id: "Move-022", cls: CLS.MoveCommand, parent: "Program-022", containment: CON.ProgramCommands, props: [] })
+                const addChildCommand1 = cmd.addChildCmd(client2, { id: "Move-022", cls: CLS.MoveCommand, parent: "Program-022", containment: CON.ProgramCommands, index: 0, props: [] })
                 nestedComposite.parts.push(addChildCommand1)
                 composite.parts.push(nestedComposite)
                 client2.sendCommand(composite)
@@ -183,8 +185,9 @@ collection.forEach((withoutHistory) => {
 
             })
             test("AddPartition with depth", async () => {
+                resetModels()
                 const addPartition = cmd.addPartitionCmd(client2, { id: "Program", classifier: CLS.Program })
-                addPartition.newPartition.nodes = ProgramNodes
+                addPartition.newPartition.nodes = programNodes
                 client2.sendCommand(addPartition)
                 
                 await expectEvent(client2, addPartition, "PartitionAdded")
@@ -203,8 +206,8 @@ collection.forEach((withoutHistory) => {
                     console.log(logo3.logo2string())
                 }
                 // logProtocol(client1, true)
-                logProtocol(client2, true)
-                logProtocol(client3, true)
+                logProtocol(client2, bulkApiClient, ["Program", "Program-22"], true)
+                logProtocol(client3, bulkApiClient, ["Program", "Program-22"], true)
                 // logProtocol(client4, true)
             })
         })

@@ -21,25 +21,25 @@ export function initSchemaWithHistory(schemaName: string): string {
     // language=SQL
     return `-- Create schema
         -- drop if empty, otherwise fail
-        DROP SCHEMA IF EXISTS "${schemaName}" RESTRICT;
+        DROP SCHEMA IF EXISTS "${schemaName}" CASCADE;
         CREATE SCHEMA "${schemaName}";
         SET search_path TO "${schemaName}";
 
         -- Drops nodes table
-        DROP VIEW IF EXISTS ${NODES_TABLE};
-        DROP VIEW IF EXISTS ${PROPERTIES_TABLE};
-        DROP VIEW IF EXISTS ${CONTAINMENTS_TABLE};
-        DROP VIEW IF EXISTS ${REFERENCES_TABLE};
-        
-        DROP TABLE IF EXISTS ${METAPOINTERS_TABLE};
+        -- DROP VIEW IF EXISTS ${NODES_TABLE};
+        -- DROP VIEW IF EXISTS ${PROPERTIES_TABLE};
+        -- DROP VIEW IF EXISTS ${CONTAINMENTS_TABLE};
+        -- DROP VIEW IF EXISTS ${REFERENCES_TABLE};
 
-        DROP TABLE IF EXISTS ${NODES_TABLE_HISTORY};
-        DROP TABLE IF EXISTS ${CONTAINMENTS_TABLE_HISTORY};
-        DROP TABLE IF EXISTS ${PROPERTIES_TABLE_HISTORY};
-        DROP TABLE IF EXISTS ${REFERENCES_TABLE_HISTORY};
-        DROP TABLE IF EXISTS ${RESERVED_IDS_TABLE};
-        DROP TABLE IF EXISTS ${REPO_VERSIONS};
-        DROP TABLE IF EXISTS ${CURRENT_DATA};
+        -- DROP TABLE IF EXISTS ${METAPOINTERS_TABLE};
+
+        -- DROP TABLE IF EXISTS ${NODES_TABLE_HISTORY};
+        -- DROP TABLE IF EXISTS ${CONTAINMENTS_TABLE_HISTORY};
+        -- DROP TABLE IF EXISTS ${PROPERTIES_TABLE_HISTORY};
+        -- DROP TABLE IF EXISTS ${REFERENCES_TABLE_HISTORY};
+        -- DROP TABLE IF EXISTS ${RESERVED_IDS_TABLE};
+        -- DROP TABLE IF EXISTS ${REPO_VERSIONS};
+        -- DROP TABLE IF EXISTS ${CURRENT_DATA};
 
         -- Drop indices
         -- DROP INDEX IF EXISTS ContainmentsNodesIndex;
@@ -348,7 +348,7 @@ export function initSchemaWithHistory(schemaName: string): string {
             END; 
         $$;
 
-        DROP TRIGGER IF EXISTS nodes_delete ON ${NODES_TABLE};
+        -- DROP TRIGGER IF EXISTS nodes_delete ON ${NODES_TABLE};
 
         CREATE TRIGGER nodes_delete
         INSTEAD OF DELETE ON ${NODES_TABLE} 
@@ -418,7 +418,7 @@ export function initSchemaWithHistory(schemaName: string): string {
         END;
         $$;
 
-        DROP TRIGGER IF EXISTS property_delete ON ${PROPERTIES_TABLE};
+        -- DROP TRIGGER IF EXISTS property_delete ON ${PROPERTIES_TABLE};
 
         CREATE TRIGGER property_delete
         INSTEAD OF DELETE ON ${PROPERTIES_TABLE} 
@@ -491,7 +491,7 @@ export function initSchemaWithHistory(schemaName: string): string {
         END; 
         $$;
 
-        DROP TRIGGER IF EXISTS containment_delete ON ${CONTAINMENTS_TABLE};
+    -- DROP TRIGGER IF EXISTS containment_delete ON ${CONTAINMENTS_TABLE};
 
         CREATE TRIGGER containment_delete
         INSTEAD OF DELETE ON ${CONTAINMENTS_TABLE} 
@@ -567,7 +567,7 @@ export function initSchemaWithHistory(schemaName: string): string {
         END; 
         $$;
 
-        DROP TRIGGER IF EXISTS reference_delete ON ${REFERENCES_TABLE};
+    -- DROP TRIGGER IF EXISTS reference_delete ON ${REFERENCES_TABLE};
 
         CREATE TRIGGER reference_delete
         INSTEAD OF DELETE ON ${REFERENCES_TABLE} 

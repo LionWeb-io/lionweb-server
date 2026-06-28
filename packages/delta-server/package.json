@@ -29,24 +29,19 @@
         "lint": "eslint src"
     },
     "dependencies": {
-        "@lionweb/json": "0.9.0-beta.3",
-        "@lionweb/json-diff": "0.9.0-beta.3",
-        "@lionweb/json-utils": "0.9.0-beta.3",
-        "@lionweb/validation": "0.9.0-beta.3",
+        "@lionweb/json": "0.10.0-alpha.4",
+        "@lionweb/json-diff": "0.10.0-alpha.4",
+        "@lionweb/json-utils": "0.10.0-alpha.4",
+        "@lionweb/validation": "0.10.0-alpha.4",
         "@lionweb/server-shared": "0.4.0-beta.5",
+        "@lionweb/server-database": "0.4.0-beta.5",
         "@lionweb/server-common": "0.4.0-beta.5",
         "@lionweb/server-dbadmin": "0.4.0-beta.5",
         "@lionweb/server-delta-shared": "0.4.0-beta.5",
         "@lionweb/server-delta-definitions": "0.4.0-beta.5",
-        "es-toolkit": "^1.41.0",
+        "es-toolkit": "1.46.1",
         "pg-promise": "11.7.8",
-        "ws": "^8.12.2"
-    },
-    "devDependencies": {
-        "prettier": "3.1.0",
-        "@types/chai": "4.3.11",
-        "chai": "4.3.10",
-        "typescript": "5.9.3"
+        "ws": "8.20.0"
     },
     "engines": {
         "node": "^24.0.0"

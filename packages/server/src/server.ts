@@ -1,4 +1,12 @@
 import { PARTICIPATIONS, registerDeltaProcessor } from "@lionweb/delta-server"
+import {
+    DbConnection,
+    LionWebTask,
+    postgresConnectionWithDatabase,
+    postgresConnectionWithoutDatabase,
+    postgresPool,
+    pgp
+} from "@lionweb/server-database"
 import { registerHistoryApi } from "@lionweb/server-history"
 import { DeltaCommand, DeltaRequest } from "@lionweb/server-delta-shared"
 import express, { Express, NextFunction, Response, Request } from "express"
@@ -6,19 +14,7 @@ import bodyParser from "body-parser"
 import cors from "cors"
 import pgPromise from "pg-promise"
 import { WebSocketServer } from "ws"
-import { postgresConnectionWithDatabase, pgp, postgresConnectionWithoutDatabase, postgresPool } from "./DbConnection.js"
-import {
-    DbConnection,
-    // expressLogger,
-    LionWebTask,
-    RepositoryConfig,
-    requestLogger,
-    SCHEMA_PREFIX,
-    ServerConfig,
-    initializeCommons,
-    deltaLogger,
-    bulkLogger
-} from "@lionweb/server-common"
+import { SCHEMA_PREFIX, initializeCommons } from "@lionweb/server-common"
 import { registerDBAdmin, repositoryStore } from "@lionweb/server-dbadmin"
 import { registerInspection } from "@lionweb/server-inspection"
 import { registerBulkApi } from "@lionweb/server-bulkapi"
@@ -27,8 +23,7 @@ import {
     registerAdditionalApi
 } from "@lionweb/server-additionalapi"
 import { registerLanguagesApi } from "@lionweb/server-languages"
-import { HttpClientErrors, PROTOBUF_CONTENT_TYPE } from "@lionweb/server-shared"
-// import { pinoHttp } from "pino-http"
+import { deltaLogger, bulkLogger, HttpClientErrors, PROTOBUF_CONTENT_TYPE, RepositoryConfig, requestLogger, ServerConfig, toJsonString } from "@lionweb/server-shared"
 import * as http from "node:http"
 import { runWithTryDelta } from "./RunTry.js";
 
@@ -76,7 +71,7 @@ app.use(verifyToken)
 const dbConnection = DbConnection.getInstance()
 dbConnection.postgresConnection = postgresConnectionWithoutDatabase
 dbConnection.pgDatabaseConnection = postgresConnectionWithDatabase
-dbConnection.pgp = pgPromise()
+dbConnection.pgp = pgp
 const { TransactionMode } = pgPromise.txMode
 const mode = new TransactionMode({
     deferrable: true,
@@ -126,7 +121,9 @@ async function setupDatabase() {
     }
 
     // Initialize repositories
-    await repositoryStore.initialize()
+    await dbConnection.tx(async (task: LionWebTask) => {
+        await repositoryStore.initialize(task)
+    })
     const existingRepositoryNames = repositoryStore.allRepositories().map(r => r.repository_name)
     requestLogger.info("Existing repositories " + existingRepositoryNames)
     for (const repository of ServerConfig.getInstance().createRepositories()) {
@@ -136,7 +133,7 @@ async function setupDatabase() {
                 requestLogger.info(`Creating new repository ${repository.name} (config option 'always')`)
                 if (existingRepositoryNames.includes(repository.name)) {
                     // need to remove the repository first
-                    await dbAdminApi.tx(async (task: LionWebTask) => {
+                    await dbConnection.tx(async (task: LionWebTask) => {
                         const deletedn = await dbAdminApi.deleteRepository(task, {
                             clientId: "setup",
                             repository: {
@@ -174,7 +171,7 @@ async function setupDatabase() {
 }
 
 async function createRepository(repository: RepositoryConfig) {
-    await dbAdminApi.tx(async (task: LionWebTask) => {
+    await dbConnection.tx(async (task: LionWebTask) => {
         const history = repository?.history !== undefined && repository?.history !== null && repository?.history === true
         const repositoryData = {
             clientId: "repository",
@@ -214,8 +211,8 @@ async function startServer() {
         PARTICIPATIONS.newParticipation(socket)
         
         socket.onmessage = message => {
-            deltaLogger.info(`Server Received: ${message.data.toString()}`);
             const msg = JSON.parse(message.data.toString()) as unknown as (DeltaCommand | DeltaRequest)
+            deltaLogger.info(`Server Received: ${toJsonString(msg)}`)
             runWithTryDelta(socket, msg)
         };
 
@@ -257,8 +254,11 @@ export async function server() {
     }
     if (setupOnly) {
         await setupDatabase()
+        dbConnection.pgp.end()
     } else if (noSetup) {
-        await repositoryStore.refresh()
+        await dbConnection.tx(async (task: LionWebTask) => {
+            await repositoryStore.refresh(task)
+        })
         await startServer()
     } else {
         requestLogger.error("Server should be called with either flag --setup or --run")

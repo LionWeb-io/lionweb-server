@@ -1,6 +1,6 @@
-import { LionWebVersionType } from "@lionweb/server-shared"
+import { LogLevel } from "@logtape/logtape"
 import fs from "node:fs"
-import { LevelWithSilent } from "./PinoLogger.js"
+import { LionWebVersionType } from "./apiutil/index.js"
 import { expressLogger, verbosity } from "./logging.js"
 
 // Define the possible values of database creation both as a type, and as an array of strings and a type
@@ -38,14 +38,14 @@ export type ServerConfigJson = {
         createRepositories?: RepositoryConfig[]
     }
     logging?: {
-        request?: LevelWithSilent
-        trace?: LevelWithSilent
-        database?: LevelWithSilent
-        query?: LevelWithSilent
-        express?: LevelWithSilent
-        delta?: LevelWithSilent
-        bulk?: LevelWithSilent
-        message?: LevelWithSilent
+        request?: LogLevel
+        trace?: LogLevel
+        database?: LogLevel
+        query?: LogLevel
+        express?: LogLevel
+        delta?: LogLevel
+        bulk?: LogLevel
+        message?: LogLevel
     }
     postgres: {
         database: {
@@ -141,41 +141,41 @@ export class ServerConfig {
         }
     }
 
-    requestLog(): LevelWithSilent {
+    requestLog(): LogLevel {
         const result = this?.config?.logging?.request
         return verbosity(result, "error")
     }
 
-    bulkLog(): LevelWithSilent {
+    bulkLog(): LogLevel {
         const result = this?.config?.logging?.bulk
         return verbosity(result, "info")
     }
 
-    traceLog(): LevelWithSilent {
+    traceLog(): LogLevel {
         const result = this?.config?.logging?.trace
-        return verbosity(result, "warn")
+        return verbosity(result, "warning")
     }
 
-    databaseLog(): LevelWithSilent {
+    databaseLog(): LogLevel {
         const result = this.config?.logging?.database
         return verbosity(result, "error")
     }
 
-    queryLog(): LevelWithSilent {
+    queryLog(): LogLevel {
         const result = this.config?.logging?.query
         return verbosity(result, "error")
     }
 
-    expressLog(): LevelWithSilent {
+    expressLog(): LogLevel {
         const result = this?.config?.logging?.express
         return verbosity(result, "info")
     }
 
-    deltaLog(): LevelWithSilent {
+    deltaLog(): LogLevel {
         const result = this.config?.logging?.delta
         return verbosity(result, "info")
     }
-    messageLog(): LevelWithSilent {
+    messageLog(): LogLevel {
         const result = this.config?.logging?.message
         return verbosity(result, "error")
     }

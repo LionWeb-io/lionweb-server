@@ -1,4 +1,4 @@
-import { RepositoryData } from "@lionweb/server-common"
+import { LionWebTask, RepositoryData } from "@lionweb/server-database"
 import { InspectionContext } from "../main.js"
 
 export interface LanguageNodes {
@@ -24,8 +24,8 @@ export interface ClassifierNodes {
 export class InspectionApiWorker {
     constructor(private context: InspectionContext) {}
 
-    async nodesByLanguage(repositoryData: RepositoryData, sql: string): Promise<LanguageNodes[]> {
-        return ((await this.context.dbConnection.query(repositoryData, sql)) as [object]).map(el => {
+    async nodesByLanguage(task: LionWebTask, repositoryData: RepositoryData, sql: string): Promise<LanguageNodes[]> {
+        return ((await task.query(repositoryData, sql)) as [object]).map(el => {
             // @ts-expect-error TS7503
             const ids = el["ids"].split(",")
             return {
@@ -37,8 +37,8 @@ export class InspectionApiWorker {
         })
     }
 
-    async nodesByClassifier(repositoryData: RepositoryData, sql: string): Promise<ClassifierNodes[]> {
-        return ((await this.context.dbConnection.query(repositoryData, sql)) as [object]).map(el => {
+    async nodesByClassifier(task: LionWebTask, repositoryData: RepositoryData, sql: string): Promise<ClassifierNodes[]> {
+        return ((await task.query(repositoryData, sql)) as [object]).map(el => {
             // @ts-expect-error TS7503
             const ids = el["ids"].split(",")
             return {

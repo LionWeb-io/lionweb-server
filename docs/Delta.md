@@ -7,4 +7,22 @@ The status is shown for the LionWeb Server, and also for Freon, as we use Freon 
 
 Latest generated status: [lionweb-server-test.html](lionweb-server-test.html)
 
+-- create new nodes
+insert into "lionweb_nodes"
+    ("id","classifier","annotations","parent")
+values
+    ('ID-2',1,'{}',null);
+
+-- insert containments for new node
+insert into "lionweb_containments"
+    ("containment","children","node_id")
+values
+    ('3','{}','ID-2');
+
+insert into "lionweb_properties"
+    ("property","value","node_id") 
+values
+    ('2','Disk_A','ID-2');\n"
+
+
 
