@@ -22,22 +22,35 @@ import {
 export type UnknownObjectType = { [key: string]: unknown }
 
 /**
- * All the validator definitions use by the delta protocol.
+ * All the validator definitions used by the delta protocol.
  */
 const definitions = new SyntaxDefinition(
     [CommandDefinitions, ResponseDefinitions, RequestDefinitions, EventDefinitions, AdminRequestDefinitions, AdminResponseDefinitions], 
     [ChunksDefinitions, DeltaTypesDefinitions, AdminTypesDefinitions]
 )
+/**
+ * Add TypeScript validators for primitive types
+ */
 definitions.addValidator("LionWebId", validateId )
 definitions.addValidator("LionWebKey", validateKey )
 definitions.addValidator("LionWebVersion",validateVersion)
 definitions.addValidator("LionWebSerializationFormatVersion", validateSerializationFormatVersion)
 
+/**
+ * Validator for validating all delta messages.
+ */
 export class DeltaValidator extends SyntaxValidator {
     constructor(validationResult: ValidationResult) {
         super(validationResult, definitions)
     }
 
+    /**
+     * Validate `object` against delta message definitions.
+     * Validation errors are stored in `this.validationResult`.
+     * When reisung the validator for a new message, call `this.validationResult.reset()` to clear previouis error messages.
+     * 
+     * @param object The message to validate
+     */
     validateDelta(object: UnknownObjectType) {
         const kind = object.messageKind
         if (kind === undefined) {
