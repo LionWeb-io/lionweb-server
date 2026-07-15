@@ -20,14 +20,14 @@ Reference implementation of LionWeb repository
 
 To run the server you need two applications
 
-1. Run a Postgres server, easiets done through using docker.
+1. Run a Postgres server, easiest done through using docker.
    There are postgres images available, we are using Postgres 16.1
-2. Run the LionWeb server, easiets done through using `npx`:
+2. Run the LionWeb server, easiest done through using `npx`:
 ```asciidoc
-npx  @lionweb/server-server@0.4.0-beta.5 --run --config server-config.json 
+npx  @lionweb/server-server@0.4.0 --run --config server-config.json 
 ```
-T=You should ensure that the Postgress information in the `server-config.json` corresponds
-with the Postgres you installed.
+You should ensure that the Postgress information in the `server-config.json` corresponds
+with the Postgres you are running.
 
 ## Postgres
 The database used for storage of models is Postgres, 
@@ -46,7 +46,7 @@ We use `pgAdmin 4` or the database plugin in WebStorm to test queries and look d
 ### How to start Postgres through docker
 
 ```
-# download docker
+# download docker image of postgres
 docker pull postgres:16.1
 
 # create a container and run it
@@ -65,8 +65,8 @@ npm run lint
 Ensure that Postgres is running.
 
 If you have a local copy of the project from github,
-the server is started with `npm run dev-run` in  the `packages/server` folder:
-
+the server is started with `npm run dev-<???>-run` in  the `packages/server` folder:
+For example:
 ```
 cd packages/server
 npm run dev-local-run
@@ -76,6 +76,8 @@ If you don't want to checkout the code, use npx:
 ```asciidoc
 npx  @lionweb/server-server@0.4.0-beta.5 --run --config server-config.json
 ```
+Make sure that you have the `server-config.json`  file locally and
+that the values in the file correspons to your local situation.
 
 For more information on how to configure the server, please check [configuration.md](configuration.md).
 
@@ -88,9 +90,9 @@ npm run test
 ```
 
 ## Status
-This server implents the full LionWeb [Bulk API](https://lionweb.io/specification/bulk/repo-access-api.html) as defined in the LionWeb specification.
+This server implements the full LionWeb [Bulk API](https://lionweb.io/specification/bulk/repo-access-api.html) as defined in the LionWeb specification.
 
-The server also implements the LionWeb Delta protocol, although currently not completely.
+The server also implements the full LionWeb Delta protocol.
 
 ##  Main Packages
 
@@ -121,6 +123,14 @@ API's to inspect the contents of the nodes table.
 The API functions to add/remove LionWeb languages to the server.
 NOTE: not implemented yet, it is a placeholder.
 
+### delta-client
+Code for a TypeScript client for sending and receiving delta messages to/from the server.
+
+### delta-server
+Server side code for the delta protocol.
+
+### delta-shared
+Shared code (like delta type definitions) for the delta protocol.
 
 ### test
 Tests for the core package
