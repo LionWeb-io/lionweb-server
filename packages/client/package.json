@@ -31,7 +31,7 @@
     },
     "dependencies": {
         "@lionweb/json": "0.10.0-alpha.4",
-        "@lionweb/server-shared": "0.4.0-beta.5"
+        "@lionweb/server-shared": "0.4.0"
     },
     "devDependencies": {
     },
