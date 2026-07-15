@@ -22,6 +22,7 @@
     "scripts": {
         "clean": "rm -rf node_modules/ && rm -rf dist/",
         "build": "tsc",
+        "release": "npm publish --access=public",
         "release-beta": "npm publish --tag beta --access=public",
         "publish-local": "npm publish --registry http://localhost:4873 --tag local",
         "unpublish-local": "npm unpublish --force --registry http://localhost:4873",
