@@ -1,6 +1,6 @@
 {
     "name": "@lionweb/server-common",
-    "version": "0.4.0-beta.5",
+    "version": "0.4.0",
     "private": false,
     "description": "Common code for the lionweb server",
     "main": "dist/index.js",
