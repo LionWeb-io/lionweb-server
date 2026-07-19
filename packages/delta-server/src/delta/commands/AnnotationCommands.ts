@@ -11,7 +11,7 @@ import {
     TableHelpers
 } from "@lionweb/server-common"
 import { LionWebTask } from "@lionweb/server-database"
-import { deltaLogger } from "@lionweb/server-shared"
+import { deltaLogger } from "@lionweb/server-logging"
 import {
     AddAnnotationCommand,
     AnnotationAddedEvent,

@@ -1,7 +1,7 @@
 import { LionWebJsonNode } from "@lionweb/json"
 import { LionWebTask, RepositoryData } from "@lionweb/server-database"
 import { KeyValuePair } from "@lionweb/server-delta-shared"
-import { dbLogger } from "@lionweb/server-shared"
+import { dbLogger } from "@lionweb/server-logging"
 import { asError } from "../apiutil/functions.js"
 import { sqlArrayFromNodeIdArray } from "./PgHelpers.js"
 import { InternalQueryError } from "./GuardFunctions.js"

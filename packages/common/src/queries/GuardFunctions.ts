@@ -2,7 +2,7 @@
 import { LionWebJsonChunk, LionWebJsonNode } from "@lionweb/json"
 import { LionWebJsonChunkWrapper } from "@lionweb/json-utils"
 import { KeyValuePair, LionWebDeltaJsonChunk } from "@lionweb/server-delta-shared"
-import { deltaLogger } from "@lionweb/server-shared"
+import { deltaLogger } from "@lionweb/server-logging"
 import { LionWebValidator, ValidationIssue } from "@lionweb/validation"
 
 let validator = new LionWebValidator({}, null)

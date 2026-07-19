@@ -25,7 +25,7 @@ import {
     UnsubscribeFromPartitionContentsResponse,
     type ErrorDelta
 } from "@lionweb/server-delta-shared"
-import { deltaLogger } from "@lionweb/server-shared"
+import { deltaLogger } from "@lionweb/server-logging"
 import { DeltaFunction } from "../commands/index.js"
 import { DeltaContext } from "../DeltaContext.js"
 import { newErrorDelta } from "../events.js"

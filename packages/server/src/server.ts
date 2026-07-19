@@ -23,7 +23,8 @@ import {
     registerAdditionalApi
 } from "@lionweb/server-additionalapi"
 import { registerLanguagesApi } from "@lionweb/server-languages"
-import { deltaLogger, bulkLogger, HttpClientErrors, PROTOBUF_CONTENT_TYPE, RepositoryConfig, requestLogger, ServerConfig, toJsonString } from "@lionweb/server-shared"
+import { HttpClientErrors, PROTOBUF_CONTENT_TYPE, toJsonString } from "@lionweb/server-shared"
+import { deltaLogger, bulkLogger, RepositoryConfig, requestLogger, ServerConfig } from "@lionweb/server-logging"
 import * as http from "node:http"
 import { runWithTryDelta } from "./RunTry.js";
 

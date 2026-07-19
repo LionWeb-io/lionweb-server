@@ -1,5 +1,5 @@
 import { DbConnection } from "@lionweb/server-database"
-import { bulkLogger } from "@lionweb/server-shared"
+import { bulkLogger } from "@lionweb/server-logging"
 import { Express } from "express"
 import pgPromise from "pg-promise"
 import pg from "pg-promise/typescript/pg-subset.js"

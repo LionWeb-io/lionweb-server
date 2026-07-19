@@ -96,7 +96,7 @@ The server also implements the full LionWeb Delta protocol.
 
 ##  Main Packages
 
-### dbadmin
+### server-adminapi-http
 Contains code to manipulate the Postgres database (create, initialize)
 
 ### server
@@ -104,32 +104,38 @@ The main LionWeb server.
 Manages the connections to the databases.
 Gets all apis from other packages.
 
-### common
+### server-common
 Utility classes and functions shared by all other packages.
 
-## API packages
-These packagesa all provide an API with one or more functions.
+### server-logging
+Utility classes and functionsfor logging server code.
 
-### bulkapi
+### server-database
+Utility classes and functions for the postgres database connection.
+
+## API packages
+These packages all provide an API with one or more functions.
+
+### server-lionweb-bulkapi-http
 The API's for the bulk protocol as specified in LionWeb.
 
-### additionalapi
+### server-additionalapi-http
 Some additiona API functions.
 
-### inspection
+### server-inspectionapi-http
 API's to inspect the contents of the nodes table.
 
-### languages
+### server-languages-http
 The API functions to add/remove LionWeb languages to the server.
 NOTE: not implemented yet, it is a placeholder.
 
-### delta-client
+### server-delta-client
 Code for a TypeScript client for sending and receiving delta messages to/from the server.
 
-### delta-server
+### server-delta
 Server side code for the delta protocol.
 
-### delta-shared
+### server-delta-shared
 Shared code (like delta type definitions) for the delta protocol.
 
 ### test

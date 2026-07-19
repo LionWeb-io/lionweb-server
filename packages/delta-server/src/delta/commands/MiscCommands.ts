@@ -2,7 +2,7 @@ import { Missing, NodeClassifierChanged, PropertyValueChanged } from "@lionweb/j
 import { JsonContext } from "@lionweb/json-utils"
 import { DbChanges, MetaPointersTracker, SQL_nextRepoVersion, TableHelpers } from "@lionweb/server-common"
 import { LionWebTask } from "@lionweb/server-database"
-import { deltaLogger } from "@lionweb/server-shared"
+import { deltaLogger } from "@lionweb/server-logging"
 import {
     ChangeClassifierCommand,
     DeltaEvent,

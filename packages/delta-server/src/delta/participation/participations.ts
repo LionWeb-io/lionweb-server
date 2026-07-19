@@ -1,5 +1,5 @@
 import { LionWebTask, RepositoryData } from "@lionweb/server-database"
-import { deltaLogger } from "@lionweb/server-shared"
+import { deltaLogger } from "@lionweb/server-logging"
 import { repositoryStore } from "@lionweb/server-dbadmin"
 import {
     DeltaAdminResponse,

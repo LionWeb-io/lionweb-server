@@ -1,7 +1,7 @@
 import { deltaProcessor } from "@lionweb/delta-server"
 import { asError, Job, requestQueue } from "@lionweb/server-common"
 import { DeltaCommand, DeltaRequest } from "@lionweb/server-delta-shared";
-import { expressLogger, deltaLogger } from "@lionweb/server-shared"
+import { expressLogger, deltaLogger } from "@lionweb/server-logging"
 import WebSocket from "ws";
 
 let index = 0

@@ -1,24 +1,24 @@
 import { LionWebTask } from "@lionweb/server-database"
 import {
     deltaLogger,
-} from "@lionweb/server-shared"
+} from "@lionweb/server-logging"
 import { repositoryStore } from "@lionweb/server-dbadmin"
 import {
-    CreateRepositoryAdminRequest,
-    CreateRepositoryAdminResponse,
-    DeleteRepositoryAdminRequest,
-    DeleteRepositoryAdminResponse,
+    Custom_CreateRepositoryAdminRequest,
+    Custom_CreateRepositoryAdminResponse,
+    Custom_DeleteRepositoryAdminRequest,
+    Custom_DeleteRepositoryAdminResponse,
     DeltaAdminResponse,
     ErrorEvent,
-    ListRepositoriesAdminRequest,
-    ListRepositoriesAdminResponse,
-    RenameRepositoryAdminResponse
+    Custom_ListRepositoriesAdminRequest,
+    Custom_ListRepositoriesAdminResponse,
+    Custom_RenameRepositoryAdminResponse
 } from "@lionweb/server-delta-shared"
 import { DeltaFunction } from "../commands/index.js"
 import { DeltaContext } from "../DeltaContext.js"
 import { Participation } from "../participation/index.js"
 
-const ListRepositories = async (participation: Participation, msg: ListRepositoriesAdminRequest, ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
+const ListRepositories = async (participation: Participation, msg: Custom_ListRepositoriesAdminRequest, ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
     deltaLogger.info("Called ListRepositories request id: " + msg.queryId)
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         await repositoryStore.refresh(task)
@@ -31,17 +31,17 @@ const ListRepositories = async (participation: Participation, msg: ListRepositor
     }))
 
     return {
-        messageKind: "ListRepositoriesAdminResponse",
+        messageKind: "Custom_ListRepositoriesAdminResponse",
         queryId: msg.queryId,
         repositories: repositories,
         additionalInfos: []
-    } as ListRepositoriesAdminResponse
+    } as Custom_ListRepositoriesAdminResponse
 }
 
-const CreateRepository = async (participation: Participation, msg: CreateRepositoryAdminRequest, _ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
+const CreateRepository = async (participation: Participation, msg: Custom_CreateRepositoryAdminRequest, _ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
     deltaLogger.info("Called CreateRepository request id: " + msg.queryId)
     return {
-        messageKind: "CreateRepositoryAdminResponse",
+        messageKind: "Custom_CreateRepositoryAdminResponse",
         queryId: msg.queryId,
         newRepositoryName: msg.repositoryName,
         additionalInfos: [ {
@@ -49,13 +49,13 @@ const CreateRepository = async (participation: Participation, msg: CreateReposit
             message: "NOT IMPLEMENTED YET",
             data: {}
         }]
-    } as CreateRepositoryAdminResponse
+    } as Custom_CreateRepositoryAdminResponse
 }
 
-const DeleteRepository = async (participation: Participation, msg: DeleteRepositoryAdminRequest, _ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
+const DeleteRepository = async (participation: Participation, msg: Custom_DeleteRepositoryAdminRequest, _ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
     deltaLogger.info("Called DeleteRepository request id: " + msg.queryId)
     return {
-        messageKind: "DeleteRepositoryAdminResponse",
+        messageKind: "Custom_DeleteRepositoryAdminResponse",
         queryId: msg.queryId,
         deletedRepositoryName: msg.repositoryName,
         additionalInfos: [ {
@@ -63,13 +63,13 @@ const DeleteRepository = async (participation: Participation, msg: DeleteReposit
             message: "NOT IMPLEMENTED YET",
             data: {}
         }]
-    } as DeleteRepositoryAdminResponse
+    } as Custom_DeleteRepositoryAdminResponse
 }
 
-const RenameRepository = async (participation: Participation, msg: DeleteRepositoryAdminRequest, _ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
+const RenameRepository = async (participation: Participation, msg: Custom_DeleteRepositoryAdminRequest, _ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
     deltaLogger.info("Called RenameRepository request id: " + msg.queryId)
     return {
-        messageKind: "RenameRepositoryAdminResponse",
+        messageKind: "Custom_RenameRepositoryAdminResponse",
         queryId: msg.queryId,
         oldRepositoryName: msg.repositoryName,
         newRepositoryName: msg.repositoryName,
@@ -78,27 +78,27 @@ const RenameRepository = async (participation: Participation, msg: DeleteReposit
             message: "NOT IMPLEMENTED YET",
             data: {}
         }]
-    } as RenameRepositoryAdminResponse
+    } as Custom_RenameRepositoryAdminResponse
 }
 
 export const adminRequestFunctions: DeltaFunction[] = [
     {
-        messageKind: "ListRepositoriesAdminRequest",
+        messageKind: "Custom_ListRepositoriesAdminRequest",
         // @ts-expect-error TS2332
         processor: ListRepositories
     },
     {
-        messageKind: "CreateRepositoryAdminRequest",
+        messageKind: "Custom_CreateRepositoryAdminRequest",
         // @ts-expect-error TS2332
         processor: CreateRepository
     },
     {
-        messageKind: "DeleteRepositoryAdminRequest",
+        messageKind: "Custom_DeleteRepositoryAdminRequest",
         // @ts-expect-error TS2332
         processor: DeleteRepository
     },
     {
-        messageKind: "RenameRepositoryAdminRequest",
+        messageKind: "Custom_RenameRepositoryAdminRequest",
         // @ts-expect-error TS2332
         processor: RenameRepository
     }

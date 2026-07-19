@@ -1,4 +1,5 @@
-import { bulkLogger, LionwebResponse, toJsonString } from "@lionweb/server-shared"
+import { LionwebResponse, toJsonString } from "@lionweb/server-shared"
+import { bulkLogger } from "@lionweb/server-logging"
 import { Response } from "express"
 import { JsonStreamStringify } from "json-stream-stringify"
 

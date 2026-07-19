@@ -4,7 +4,7 @@ import { Express } from "express"
 import pgPromise from "pg-promise"
 import pg from "pg-promise/typescript/pg-subset.js"
 import { runWithTry } from "@lionweb/server-common"
-import { requestLogger } from "@lionweb/server-shared"
+import { requestLogger } from "@lionweb/server-logging"
 import { LanguageApiWorker } from "./controllers/LanguageApiWorker.js";
 import { LanguageApiImpl } from "./controllers/index.js";
 

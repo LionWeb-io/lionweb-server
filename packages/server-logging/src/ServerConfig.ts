@@ -1,6 +1,5 @@
 import { LogLevel } from "@logtape/logtape"
 import fs from "node:fs"
-import { LionWebVersionType } from "./apiutil/index.js"
 import { expressLogger, verbosity } from "./logging.js"
 
 // Define the possible values of database creation both as a type, and as an array of strings and a type
@@ -12,13 +11,13 @@ export function isCreationType(v: string): v is CreationType {
     return s.includes(v)
 }
 
-// export const LionWebVersionValues = ["2023.1", "2024.1"] as const
-// export type LionWebVersionType = (typeof LionWebVersionValues)[number]
-//
-// export function isLionWebVersion(v: string): v is LionWebVersionType {
-//     const s: readonly string[] = LionWebVersionValues
-//     return s.includes(v)
-// }
+const LionWebVersionValues = ["2023.1", "2024.1"] as const
+type LionWebVersionType = (typeof LionWebVersionValues)[number]
+
+function isLionWebVersion(v: string): v is LionWebVersionType {
+    const s: readonly string[] = LionWebVersionValues
+    return s.includes(v)
+}
 
 export type RepositoryConfig = {
     create: CreationType

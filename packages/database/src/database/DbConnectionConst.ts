@@ -1,4 +1,5 @@
-import { dbLogger, ServerConfig, toJsonString } from "@lionweb/server-shared"
+import { toJsonString } from "@lionweb/server-shared"
+import { dbLogger, ServerConfig } from "@lionweb/server-logging"
 import pgPromise from "pg-promise"
 import dotenv from "dotenv"
 import pg from "pg"

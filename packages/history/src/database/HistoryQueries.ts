@@ -1,10 +1,9 @@
 import { LionWebTask, RepositoryData } from "@lionweb/server-database"
+import { dbLogger, requestLogger } from "@lionweb/server-logging"
 import {
     ListPartitionsResponse,
     HttpSuccessCodes,
     HttpClientErrors,
-    dbLogger,
-    requestLogger,
 } from "@lionweb/server-shared"
 import { asError, QueryReturnType, nodesToChunk} from "@lionweb/server-common"
 import { LionWebJsonNode } from "@lionweb/json"

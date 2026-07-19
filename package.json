@@ -1,6 +1,6 @@
 {
     "name": "@lionweb/server",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "type": "module",
     "private": true,
     "license": "Apache-2.0",
@@ -61,6 +61,7 @@
     },
     "workspaces": [
         "./packages/shared",
+        "./packages/server-logging",
         "./packages/delta-shared",
         "./packages/server-delta-definitions",
         "./packages/database",

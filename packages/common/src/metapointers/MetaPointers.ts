@@ -1,6 +1,6 @@
 import { LionWebJsonMetaPointer, LionWebJsonNode } from "@lionweb/json"
 import { DbConnection, LionWebTask, RepositoryData } from "@lionweb/server-database"
-import { dbLogger, deltaLogger } from "@lionweb/server-shared"
+import { dbLogger, deltaLogger } from "@lionweb/server-logging"
 import { METAPOINTERS_TABLE } from "../database/index.js"
 
 /**

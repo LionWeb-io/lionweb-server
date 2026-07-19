@@ -1,4 +1,4 @@
-import { ServerConfig } from "@lionweb/server-shared"
+import { ServerConfig } from "@lionweb/server-logging"
 import * as fs from "node:fs"
 
 export type PostgresConfig = {

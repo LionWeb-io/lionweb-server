@@ -1,4 +1,5 @@
-import { HttpServerErrors, requestLogger } from "@lionweb/server-shared"
+import { HttpServerErrors } from "@lionweb/server-shared"
+import { requestLogger } from "@lionweb/server-logging"
 import { isInternalQueryError } from "../queries/GuardFunctions.js"
 import { asError } from "./functions.js"
 import { lionwebResponse } from "./LionwebResponse.js"

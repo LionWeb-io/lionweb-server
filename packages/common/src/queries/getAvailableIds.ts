@@ -1,6 +1,6 @@
 import { LionWebTask, RepositoryData } from "@lionweb/server-database"
 import { LionWebId } from "@lionweb/server-delta-shared"
-import { requestLogger } from "@lionweb/server-shared"
+import { requestLogger } from "@lionweb/server-logging"
 import { createId } from "../apiutil/index.js"
 import { SQL_insertReservedNodeIds } from "./ReservedIds.js"
 import { DB_nodeIdsInUse, DB_reservedNodeIdsByOtherClient } from "./ReservedIds.js"

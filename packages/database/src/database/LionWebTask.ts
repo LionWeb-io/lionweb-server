@@ -1,4 +1,5 @@
-import { queryLogger, toJsonArray } from "@lionweb/server-shared"
+import { toJsonArray } from "@lionweb/server-shared"
+import { queryLogger } from "@lionweb/server-logging"
 import pgPromise from "pg-promise"
 import { addRepositorySchema, RepositoryData } from "./Repositories.js"
 

@@ -1,6 +1,6 @@
 import { LionWebJsonNode } from "@lionweb/json"
 import { LionWebTask, RepositoryData } from "@lionweb/server-database"
-import { dbLogger } from "@lionweb/server-shared"
+import { dbLogger } from "@lionweb/server-logging"
 import { NODES_TABLE } from "../database/index.js"
 import { SQL_currentRepoVersion } from "./PgHelpers.js"
 import { SQL_retrieveFullNodesFromQuery } from "./QueryNode.js"

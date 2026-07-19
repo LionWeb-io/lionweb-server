@@ -1,4 +1,4 @@
-import { ServerConfig } from "@lionweb/server-shared"
+import { ServerConfig } from "@lionweb/server-logging"
 
 export const CREATE_DATABASE_SQL: string =
 `
