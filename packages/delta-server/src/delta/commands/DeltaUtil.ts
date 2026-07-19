@@ -1,7 +1,7 @@
 import { LionWebJsonNode } from "@lionweb/json"
 import { JsonContext } from "@lionweb/json-utils"
 import { LionWebTask } from "@lionweb/server-database"
-import { dbLogger, deltaLogger } from "@lionweb/server-shared"
+import { dbLogger, deltaLogger } from "@lionweb/server-logging"
 import { ValidationIssue } from "@lionweb/validation"
 import {
     NodeWithParent,

@@ -1,5 +1,6 @@
 import { LionWebTask, RepositoryData } from "@lionweb/server-database"
-import { HttpClientErrors, HttpSuccessCodes, requestLogger } from "@lionweb/server-shared"
+import { HttpClientErrors, HttpSuccessCodes } from "@lionweb/server-shared"
+import { requestLogger } from "@lionweb/server-logging"
 import { QueryReturnType, MetaPointersTracker } from "@lionweb/server-common"
 import { AdditionalApiContext } from "../main.js"
 import {

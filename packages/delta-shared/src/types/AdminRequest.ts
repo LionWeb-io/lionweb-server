@@ -1,12 +1,13 @@
 import type { QueryId } from "./DeltaTypes.js";
 import type { String } from "./DeltaTypes.js";
 import type { AdditionalInfo } from "./DeltaTypes.js";
+import type { Boolean } from "./DeltaTypes.js";
 
 export const DeltaAdminRequestMessageKinds = [
-    "ListRepositoriesAdminRequest",
-    "CreateRepositoryAdminRequest",
-    "DeleteRepositoryAdminRequest",
-    "RenameRepositoryAdminRequest",
+    "Custom_ListRepositoriesAdminRequest",
+    "Custom_CreateRepositoryAdminRequest",
+    "Custom_DeleteRepositoryAdminRequest",
+    "Custom_RenameRepositoryAdminRequest",
 ] as const;
 
 // The type for the tagged union property, derived from the above array
@@ -20,34 +21,36 @@ export type DeltaAdminRequest = {
 };
 
 /**
- *  @see unknown-ListRepositories
+ *  @see unknown-Custom_ListRepositories
  */
-export type ListRepositoriesAdminRequest = DeltaAdminRequest & {
-    messageKind: "ListRepositoriesAdminRequest";
+export type Custom_ListRepositoriesAdminRequest = DeltaAdminRequest & {
+    messageKind: "Custom_ListRepositoriesAdminRequest";
 };
 
 /**
- *  @see unknown-CreateRepository
+ *  @see unknown-Custom_CreateRepository
  */
-export type CreateRepositoryAdminRequest = DeltaAdminRequest & {
+export type Custom_CreateRepositoryAdminRequest = DeltaAdminRequest & {
     repositoryName: String;
-    messageKind: "CreateRepositoryAdminRequest";
+    lionWebVersion: String;
+    history: Boolean;
+    messageKind: "Custom_CreateRepositoryAdminRequest";
 };
 
 /**
- *  @see unknown-DeleteRepository
+ *  @see unknown-Custom_DeleteRepository
  */
-export type DeleteRepositoryAdminRequest = DeltaAdminRequest & {
+export type Custom_DeleteRepositoryAdminRequest = DeltaAdminRequest & {
     repositoryName: String;
-    messageKind: "DeleteRepositoryAdminRequest";
+    messageKind: "Custom_DeleteRepositoryAdminRequest";
 };
 
 /**
- *  @see unknown-RenameRepository
+ *  @see unknown-Custom_RenameRepository
  */
-export type RenameRepositoryAdminRequest = DeltaAdminRequest & {
+export type Custom_RenameRepositoryAdminRequest = DeltaAdminRequest & {
     repositoryName: String;
-    messageKind: "RenameRepositoryAdminRequest";
+    messageKind: "Custom_RenameRepositoryAdminRequest";
 };
 
 // Type Guard function

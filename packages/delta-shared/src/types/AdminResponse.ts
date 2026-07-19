@@ -4,10 +4,10 @@ import type { AdditionalInfo } from "./DeltaTypes.js";
 import type { RepositoryInfo } from "./AdminTypes.js";
 
 export const DeltaAdminResponseMessageKinds = [
-    "ListRepositoriesAdminResponse",
-    "CreateRepositoryAdminResponse",
-    "DeleteRepositoryAdminResponse",
-    "RenameRepositoryAdminResponse",
+    "Custom_ListRepositoriesAdminResponse",
+    "Custom_CreateRepositoryAdminResponse",
+    "Custom_DeleteRepositoryAdminResponse",
+    "Custom_RenameRepositoryAdminResponse",
 ] as const;
 
 // The type for the tagged union property, derived from the above array
@@ -21,36 +21,36 @@ export type DeltaAdminResponse = {
 };
 
 /**
- *  @see unknown-ListRepositories
+ *  @see unknown-Custom_ListRepositories
  */
-export type ListRepositoriesAdminResponse = DeltaAdminResponse & {
+export type Custom_ListRepositoriesAdminResponse = DeltaAdminResponse & {
     repositories: RepositoryInfo[];
-    messageKind: "ListRepositoriesAdminResponse";
+    messageKind: "Custom_ListRepositoriesAdminResponse";
 };
 
 /**
- *  @see unknown-CreateRepository
+ *  @see unknown-Custom_CreateRepository
  */
-export type CreateRepositoryAdminResponse = DeltaAdminResponse & {
+export type Custom_CreateRepositoryAdminResponse = DeltaAdminResponse & {
     newRepositoryName: String;
-    messageKind: "CreateRepositoryAdminResponse";
+    messageKind: "Custom_CreateRepositoryAdminResponse";
 };
 
 /**
- *  @see unknown-DeleteRepository
+ *  @see unknown-Custom_DeleteRepository
  */
-export type DeleteRepositoryAdminResponse = DeltaAdminResponse & {
+export type Custom_DeleteRepositoryAdminResponse = DeltaAdminResponse & {
     deletedRepositoryName: String;
-    messageKind: "DeleteRepositoryAdminResponse";
+    messageKind: "Custom_DeleteRepositoryAdminResponse";
 };
 
 /**
- *  @see unknown-RenameRepository
+ *  @see unknown-Custom_RenameRepository
  */
-export type RenameRepositoryAdminResponse = DeltaAdminResponse & {
+export type Custom_RenameRepositoryAdminResponse = DeltaAdminResponse & {
     oldRepositoryName: String;
     newRepositoryName: String;
-    messageKind: "RenameRepositoryAdminResponse";
+    messageKind: "Custom_RenameRepositoryAdminResponse";
 };
 
 // Type Guard function

@@ -1,5 +1,5 @@
 import { LionWebJsonNode } from "@lionweb/json"
-import { dbLogger } from "@lionweb/server-shared"
+import { dbLogger } from "@lionweb/server-logging"
 import { NodeRecord } from "../database/index.js"
 import { TableHelpers } from "../main.js"
 import { MetaPointersTracker } from "../metapointers/MetaPointers.js"

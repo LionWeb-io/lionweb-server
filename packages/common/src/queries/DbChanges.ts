@@ -12,7 +12,8 @@ import {
     ReferenceChange
 } from "@lionweb/json-diff"
 import { LionWebTask } from "@lionweb/server-database"
-import { dbLogger, queryLogger, toJsonString } from "@lionweb/server-shared"
+import { dbLogger, queryLogger } from "@lionweb/server-logging"
+import {  toJsonString } from "@lionweb/server-shared"
 import pgPromise, { ColumnSet } from "pg-promise"
 import pg from "pg-promise/typescript/pg-subset.js"
 import { UnknownObjectType } from "../apiutil/index.js"

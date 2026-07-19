@@ -15,7 +15,7 @@ import {
     PartitionDeletedEvent,
     type ErrorDelta
 } from "@lionweb/server-delta-shared"
-import { deltaLogger } from "@lionweb/server-shared"
+import { deltaLogger } from "@lionweb/server-logging"
 import { DeltaContext } from "../DeltaContext.js"
 import { affectedNodeMessage, newErrorDelta, affectedPartitionMessage } from "../events.js"
 import { Participation } from "../participation/index.js"

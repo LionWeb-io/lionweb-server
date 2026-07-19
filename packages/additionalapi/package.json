@@ -1,6 +1,6 @@
 {
     "name": "@lionweb/server-additionalapi",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "private": false,
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -32,11 +32,12 @@
         "chai": "4.3.10"
     },
     "dependencies": {
-        "@lionweb/json": "0.10.0-alpha.4",
-        "@lionweb/server-common": "0.4.0",
-        "@lionweb/server-database": "0.4.0",
-        "@lionweb/server-dbadmin": "0.4.0",
-        "@lionweb/server-shared": "0.4.0",
+        "@lionweb/json": "0.10.0-beta.3",
+        "@lionweb/server-common": "0.4.1",
+        "@lionweb/server-database": "0.4.1",
+        "@lionweb/server-dbadmin": "0.4.1",
+        "@lionweb/server-shared": "0.4.1",
+        "@lionweb/server-logging": "0.4.1",
         "@types/express": "4.17.21",
         "body-parser": "2.3.0",
         "chai": "4.3.10",

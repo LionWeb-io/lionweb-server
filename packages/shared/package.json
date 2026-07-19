@@ -1,6 +1,6 @@
 {
     "name": "@lionweb/server-shared",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "private": false,
     "description": "Shared code between client and server",
     "main": "dist/index.js",
@@ -19,6 +19,7 @@
         "clean": "rm -rf node_modules/ && rm -rf dist/",
         "build": "tsc",
         "lint": "eslint src",
+        "install-local": "npm install --registry http://localhost:4873",
         "release": "npm publish --access=public",
         "release-beta": "npm publish --tag beta --access=public",
         "publish-local": "npm publish --registry http://localhost:4873 --tag beta",
@@ -26,10 +27,7 @@
         "republish-local": "npm run unpublish-local && npm run publish-local"
     },
     "dependencies": {
-        "@lionweb/json": "0.10.0-alpha.4",
-        "@logtape/file": "2.0.5",
-        "@logtape/logtape": "2.0.5",
-        "@logtape/pretty": "2.0.5",
+        "@lionweb/json": "0.10.0-beta.3",
         "protobufjs": "8.6.3",
         "source-map-support": "0.5.21"
     }

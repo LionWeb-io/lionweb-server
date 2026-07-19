@@ -1,6 +1,7 @@
 import { cleanGlobalPointersMap, QueryReturnType, removeNewlinesBetween$$ } from "@lionweb/server-common"
 import { LionWebTask, RepositoryData } from "@lionweb/server-database"
-import { bulkLogger, HttpSuccessCodes, requestLogger, ServerConfig } from "@lionweb/server-shared"
+import { bulkLogger, requestLogger, ServerConfig } from "@lionweb/server-logging"
+import { HttpSuccessCodes } from "@lionweb/server-shared"
 import { DbAdminApiContext } from "../main.js"
 import { CREATE_DATABASE_SQL, CREATE_GLOBALS_SQL, dropSchema, initSchemaWithHistory, initSchemaWithoutHistory } from "../tools/index.js"
 

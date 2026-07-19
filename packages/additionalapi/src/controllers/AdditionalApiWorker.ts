@@ -1,6 +1,7 @@
 import { LionWebTask, RepositoryData } from "@lionweb/server-database"
 import { AdditionalApiContext } from "../main.js";
-import { BulkImport, requestLogger } from "@lionweb/server-shared"
+import { BulkImport } from "@lionweb/server-shared"
+import { requestLogger } from "@lionweb/server-logging"
 
 /**
  * Implementations of the additional non-LionWeb methods.

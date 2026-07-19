@@ -9,13 +9,12 @@ import {
     SCHEMA_PREFIX
 } from "@lionweb/server-common"
 import { LionWebTask, RepositoryData } from "@lionweb/server-database"
+import { bulkLogger, requestLogger } from "@lionweb/server-logging"
 import {
-    bulkLogger,
     HttpClientErrors,
     HttpSuccessCodes,
     ListPartitionsResponse,
     ListRepositoriesResponse,
-    requestLogger
 } from "@lionweb/server-shared"
 import { lionwebResponse } from "@lionweb/server-common"
 import e, { Request, Response } from "express"

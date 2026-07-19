@@ -5,18 +5,20 @@
  *   - pack response
  */
 import {
-    bulkLogger,
     CreatePartitionsResponse,
-    dbLogger,
     DeletePartitionsResponse,
     HttpClientErrors,
     HttpSuccessCodes,
     ListPartitionsResponse,
-    requestLogger,
     ResponseMessage,
-    StoreResponse,
-    traceLogger
+    StoreResponse
 } from "@lionweb/server-shared"
+import {
+    bulkLogger,
+    dbLogger,
+    requestLogger,
+    traceLogger
+} from "@lionweb/server-logging"
 import { lionwebResponse } from "@lionweb/server-common"
 import { LionWebTask } from "@lionweb/server-database"
 import { getIntegerParam, isParameterError } from "@lionweb/server-common"

@@ -6,7 +6,7 @@ import {
     REPOSITORIES_TABLE,
 } from "@lionweb/server-common"
 import { LionWebTask, RepositoryData, RepositoryInfo } from "@lionweb/server-database"
-import { requestLogger } from "@lionweb/server-shared"
+import { requestLogger } from "@lionweb/server-logging"
 import { GenericIssue, ValidationResult } from "@lionweb/validation"
 import { LionWebJsonChunk } from "@lionweb/json"
 import { JsonContext } from "@lionweb/json-utils"

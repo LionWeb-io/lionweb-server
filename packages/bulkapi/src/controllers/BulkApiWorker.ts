@@ -14,13 +14,12 @@ import {
     HttpSuccessCodes,
     IdsResponse,
     ListPartitionsResponse,
-    requestLogger,
     ResponseMessage,
     RetrieveResponse,
     StoreResponse,
-    toJsonString,
-    traceLogger
+    toJsonString
 } from "@lionweb/server-shared"
+import { traceLogger, requestLogger } from "@lionweb/server-logging" 
 import { EMPTY_CHUNKS, nodesToChunk, QueryReturnType } from "@lionweb/server-common"
 import { LionWebTask, RepositoryData} from "@lionweb/server-database"
 import { LionWebJsonChunk } from "@lionweb/json"

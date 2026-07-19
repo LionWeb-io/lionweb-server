@@ -2,7 +2,7 @@ import {Express} from "express"
 import pgPromise from "pg-promise"
 import pg from "pg-promise/typescript/pg-subset.js"
 import { runWithTry } from "@lionweb/server-common"
-import { requestLogger } from "@lionweb/server-shared"
+import { requestLogger } from "@lionweb/server-logging"
 import { DbConnection } from "@lionweb/server-database"
 import { AdditionalApiWorker } from "./controllers/AdditionalApiWorker.js";
 import { AdditionalApiImpl } from "./controllers/index.js";

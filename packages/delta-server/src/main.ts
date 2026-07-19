@@ -1,7 +1,7 @@
 import { DbConnection } from "@lionweb/server-database"
 import pgPromise from "pg-promise"
 import pg from "pg-promise/typescript/pg-subset.js"
-import { requestLogger } from "@lionweb/server-shared"
+import { requestLogger } from "@lionweb/server-logging"
 import { DeltaContext } from "./delta/index.js"
 
 /**

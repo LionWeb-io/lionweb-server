@@ -9,7 +9,7 @@ import { Request, Response } from "express"
 import { HistoryContext } from "../main.js"
 import { getIntegerParam, isParameterError, FOREVER } from "@lionweb/server-common"
 import { LionWebTask } from "@lionweb/server-database"
-import { bulkLogger, dbLogger, requestLogger } from "@lionweb/server-shared"
+import { bulkLogger, dbLogger, requestLogger } from "@lionweb/server-logging"
 export interface HistoryApi {
     listPartitions: (request: Request, response: Response) => void
     retrieve: (request: Request, response: Response) => void

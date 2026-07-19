@@ -23,8 +23,8 @@ import {
     DeltaEvent,
     DeltaCommand,
     DeltaAdminRequest,
-    CreateRepositoryAdminRequest,
-    DeleteRepositoryAdminRequest,
+    Custom_CreateRepositoryAdminRequest,
+    Custom_DeleteRepositoryAdminRequest,
     MessageToClient,
     MessageFromClient,
     ChangeReferenceCommand,
@@ -616,26 +616,28 @@ export class Commands {
     }
 
     listRepositories = (client: DeltaClient): DeltaAdminRequest => {
-        return client.sendAdminRequest({ messageKind: "ListRepositoriesAdminRequest", queryId: "123", additionalInfos: [] })
+        return client.sendAdminRequest({ messageKind: "Custom_ListRepositoriesAdminRequest", queryId: "123", additionalInfos: [] })
     }
 
     addRepository = (client: DeltaClient, repoName: string): DeltaAdminRequest => {
         const cmd = {
-            messageKind: "CreateRepositoryAdminRequest",
+            messageKind: "Custom_CreateRepositoryAdminRequest",
             queryId: "",
             repositoryName: repoName,
+            history: false,
+            lionWebVersion: "2024.1",
             additionalInfos: []
-        } as CreateRepositoryAdminRequest
+        } as Custom_CreateRepositoryAdminRequest
         return client.sendAdminRequest(cmd)
     }
 
     deleteRepository = (client: DeltaClient, repoName: string): DeltaAdminRequest => {
         const cmd = {
-            messageKind: "DeleteRepositoryAdminRequest",
+            messageKind: "Custom_DeleteRepositoryAdminRequest",
             queryId: "",
             repositoryName: repoName,
             additionalInfos: []
-        } as DeleteRepositoryAdminRequest
+        } as Custom_DeleteRepositoryAdminRequest
         return client.sendAdminRequest(cmd)
     }
 

@@ -28,7 +28,8 @@ import {
     isContinuedCommand
 } from "@lionweb/server-delta-shared"
 import { MessageFromClient } from "@lionweb/server-delta-shared"
-import { deltaLogger, toJsonString } from "@lionweb/server-shared"
+import { toJsonString } from "@lionweb/server-shared"
+import { deltaLogger } from "@lionweb/server-logging"
 import { ValidationResult } from "@lionweb/validation"
 import WebSocket from 'ws';
 import { adminRequestFunctions } from "./adminrequests/AdminFunctions.js"

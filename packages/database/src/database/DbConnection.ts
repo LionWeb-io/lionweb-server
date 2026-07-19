@@ -1,4 +1,5 @@
-import { dbLogger, LionWebVersionType, queryLogger, requestLogger, toJsonString, traceLogger } from "@lionweb/server-shared"
+import { LionWebVersionType, toJsonString } from "@lionweb/server-shared"
+import { dbLogger, queryLogger, requestLogger, traceLogger } from "@lionweb/server-logging"
 import pgPromise from "pg-promise"
 import { IClient } from "pg-promise/typescript/pg-subset.js"
 import { Pool } from "pg"

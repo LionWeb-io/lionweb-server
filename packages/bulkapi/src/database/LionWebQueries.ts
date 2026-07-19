@@ -5,9 +5,9 @@ import {
     StoreResponse,
     HttpSuccessCodes,
     HttpClientErrors,
-    DeletePartitionsResponse,
-    dbLogger
+    DeletePartitionsResponse
 } from "@lionweb/server-shared"
+import { dbLogger } from "@lionweb/server-logging"
 import {
     QueryReturnType,
     UNLIMITED_DEPTH,
