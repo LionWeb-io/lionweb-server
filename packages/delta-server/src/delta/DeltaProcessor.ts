@@ -51,6 +51,11 @@ import { requestFunctions } from "./queries/index.js"
 import { Participation, PARTICIPATIONS, validateParticipation } from "./participation/index.js"
 import { CompositeEventBufferStack } from "./CompositeEventBuffer.js"
 
+export let MONITOR: WebSocket | undefined = undefined
+export function setMonitor(s: WebSocket): void {
+    MONITOR = s
+}
+
 class DeltaProcessor {
     processingFunctions: Map<string, MessageFunction> = new Map<string, MessageFunction>()
     deltaValidator = new DeltaValidator(new ValidationResult())
@@ -76,7 +81,7 @@ class DeltaProcessor {
      */
     processDelta = async (socket: WebSocket, delta: MessageFromClient): Promise<void> => {
         // first try to get the `messageKind`
-        deltaLogger.debug(`processDelta messageKind ${delta?.messageKind}`)
+        deltaLogger.info(`processDelta messageKind ${delta?.messageKind}`)
         const messageKind = delta.messageKind
         if (typeof messageKind !== "string") {
             deltaLogger.error(`processDelta 1: messageKind should be a string but is a '${typeof messageKind}'`)
@@ -120,6 +125,7 @@ class DeltaProcessor {
 
         // Finally ok, process the delta and send the response
         try {
+            // this.monitor(MONITOR, participation, delta)
             if (participation === undefined) {
                 return
             } else if (delta.messageKind === "CompositeCommand") {
@@ -146,9 +152,11 @@ class DeltaProcessor {
                         // TODO Should be done inside processing function, but the socket is not known there
                         PARTICIPATIONS.reconnect(socket, PARTICIPATIONS.findOldParticipation((delta as ReconnectRequest).participationId)!)
                     }
+                    this.monitor(MONITOR, participation, delta)
                     this.sendDelta(socket, participation, delta, response)
                 
                 } else {
+                    this.monitor(MONITOR, participation, delta)
                     // To whom needs this Event (yes, it's an Event now) needs to be sent.
                     deltaLogger.info(`looking for affected partitions in ${response}`)
                     const affectedPartitionData = response.additionalInfos.find(m => m.kind == "AffectedPartition")
@@ -205,15 +213,7 @@ class DeltaProcessor {
         }
     }
 
-    eventBuffers: CompositeEventBufferStack = new CompositeEventBufferStack() 
-
-    ContinuedCommand(        participation: Participation,
-                             msg: CompositeCommand,
-                             _ctx: DeltaContext,
-                             socket?: WebSocket
-    ){
-        
-    }
+    eventBuffers: CompositeEventBufferStack = new CompositeEventBufferStack()
 
     CompositeCommandFunction = async (
         participation: Participation,
@@ -256,7 +256,34 @@ class DeltaProcessor {
         // ensure originationg client will get the response
         return errorEvent(msg)
     }
-    
+
+    /**
+     *  Send a message to te monitor client
+     * @param s
+     * @param participation
+     * @param delta
+     */
+    monitor(s: WebSocket | undefined, participation: Participation | undefined, delta: Object): void {
+        if (s !== undefined && participation !== undefined) {
+            deltaLogger.info(`sending to monitor`)
+            s.send(JSON.stringify({
+                messageKind: "Monitor",
+                clientId: participation.repositoryData?.clientId,
+                repository: participation.repositoryData?.repository?.repository_name,
+                delta: delta
+            }))
+        } else {
+            console.error(`PARTICIPATION ${participation?.participationId} or socket ${s} IS UNDEFINED for ${JSON.stringify(delta)}`)
+        }
+    }
+
+    /**
+     * Send a delta to clients.
+     * @param socket
+     * @param participation
+     * @param originalMessage
+     * @param responseOrEvent
+     */
     sendDelta(
         socket: WebSocket,
         participation: Participation | undefined,
@@ -264,6 +291,7 @@ class DeltaProcessor {
         responseOrEvent: MessageToClient
     ) {
         deltaLogger.info(`Send delta ${responseOrEvent.messageKind} to ${participation?.repositoryData?.clientId}`)
+        this.monitor(MONITOR, participation, responseOrEvent)
         if (responseOrEvent.messageKind === "ErrorEvent") {
             deltaLogger.info(`Sending ERROR message ${JSON.stringify(responseOrEvent)}`)
         }
@@ -282,7 +310,7 @@ class DeltaProcessor {
             deltaLogger.info(`    buffering event ${responseOrEvent.messageKind}`)
             this.eventBuffers.activeBuffer().addEvent(participation!, (originalMessage as DeltaCommand), responseOrEvent as DeltaEvent)
         } else {
-            deltaLogger.info(`    sending event/response ${JSON.stringify(responseOrEvent)}`)
+            // deltaLogger.info(`    Buffer sending event/response ${JSON.stringify(responseOrEvent)}`)
             this.applySequenceNumbers(participation!, responseOrEvent)
             socket.send(JSON.stringify(responseOrEvent))
         }

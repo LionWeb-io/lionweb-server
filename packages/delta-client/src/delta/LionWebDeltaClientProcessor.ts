@@ -20,7 +20,7 @@ export class LionWebDeltaClientProcessor {
     }
 
     processDelta(socket: WebSocket, delta: DeltaEvent): void {
-        console.log("LionWebDeltaClientProcessor.processDelta")
+        // console.log("LionWebDeltaClientProcessor.processDelta")
         const type = delta.messageKind
         if (typeof type !== "string") {
             console.error(`1 : messageKind is not a string but a '${typeof type}'`)
@@ -28,7 +28,7 @@ export class LionWebDeltaClientProcessor {
         }
         const func = this.processingFunctions.get(type)
         if (func === undefined) {
-            console.error(`LionWebDeltaClientProcessor.processDelta(): processing function not found for '${JSON.stringify(delta)}'`)
+            // console.error(`LionWebDeltaClientProcessor.processDelta(): processing function not found for '${JSON.stringify(delta)}'`)
             return
         }
         // Now validate the JSON message

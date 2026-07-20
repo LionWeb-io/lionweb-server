@@ -24,10 +24,10 @@ export class DBAdminApiWorker {
     async deleteRepository(task: LionWebTask, repositoryData: RepositoryData): Promise<QueryReturnType<string>> {
         requestLogger.info(`deleteRepository`)
         const queryResult = await task.queryWithoutRepository(dropSchema(repositoryData.repository.schema_name))
-        requestLogger.info(`cleanMetaPointers`)
-        requestLogger.info(`${JSON.stringify(queryResult)}`)
+        // requestLogger.info(`cleanMetaPointers`)
+        // requestLogger.info(`${JSON.stringify(queryResult)}`)
         cleanGlobalPointersMap(repositoryData.repository.repository_name)
-        requestLogger.info(`return`)
+        // requestLogger.info(`return`)
         return {
             status: HttpSuccessCodes.Ok,
             query: dropSchema(repositoryData.repository.schema_name),

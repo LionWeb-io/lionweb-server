@@ -32,6 +32,7 @@ export class ParticipationAdmin {
     newParticipation(socket: WebSocket): Participation {
         const part = new Participation(socket)
         this.activeSockets.set(socket, part)
+        deltaLogger.info(`ParticipationInfo for socket ${part.participationId}`)
         return part
     }
 
@@ -128,6 +129,7 @@ export class Participation {
      */
     constructor(socket: WebSocket) {
         this.socket = socket
+        this.participationId = this.nextParticipationId()
     }
 
     async startParticipation(task: LionWebTask, clientId: string, repositoryId: string): Promise<void> {
@@ -137,7 +139,7 @@ export class Participation {
             clientId: clientId,
             repository: await repositoryStore.getRepository(task, repositoryId)
         }
-        deltaLogger.info(`startParticipation repo '${repositoryId}' schema ${JSON.stringify(this.repositoryData)}`)
+        deltaLogger.info(`startParticipation repo '${repositoryId}' schema ${JSON.stringify(this.repositoryData?.repository)}`)
     }
 
     lastSequenceNumber(): number {

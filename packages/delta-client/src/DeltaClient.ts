@@ -4,6 +4,7 @@ import {
     DeltaAdminResponse,
     DeltaCommand,
     DeltaEvent,
+    DeltaMonitor,
     DeltaRequest,
     DeltaResponse,
     isDeltaAdminResponse,
@@ -106,7 +107,12 @@ export class DeltaClient {
 
     socket: WebSocket | undefined
     deltaProcessor: LionWebDeltaClientProcessor
-    customFunction: ((msg: MessageToClient) => void) = () => {}
+    customFunction: ((msg: object) => void) = () => {}
+    /**
+     * When `true` and there is a cutomFunction, will stop after running the customFunction.
+     * When `false` will run the default behavior after the custom functiomn is called.
+     */
+    customFunctionOnly: boolean = false
     messageIndex = 0
 
     sentMessageHistory: string[] = []
@@ -116,11 +122,11 @@ export class DeltaClient {
     // Map from response-id to response =>
     receivedResponses: Map<string, DeltaResponse | DeltaAdminResponse> = new Map<string, DeltaResponse | DeltaAdminResponse>()
 
-    asyncConnect(): Promise<WebSocket | Event> {
+    asyncConnect(param?: string): Promise<WebSocket | Event> {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const self = this
         return new Promise(function(resolve, reject) {
-            const server = new WebSocket(self.serverUrl);
+            const server = new WebSocket(self.serverUrl + "?param=" + param);
             server.onopen = function() {
                 resolve(server);
             };
@@ -131,12 +137,12 @@ export class DeltaClient {
         });
     }
     
-    async connect(): Promise<void> {
+    async connect(param?: string): Promise<void> {
         this.log("Connecting socket")
         if (this.socket?.readyState === WebSocket.OPEN) {
             return;
         }
-        const connectionResult = await this.asyncConnect()
+        const connectionResult = await this.asyncConnect(param)
         if (connectionResult instanceof Event) {
             this.log(`Error connecting: ${JSON.stringify(connectionResult)} `)
             return
@@ -163,6 +169,9 @@ export class DeltaClient {
             // Run user provided function first
             if (notNullOrUndefined(this.customFunction)) {
                 this.customFunction(incomingEventOrResponse)
+                if (this.customFunctionOnly) {
+                    return
+                }
             }
             // Store the incoming events, so they can be examined later on.
             if (isDeltaEvent(incomingEventOrResponse)) {
@@ -236,6 +245,21 @@ export class DeltaClient {
         return request
     }
 
+    sendMonitorRequest(request: DeltaMonitor): DeltaMonitor {
+        this.setQueryId(request)
+        const queryAsString = JSON.stringify(request)
+        this.log(`sendMonitorRequest: ${queryAsString}`)
+        if (this.socket === undefined) {
+            throw new Error("No socket object")
+        }
+        if (this.socket.readyState !== WebSocket.OPEN) {
+            throw new Error("Socket has no open connection")
+        }
+        this.sentMessageHistory.push(queryAsString)
+        this.socket.send(queryAsString)
+        return request
+    }
+
     disconnect(): void {
         this.socket?.close()
         this.state = "Disconnected"
@@ -253,7 +277,7 @@ export class DeltaClient {
     }
 
     private queryNumber = 0;
-    private setQueryId(query: DeltaRequest | DeltaAdminRequest): void {
+    private setQueryId(query: DeltaRequest | DeltaAdminRequest | DeltaMonitor): void {
         if (query.queryId === "") {
             query.queryId = query.messageKind + "-" + this.queryNumber++
         }

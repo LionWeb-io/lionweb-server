@@ -60,11 +60,11 @@ collection.forEach((withoutHistory) => {
             // await responseFor(deleteRepo)
             const addRepo = cmd.addRepository(client1, repository)
 
-            expect((await cmd.responseFor(client1, addRepo)).messageKind).toEqual("CreateRepositoryAdminResponse")
+            expect((await cmd.responseFor(client1, addRepo)).messageKind).toEqual("Custom_CreateRepositoryAdminResponse")
 
             const signOn = cmd.signOnRequest(client1, client1.repository)
 
-            expect((await cmd.responseFor(client1, listReposRequest)).messageKind).toEqual("ListRepositoriesAdminResponse")
+            expect((await cmd.responseFor(client1, listReposRequest)).messageKind).toEqual("Custom_ListRepositoriesAdminResponse")
             await expectResponse(client1, signOn, "SignOnResponse")
             expect(await cmd.responseFor(client1, signOn)).toMatchObject({
                 messageKind: "SignOnResponse",

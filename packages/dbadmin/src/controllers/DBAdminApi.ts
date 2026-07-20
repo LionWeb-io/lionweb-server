@@ -222,11 +222,11 @@ export class DBAdminApiImpl implements DBAdminApi {
         } else {
             await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
                 const result = await this.ctx.dbAdminApiWorker.deleteRepository(task, repositoryData)
-                requestLogger.info(`Update repository info table ${repositoryData.repository.repository_name}`)
+                // requestLogger.info(`Update repository info table ${repositoryData.repository.repository_name}`)
                 await task.queryWithoutRepository(
                     `SELECT public.deleteRepositoryInfo('${repositoryData.repository.repository_name}'::text);\n`
                 )
-                requestLogger.info("refresh repostore")
+                // requestLogger.info("refresh repostore")
                 await repositoryStore.refresh(task)
                 lionwebResponse(response, result.status, {
                     success: result.status === HttpSuccessCodes.Ok,
