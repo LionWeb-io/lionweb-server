@@ -104,6 +104,9 @@ collection.forEach(withoutHistory => {
                 console.log("Retrieve Result: " + JSON.stringify(JSON.stringify(retrieve.body.messages)))
                 const retrieveResponse = retrieve.body as RetrieveResponse
                 const diff = new LionWebJsonDiff()
+                console.log(`${JSON.stringify(baseFullChunk, null, 2)}`)
+                console.log(`retrive `)
+                console.log(`${JSON.stringify(retrieveResponse, null, 2)}`)
                 diff.diffLwChunk(baseFullChunk, retrieveResponse.chunk)
                 expect(diff.diffResult.changes).toEqual([])
             })

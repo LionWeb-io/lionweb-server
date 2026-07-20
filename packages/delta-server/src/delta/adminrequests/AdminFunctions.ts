@@ -12,10 +12,12 @@ import {
     ErrorEvent,
     Custom_ListRepositoriesAdminRequest,
     Custom_ListRepositoriesAdminResponse,
-    Custom_RenameRepositoryAdminResponse
+    Custom_RenameRepositoryAdminResponse,
+    Custom_MonitorStartMonitor
 } from "@lionweb/server-delta-shared"
 import { DeltaFunction } from "../commands/index.js"
 import { DeltaContext } from "../DeltaContext.js"
+import { setMonitor } from "../DeltaProcessor.js"
 import { Participation } from "../participation/index.js"
 
 const ListRepositories = async (participation: Participation, msg: Custom_ListRepositoriesAdminRequest, ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
@@ -81,6 +83,22 @@ const RenameRepository = async (participation: Participation, msg: Custom_Delete
     } as Custom_RenameRepositoryAdminResponse
 }
 
+const MonitorStart = async (participation: Participation, msg: Custom_MonitorStartMonitor, _ctx: DeltaContext): Promise<DeltaAdminResponse | ErrorEvent> => {
+    deltaLogger.info("Called Custom_MonitorStartMonitor request id: " + msg.queryId)
+    setMonitor(participation.socket)
+    return {
+        messageKind: "Custom_RenameRepositoryAdminResponse",
+        queryId: msg.queryId,
+        oldRepositoryName: msg.repositoryName,
+        newRepositoryName: msg.repositoryName,
+        additionalInfos: [ {
+            kind: "Info",
+            message: "NOT IMPLEMENTED YET",
+            data: {}
+        }]
+    } as Custom_RenameRepositoryAdminResponse
+}
+
 export const adminRequestFunctions: DeltaFunction[] = [
     {
         messageKind: "Custom_ListRepositoriesAdminRequest",
@@ -101,5 +119,10 @@ export const adminRequestFunctions: DeltaFunction[] = [
         messageKind: "Custom_RenameRepositoryAdminRequest",
         // @ts-expect-error TS2332
         processor: RenameRepository
+    },
+    {
+        messageKind: "Custom_MonitorStart",
+        // @ts-expect-error TS2332
+        processor: MonitorStart
     }
 ]

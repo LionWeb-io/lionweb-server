@@ -55,10 +55,10 @@ console.log(`beforeAllTests ${name}`)
     const listReposRequest = cmd.listRepositories(client)
     const addRepo = cmd.addRepository(client, repository)
 
-    expect((await cmd.responseFor(client, addRepo)).messageKind).toEqual("CreateRepositoryAdminResponse")
+    expect((await cmd.responseFor(client, addRepo)).messageKind).toEqual("Custom_CreateRepositoryAdminResponse")
 
     const signOn = cmd.signOnRequest(client, client.repository)
-    expect((await cmd.responseFor(client, listReposRequest)).messageKind).toEqual("ListRepositoriesAdminResponse")
+    expect((await cmd.responseFor(client, listReposRequest)).messageKind).toEqual("Custom_ListRepositoriesAdminResponse")
     await expectResponse(client, signOn, "SignOnResponse")
     expect(await cmd.responseFor(client, signOn)).toMatchObject({
         messageKind: "SignOnResponse",

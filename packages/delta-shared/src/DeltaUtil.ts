@@ -25,6 +25,17 @@ export function findDistributableInfos(delta: MessageFromClient | MessageToClien
     return delta.additionalInfos.filter(info => info.distribute)
 }
 
+export type MonitorMessage = {
+    messageKind: "Monitor"
+    clientId: string
+    repository: string
+    delta: MessageToClient | MessageFromClient
+}
+
+export function isMonitorMessage(object: object): object is MonitorMessage {
+    return (object as any)["messageKind"] === "Monitor"
+}
+
 export type ErrorDelta = ErrorEvent | ErrorResponse
 
 export function isErrorEvent(object: unknown): object is ErrorEvent {

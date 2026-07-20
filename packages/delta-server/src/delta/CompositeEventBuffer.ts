@@ -6,7 +6,7 @@ export class CompositeEventBufferStack {
     eventBuffers: CompositeEventBuffer[] = []
 
     shouldBuffer(): boolean {
-        deltaLogger.info(`shoulod buffer ${this.eventBuffers.length > 0}`)
+        // deltaLogger.info(`CompositeEventBufferStack.should buffer ${this.eventBuffers.length > 0}`)
         return this.eventBuffers.length > 0
     }
 

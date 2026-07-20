@@ -10,6 +10,8 @@ export function readModel(filename: string): LionWebJsonChunk | null {
             const chunk: LionWebJsonChunk = JSON.parse(fs.readFileSync(filename).toString())
             return chunk
         }
+    } else {
+        console.error(`File ${filename} does not exist`)
     }
     return null
 }

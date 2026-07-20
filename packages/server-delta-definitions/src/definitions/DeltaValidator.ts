@@ -16,7 +16,8 @@ import {
     validateId,
     AdminTypesDefinitions,
     AdminRequestDefinitions,
-    AdminResponseDefinitions
+    AdminResponseDefinitions,
+    MonitorDefinitions
 } from "@lionweb/validation"
 
 export type UnknownObjectType = { [key: string]: unknown }
@@ -25,7 +26,7 @@ export type UnknownObjectType = { [key: string]: unknown }
  * All the validator definitions used by the delta protocol.
  */
 const definitions = new SyntaxDefinition(
-    [CommandDefinitions, ResponseDefinitions, RequestDefinitions, EventDefinitions, AdminRequestDefinitions, AdminResponseDefinitions], 
+    [CommandDefinitions, ResponseDefinitions, RequestDefinitions, EventDefinitions, AdminRequestDefinitions, AdminResponseDefinitions, MonitorDefinitions], 
     [ChunksDefinitions, DeltaTypesDefinitions, AdminTypesDefinitions]
 )
 /**

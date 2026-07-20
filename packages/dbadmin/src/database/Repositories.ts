@@ -51,13 +51,13 @@ export class RepositoryStore {
     constructor() {}
 
     async refresh(task: LionWebTask): Promise<void> {
-        requestLogger.info("RepositoryStore REFRESH")
+        // requestLogger.info("RepositoryStore REFRESH")
         this.initialized = false
         await this.initialize(task)
     }
 
     async initialize(task: LionWebTask) {
-        requestLogger.info("RepositoryStore initialize " + this.i++)
+        // requestLogger.info("RepositoryStore initialize " + this.i++)
         if (this.initialized) {
             // requestLogger.info("ALREADY initialized")
             return
@@ -65,13 +65,13 @@ export class RepositoryStore {
         // requestLogger.info("initializing")
         this.repositoryName2repository.clear()
         let repoTable = (await task.queryWithoutRepository(`SELECT * FROM ${REPOSITORIES_TABLE};\n`)) as RepositoryInfo[]
-        requestLogger.info("repotable found")
+        // requestLogger.info("repotable found")
         for (const repo of repoTable) {
             this.repositoryName2repository.set(repo.repository_name, repo)
-            requestLogger.info("Repo row: " + JSON.stringify(repo))
+            // requestLogger.info("Repo row: " + JSON.stringify(repo))
             await initializeGlobalMetaPointersMap(task, { repository: repo, clientId: "SERVER" })
         }
-        requestLogger.info("done refresh")
+        // requestLogger.info("done refresh")
         this.initialized = true
     }
 

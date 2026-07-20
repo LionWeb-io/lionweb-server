@@ -208,7 +208,12 @@ async function startServer() {
     
     const wsServer = new WebSocketServer({server: httpServer})
     wsServer.on('connection', (socket, _request) => {
-        deltaLogger.info(`Client connected`);
+        deltaLogger.info(`Client connected with URL '${_request.url}'`);
+        if (_request.url.includes("param=monitor")) {
+            // Special monitoring socket
+            
+            return
+        }
         PARTICIPATIONS.newParticipation(socket)
         
         socket.onmessage = message => {
