@@ -269,7 +269,8 @@ class DeltaProcessor {
             s.send(JSON.stringify({
                 messageKind: "Monitor",
                 clientId: participation.repositoryData?.clientId,
-                repository: participation.repositoryData?.repository?.repository_name,
+                participationId: participation.participationId,
+                repositoryName: participation.repositoryData?.repository?.repository_name,
                 delta: delta
             }))
         } else {
