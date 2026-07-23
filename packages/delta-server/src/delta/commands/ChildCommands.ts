@@ -356,11 +356,12 @@ const MoveChildInSameContainment = async (
         //// Execute ////
         const changes = new DbChanges(TableHelpers.pgp)
         const changedContainment = structuredClone(containment)
-        if (msg.oldIndex > msg.newIndex) {
-            changedContainment.children.splice(msg.newIndex, 0, movedChildNode.id)
-        } else {
-            changedContainment.children.splice(msg.newIndex - 1, 0, movedChildNode.id)
-        }
+        changedContainment.children.splice(msg.oldIndex + msg.indexOffset, 0, movedChildNode.id)
+        // if (msg.oldIndex > msg.newIndex) {
+        //     changedContainment.children.splice(msg.newIndex, 0, movedChildNode.id)
+        // } else {
+        //     changedContainment.children.splice(msg.newIndex - 1, 0, movedChildNode.id)
+        // }
         changes.addChanges([
             new ChildOrderChanged(deltaContext(), parentNode, msg.containment, changedContainment, msg.movedChild, Missing.NotMissing)
         ])
@@ -376,7 +377,7 @@ const MoveChildInSameContainment = async (
             movedChild: msg.movedChild,
             containment: msg.containment,
             oldIndex: msg.oldIndex,
-            newIndex: msg.newIndex,
+            indexOffset: msg.indexOffset,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0, // dummy, will be changed for each participation before sending
             additionalInfos: [affectedNodeMessage(msg.parent), affectedPartitionMessage(partition)]

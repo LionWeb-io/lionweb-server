@@ -123,7 +123,7 @@ describe.each(withoutHistoryList)("Annotations-$withoutHistory", async ({ withou
         const partitionL = cmd.addFullPartition(client, LibraryModel.nodes())
         ProgramModel.addPartition(libraryNodes)
 
-        const annErr = cmd.moveAnnotationInSameParent(client, "id-annotation-none", "id-program", 0, 1)
+        const annErr = cmd.moveAnnotationInSameParent(client, "id-annotation-none", "id-program", 0,  1)
         await expectError(client, annErr, "indexEntryMismatch")
 
         const annCmd = cmd.moveAnnotationInSameParent(client, "id-annotation", "id-program", 0, 1)

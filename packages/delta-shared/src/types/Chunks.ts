@@ -54,7 +54,6 @@ export type LionWebJsonReference = {
     targets: LionWebJsonReferenceTarget[];
 };
 
-
 export type LionWebJsonReferenceTarget =
     | {
           resolveInfo: String
@@ -63,4 +62,8 @@ export type LionWebJsonReferenceTarget =
     | {
           resolveInfo: String | null
           reference: LionWebId
-      }
+}
+
+export type IdList = {
+    ids: LionWebId[];
+};

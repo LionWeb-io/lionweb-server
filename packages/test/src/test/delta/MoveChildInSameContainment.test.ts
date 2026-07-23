@@ -31,18 +31,18 @@ describe.each(withoutHistoryList)("MoveInSameContainment-$withoutHistory ", asyn
         ProgramModel.addPartition(libraryNodes)
 
         const moveErr2 = cmd.moveChildInSameContainment(client,
-            CONTAINMENT.ProcedureParameter,  ProgramModel.getNode("id-p1-param1"), 1, 0)
+            CONTAINMENT.ProcedureParameter,  ProgramModel.getNode("id-p1-param1"), 1, -1)
         await expectError(client, moveErr2, "indexEntryMismatch")
         // const moveErr3 = cmd.moveChildInSameContainment(client,
         // Validate old and new index are different.
         //     CONTAINMENT.ProcedureParameter,  ProgramModel.getNode("id-p1-param1"), 0, 0)
         // await expectError(client, moveErr3, "indexEntryMismatch")
         const moveErr4 = cmd.moveChildInSameContainment(client,
-            CONTAINMENT.ProcedureParameter,  ProgramModel.getNode("id-p1-param1"), 10, 20)
+            CONTAINMENT.ProcedureParameter,  ProgramModel.getNode("id-p1-param1"), 10, 10)
         await expectError(client, moveErr4, "indexEntryMismatch")
 
         const move = cmd.moveChildInSameContainment(client,
-            CONTAINMENT.ProcedureParameter,  ProgramModel.getNode("id-p1-param2"), 1, 0)
+            CONTAINMENT.ProcedureParameter,  ProgramModel.getNode("id-p1-param2"), 1, -1)
         await expectEvent(client, move, "ChildMovedInSameContainment")
         ProgramModel.applyDelta(move)
         await logProtocol(client, bulkApiClient, ["id-program", "id-library"], log, ProgramModel)
