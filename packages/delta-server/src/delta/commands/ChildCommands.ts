@@ -341,6 +341,7 @@ const MoveChildInSameContainment = async (
     ctx: DeltaContext
 ): Promise<DeltaEvent | ErrorEvent> => {
     deltaLogger.debug("Called MoveChildInSameContainment " + msg.messageKind)
+    // TODO check that offset is not 0 and resulkt within bounds
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const nodesFromDB = await DB_retrieveFullNodesFromIdList(task, participation.repositoryData!, [
             msg.movedChild,
