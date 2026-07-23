@@ -261,17 +261,18 @@ const MoveAnnotationInSameParent = async (
             ...msg.movedAnnotation, msg.parent
         ])
         const parentNode = findAndValidateNodeExists(msg.parent, nodesFromDB, msg, participation)
-
+        const newIndex = msg.oldIndex + msg.indexOffset 
+            
         validateChildInAnnotation(parentNode, msg.oldIndex, msg.movedAnnotation, msg, participation)
-        validateAnnotationIndex(parentNode, msg.newIndex, msg, participation)
+        validateAnnotationIndex(parentNode, newIndex, msg, participation)
         const changedParentNode = structuredClone(parentNode)
         changedParentNode.annotations.splice(msg.oldIndex, 1)
-        changedParentNode.annotations.splice(msg.newIndex, 0, msg.movedAnnotation)
+        changedParentNode.annotations.splice(newIndex, 0, msg.movedAnnotation)
 
         // Check done, do the work
         const changes = new DbChanges(TableHelpers.pgp)
         changes.addChanges([
-            new AnnotationOrderChanged(deltaContext(),parentNode,changedParentNode,msg.movedAnnotation,msg.newIndex)
+            new AnnotationOrderChanged(deltaContext(),parentNode,changedParentNode,msg.movedAnnotation,newIndex)
         ])
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         const nextVersionSql = SQL_nextRepoVersion(participation.participationId)
@@ -283,7 +284,7 @@ const MoveAnnotationInSameParent = async (
             movedAnnotation: msg.movedAnnotation,
             parent: msg.parent,
             oldIndex: msg.oldIndex,
-            newIndex: msg.newIndex,
+            indexOffset: msg.indexOffset,
             originCommands: [{ commandId: msg.commandId, participationId: participation.participationId }],
             sequenceNumber: 0, // dummy, will be changed for each participation before sending
             additionalInfos: [affectedNodeMessage(parentNode.id), affectedPartitionMessage(partition)]

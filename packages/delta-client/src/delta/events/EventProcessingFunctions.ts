@@ -269,7 +269,7 @@ export const eventFunctions: ReceivingDelta[] = [
         processor: ErrorFunction
     },
     {
-        messageKind: "NoOp",
+        messageKind: "NoOpEvent",
         // @ts-expect-error TS2322
         processor: NoOpEventFunction
     },

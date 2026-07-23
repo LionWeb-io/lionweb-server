@@ -471,7 +471,7 @@ export class LionWebModel {
             case "MoveChildInSameContainment": {
                 const cmd = delta as MoveChildInSameContainmentCommand
                 this.getContainment(cmd.parent, cmd.containment).children.splice(cmd.oldIndex, 1)
-                this.getContainment(cmd.parent, cmd.containment).children.splice(cmd.newIndex, 0, cmd.movedChild)
+                this.getContainment(cmd.parent, cmd.containment).children.splice(cmd.oldIndex + cmd.indexOffset, 0, cmd.movedChild)
                 break
             }
             case "MoveAndReplaceAnnotationFromOtherParent": {
@@ -511,7 +511,7 @@ export class LionWebModel {
                 const cmd = delta as MoveAnnotationInSameParentCommand
                 const parentNode = this.getNode(this.getNode(cmd.movedAnnotation).parent)
                 pull(parentNode.annotations, [cmd.movedAnnotation])
-                parentNode.annotations.splice(cmd.newIndex, 0, cmd.movedAnnotation)
+                parentNode.annotations.splice(cmd.oldIndex + cmd.indexOffset, 0, cmd.movedAnnotation)
                 break
             }
             case "ChangeClassifier": {

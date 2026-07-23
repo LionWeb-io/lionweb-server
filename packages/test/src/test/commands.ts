@@ -385,7 +385,7 @@ export class Commands {
         containment: LionWebJsonMetaPointer,
         movedChild: LionWebJsonNode,
         oldIndex: number,
-        newIndex: number
+        indexOffset: number
     ): MoveChildInSameContainmentCommand => {
         const command: MoveChildInSameContainmentCommand = {
             messageKind: "MoveChildInSameContainment",
@@ -394,7 +394,7 @@ export class Commands {
             movedChild: movedChild.id,
             containment: containment,
             oldIndex: oldIndex,
-            newIndex: newIndex,
+            indexOffset: indexOffset,
             additionalInfos: []
         }
         return client.sendCommand(command) as MoveChildInSameContainmentCommand
@@ -788,13 +788,13 @@ export class Commands {
         annotation: LionWebId,
         parent: LionWebId,
         oldIndex: number,
-        newIndex: number
+        indexOffset: number
     ): MoveAnnotationInSameParentCommand => {
         const command: MoveAnnotationInSameParentCommand = {
             messageKind: "MoveAnnotationInSameParent",
             commandId: `command-id-${queryId++}`,
             oldIndex: oldIndex,
-            newIndex: newIndex,
+            indexOffset: indexOffset,
             parent: parent,
             movedAnnotation: annotation,
             additionalInfos: []

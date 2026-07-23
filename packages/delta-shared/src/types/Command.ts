@@ -172,8 +172,8 @@ export type MoveChildFromOtherContainmentInSameParentCommand = DeltaCommand & {
 export type MoveChildInSameContainmentCommand = DeltaCommand & {
     parent: LionWebId;
     containment: LionWebJsonMetaPointer;
-    newIndex: Number;
     oldIndex: Number;
+    indexOffset: Number;
     movedChild: LionWebId;
     messageKind: "MoveChildInSameContainment";
 };
@@ -270,8 +270,8 @@ export type MoveAnnotationFromOtherParentCommand = DeltaCommand & {
  */
 export type MoveAnnotationInSameParentCommand = DeltaCommand & {
     parent: LionWebId;
-    newIndex: Number;
     oldIndex: Number;
+    indexOffset: Number;
     movedAnnotation: LionWebId;
     messageKind: "MoveAnnotationInSameParent";
 };

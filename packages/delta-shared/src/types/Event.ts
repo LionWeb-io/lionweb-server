@@ -36,7 +36,7 @@ export const DeltaEventMessageKinds = [
     "ReferenceChanged",
     "ContinuedEvent",
     "CompositeEvent",
-    "NoOp",
+    "NoOpEvent",
     "ErrorEvent",
 ] as const;
 
@@ -159,7 +159,6 @@ export type ChildMovedFromOtherContainmentEvent = DeltaEvent & {
     oldIndex: Number;
     oldContainment: LionWebJsonMetaPointer;
     movedChild: LionWebId;
-    split?: Boolean;
     messageKind: "ChildMovedFromOtherContainment";
 };
 
@@ -181,7 +180,7 @@ export type ChildMovedFromOtherContainmentInSameParentEvent = DeltaEvent & {
  */
 export type ChildMovedInSameContainmentEvent = DeltaEvent & {
     parent: LionWebId;
-    newIndex: Number;
+    indexOffset: Number;
     containment: LionWebJsonMetaPointer;
     oldIndex: Number;
     movedChild: LionWebId;
@@ -285,7 +284,7 @@ export type AnnotationMovedFromOtherParentEvent = DeltaEvent & {
  */
 export type AnnotationMovedInSameParentEvent = DeltaEvent & {
     parent: LionWebId;
-    newIndex: Number;
+    indexOffset: Number;
     movedAnnotation: LionWebId;
     oldIndex: Number;
     messageKind: "AnnotationMovedInSameParent";
@@ -376,10 +375,10 @@ export type CompositeEvent = DeltaEvent & {
 };
 
 /**
- *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-NoOp
+ *  @see https://lionWeb.io/specification/delta/delta-api.html#evnt-NoOpEvent
  */
 export type NoOpEvent = DeltaEvent & {
-    messageKind: "NoOp";
+    messageKind: "NoOpEvent";
 };
 
 /**
