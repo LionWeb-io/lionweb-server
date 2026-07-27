@@ -1,8 +1,8 @@
 {
-    "name": "@lionweb/server-dbadmin",
+    "name": "@lionweb/server-logging",
     "version": "0.4.1",
     "private": false,
-    "description": "DB Admin routes for the lionweb server",
+    "description": "Server Side Logging",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "typings": "dist/index.d.ts",
@@ -26,16 +26,11 @@
         "republish-local": "npm run unpublish-local && npm run publish-local"
     },
     "dependencies": {
-        "@lionweb/json": "0.10.0-alpha.10",
-        "@lionweb/json-diff": "0.10.0-alpha.10",
-        "@lionweb/json-utils": "0.10.0-alpha.10",
-        "@lionweb/server-common": "0.4.1",
-        "@lionweb/server-database": "0.4.1",
         "@lionweb/server-shared": "0.4.1",
-        "@lionweb/server-logging": "0.4.1",
-        "@lionweb/validation": "0.10.0-alpha.10",
-        "@types/express": "4.17.21",
-        "express": "4.22.2",
-        "pg-promise": "11.7.8"
+        "@lionweb/json": "0.10.0-alpha.10",
+        "@logtape/file": "2.0.5",
+        "@logtape/logtape": "2.0.5",
+        "@logtape/pretty": "2.0.5",
+        "source-map-support": "0.5.21"
     }
 }
