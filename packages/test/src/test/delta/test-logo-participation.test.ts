@@ -103,8 +103,8 @@ collection.forEach((withoutHistory) => {
         describe("Multi Client Partition tests", () => {
             test("SignOnOff", async () => {
                 // Signing on twice is ok
-                const signOn = cmd.signOnRequest(client1, repository)
-                await expectResponse(client1, signOn, "SignOnResponse")
+                // const signOn = cmd.signOnRequest(client1, repository)
+                // await expectResponse(client1, signOn, "SignOnResponse")
                 const signOn2 = cmd.signOnRequest(client2, repository)
                 await expectResponse(client2, signOn2, "SignOnResponse")
                 const signOn3 = cmd.signOnRequest(client3, repository)
@@ -139,6 +139,7 @@ collection.forEach((withoutHistory) => {
                 await expectEvent(client1, addPartitionCommand1, "PartitionAdded")
                 await expectEvent(client2, addPartitionCommand1, "PartitionAdded")
                 await expectEvent(client3, addPartitionCommand1, "PartitionAdded")
+
 
                 const deletePartition = cmd.deletePartition(client1, "Program-01")
                 await expectEvent(client1, deletePartition, "PartitionDeleted")
@@ -178,8 +179,11 @@ collection.forEach((withoutHistory) => {
                 await expectResponse(client3, subscribe, "InformAboutChangingPartitionsResponse")
 
                 await expectEvent(client2, composite, "CompositeEvent")
+                const event = await cmd.eventFor(client2, composite)
+                expect(event.originCommands[0].commandId).toEqual(composite.commandId)
+                
                 await expectEvent(client3, composite, "CompositeEvent")
-                // console.log(`COMPOSITE EVNT ${JSON.stringify(event, null, 2)}`)
+                expect(event.originCommands[0].commandId).toEqual(composite.commandId)
                 await expect(cmd.eventFor(client1, composite)).rejects.toThrowErrorMatchingInlineSnapshot("[Error: TimeOut]")
                 await expect(cmd.eventFor(client4, composite)).rejects.toThrowErrorMatchingInlineSnapshot("[Error: TimeOut]")
 

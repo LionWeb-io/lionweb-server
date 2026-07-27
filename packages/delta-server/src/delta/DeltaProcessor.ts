@@ -130,11 +130,14 @@ class DeltaProcessor {
                 return
             } else if (delta.messageKind === "CompositeCommand") {
                 // Special case
+                this.monitor(MONITOR, participation, delta)
                 await this.CompositeCommandFunction(participation, delta as CompositeCommand, this.context!, socket)
             } else if (isSplitCommand(delta)) {
+                this.monitor(MONITOR, participation, delta)
                 // There is only one split command active, per participation, save it
                 this.splitCommands.addSplitCommand(participation, delta)
             } else if(isContinuedCommand(delta)) {
+                this.monitor(MONITOR, participation, delta)
                 // add nodes to current split command
                 this.splitCommands.addContinuedCommand(participation, delta)
                 if (delta.continuedChunkCompleted) {
@@ -265,7 +268,7 @@ class DeltaProcessor {
      */
     monitor(s: WebSocket | undefined, participation: Participation | undefined, delta: Object): void {
         if (s !== undefined && participation !== undefined) {
-            deltaLogger.info(`sending to monitor`)
+            deltaLogger.info(`sending to monitor ${JSON.stringify(delta)}`)
             s.send(JSON.stringify({
                 messageKind: "Monitor",
                 clientId: participation.repositoryData?.clientId,
