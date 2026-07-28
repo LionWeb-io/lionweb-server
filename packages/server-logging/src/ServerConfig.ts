@@ -11,7 +11,7 @@ export function isCreationType(v: string): v is CreationType {
     return s.includes(v)
 }
 
-const LionWebVersionValues = ["2023.1", "2024.1"] as const
+const LionWebVersionValues = ["2023.1", "2024.1", "2026.1"] as const
 type LionWebVersionType = (typeof LionWebVersionValues)[number]
 
 function isLionWebVersion(v: string): v is LionWebVersionType {

@@ -1,6 +1,6 @@
 import { LionWebJsonChunk } from "@lionweb/json"
 
-export const LionWebVersionValues = ["2023.1", "2024.1"] as const
+export const LionWebVersionValues = ["2023.1", "2024.1", "2026.1"] as const
 export type LionWebVersionType = (typeof LionWebVersionValues)[number]
 
 export function isLionWebVersion(v: string): v is LionWebVersionType {
