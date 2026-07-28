@@ -1,6 +1,12 @@
 # lionweb-server
 Reference implementation of LionWeb repository
 
+## Changes in Version 0.4.1
+
+- Add monitor API to see delta;s, used in admin UI project
+- Split off server logging package, as it was accidentally used (and failed) by the client in the browser.
+- Update to latest delta spec
+
 ## Changes in Version 0.4.0
 
 - Implementation of the LionWeb Delta protocol.
