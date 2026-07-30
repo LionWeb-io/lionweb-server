@@ -30,17 +30,27 @@ jobs:
       - name: Remove @lionweb/server link
         run: rm -rf node_modules/@lionweb/server
 
-      - name: setup
-        run: npm run setup
+# Not deede: just copies test files
+#      - name: setup
+#        run: npm run setup
 
       - name: tsc
         run: npm run build
 
+# Only upload packages needed to run the server, exclude client packages
       - name: Upload dist
         uses: actions/upload-artifact@v6
         with:
           name: dist
           path: |
+            packages/shared/dist/
+            packages/server-logging/dist/
+            packages/delta-shared/dist/
+            packages/server-delta-definitions/dist/
+            packages/database/dist/
+            packages/dbadmin/dist/
+            packages/history/dist/
+            packages/delta-server/dist/
             packages/additionalapi/dist/
             packages/bulkapi/dist/
             packages/common/dist/
@@ -50,6 +60,8 @@ jobs:
           if-no-files-found: error
           overwrite: true
 
+# Uplocad the node_modules that is filled by npm install
+# TODO: get rid of all the dev packages, like typescript, prettier, etc.
       - name: Upload node modules
         uses: actions/upload-artifact@v6
         with:
@@ -66,6 +78,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+# Download all the files that were uploaded by the build job and merge the dist folders
       - name: Download dist
         uses: actions/download-artifact@v6
         with:
@@ -73,6 +86,7 @@ jobs:
           path: packages
           merge-multiple: true
 
+# Download the uploaded node_modules
       - name: Download node_modules
         uses: actions/download-artifact@v6
         with:

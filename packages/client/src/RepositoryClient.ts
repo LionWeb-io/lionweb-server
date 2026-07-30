@@ -32,7 +32,7 @@ export type ClientConfiguration = {
     authorizationToken?: string;
     timeout?: number
 }
-// export type LionWebVersionType = "2023.1" | "2024.1"
+// export type LionWebVersionType = "2023.1" | "2024.1" | "2026.1"
 
 /**
  *  Access to the LionWeb repository API's.

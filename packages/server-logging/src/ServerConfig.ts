@@ -66,6 +66,16 @@ export type ServerConfigJson = {
  * Class for accessing all configuration properties of the server.
  */
 export class ServerConfig {
+    // Default values
+    private readonly PG_HOST = "127.0.0.1"
+    private readonly PG_USER = "postgres"
+    private readonly PG_DB = "lionweb"
+    private readonly PG_MAINTENANCEDB = "postgres"
+    private readonly PG_PASSWORD = "lionweb"
+    private readonly SERVER_PORT = 3005
+    private readonly BODY_LIMIT = "50mb"
+    private readonly PG_PORT = 5432
+    
     static instance: ServerConfig
 
     static getInstance(): ServerConfig {
@@ -95,7 +105,7 @@ export class ServerConfig {
                 // This is not ideal, but because of how `npm run dev` works I could not think of another solution
                 // that works conveniently both to run the server specifying the configuration path and not specifying
                 // it
-                expressLogger.warn(`--config <filename> is missing <filename>, using default path ${configFile})`)
+                console.warn(`--config <filename> is missing <filename>, using default path ${configFile})`)
             }
         }
         if (fs.existsSync(configFile)) {
@@ -182,31 +192,31 @@ export class ServerConfig {
     pgHost(): string {
         const PGHOST = process.env.PGHOST
         const result = this?.config?.postgres?.database?.host
-        return PGHOST ?? result ?? "127.0.0.1"
+        return PGHOST ?? result ?? this.PG_HOST
     }
 
     pgUser(): string {
         const PGUSER = process.env.PGUSER
         const result = this?.config?.postgres?.database?.user
-        return PGUSER ?? result ?? "postgres"
+        return PGUSER ?? result ?? this.PG_USER
     }
 
     pgDb(): string {
         const PGDB = process.env.PGDB
         const result = this?.config?.postgres?.database?.db
-        return PGDB ?? result ?? "lionweb"
+        return PGDB ?? result ?? this.PG_DB
     }
 
     pgMaintenanceDb(): string {
         const PGMAINTENANCE = process.env.PGMAINTENANCE
         const result = this?.config?.postgres?.database?.maintenanceDb
-        return PGMAINTENANCE ?? result ?? "postgres"
+        return PGMAINTENANCE ?? result ?? this.PG_MAINTENANCEDB
     }
 
     pgPassword(): string {
         const PGPASSWORD = process.env.PGPASSWORD
         const result = this?.config?.postgres?.database?.password
-        return PGPASSWORD ?? result ?? "lionweb"
+        return PGPASSWORD ?? result ?? this.PG_PASSWORD
     }
 
     pgPort(): number {
@@ -215,9 +225,8 @@ export class ServerConfig {
             PGPORT = undefined
         }
         const result = this.config?.postgres?.database?.port
-        return PGPORT ?? result ?? 5432
+        return PGPORT ?? result ?? this.PG_PORT
     }
-
     pgRootcert(): string {
         const PGROOTCERT = process.env.PGROOTCERT
         const result = this?.config?.postgres?.certificates?.rootcert
@@ -235,7 +244,7 @@ export class ServerConfig {
         if (result !== undefined && result !== null && typeof result === "number") {
             return result
         }
-        return 3005 // default
+        return this.SERVER_PORT
     }
 
     bodyLimit(): string {
@@ -243,7 +252,7 @@ export class ServerConfig {
         if (result !== undefined && result !== null && typeof result === "string") {
             return result
         }
-        return "50mb" // default
+        return this.BODY_LIMIT // default
     }
 
     expectedToken(): string {

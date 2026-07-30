@@ -1,8 +1,7 @@
-import { getFileSink } from "@logtape/file"
+// import { getFileSink } from "@logtape/file"
 import {
     configure,
     getConsoleSink,
-    getJsonLinesFormatter,
     getLogger,
     getLogLevels,
     LogLevel,
@@ -23,16 +22,9 @@ function queryFilter(config: LogRecord): boolean {
     return true
 }
 
-await configure<"console" | "file", string>({
+await configure<"console", string>({
     filters: { queryFilter },
     sinks: {
-        file: getFileSink("./sink.jsonl", {
-            formatter: getJsonLinesFormatter({
-                categorySeparator: " > ",
-                message: "rendered",
-                properties: "flatten"
-            })
-        }),
         console: getConsoleSink({
             // formatter: prettyFormatter
             // formatter: jsonLinesFormatter,
@@ -57,14 +49,14 @@ await configure<"console" | "file", string>({
         })
     },
     loggers: [
-        { category: "query", lowestLevel: ServerConfig.getInstance().queryLog() as LogLevel, sinks: ["console", "file"] },
-        { category: "request", lowestLevel: ServerConfig.getInstance().requestLog() as LogLevel, sinks: ["console", "file"] },
-        { category: "delta", lowestLevel: ServerConfig.getInstance().deltaLog() as LogLevel, sinks: ["console", "file"] },
-        { category: "bulk", lowestLevel: ServerConfig.getInstance().bulkLog() as LogLevel, sinks: ["console", "file"] },
-        { category: "express", lowestLevel: ServerConfig.getInstance().expressLog() as LogLevel, sinks: ["console", "file"] },
-        { category: "trace", lowestLevel: ServerConfig.getInstance().traceLog() as LogLevel, sinks: ["console", "file"] },
-        { category: "database", lowestLevel: ServerConfig.getInstance().databaseLog() as LogLevel, sinks: ["console", "file"], filters: ["queryFilter"] },
-        { category: "message", lowestLevel: ServerConfig.getInstance().messageLog() as LogLevel, sinks: ["console", "file"] }
+        { category: "query", lowestLevel: ServerConfig.getInstance().queryLog() as LogLevel, sinks: ["console"] },
+        { category: "request", lowestLevel: ServerConfig.getInstance().requestLog() as LogLevel, sinks: ["console"] },
+        { category: "delta", lowestLevel: ServerConfig.getInstance().deltaLog() as LogLevel, sinks: ["console"] },
+        { category: "bulk", lowestLevel: ServerConfig.getInstance().bulkLog() as LogLevel, sinks: ["console"] },
+        { category: "express", lowestLevel: ServerConfig.getInstance().expressLog() as LogLevel, sinks: ["console"] },
+        { category: "trace", lowestLevel: ServerConfig.getInstance().traceLog() as LogLevel, sinks: ["console"] },
+        { category: "database", lowestLevel: ServerConfig.getInstance().databaseLog() as LogLevel, sinks: ["console"], filters: ["queryFilter"] },
+        { category: "message", lowestLevel: ServerConfig.getInstance().messageLog() as LogLevel, sinks: ["console"] }
     ]
 })
 
