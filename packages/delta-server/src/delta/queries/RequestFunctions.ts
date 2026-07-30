@@ -234,11 +234,11 @@ const GetAvailableIdsRequestFunction = async (
     return response
 }
 
-const ReconnectRequestFunction = (
+const ReconnectRequestFunction = async (
     participation: Participation,
     msg: ReconnectRequest,
     _ctx: DeltaContext
-): DeltaEvent | DeltaResponse => {
+): Promise<DeltaEvent | DeltaResponse> => {
     deltaLogger.info("Called ReconnectRequestFunction " + msg.messageKind)
     const oldParticipation = PARTICIPATIONS.findOldParticipation(msg.participationId)
     if (oldParticipation !== undefined) {
@@ -252,7 +252,7 @@ const ReconnectRequestFunction = (
         }
         return response
     } else {
-        throw newErrorDelta("invalidParticipation", `Server cannot forn an old participation with the id ${msg.participationId}`, msg, undefined)
+        throw newErrorDelta("invalidParticipation", `Server cannot find an old participation with the id ${msg.participationId}`, msg, undefined)
     }
 }
 
