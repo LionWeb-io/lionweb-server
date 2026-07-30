@@ -26,6 +26,7 @@
         "republish-local": "npm run unpublish-local && npm run publish-local"
     },
     "dependencies": {
+        "@types/node": "24.13.3",
         "@lionweb/server-shared": "0.4.2-beta.1",
         "@lionweb/json": "0.10.0-alpha.10",
         "@logtape/file": "2.0.5",
