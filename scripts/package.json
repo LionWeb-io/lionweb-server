@@ -22,8 +22,7 @@
         "lint": "eslint src"
     },
     "devDependencies": {
-        "@prettier/sync": "0.6.1",
-        "dependency-cruiser": "17.4.0"
+        "@prettier/sync": "0.6.1"
     },
     "dependencies": {
         "@lionweb/json": "0.10.0-alpha.10",

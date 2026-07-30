@@ -17,12 +17,12 @@ jobs:
     container: node:24.4.1
     steps:
       - name: install node
-        uses: actions/setup-node@v6.3.0
+        uses: actions/setup-node@v7
         with:
           node-version: 24
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Install dependencies
         run: npm install
@@ -38,7 +38,7 @@ jobs:
 
 # Only upload packages needed to run the server, exclude client packages
       - name: Upload dist
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: dist
           path: |
@@ -62,7 +62,7 @@ jobs:
 # Uplocad the node_modules that is filled by npm install
 # TODO: get rid of all the dev packages, like typescript, prettier, etc.
       - name: Upload node modules
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: node_modules
           path: |
@@ -75,11 +75,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
 # Download all the files that were uploaded by the build job and merge the dist folders
       - name: Download dist
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: dist
           path: packages
@@ -87,7 +87,7 @@ jobs:
 
 # Download the uploaded node_modules
       - name: Download node_modules
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: node_modules
           path: node_modules

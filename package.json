@@ -31,8 +31,6 @@
         "list-dependencies": "npx  syncpack list --source 'package.json' --source 'packages/*/package.json'"
     },
     "devDependencies": {
-        "@changesets/cli": "2.31.0",
-        "@changesets/config": "3.0.0",
         "@eslint/compat": "2.0.2",
         "@eslint/eslintrc": "3.3.3",
         "@eslint/js": "10.0.1",
@@ -41,7 +39,6 @@
         "@typescript-eslint/eslint-plugin": "8.57.2",
         "@typescript-eslint/parser": "8.57.2",
         "@vitest/eslint-plugin": "1.6.20",
-        "changesets": "1.0.2",
         "eslint": "10.1.0",
         "eslint-config-prettier": "10.1.8",
         "eslint-plugin-n": "17.24.0",
