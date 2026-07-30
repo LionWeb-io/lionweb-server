@@ -73,9 +73,10 @@ export class ServerConfig {
     private readonly PG_MAINTENANCEDB = "postgres"
     private readonly PG_PASSWORD = "lionweb"
     private readonly SERVER_PORT = 3005
+    private readonly CREATE_DATABASE_DEFAULT = "if-not-exists"
     private readonly BODY_LIMIT = "50mb"
     private readonly PG_PORT = 5432
-    
+
     static instance: ServerConfig
 
     static getInstance(): ServerConfig {
@@ -108,6 +109,9 @@ export class ServerConfig {
                 console.warn(`--config <filename> is missing <filename>, using default path ${configFile})`)
             }
         }
+        if( !fs.existsSync(configFile) ) {
+            configFile = "/local/server-config.json"
+        }
         if (fs.existsSync(configFile)) {
             console.log(`Reading configuration from file ${configFile}`)
             const stats = fs.statSync(configFile)
@@ -127,10 +131,11 @@ export class ServerConfig {
                 // --config option used, given config file should exist
                 console.error(`Config file ${configFile} does not exist`)
                 process.exit(1)
+            } else {
+                console.warn("No --config parameter found, no config file found ")
             }
         }
     }
-
     createDatabase(): CreationType {
         const result = this?.config?.startup?.createDatabase
         if (typeof result === "string") {
@@ -138,7 +143,7 @@ export class ServerConfig {
                 return result
             }
         }
-        return "never"
+        return this.CREATE_DATABASE_DEFAULT
     }
 
     createRepositories(): RepositoryConfig[] {

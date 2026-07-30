@@ -95,7 +95,7 @@ registerDeltaProcessor(DbConnection.getInstance(), pgp)
 async function setupDatabase() {
     // Initialize database
     const databaseCreation = ServerConfig.getInstance().createDatabase()
-
+    console.log(`setupDatabase ${databaseCreation}`)
     // Do we need to create the database?
     switch (databaseCreation) {
         case "always":
