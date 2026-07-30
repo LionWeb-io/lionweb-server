@@ -115,7 +115,7 @@ export class ServerConfig {
                 try {
                     this.config = JSON.parse(fs.readFileSync(configFile).toString()) as ServerConfigJson
                 } catch (e) {
-                    expressLogger.error(`Error parsing JSON file ${configFile}: ${(e as Error).message}`)
+                    console.error(`Error parsing JSON file ${configFile}: ${(e as Error).message}`)
                     process.exit(1)
                 }
             } else {
@@ -125,7 +125,7 @@ export class ServerConfig {
         } else {
             if (configFlagIndex > -1) {
                 // --config option used, given config file should exist
-                expressLogger.error(`Config file ${configFile} does not exist`)
+                console.error(`Config file ${configFile} does not exist`)
                 process.exit(1)
             }
         }

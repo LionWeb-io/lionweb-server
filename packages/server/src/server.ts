@@ -254,6 +254,7 @@ async function startServer() {
 export async function server() {
     const setupOnly = process.argv.includes("--setup")
     const noSetup = process.argv.includes("--run")
+    bulkLogger.info(`Server: setup ${setupOnly} run ${noSetup}`)
     if (setupOnly && noSetup) {
         requestLogger.error("Cannot use flags --run and --setup together.")
         process.exit(-1)
