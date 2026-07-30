@@ -16,7 +16,6 @@
     },
     "scripts": {
         "clean": "rm -rf node_modules/ && rm -rf dist/",
-        "dev": "nodemon dist/server.js",
         "build": "rm -rf dist && tsc",
         "alive": "echo I am alive",
         "lint": "eslint src",
@@ -45,7 +44,6 @@
         "dotenv": "16.3.1",
         "express": "4.22.2",
         "fs-extra": "11.1.1",
-        "nodemon": "3.0.1",
         "pg": "8.11.3",
         "pg-copy-streams": "7.0.0",
         "pg-promise": "11.7.8",
