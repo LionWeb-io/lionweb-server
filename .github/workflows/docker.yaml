@@ -30,9 +30,8 @@ jobs:
       - name: Remove @lionweb/server link
         run: rm -rf node_modules/@lionweb/server
 
-# Not deede: just copies test files
-#      - name: setup
-#        run: npm run setup
+      - name: setup
+        run: npm run setup
 
       - name: tsc
         run: npm run build
