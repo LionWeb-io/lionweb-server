@@ -185,7 +185,7 @@ async function createRepository(repository: RepositoryConfig) {
         }
         await dbAdminApi.createRepository(task, repositoryData)
         await dbAdminApi.addRepositoryToTable(task, repositoryData)
-        requestLogger.info(`creation of repository ${JSON.stringify(repository)} completed`)
+        requestLogger.info(`creation of repository ${JSON.stringify(repository?.name)} completed`)
     })
 }
 
