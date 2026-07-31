@@ -252,23 +252,29 @@ async function startServer() {
  **********************************************************************/
 
 export async function server() {
-    const setupOnly = process.argv.includes("--setup")
-    const noSetup = process.argv.includes("--run")
-    bulkLogger.info(`Server: setup ${setupOnly} run ${noSetup}`)
-    if (setupOnly && noSetup) {
-        requestLogger.error("Cannot use flags --run and --setup together.")
-        process.exit(-1)
-    }
-    if (setupOnly) {
-        await setupDatabase()
-        dbConnection.pgp.end()
-    } else if (noSetup) {
-        await dbConnection.tx(async (task: LionWebTask) => {
-            await repositoryStore.refresh(task)
-        })
-        await startServer()
-    } else {
-        requestLogger.error("Server should be called with either flag --setup or --run")
-        process.exit(-1)
-    }
+    await setupDatabase()
+    await dbConnection.tx(async (task: LionWebTask) => {
+        await repositoryStore.refresh(task)
+    })
+    await startServer()
+
+    // const setupOnly = process.argv.includes("--setup")
+    // const noSetup = process.argv.includes("--run")
+    // bulkLogger.info(`Server: setup ${setupOnly} run ${noSetup}`)
+    // if (setupOnly && noSetup) {
+    //     requestLogger.error("Cannot use flags --run and --setup together.")
+    //     process.exit(-1)
+    // }
+    // if (setupOnly) {
+    //     await setupDatabase()
+    //     dbConnection.pgp.end()
+    // } else if (noSetup) {
+    //     await dbConnection.tx(async (task: LionWebTask) => {
+    //         await repositoryStore.refresh(task)
+    //     })
+    //     await startServer()
+    // } else {
+    //     requestLogger.error("Server should be called with either flag --setup or --run")
+    //     process.exit(-1)
+    // }
 }
