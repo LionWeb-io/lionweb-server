@@ -1,0 +1,34 @@
+{
+    "server": {
+        "serverPort": 3005,
+        "expectedToken": null
+    },
+    "startup": {
+        "createDatabase": "always",
+        "createRepositories": [
+        ]
+    },
+    "logging": {
+        "bulk": "silenty",
+        "request": "info",
+        "trace": "silent",
+        "database": "silent",
+        "query": "silent",
+        "express": "silent",
+        "delta": "info",
+        "message": "silent"
+    },
+    "postgres": {
+        "database": {
+            "host": "postgres",
+            "user": "postgres",
+            "db": "lionweb",
+            "password": "postgres",
+            "port": "5432"
+        },
+        "certificates": {
+            "rootcert": null,
+            "rootcertcontent": null
+        }
+    }
+}

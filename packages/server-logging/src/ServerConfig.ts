@@ -118,6 +118,7 @@ export class ServerConfig {
             if (stats.isFile()) {
                 try {
                     this.config = JSON.parse(fs.readFileSync(configFile).toString()) as ServerConfigJson
+                    console.log(`Config: ${JSON.stringify(this.config)}`)
                 } catch (e) {
                     console.error(`Error parsing JSON file ${configFile}: ${(e as Error).message}`)
                     process.exit(1)
