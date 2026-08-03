@@ -23,7 +23,7 @@
             "host": "postgres",
             "user": "postgres",
             "db": "lionweb",
-            "password": "postgres",
+            "password": "lionweb",
             "port": "5432"
         },
         "certificates": {

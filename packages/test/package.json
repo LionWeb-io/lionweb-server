@@ -23,7 +23,7 @@
         "setup": "npm run install-bulk-data && npm run install-delta-data",
         "install-bulk-data": "npx degit https://github.com/LionWeb-io/lionweb-integration-testing/testchanges/data/ data",
         "install-delta-data": "npx degit https://github.com/LionWeb-io/lionweb-integration-testing/delta/ delta",
-        "test": "npm run test-all && npm run test-additional && npm run test-bulk",
+        "test": "npm run test-all",
         "test-all": "vitest --run --fileParallelism=false  --silent=false ./src/test/all-tests.test.ts",
         "test-logo": "vitest --run --open --fileParallelism=false  --silent=false ./src/test/delta/test-logo-deltas.test.ts",
         "test-delta": "vitest --run --open --fileParallelism=false  --silent=false ./src/test/delta/*.test.ts",

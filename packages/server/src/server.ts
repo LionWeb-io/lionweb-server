@@ -99,7 +99,7 @@ async function setupDatabase() {
     // Do we need to create the database?
     switch (databaseCreation) {
         case "always":
-            requestLogger.info(`Creating new database ${ServerConfig.getInstance().pgDb()} (config option 'always')`)
+            requestLogger.info(`Creating new database ${ServerConfig.getInstance().pgDb()} (config option 'always') password '${ServerConfig.getInstance().pgPassword()}'`)
             await dbAdminApi.createDatabase()
             break
         case "never":

@@ -1,11 +1,14 @@
 # Docker
 
 ## Lionweb Repository Image
-The `Dockerfile` specifies the creation of an image for the LionWeb repository server.
+The `Dockerfile` in the root of the project specifies the creation of an image of the LionWeb repository server.
 
 ## Docker Compose
-The `compose.yml` starts up a container running both the postgres database server and the LionWeb repository server.
-Note that the postgres image should be installed in docker.
+The `compose.yaml` starts up a container running both 
+- The postgres database server image from the docker registry.
+- The last published LionWeb Server image from the github registry.
+
+
 
 ## docker.yaml
 Github CI to create and publish a docker image when a tage named `release.*` is pushed.

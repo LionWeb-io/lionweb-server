@@ -63,7 +63,7 @@ export class DBAdminApiWorker {
             // When using PGlite the "postgres" database is used for lionweb, as PGlite only supports one database.
             // Therefore no need to create a lionweb database, it's there already.
             if (ServerConfig.getInstance().pgDb() !== "postgres") {
-                bulkLogger.info("Creating new database " + ServerConfig.getInstance().pgDb())
+                bulkLogger.info(`Creating new database ${ServerConfig.getInstance().pgDb()} with password ${ServerConfig.getInstance().pgPassword()}`)
                 // split the file into separate statements
                 const statements = sql.split(/;\s*$/m)
                 for (const statement of statements) {
