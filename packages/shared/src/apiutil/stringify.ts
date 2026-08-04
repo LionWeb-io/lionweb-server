@@ -25,6 +25,8 @@ function replacer(key: unknown, value: unknown) {
         return `isNull`
     } else if (isArray) {
         return value
+    } else if (value instanceof Set) {
+        return Array.from(value)
     } else if (typeof value === "object") {
         return (
             "{{ " +

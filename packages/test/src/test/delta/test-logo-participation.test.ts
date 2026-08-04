@@ -139,6 +139,10 @@ collection.forEach((withoutHistory) => {
                 await expectEvent(client1, addPartitionCommand1, "PartitionAdded")
                 await expectEvent(client2, addPartitionCommand1, "PartitionAdded")
                 await expectEvent(client3, addPartitionCommand1, "PartitionAdded")
+                
+                const addPropertyCmd = cmd.addProperty(client1, "Program-01", "new prop value", "property-key")
+                await expectEvent(client1, addPropertyCmd, "PropertyAdded")
+                await expectEvent(client3, addPropertyCmd, "PropertyAdded")
 
 
                 const deletePartition = cmd.deletePartition(client1, "Program-01")
