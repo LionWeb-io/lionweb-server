@@ -208,34 +208,39 @@ async function startServer() {
     
     const wsServer = new WebSocketServer({server: httpServer})
     wsServer.on('connection', (socket, _request) => {
-        deltaLogger.info(`Client connected with URL '${_request.url}'`);
+        deltaLogger.info(`Socket Client connected with URL '${_request.url}'`);
         if (_request.url.includes("param=monitor")) {
             // Special monitoring socket
-            
             return
         }
         PARTICIPATIONS.newParticipation(socket)
         
         socket.onmessage = message => {
             const msg = JSON.parse(message.data.toString()) as unknown as (DeltaCommand | DeltaRequest)
-            deltaLogger.info(`Server Received: ${toJsonString(msg)}`)
+            deltaLogger.info(`Socket Server Received: ${toJsonString(msg)}`)
             runWithTryDelta(socket, msg)
         };
 
         socket.onclose = _ev => {
-            deltaLogger.info('Client disconnected');
+            deltaLogger.info(`Socket Client disconnected`);
+            const part = PARTICIPATIONS.getParticipation(socket)
+            if (part !== undefined) {
+                deltaLogger.info(`   partiId ${part.participationId}, client ${part.repositoryData.clientId} status ${part.participationStatus}`)
+            } else {
+                deltaLogger.info("   no participation found")
+            }
             PARTICIPATIONS.deleteParticipation(socket)
         };
         socket.onerror = ev => {
-            deltaLogger.info(`Error message on socket: ${ev.toString()}`);
+            deltaLogger.info(`Socket Error message: ${ev.toString()}`);
             // activeSockets.delete(socket)
         };
         socket.on('ping', () => {
-            deltaLogger.info('Ping message on socket');
+            deltaLogger.info('Socket Ping message');
             // activeSockets.delete(socket)
         });
         socket.on('upgrade', () => {
-            deltaLogger.info('Upgrade message on socket');
+            deltaLogger.info('Socket Upgrade message');
             // activeSockets.delete(socket)
         });
     });

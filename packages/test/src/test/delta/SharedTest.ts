@@ -21,7 +21,7 @@ export const config = {
 }
 
 // Run all, tests with and without history
-export const client = new DeltaClient("test-logo", config, [eventFunctions, responseFunctions, adminResponseFunctions])
+export const client = new DeltaClient("DeltaClient-01", config, [eventFunctions, responseFunctions, adminResponseFunctions])
 client.loggingOn = log
 export const checkClient = new DeltaClient("check-logo", config, [eventFunctions, responseFunctions, adminResponseFunctions])
 
@@ -36,7 +36,6 @@ console.log(`beforeAllTests ${name}`)
     logoModel = new LionWebModel([])
 
     client.repository = repository
-    client.clientId = "DeltaClient-01"
     bulkApiClient.repository = repository
 
     const delResponse = await bulkApiClient.dbAdmin.deleteRepository(repository, "delete at start og test")
