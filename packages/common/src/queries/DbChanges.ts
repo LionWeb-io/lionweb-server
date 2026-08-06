@@ -14,7 +14,7 @@ import {
 import { LionWebTask } from "@lionweb/server-database"
 import { dbLogger, queryLogger } from "@lionweb/server-logging"
 import pgPromise, { ColumnSet } from "pg-promise"
-import pg from "pg-promise/typescript/pg-subset.js"
+import pg from "pg-promise/typescript/pg-subset.d.js"
 import { UnknownObjectType } from "../apiutil/index.js"
 import { CONTAINMENTS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "../database/index.js"
 import { TableHelpers } from "../main.js"

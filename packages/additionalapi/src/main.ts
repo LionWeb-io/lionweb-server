@@ -1,6 +1,6 @@
 import {Express} from "express"
 import pgPromise from "pg-promise"
-import pg from "pg-promise/typescript/pg-subset.js"
+import pg from "pg-promise/typescript/pg-subset.d.js"
 import { runWithTry } from "@lionweb/server-common"
 import { requestLogger } from "@lionweb/server-logging"
 import { DbConnection } from "@lionweb/server-database"

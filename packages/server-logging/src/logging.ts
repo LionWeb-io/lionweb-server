@@ -43,7 +43,7 @@ await configure<"console", string>({
                 },
                 properties: false,
                 inspectOptions: {
-                    depth: 3, // Show 3 levels of nesting
+                    depth: 6, // Show 3 levels of nesting
                     colors: true, // Disable value syntax highlighting
                     compact: true, // Use compact object display
                 }, 

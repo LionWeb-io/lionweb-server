@@ -1,6 +1,6 @@
 import { dbLogger, queryLogger, traceLogger } from "@lionweb/server-logging"
 import pgPromise from "pg-promise"
-import { IClient } from "pg-promise/typescript/pg-subset.js"
+import { IClient } from "pg-promise/typescript/pg-subset.d.js"
 import { Pool } from "pg"
 import { LionWebTask } from "./LionWebTask.js"
 import { addRepositorySchema, RepositoryData } from "./Repositories.js"
