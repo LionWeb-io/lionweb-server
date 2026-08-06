@@ -16,8 +16,7 @@ import {
     ListPartitionsResponse,
     ResponseMessage,
     RetrieveResponse,
-    StoreResponse,
-    toJsonString
+    StoreResponse
 } from "@lionweb/server-shared"
 import { traceLogger, requestLogger } from "@lionweb/server-logging" 
 import { EMPTY_CHUNKS, nodesToChunk, QueryReturnType } from "@lionweb/server-common"
@@ -56,7 +55,7 @@ export class BulkApiWorker {
         repositoryData: RepositoryData,
         chunk: LionWebJsonChunk
     ): Promise<QueryReturnType<CreatePartitionsResponse>> => {
-        requestLogger.info(`BulkApiWorker.createPartitions repo [${JSON.stringify(repositoryData)}]`)
+        requestLogger.info(`BulkApiWorker.createPartitions repo [{repositoryData}]`, {repositoryData})
         // TODO Optimize: This reuses the "getNodesFromIdList", but that retrieves full nodes, which is not needed here
 
         const existingNodes = await DB_retrieveFullNodesFromIdList(
@@ -149,7 +148,7 @@ export class BulkApiWorker {
             }
         }
         const [versionResult, nodes] = await task.multi(repositoryData, SQL_currentRepoVersion() + SQL_retrieveFullNodesRecursive(nodeIdList, depthLimit))
-        requestLogger.info(`VERSION ${toJsonString(versionResult)}`)
+        requestLogger.info(`VERSION {versionResult}`, { versionResult })
         requestLogger.trace(`NODES ${JSON.stringify(nodes)}`)
         return {
             status: HttpSuccessCodes.Ok,

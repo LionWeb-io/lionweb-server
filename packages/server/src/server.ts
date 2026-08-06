@@ -23,7 +23,7 @@ import {
     registerAdditionalApi
 } from "@lionweb/server-additionalapi"
 import { registerLanguagesApi } from "@lionweb/server-languages"
-import { HttpClientErrors, PROTOBUF_CONTENT_TYPE, toJsonString } from "@lionweb/server-shared"
+import { HttpClientErrors, PROTOBUF_CONTENT_TYPE } from "@lionweb/server-shared"
 import { deltaLogger, bulkLogger, RepositoryConfig, requestLogger, ServerConfig } from "@lionweb/server-logging"
 import * as http from "node:http"
 import { runWithTryDelta } from "./RunTry.js";
@@ -144,7 +144,7 @@ async function setupDatabase() {
                                 lionweb_version: repository.lionWebVersion
                             }
                         })
-                        requestLogger.info(`Delete repository ${repository.name} result is ` + JSON.stringify(deletedn))
+                        requestLogger.info("Delete repository ${repository.name} result is {deletedn}", {deletedn})
                         const newExistingRepositoryNames = repositoryStore.allRepositories().map(r => r.repository_name)
                         requestLogger.info("Repositories in schemata now are: " + newExistingRepositoryNames)
                     })
@@ -217,7 +217,7 @@ async function startServer() {
         
         socket.onmessage = message => {
             const msg = JSON.parse(message.data.toString()) as unknown as (DeltaCommand | DeltaRequest)
-            deltaLogger.info(`Socket Server Received: ${toJsonString(msg)}`)
+            deltaLogger.info(`Socket Server Received: {msg}`, {msg})
             runWithTryDelta(socket, msg)
         };
 

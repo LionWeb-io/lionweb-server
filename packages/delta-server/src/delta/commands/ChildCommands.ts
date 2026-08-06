@@ -80,7 +80,7 @@ const AddChild = async (participation: Participation, msg: AddChildCommand, ctx:
         const changes = new DbChanges(TableHelpers.pgp)
         // Add child to parent
         const missing: Missing = (parentNode.containments.find(c => isEqualMetaPointer(c.containment, msg.containment)) === undefined ? Missing.MissingBefore : Missing.NotMissing)
-        deltaLogger.debug(`Missing is ${missing} ================================ ${JSON.stringify(msg.containment)}`)
+        deltaLogger.debug(`Missing is ${missing} ================================ {msg.containment}`, {msg})
         changes.addChanges(
             [new ChildAdded(new JsonContext(null, ["delta"]), parentNode!, msg.containment, containment, newChildNode!.id, missing)]
         )

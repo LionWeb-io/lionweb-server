@@ -1,4 +1,4 @@
-import { LionwebResponse, toJsonString } from "@lionweb/server-shared"
+import { LionwebResponse } from "@lionweb/server-shared"
 import { bulkLogger } from "@lionweb/server-logging"
 import { Response } from "express"
 import { JsonStreamStringify } from "json-stream-stringify"
@@ -30,6 +30,6 @@ export type QueryReturnType<T> = {
 
 export function lionwebResponse<T extends LionwebResponse>(response: Response, status: number, body: T): void {
     response.status(status)
-    bulkLogger.info(`<< response: status: ${status} body: ${toJsonString(body)}`)
+    bulkLogger.info(`<< response: status: ${status} body: {body}`, {body})
     new JsonStreamStringify(body).pipe(response)
 }

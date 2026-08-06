@@ -1,6 +1,6 @@
 import { deltaProcessor } from "@lionweb/delta-server"
 import { asError, Job, requestQueue } from "@lionweb/server-common"
-import { DeltaCommand, DeltaRequest } from "@lionweb/server-delta-shared";
+import { DeltaAdminRequest, DeltaCommand, DeltaRequest, MessageFromClient } from "@lionweb/server-delta-shared"
 import { expressLogger, deltaLogger } from "@lionweb/server-logging"
 import WebSocket from "ws";
 
@@ -11,7 +11,7 @@ let index = 0
  * And put the request function in the request queue.
  * @param func
  */
-export async function runWithTryDelta(socket: WebSocket, delta: DeltaCommand | DeltaRequest): Promise<void> {
+export async function runWithTryDelta(socket: WebSocket, delta: MessageFromClient): Promise<void> {
     // deltaLogger.info(`Run with try ${delta.messageKind}`)
     const myIndex = index++
     const deltaFunction = async () => {

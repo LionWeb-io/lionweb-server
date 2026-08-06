@@ -51,7 +51,7 @@ export class BulkApiImpl implements BulkApi {
         bulkLogger.info(` * listPartitions request received, with body of ${request.headers["content-length"]} bytes`)
         await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
             const repositoryData = await getRepositoryData(task, request)
-            requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
+            requestLogger.debug(`    ** repository data { repositoryData } bytes`, { repositoryData })
             if (isParameterError(repositoryData)) {
                 lionwebResponse<ListPartitionsResponse>(response, HttpClientErrors.PreconditionFailed, {
                     success: false,
@@ -69,7 +69,7 @@ export class BulkApiImpl implements BulkApi {
         bulkLogger.info(` * createPartitions request received, with body of ${request.headers["content-length"]} bytes`)
         await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
             const repositoryData = await getRepositoryData(task, request)
-            requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
+            requestLogger.debug(`    ** repository data {repositoryData} bytes`, {repositoryData})
             const chunk: LionWebJsonChunk = request.body
             if (isParameterError(repositoryData)) {
                 lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
@@ -136,7 +136,7 @@ export class BulkApiImpl implements BulkApi {
         bulkLogger.info(` * deletePartitions request received, with body of ${request.headers["content-length"]} bytes`)
         await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
             const repositoryData = await getRepositoryData(task, request)
-            requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
+            requestLogger.debug(`    ** repository data {repositoryData} bytes`, {repositoryData})
             if (isParameterError(repositoryData)) {
                 lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
                     success: false,
@@ -159,9 +159,9 @@ export class BulkApiImpl implements BulkApi {
         bulkLogger.info(` * store request received, with body of ${request.headers["content-length"]} bytes`)
         await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
             const repositoryData = await getRepositoryData(task, request)
-            requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
+            requestLogger.debug(`    ** repository data {repositoryData} bytes`, {repositoryData})
             if (isParameterError(repositoryData)) {
-                requestLogger.error("STORE ERROR: repository data incorrect: " + JSON.stringify(repositoryData))
+                requestLogger.error("STORE ERROR: repository data incorrect: {repositoryData}", {repositoryData})
                 lionwebResponse<StoreResponse>(response, HttpClientErrors.PreconditionFailed, {
                     success: false,
                     messages: [repositoryData.error]
@@ -202,7 +202,7 @@ export class BulkApiImpl implements BulkApi {
         bulkLogger.info(` * retrieve request received, with body of ${request.headers["content-length"]} bytes`)
         await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
             const repositoryData = await getRepositoryData(task, request)
-            requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
+            requestLogger.debug(`    ** repository data {repositoryData} bytes`, {repositoryData})
             const depthLimit = getIntegerParam(request, "depthLimit", Number.MAX_SAFE_INTEGER)
             const idList = request.body.ids
             if (isParameterError(depthLimit)) {
@@ -240,7 +240,7 @@ export class BulkApiImpl implements BulkApi {
         bulkLogger.info(` * ids request received, with body of ${request.headers["content-length"]} bytes`)
         await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
             const repositoryData = await getRepositoryData(task, request)
-            requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
+            requestLogger.debug(`    ** repository data {repositoryData} bytes`, {repositoryData})
             const count = getIntegerParam(request, "count", Number.MAX_SAFE_INTEGER)
             if (isParameterError(count)) {
                 lionwebResponse(response, HttpClientErrors.PreconditionFailed, {

@@ -22,6 +22,7 @@ function queryFilter(config: LogRecord): boolean {
     return true
 }
 
+
 await configure<"console", string>({
     filters: { queryFilter },
     sinks: {
@@ -29,6 +30,7 @@ await configure<"console", string>({
             // formatter: prettyFormatter
             // formatter: jsonLinesFormatter,
             formatter: getPrettyFormatter({
+                wordWrap: false,
                 timestamp: "none",
                 // Control colors
                 colors: true,
@@ -44,8 +46,9 @@ await configure<"console", string>({
                     depth: 3, // Show 3 levels of nesting
                     colors: true, // Disable value syntax highlighting
                     compact: true, // Use compact object display
-                },
+                }, 
             }),
+            
         })
     },
     loggers: [

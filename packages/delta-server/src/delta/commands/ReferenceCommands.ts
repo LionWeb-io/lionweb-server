@@ -78,7 +78,7 @@ const DeleteReference = async (participation: Participation, msg: DeleteReferenc
         const afterTargets = [...beforeReference.targets]
         afterTargets.splice(msg.index, 1)
         const afterReference = { reference: beforeReference.reference, targets: afterTargets}
-        deltaLogger.debug(`REFERENCE DEL index ${msg.index} before ${JSON.stringify(beforeReference.targets)} after ${JSON.stringify(afterReference.targets)}`)
+        deltaLogger.debug(`REFERENCE DEL index ${msg.index} before {beforeReference.targets} after {afterReference.targets}`, {beforeReference, afterReference})
         const changes = new DbChanges(TableHelpers.pgp)
         changes.addChanges(
             [new TargetRemoved(new JsonContext(null, ["delta"]), parentNode, beforeReference, afterReference, { resolveInfo: msg.deletedResolveInfo ?? null, reference: msg.deletedReference!}, Missing.NotMissing)]

@@ -18,7 +18,7 @@ export const DB_retrievePartitionNodes = async (task: LionWebTask, repositoryDat
     let query = SQL_currentRepoVersion()
     query += SQL_retrieveFullNodesFromQuery(`SELECT * FROM ${NODES_TABLE} WHERE parent is null`)
     const [versionResult, result] = await task.multi(repositoryData, query)
-    dbLogger.info(`VERSION typeof ${typeof versionResult[0].currentrepoversion} JSON '${JSON.stringify(versionResult)}'`)
+    dbLogger.info(`VERSION typeof ${typeof versionResult[0].currentrepoversion} JSON '{versionResult}'`, {versionResult})
     return {
         nodes: result as LionWebJsonNode[],
         version: (versionResult[0].currentrepoversion) as number

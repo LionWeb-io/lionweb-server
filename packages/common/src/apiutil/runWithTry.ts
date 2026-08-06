@@ -25,14 +25,14 @@ export function runWithTry(func: (request: Request, response: Response) => void)
             } catch (e) {
                 if (isInternalQueryError(e)) {
                     requestLogger.error(`Exception ${myIndex} while serving request for ${request.url}: ${e.message}`)
-                    requestLogger.error(JSON.stringify(e))
+                    requestLogger.error({e})
                     lionwebResponse(response, HttpServerErrors.InternalServerError, {
                         success: false,
                         messages: [{ kind: e.name, message: `Exception while serving request for ${request.url}: ${JSON.stringify(e)}` }]
                     })
                 } else {
                     const error = asError(e)
-                    requestLogger.error(`Exception ${myIndex} while serving request for ${request.url}: ${JSON.stringify(e)}`)
+                    requestLogger.error(`Exception ${myIndex} while serving request for ${request.url}: {e}`, {e})
                     requestLogger.error(error)
                     lionwebResponse(response, HttpServerErrors.InternalServerError, {
                         success: false,

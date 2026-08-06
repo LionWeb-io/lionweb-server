@@ -1,4 +1,3 @@
-import { toJsonArray } from "@lionweb/server-shared"
 import { queryLogger } from "@lionweb/server-logging"
 import pgPromise from "pg-promise"
 import { addRepositorySchema, RepositoryData } from "./Repositories.js"
@@ -31,7 +30,7 @@ export class LionWebTask {
         queryLogger.info(`LionWebTask.query ${query} for repository ${repositoryData.repository.repository_name}`)
         query = addRepositorySchema(query, repositoryData)
         const result = await this.task.query(query)
-        queryLogger.info(`   LionWebTask.query result ${toJsonArray(result)}`)
+        queryLogger.info(`   LionWebTask.query result {result}`, {result})
         return result
     }
 
@@ -49,7 +48,7 @@ export class LionWebTask {
         queryLogger.info(`LionWebTask.many ${query} for repository ${repositoryData.repository.repository_name}`)
         query = addRepositorySchema(query, repositoryData)
         const result = await this.task.many(query)
-        queryLogger.info(`   LionWebTask.many result ${toJsonArray(result)}`)
+        queryLogger.info(`   LionWebTask.many result {result}`, {result})
         return result
     }
 
@@ -62,7 +61,7 @@ export class LionWebTask {
         queryLogger.info(`LionWebTask.manyOrNone ${query} for repository ${repositoryData.repository.repository_name}`)
         query = addRepositorySchema(query, repositoryData)
         const result = await this.task.manyOrNone(query)
-        queryLogger.info(`   LionWebTask.manyOrNone result ${toJsonArray(result)}`)
+        queryLogger.info(`   LionWebTask.manyOrNone result {result}`, {result})
         return result
     }
 
@@ -80,7 +79,7 @@ export class LionWebTask {
         // Remove first two elements since these are the result of the inserted search_path and schema existence check
         multiResult.shift()
         multiResult.shift()
-        queryLogger.info(`   LionWebTask.multi result ${toJsonArray(multiResult)}`)
+        queryLogger.info(`   LionWebTask.multi result {multiResult}`, {multiResult})
         return multiResult
     }
 }

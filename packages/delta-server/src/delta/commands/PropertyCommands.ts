@@ -89,7 +89,7 @@ const DeletePropertyFunction = async (
         const nextRepoVersionSql = SQL_nextRepoVersion(participation.participationId)
         const addPropSql= changes.createPostgresQuery(metaPointersTracker)
         const dbResult = await task.query(participation.repositoryData!, nextRepoVersionSql + addPropSql )
-        deltaLogger.debug(`db delete is ${JSON.stringify(dbResult)}`)
+        deltaLogger.debug(`db delete is {dbResult}`, {dbResult})
         const partition = await DB_affectedPartition(task, msg.node, participation)
 
         return {
