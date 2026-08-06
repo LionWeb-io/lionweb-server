@@ -339,7 +339,7 @@ class DeltaProcessor {
 
     /**
      * Send the PartitionAdded event to all participations that are subscribed.
-     * To make things complex,  each subscriber may get a different subset of tghe new partition's nodes.
+     * To make things complex,  each subscriber may get a different subset of the new partition's nodes.
      *
      * @param socket  The socket through which the AddPartition command was received.
      * @param delta     The original AddPartition command
@@ -365,7 +365,8 @@ class DeltaProcessor {
                 // Subscribed?
                 if (participationInfo.partitionChangesSubscription.creation === true) {
                     if (participationInfo.partitionChangesSubscription.autoSubscribe) {
-                        // autosubscribe, so send full partition nodes
+                        // autosubscribe, so send full partition nodes and subscribe to partition
+                        participationInfo.subscribedPartitions.add(affectedPartition)
                         const adaptedResponse = structuredClone(response)
                         adaptedResponse.newPartition = {
                             nodes: delta.newPartition.nodes

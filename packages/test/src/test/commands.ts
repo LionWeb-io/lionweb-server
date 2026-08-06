@@ -659,7 +659,7 @@ export class Commands {
         return tmp
     }
     responseFor = async (client: DeltaClient, query: DeltaRequest | DeltaAdminRequest): Promise<DeltaResponse | DeltaAdminResponse> => {
-        console.log(`WAIT ${client.clientId}  ${JSON.stringify(query)}`)
+        console.log(`WAIT responseFor ${client.clientId}  ${JSON.stringify(query)}`)
         const result = await waitFor<DeltaResponse | DeltaAdminResponse>(
             () => client.receivedResponses.get(query.queryId),
             result => result === undefined,

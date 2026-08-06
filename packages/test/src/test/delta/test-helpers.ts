@@ -103,7 +103,7 @@ export async function expectEvent(client: DeltaClient, delta: DeltaCommand, even
  */
 export async function expectResponse(client: DeltaClient, delta: DeltaRequest, responseKind: ResponseMessageKind): Promise<void> {
     const response = await cmd.responseFor(client, delta)
-    expect(response.messageKind, `ErrorResponse: ${(response as ErrorResponse)?.message}`).toEqual(responseKind)
+    expect(response?.messageKind, `ErrorResponse: ${(response as ErrorResponse)?.message}`).toEqual(responseKind)
     CoverageMap.get(delta.messageKind).receivedEvents++
 }
 

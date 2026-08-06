@@ -1,25 +1,10 @@
 # lionweb-server
 Reference implementation of LionWeb repository
 
-## Changes in Version 0.4.0
-
-- Implementation of the LionWeb Delta protocol.
-- Ability to run server through `npx`
-- Replace Pino logger because it didn't work inside docker
-
-- ## Changes in Version 0.3.0
-
-- Support for LionWeb 2024.1
-- Removed `init` request from dbAdmin
-- Request `createRepository` in dbAdmin has additional **mandatory** parameter `lionWebVersion`
-  - All tests and applications need to add this parameter    
-  - The server config section for creating repositories also has this additional field 
-- All requests fail if the LionWeb version of the chunk is not the same LionWeb version as the repository. 
-
 ## Howto run the server
 
 To run the server you need two applications
-
+1
 1. Run a Postgres server, easiest done through using docker.
    There are postgres images available, we are using Postgres 16.1
 2. Run the LionWeb server, easiest done through using `npx`:
@@ -80,6 +65,7 @@ Make sure that you have the `server-config.json`  file locally and
 that the values in the file correspons to your local situation.
 
 For more information on how to configure the server, please check [configuration.md](configuration.md).
+
 
 ### How to test
 Ensure the Postgres server and the LionWeb server are both running.
@@ -166,6 +152,20 @@ You can get the docker image from the Docker repository hosted by GitHub:
 
 ```
 docker pull ghcr.io/lionweb-io/lionweb-server:latest 
-# alternatively you can specify a specific version
-docker pull ghcr.io/lionweb-io/lionweb-server:release-lionweb-server-0.1.1
 ```
+Alternatively you can specify a specific version
+```
+docker pull ghcr.io/lionweb-io/lionweb-server:release-lionweb-server-0.4.2
+```
+
+
+# Multiple ways to run the server
+
+|                    | Postgres Database | LionWeb Server                    | Admin UI                         | 
+|--------------------|-------------------|-----------------------------------|----------------------------------|
+| Docker-compose 1   | Docker            | Docker of released server         | Docker of released admin UI      |
+| Docker-compose 2   | Docker            | Docker of locally build sever     | Docker of released admin UI      |
+| Docker-compose 3   | Docker            | Docker of locally build sever     | Docker of locally build admin UI |
+| Docker + npx       | Docker            | npx @lionweb/server-server@latest | npx admin UI                     |
+| In memory Postgres | Pglite            | npx @lionweb/server-server@latest | npx admin UI                     |
+
