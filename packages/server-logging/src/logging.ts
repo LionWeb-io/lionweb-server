@@ -22,7 +22,6 @@ function queryFilter(config: LogRecord): boolean {
     return true
 }
 
-
 await configure<"console", string>({
     filters: { queryFilter },
     sinks: {
