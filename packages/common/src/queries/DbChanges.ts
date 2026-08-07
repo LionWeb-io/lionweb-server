@@ -13,9 +13,8 @@ import {
 } from "@lionweb/json-diff"
 import { LionWebTask } from "@lionweb/server-database"
 import { dbLogger, queryLogger } from "@lionweb/server-logging"
-import {  toJsonString } from "@lionweb/server-shared"
 import pgPromise, { ColumnSet } from "pg-promise"
-import pg from "pg-promise/typescript/pg-subset.js"
+import pg from "pg-promise/typescript/pg-subset.d.js"
 import { UnknownObjectType } from "../apiutil/index.js"
 import { CONTAINMENTS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "../database/index.js"
 import { TableHelpers } from "../main.js"
@@ -147,10 +146,9 @@ export class DbChanges {
                 case "TargetAdded":
                 case "TargetRemoved":
                 case "TargetOrderChanged": {
+                    const targets = (change as ReferenceChange).afterReference?.targets ?? []
                     queryLogger.info(
-                        `==> ${change.changeType}: ${change.changeMsg()} targets '${
-                            toJsonString((change as ReferenceChange).afterReference?.targets ?? [])
-                        }'`
+                        `==> ${change.changeType}: ${change.changeMsg()} targets '{targets}'`, {targets}
                     )
                     const update: DbReferenceUpdate = {
                         node_id: (change as ReferenceChange).node.id,
@@ -198,7 +196,7 @@ export class DbChanges {
                       `
         })
         this.updatesReferenceTable.values().forEach((values: DbReferenceUpdate[]) => {
-            const tmp = `updatesReferenceTable ${values.map(v => toJsonString(v))}`
+            const tmp = `updatesReferenceTable ${values.map(v => JSON.stringify(v))}`
             result += `-- ${tmp}
             `
             // Ensure that there is at most one query created for each reference metapointer

@@ -83,7 +83,7 @@ export class LionWebQueries {
         repositoryData: RepositoryData,
         partitions: LionWebJsonChunk
     ): Promise<QueryReturnType<CreatePartitionsResponse>> => {
-        dbLogger.info("LionWebQueries.createPartitions repo " + JSON.stringify(repositoryData))
+        dbLogger.info("LionWebQueries.createPartitions repo {repositoryData}", {repositoryData})
         let query = SQL_nextRepoVersion(repositoryData.clientId)
         const metaPointersTracker = new MetaPointersTracker(repositoryData)
         await metaPointersTracker.populateFromNodes(partitions.nodes, task)
@@ -369,7 +369,7 @@ export class LionWebQueries {
         addedAndNotParentChangedChildren.forEach(added => {
             const node = databaseChunkWrapper.getNode(added.childId)
             if (node !== undefined) {
-                dbLogger.info("FOUND CHILD PARENT " + JSON.stringify(node))
+                dbLogger.info("FOUND CHILD PARENT {node}", {node})
                 changes.push(new ParentChanged(new JsonContext(null, ["implicitParentChange"]), node, node.parent, added.parentNode.id))
             } else {
                 dbLogger.info("MISSING CHILD " + added.childId)

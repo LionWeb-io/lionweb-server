@@ -2,7 +2,7 @@
  * The table definitions for use with pg-promise helpers
  */
 import pgPromise from "pg-promise"
-import pg from "pg-promise/typescript/pg-subset.js"
+import pg from "pg-promise/typescript/pg-subset.d.js"
 import {
     CONTAINMENTS_TABLE,
     METAPOINTERS_TABLE,

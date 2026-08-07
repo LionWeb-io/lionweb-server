@@ -139,7 +139,7 @@ export class Participation {
             clientId: clientId,
             repository: await repositoryStore.getRepository(task, repositoryId)
         }
-        deltaLogger.info(`startParticipation repo '${repositoryId}' schema ${JSON.stringify(this.repositoryData?.repository)}`)
+        deltaLogger.info(`startParticipation repo '${repositoryId}' schema ${this.repositoryData?.repository?.schema_name}`)
     }
 
     lastSequenceNumber(): number {

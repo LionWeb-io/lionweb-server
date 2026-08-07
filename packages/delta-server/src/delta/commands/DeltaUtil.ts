@@ -65,7 +65,7 @@ export const issuesToAdditionalInfo = (issues: ValidationIssue[]): AdditionalInf
  */
 export const DB_retrieveNode = async(id: string, delta: DeltaCommand | DeltaRequest, participation: Participation, task: LionWebTask): Promise<LionWebJsonNode> => {
     const queryResult = await DB_retrieveSingleFullNode(task, participation.repositoryData!, id)
-    dbLogger.info(`Result of retrieveNode: '${JSON.stringify(queryResult)}'`) 
+    dbLogger.info("Result of retrieveNode: '{queryResult}'", {queryResult}) 
 
     // Validate return type
     if (!is_NodesForQueryQuery_ResultType(queryResult)) {
@@ -95,7 +95,7 @@ export async function DB_affectedPartition(task: LionWebTask, nodeid: LionWebId,
     if (parentChain === undefined) {
         throw new Error("affectedPartition: Internal Error: PARENT CHAIN UNDEFINED")
     }
-    deltaLogger.debug(`affectedPartition: PARENT CHAIN IS ${JSON.stringify(parentChain)}`)
+    deltaLogger.debug(`affectedPartition: PARENT CHAIN IS {parentChain}`, {parentChain})
     const affectedPartition = parentChain[parentChain.length - 1] ?? ({ id: nodeid, parent: null } as NodeWithParent)
     return affectedPartition.id
 }

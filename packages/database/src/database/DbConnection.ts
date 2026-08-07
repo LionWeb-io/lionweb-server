@@ -1,7 +1,6 @@
-import { LionWebVersionType, toJsonString } from "@lionweb/server-shared"
-import { dbLogger, queryLogger, requestLogger, traceLogger } from "@lionweb/server-logging"
+import { dbLogger, queryLogger, traceLogger } from "@lionweb/server-logging"
 import pgPromise from "pg-promise"
-import { IClient } from "pg-promise/typescript/pg-subset.js"
+import { IClient } from "pg-promise/typescript/pg-subset.d.js"
 import { Pool } from "pg"
 import { LionWebTask } from "./LionWebTask.js"
 import { addRepositorySchema, RepositoryData } from "./Repositories.js"
@@ -101,7 +100,7 @@ export class DbConnection {
      * @param query
      */
     async manyOrNone(repositoryData: RepositoryData, query: string) {
-        traceLogger.info("DbConnection.one")
+        traceLogger.info("DbConnection.manyOrNone")
         query = addRepositorySchema(query, repositoryData)
         dbLogger.debug({ query: query.split("\n", 500) })
         queryLogger.info(`DbConnection.manyOrNone ${query}`)
@@ -112,7 +111,7 @@ export class DbConnection {
      * @see  IBaseProtocol.tx
      */
     async tx<T>(body: (tsk: LionWebTask) => Promise<T>): Promise<T> {
-        dbLogger.debug("DbConnection.tx start with mode " + toJsonString(this.transactionMode))
+        dbLogger.debug("DbConnection.tx start with mode " + (this.transactionMode))
         try {
             return await this.pgDatabaseConnection.tx({ mode: this.transactionMode as never }, async task => {
                 const lionwebTask = new LionWebTask(task)
@@ -120,7 +119,7 @@ export class DbConnection {
                 return await body(lionwebTask)
             })
         } catch (e) {
-            dbLogger.error("DbConnection.tx TRANSACTION ERROR " + toJsonString(e))
+            dbLogger.error("DbConnection.tx TRANSACTION ERROR {e}", {e})
             throw e
         }
     }

@@ -26,7 +26,7 @@ export class HistoryApiImpl implements HistoryApi {
         bulkLogger.info(` * history listPartitions request received, with body of ${request.headers["content-length"]} bytes`)
         await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
             const repositoryData = await getRepositoryData(task, request)
-            requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
+            requestLogger.debug(`    ** repository data {repositoryData} bytes`, {repositoryData})
             const repoVersion = getIntegerParam(request, "repoVersion", FOREVER)
             if (isParameterError(repositoryData)) {
                 lionwebResponse<ListPartitionsResponse>(response, HttpClientErrors.PreconditionFailed, {
@@ -56,12 +56,12 @@ export class HistoryApiImpl implements HistoryApi {
         bulkLogger.info(` * retrieve request received, with body of ${request.headers["content-length"]} bytes`)
         await this.ctx.dbConnection.tx(async (task: LionWebTask) => {
             const repositoryData = await getRepositoryData(task, request)
-            requestLogger.debug(`    ** repository data ${JSON.stringify(repositoryData)} bytes`)
+            requestLogger.debug(`    ** repository data {repositoryData} bytes`, {repositoryData})
             const depthLimit = getIntegerParam(request, "depthLimit", Number.MAX_SAFE_INTEGER)
             const idList = request.body.ids
             const repoVersion = getIntegerParam(request, "repoVersion", FOREVER)
             dbLogger.debug(
-                "Api.getNodes: " + JSON.stringify(request.body) + " depth " + depthLimit + " repo: " + JSON.stringify(repositoryData)
+                `Api.getNodes: {request.body} depth ${depthLimit} repo: {repositoryData}`, {request, repositoryData}
             )
             if (isParameterError(depthLimit)) {
                 lionwebResponse(response, HttpClientErrors.PreconditionFailed, {

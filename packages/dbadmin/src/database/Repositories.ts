@@ -84,7 +84,7 @@ export class RepositoryStore {
             await this.initialize(task)
         }
         const result = this.repositoryName2repository.get(repoName)
-        requestLogger.trace(`getRepository(${repoName}) => ${JSON.stringify(result)}`)
+        requestLogger.trace(`getRepository(${repoName}) => {result}`, {result})
         return result
     }
 

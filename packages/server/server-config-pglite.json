@@ -27,7 +27,7 @@
         "database": "info",
         "query": "info",
         "express": "info",
-        "delta": "info",
+        "delta": "debug",
         "message": "silent"
     },
     "postgres": {

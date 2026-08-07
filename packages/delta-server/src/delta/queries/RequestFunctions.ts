@@ -47,7 +47,7 @@ const SubscribeToChangingPartitionsRequestFunction = (
     participation: Participation,
     msg: SubscribeToChangingPartitionsRequest
 ): DeltaEvent | DeltaResponse | ErrorDelta => {
-    deltaLogger.info("Called SubscribeToChangingPartitionsRequestFunction " + msg.messageKind)
+    deltaLogger.info("Called SubscribeToChangingPartitionsRequestFunction ")
     const subscription= new ChangingPartitionsSubscription()
     subscription.deletion = msg.deletion
     subscription.creation = msg.creation
@@ -64,7 +64,7 @@ const InformAboutChangingPartitionsRequestFunction = (
     participation: Participation,
     msg: InformAboutChangingPartitionsRequest
 ): DeltaEvent | DeltaResponse | ErrorDelta => {
-    deltaLogger.info("Called InformAboutChangingPartitionsRequestFunction " + msg.messageKind)
+    deltaLogger.info("Called InformAboutChangingPartitionsRequestFunction ")
     const subscription= new ChangingPartitionsSubscription()
     subscription.deletion = msg.deletion
     subscription.creation = msg.creation
@@ -83,7 +83,7 @@ const SubscribeToPartitionContentsRequestFunction = async (
     msg: SubscribeToPartitionContentsRequest,
     ctx: DeltaContext
 ): Promise<DeltaEvent | DeltaResponse | ErrorDelta> => {
-    deltaLogger.info("Called SubscribeToPartitionContentsRequestFunction " + msg.messageKind)
+    deltaLogger.info("Called SubscribeToPartitionContentsRequestFunction ")
     const result = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         if (participation.subscribedPartitions.has(msg.partition)) {
             return newErrorDelta("alreadySubscribed", `Already subscribed to partition ${msg.partition}`, msg, participation)
@@ -105,7 +105,7 @@ const UnsubscribeFromPartitionContentsRequestFunction = (
     msg: UnsubscribeFromPartitionContentsRequest,
     _ctx: DeltaContext
 ): DeltaEvent | DeltaResponse | ErrorDelta => {
-    deltaLogger.info("Called UnsubscribeFromPartitionContentsRequestFunction " + msg.messageKind)
+    deltaLogger.info("Called UnsubscribeFromPartitionContentsRequestFunction ")
     if (!participation.subscribedPartitions.has(msg.partition)) {
         return newErrorDelta("notSubscribed", `Not subscribed to partition ${msg.partition}, cannot unsubscribe`, msg, participation)
     }
@@ -122,7 +122,7 @@ const SignOnRequestFunction = async (
     msg: SignOnRequest,
     ctx: DeltaContext
 ): Promise<DeltaEvent | DeltaResponse | ErrorDelta> => {
-    deltaLogger.info("Called SignOnRequestFunction " + msg.messageKind)
+    deltaLogger.info("Called SignOnRequestFunction ")
     const error = validateSignOnRequest(participation, msg)
     if (error !== undefined) {
         return error
@@ -150,7 +150,7 @@ const validateSignOnRequest = (participation: Participation | undefined, msg: Si
 }
 
 const SignOffRequestFunction = (participation: Participation, msg: SignOffRequest, _ctx: DeltaContext): DeltaEvent | DeltaResponse => {
-    deltaLogger.info("Called SignOffRequestFunction " + msg.messageKind)
+    deltaLogger.info("Called SignOffRequestFunction ")
     if (participation.participationStatus !== "signedOn") {
         return newErrorDelta("notSignedOn", "Cannot SignOff a participation, because you are not signed on.", msg, participation)
     }
@@ -167,7 +167,7 @@ const ListPartitionsRequestFunction = async (
     msg: ListPartitionsRequest,
     ctx: DeltaContext
 ): Promise<DeltaEvent | DeltaResponse> => {
-    deltaLogger.info("Called ListPartitionsRequestFunction " + msg.messageKind)
+    deltaLogger.info("Called ListPartitionsRequestFunction ")
     const partitionsContents = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const partitions = await DB_retrievePartitionNodes(task, participation.repositoryData!)
         const partitionsContents = await DB_retrieveFullNodesRecursive(
@@ -193,7 +193,7 @@ const ListAndSubscribePartitionsRequestFunction = async (
     msg: ListAndSubscribePartitionsRequest,
     ctx: DeltaContext
 ): Promise<DeltaEvent | DeltaResponse> => {
-    deltaLogger.info("Called ListAndSubscribePartitionsRequestFunction " + msg.messageKind)
+    deltaLogger.info("Called ListAndSubscribePartitionsRequestFunction ")
     const partitionsContents = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const partitions = await DB_retrievePartitionNodes(task, participation.repositoryData!)
         const partitionsContents = await DB_retrieveFullNodesRecursive(
@@ -220,7 +220,7 @@ const GetAvailableIdsRequestFunction = async (
     msg: GetAvailableIdsRequest,
     ctx: DeltaContext
 ): Promise<DeltaEvent | DeltaResponse> => {
-    deltaLogger.info(`Called GetAvailableIdsRequestFunction participation '${JSON.stringify(participation)}'`)
+    deltaLogger.info("Called GetAvailableIdsRequestFunction participation '{participation}'", {participation})
     const ids = await ctx.dbConnection.tx(async (task: LionWebTask) => {
         const result = await DB_getAvailableIds(task, participation.repositoryData!, msg.count)
         return result
@@ -239,7 +239,7 @@ const ReconnectRequestFunction = async (
     msg: ReconnectRequest,
     _ctx: DeltaContext
 ): Promise<DeltaEvent | DeltaResponse> => {
-    deltaLogger.info("Called ReconnectRequestFunction " + msg.messageKind)
+    deltaLogger.info("Called ReconnectRequestFunction ")
     const oldParticipation = PARTICIPATIONS.findOldParticipation(msg.participationId)
     if (oldParticipation !== undefined) {
         // TODO next line should be done here, but we don't know the socket.

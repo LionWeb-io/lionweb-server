@@ -39,7 +39,6 @@ import {
     ReplaceAnnotationCommand,
     ReplaceChildCommand
 } from "@lionweb/server-delta-shared"
-import { toJsonString } from "@lionweb/server-shared"
 import { pull } from "es-toolkit"
 
 /**

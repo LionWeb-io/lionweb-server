@@ -1,7 +1,7 @@
 import { DbConnection, LionWebTask, RepositoryData } from "@lionweb/server-database"
 import { InternalQueryError } from "./GuardFunctions.js"
 import { LionWebJsonNode } from "@lionweb/json"
-import { ResponseMessage, toJsonString } from "@lionweb/server-shared"
+import { ResponseMessage } from "@lionweb/server-shared"
 import { dbLogger } from "@lionweb/server-logging"
 import { CONTAINMENTS_TABLE, METAPOINTERS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "../database/index.js"
 import { isLionWebJsonNode } from "./GuardFunctions.js"
@@ -54,7 +54,7 @@ export const DB_retrieveFullNodesFromQuery = async (dbConnection: DbConnection, 
             },
             {
                 key: "queryResult",
-                value: toJsonString(queryResult)
+                value: JSON.stringify(queryResult)
             }
         ])
     }

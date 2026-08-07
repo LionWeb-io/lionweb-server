@@ -34,9 +34,9 @@
 <tr><th>Command</th><th>Server</th><th>Tests Ok</th><th>Expected Errors Tested</th></tr>
 </thead>
 <tbody>
-<tr><td class="CMD"> AddPartition </td><td> ✅  </td><td> 5 </td>
+<tr><td class="CMD"> AddPartition </td><td>   </td><td> 0 </td>
             <td class="ERR">  </td><tr>
-<tr><td class="CMD"> DeletePartition </td><td> ✅  </td><td> 3 </td>
+<tr><td class="CMD"> DeletePartition </td><td>   </td><td> 0 </td>
             <td class="ERR">  </td><tr>
 <tr><td class="CMD"> ChangeClassifier </td><td>   </td><td> 0 </td>
             <td class="ERR">  </td><tr>
@@ -86,28 +86,28 @@
             <td class="ERR">  </td><tr>
 <tr><td class="CMD"> ContinuedCommand </td><td>   </td><td> 0 </td>
             <td class="ERR">  </td><tr>
-<tr><td class="CMD"> CompositeCommand </td><td> ✅  </td><td> 2 </td>
+<tr><td class="CMD"> CompositeCommand </td><td>   </td><td> 0 </td>
             <td class="ERR">  </td><tr>
-<tr><td class="CMD"> InformAboutChangingPartitionsRequest </td><td> ✅  </td><td> 3 </td>
-            <td class="ERR">  </td><tr>
+<tr><td class="CMD"> InformAboutChangingPartitionsRequest </td><td> ✅  </td><td> 1 </td>
+            <td class="ERR"> invalidParticipation<br/> </td><tr>
 <tr><td class="CMD"> SubscribeToChangingPartitionsRequest </td><td> ✅  </td><td> 1 </td>
-            <td class="ERR">  </td><tr>
+            <td class="ERR"> invalidParticipation<br/> </td><tr>
 <tr><td class="CMD"> SubscribeToPartitionContentsRequest </td><td>   </td><td> 0 </td>
             <td class="ERR">  </td><tr>
 <tr><td class="CMD"> UnsubscribeFromPartitionContentsRequest </td><td>   </td><td> 0 </td>
             <td class="ERR">  </td><tr>
-<tr><td class="CMD"> SignOnRequest </td><td> ✅  </td><td> 5 </td>
+<tr><td class="CMD"> SignOnRequest </td><td> ✅  </td><td> 3 </td>
             <td class="ERR">  </td><tr>
-<tr><td class="CMD"> SignOffRequest </td><td>   </td><td> 0 </td>
+<tr><td class="CMD"> SignOffRequest </td><td> ✅  </td><td> 1 </td>
+            <td class="ERR"> notSignedOn<br/> </td><tr>
+<tr><td class="CMD"> ReconnectRequest </td><td>   </td><td> 0 </td>
             <td class="ERR">  </td><tr>
-<tr><td class="CMD"> ReconnectRequest </td><td> ✅  </td><td> 3 </td>
+<tr><td class="CMD"> GetAvailableIdsRequest </td><td> ✅  </td><td> 1 </td>
             <td class="ERR"> invalidParticipation<br/> </td><tr>
-<tr><td class="CMD"> GetAvailableIdsRequest </td><td>   </td><td> 0 </td>
-            <td class="ERR">  </td><tr>
 <tr><td class="CMD"> ListPartitionsRequest </td><td>   </td><td> 0 </td>
-            <td class="ERR">  </td><tr>
+            <td class="ERR"> invalidParticipation<br/> </td><tr>
 <tr><td class="CMD"> ListAndSubscribePartitionsRequest </td><td>   </td><td> 0 </td>
-            <td class="ERR">  </td><tr>
+            <td class="ERR"> invalidParticipation<br/> </td><tr>
 </tbody></table>
 </body>
 </html>
