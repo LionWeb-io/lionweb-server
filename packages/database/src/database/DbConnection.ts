@@ -15,7 +15,7 @@ export class DbConnection {
     pgDatabaseConnection: pgPromise.IDatabase<object, IClient>
     private _pgp: pgPromise.IMain<object, IClient>
     pgPool: Pool
-    transactionMode: typeof pgPromise.txMode.TransactionMode
+    transactionMode: object
 
     set pgp(value: pgPromise.IMain<object, IClient>) {
         this._pgp = value
