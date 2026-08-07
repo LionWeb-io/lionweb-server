@@ -15,7 +15,7 @@ export class DbConnection {
     pgDatabaseConnection: pgPromise.IDatabase<object, IClient>
     private _pgp: pgPromise.IMain<object, IClient>
     pgPool: Pool
-    transactionMode: object
+    transactionMode: typeof pgPromise.txMode.TransactionMode
 
     set pgp(value: pgPromise.IMain<object, IClient>) {
         this._pgp = value
@@ -100,7 +100,7 @@ export class DbConnection {
      * @param query
      */
     async manyOrNone(repositoryData: RepositoryData, query: string) {
-        traceLogger.info("DbConnection.one")
+        traceLogger.info("DbConnection.manyOrNone")
         query = addRepositorySchema(query, repositoryData)
         dbLogger.debug({ query: query.split("\n", 500) })
         queryLogger.info(`DbConnection.manyOrNone ${query}`)
