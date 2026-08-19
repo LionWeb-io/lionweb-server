@@ -4,7 +4,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "version": "0.4.2-beta.1",
+    "version": "0.4.2-beta.2",
     "description": "Library to access LionWeb server from a TypeScript/JavaScript client",
     "main": "dist/index.js",
     "exports": "./dist/index.js",
@@ -31,7 +31,7 @@
     },
     "dependencies": {
         "@lionweb/json": "0.10.0-alpha.10",
-        "@lionweb/server-shared": "0.4.2-beta.1"
+        "@lionweb/server-shared": "0.4.2-beta.2"
     },
     "devDependencies": {
     },

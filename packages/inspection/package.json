@@ -1,6 +1,6 @@
 {
     "name": "@lionweb/server-inspection",
-    "version": "0.4.2-beta.1",
+    "version": "0.4.2-beta.2",
     "private": false,
     "description": "Inspection routes for the lionweb server",
     "main": "dist/index.js",
@@ -27,11 +27,11 @@
         "test": "echo No tests in server-inspection"
     },
     "dependencies": {
-        "@lionweb/server-common": "0.4.2-beta.1",
-        "@lionweb/server-database": "0.4.2-beta.1",
-        "@lionweb/server-dbadmin": "0.4.2-beta.1",
-        "@lionweb/server-shared": "0.4.2-beta.1",
-        "@lionweb/server-logging": "0.4.2-beta.1",
+        "@lionweb/server-common": "0.4.2-beta.2",
+        "@lionweb/server-database": "0.4.2-beta.2",
+        "@lionweb/server-dbadmin": "0.4.2-beta.2",
+        "@lionweb/server-shared": "0.4.2-beta.2",
+        "@lionweb/server-logging": "0.4.2-beta.2",
         "@types/express": "4.17.21",
         "express": "4.22.2",
         "pg-promise": "11.7.8"

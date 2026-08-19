@@ -4,7 +4,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "version": "0.4.2-beta.1",
+    "version": "0.4.2-beta.2",
     "description": "Library with types used in delta protocol between TypeScript/JavaScript client and server",
     "main": "dist/index.js",
     "exports": "./dist/index.js",
