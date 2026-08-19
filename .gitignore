@@ -4,7 +4,16 @@
 /node_modules
 /packages/*/node_modules
 /packages/*/dist
+/packages/test/data
+/packages/test/delta
+/packages/test/lionweb-server-testall.html
 /.idea
 build
 /scripts/dist
 /scripts/node_modules
+
+dependency-graph.dot
+dependency-graph.pdf
+dependency-graph-files.dot
+dependency-graph-files.pdf
+
