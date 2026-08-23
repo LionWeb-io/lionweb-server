@@ -165,7 +165,7 @@ export class DbChanges {
                 case "ChildAdded": 
                 case "ChildOrderChanged": {
                     let missing: FeatureMissing = (change as ContainmentChange).missing
-                    if ((change as ChildRemoved).afterContainment.children.length === 0) {
+                    if ((change as ChildRemoved).afterContainment?.children?.length === 0) {
                         // no Children left is null means this containment is deleted.
                         missing = FeatureMissing.MissingAfter
                     }
