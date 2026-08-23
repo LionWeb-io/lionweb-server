@@ -1,4 +1,4 @@
-import { Missing, NodeClassifierChanged, PropertyValueChanged } from "@lionweb/json-diff"
+import { FeatureMissing, NodeClassifierChanged, PropertyValueChanged } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
 import { DbChanges, MetaPointersTracker, SQL_nextRepoVersion, TableHelpers } from "@lionweb/server-common"
 import { LionWebTask } from "@lionweb/server-database"

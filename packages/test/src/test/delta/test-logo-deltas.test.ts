@@ -257,7 +257,7 @@ describe.each(withoutHistoryList)
         const delRef7 = cmd.deleteReference(client, { parent: "PCall-000", index: 0, deletedReference: "target", deletedResolveInfo: null, reference: REF.ProcedureCallProcedure })
 
         await expectError(client, delRef6, "undefinedReferenceTarget")
-        await expectError(client, delRef5, "unknownIndex")
+        await expectError(client, delRef5, "unknownReference") // as the reference has been deleted from the server due to it being empty.
         await expectError(client, delRef7, "unknownNode")
 
         const addRef9 = cmd.addReference(client, { id: "PCall-01", index: 0, target: "Procedure-02", resolveInfo: "PROC-02", reference: REF.ProcedureCallProcedure })

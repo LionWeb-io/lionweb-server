@@ -59,6 +59,8 @@ export function findContainment(
  * Find ` containment` within `node`, throw an exception if there is no such containment.
  * @param node
  * @param containmentMP
+ * @param msg           The command that triggers this function.
+ * @param participation The participation that is active. 
  */
 export function findAndValidateContainment(
     node: LionWebJsonNode,
@@ -78,6 +80,14 @@ export function findAndValidateContainment(
     return containment
 }
 
+/**
+ * Valiodate that  property` within `node` does not exist, throw an exception if there is such property.
+ *
+ * @param node          The node that should contain the property.
+ * @param propertyMP    The property metapointer to find.
+ * @param msg           The command that triggers this function.
+ * @param participation The participation that is active.
+ */
 export function validatePropertyDoesNotExist(
     node: LionWebJsonNode,
     propertyMP: LionWebJsonMetaPointer,
@@ -85,10 +95,10 @@ export function validatePropertyDoesNotExist(
     participation: Participation
 ): void {
     const property = node.properties.find(c => isEqualMetaPointer(c.property, propertyMP))
-        if (notNullOrUndefined(property) && notNullOrUndefined(property.value)) {
+    if (notNullOrUndefined(property)) {
         throw newErrorDelta(
             "propertyAlreadyExists",
-            `Property '${JSON.stringify(propertyMP)}' already exists in node '${node.id}'`,
+            `Property '${JSON.stringify(propertyMP)}' already exists in node '${node.id}' with value '${property.value}'`,
             msg,
             participation
         )
@@ -96,9 +106,12 @@ export function validatePropertyDoesNotExist(
 }
 
 /**
- * Find ` containment` within `node`, throw an exception if there is no such containment.
- * @param node
- * @param containmentMP
+ * Find ` property` within `node`, throw an exception if there is no such property.
+ * 
+ * @param node          The node that should contain the property.
+ * @param propertyMP    The property metapointer to find.
+ * @param msg           The command that triggers this function.
+ * @param participation The participation that is active.
  */
 export function findAndValidateProperty(
     node: LionWebJsonNode,
@@ -118,6 +131,13 @@ export function findAndValidateProperty(
     return property
 }
 
+/**
+ * 
+ * @param property
+ * @param newValue
+ * @param msg
+ * @param participation
+ */
 export function validatePropertyHasChanged(property: LionWebJsonProperty, newValue: string, msg: DeltaCommand, participation: Participation): void {
     if (property.value === newValue) {
         throw newErrorDelta(

@@ -1,6 +1,6 @@
 import { isEqualMetaPointer } from "@lionweb/json"
 import { NodeUtils } from "@lionweb/json-utils"
-import { ChildAdded, Missing, ChildRemoved, ParentChanged, ChildOrderChanged } from "@lionweb/json-diff"
+import { ChildAdded, FeatureMissing, ChildRemoved, ParentChanged, ChildOrderChanged } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
 import {
     DbChanges,
@@ -79,7 +79,7 @@ const AddChild = async (participation: Participation, msg: AddChildCommand, ctx:
         //////////////////// Check done, do the work /////////////////
         const changes = new DbChanges(TableHelpers.pgp)
         // Add child to parent
-        const missing: Missing = (parentNode.containments.find(c => isEqualMetaPointer(c.containment, msg.containment)) === undefined ? Missing.MissingBefore : Missing.NotMissing)
+        const missing: FeatureMissing = (parentNode.containments.find(c => isEqualMetaPointer(c.containment, msg.containment)) === undefined ? FeatureMissing.MissingBefore : FeatureMissing.NotMissing)
         deltaLogger.debug(`Missing is ${missing} ================================ {msg.containment}`, {msg})
         changes.addChanges(
             [new ChildAdded(new JsonContext(null, ["delta"]), parentNode!, msg.containment, containment, newChildNode!.id, missing)]
@@ -132,7 +132,7 @@ const DeleteChild = async (
         const deleteSql = SQL_deleteFullNodes(subtreeNodes.map(n => n.id))
         const dbChanges = new DbChanges(TableHelpers.pgp)
         dbChanges.addChanges(            
-            [new ChildRemoved(new JsonContext(null, ["delta"]), parentNode, msg.containment, containment, msg.deletedChild, Missing.NotMissing)]
+            [new ChildRemoved(new JsonContext(null, ["delta"]), parentNode, msg.containment, containment, msg.deletedChild, FeatureMissing.NotMissing)]
         ) 
         // Run the query with metapointers as a dummy, there are no metapointers being added
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
@@ -180,10 +180,10 @@ const ReplaceChild = async (
         const changes = new DbChanges(TableHelpers.pgp)
         const replacedTree = await DB_retrieveNodeTree(task, participation.repositoryData!, [msg.replacedChild], Number.MAX_SAFE_INTEGER)
 
-        const missing: Missing =
+        const missing: FeatureMissing =
             parentNode.containments.find(c => isEqualMetaPointer(c.containment, msg.containment)) === undefined
-                ? Missing.MissingBefore
-                : Missing.NotMissing
+                ? FeatureMissing.MissingBefore
+                : FeatureMissing.NotMissing
         changes.addChanges([
             new ChildAdded(deltaContext(), parentNode, msg.containment, containment, newChildNode.id, missing)
         ])
@@ -245,14 +245,14 @@ const MoveChildFromOtherContainmentFunction = async (
         const changes = new DbChanges(TableHelpers.pgp)
         newContainment.children.splice(msg.newIndex, 0, movedChildNode.id)
         oldContainment.children.splice(msg.oldIndex, 1)
-        const newParentMissing: Missing =
+        const newParentMissing: FeatureMissing =
             newParentNode.containments.find(c => isEqualMetaPointer(c.containment, msg.newContainment)) === undefined
-                ? Missing.MissingBefore
-                : Missing.NotMissing
+                ? FeatureMissing.MissingBefore
+                : FeatureMissing.NotMissing
         changes.addChanges([
             new ParentChanged(new JsonContext(null, ["delta"]), movedChildNode, oldParentNode.id, newParentNode.id),
             new ChildAdded(deltaContext(),newParentNode,msg.newContainment,newContainment,movedChildNode.id,newParentMissing),
-            new ChildRemoved(deltaContext(),oldParentNode,oldContainment.containment,oldContainment,movedChildNode.id,Missing.NotMissing)
+            new ChildRemoved(deltaContext(),oldParentNode,oldContainment.containment,oldContainment,movedChildNode.id,FeatureMissing.NotMissing)
         ])
         // Add child nodes to database
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
@@ -299,17 +299,17 @@ const MoveChildFromOtherContainmentInSameParent = async (
         const oldContainment = findAndValidateContainment(parentNode, msg.oldContainment, msg, participation)
         validateChildInContainment(parentNode, oldContainment, msg.oldIndex, msg.movedChild, msg, participation)
         const newContainment = validateContainment(parentNode, msg.newContainment, msg.newIndex, "Add", undefined, msg, participation)
-        const newContainmentMissing: Missing =
+        const newContainmentMissing: FeatureMissing =
             parentNode.containments.find(c => isEqualMetaPointer(c.containment, msg.newContainment)) === undefined
-                ? Missing.MissingBefore
-                : Missing.NotMissing
+                ? FeatureMissing.MissingBefore
+                : FeatureMissing.NotMissing
         //// Execute ////
         const changes = new DbChanges(TableHelpers.pgp)
         newContainment.children.splice(msg.newIndex, 0, movedChildNode.id)
         oldContainment.children.splice(msg.oldIndex, 1)
         changes.addChanges([
             new ChildAdded(deltaContext(),parentNode,msg.newContainment,newContainment,movedChildNode.id,newContainmentMissing),
-            new ChildRemoved(deltaContext(),parentNode,oldContainment.containment,oldContainment,movedChildNode.id,Missing.NotMissing)
+            new ChildRemoved(deltaContext(),parentNode,oldContainment.containment,oldContainment,movedChildNode.id,FeatureMissing.NotMissing)
         ])
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [parentNode], task)
@@ -363,7 +363,7 @@ const MoveChildInSameContainment = async (
         //     changedContainment.children.splice(msg.newIndex - 1, 0, movedChildNode.id)
         // }
         changes.addChanges([
-            new ChildOrderChanged(deltaContext(), parentNode, msg.containment, changedContainment, msg.movedChild, Missing.NotMissing)
+            new ChildOrderChanged(deltaContext(), parentNode, msg.containment, changedContainment, msg.movedChild, FeatureMissing.NotMissing)
         ])
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         // TODO Check: not needed as there are no new nodes or containments.
@@ -424,16 +424,16 @@ const MoveAndReplaceChildFromOtherContainment = async (
         oldContainment.children.splice(msg.oldIndex, 1)
         changes.addChanges([
             new ParentChanged(deltaContext(), movedChildNode, msg.oldParent, msg.newParent),
-            new ChildRemoved(deltaContext(), oldParentNode, msg.oldContainment, oldContainment, movedChildNode.id, Missing.NotMissing),
+            new ChildRemoved(deltaContext(), oldParentNode, msg.oldContainment, oldContainment, movedChildNode.id, FeatureMissing.NotMissing),
             new ChildRemoved(
                 deltaContext(),
                 newParentNode,
                 newContainment.containment,
                 newContainment,
                 replacedChildNode.id,
-                Missing.NotMissing
+                FeatureMissing.NotMissing
             ),
-            new ChildAdded(deltaContext(), newParentNode, msg.newContainment, newContainment, movedChildNode.id, Missing.NotMissing),
+            new ChildAdded(deltaContext(), newParentNode, msg.newContainment, newContainment, movedChildNode.id, FeatureMissing.NotMissing),
         ])
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         // TODO Check: not needed as there are no new nodes or containments.
@@ -495,16 +495,16 @@ const MoveAndReplaceChildFromOtherContainmentInSameParent = async (
         newContainment.children.splice(msg.newIndex, 1, movedChildNode.id)
         oldContainment.children.splice(msg.oldIndex, 1)
         changes.addChanges([
-            new ChildRemoved(deltaContext(), parentNode, msg.oldContainment, oldContainment, movedChildNode.id, Missing.NotMissing),
+            new ChildRemoved(deltaContext(), parentNode, msg.oldContainment, oldContainment, movedChildNode.id, FeatureMissing.NotMissing),
             new ChildRemoved(
                 deltaContext(),
                 parentNode,
                 newContainment.containment,
                 newContainment,
                 replacedChildNode.id,
-                Missing.NotMissing
+                FeatureMissing.NotMissing
             ),
-            new ChildAdded(deltaContext(), parentNode, msg.newContainment, newContainment, movedChildNode.id, Missing.NotMissing)
+            new ChildAdded(deltaContext(), parentNode, msg.newContainment, newContainment, movedChildNode.id, FeatureMissing.NotMissing)
         ])
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         // TODO Check: not needed as there are no new nodes or containments.
@@ -562,8 +562,8 @@ const MoveAndReplaceChildInSameContainment = async (
             changedContainment.children.splice(msg.oldIndex + msg.indexOffset - 1, 1, movedChildNode.id)
         }
         changes.addChanges([
-            new ChildRemoved(deltaContext(), parentNode, msg.containment, changedContainment, msg.replacedChild, Missing.NotMissing),
-            new ChildAdded(deltaContext(), parentNode, msg.containment, changedContainment, movedChildNode.id, Missing.NotMissing)
+            new ChildRemoved(deltaContext(), parentNode, msg.containment, changedContainment, msg.replacedChild, FeatureMissing.NotMissing),
+            new ChildAdded(deltaContext(), parentNode, msg.containment, changedContainment, movedChildNode.id, FeatureMissing.NotMissing)
         ])
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         // TODO Check: not needed as there are no new nodes or containments.

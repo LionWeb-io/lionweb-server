@@ -1,5 +1,6 @@
 import { LionWebJsonNode } from "@lionweb/json"
 import { dbLogger } from "@lionweb/server-logging"
+import { notNullOrUndefined } from "../apiutil/index.js"
 import { NodeRecord } from "../database/index.js"
 import { TableHelpers } from "../main.js"
 import { MetaPointersTracker } from "../metapointers/MetaPointers.js"
@@ -28,9 +29,9 @@ export function SQL_insertNodeArray(tbsNodesToCreate: LionWebJsonNode[], metaPoi
         query += TableHelpers.pgp.helpers.insert(node_rows, TableHelpers.NODES_COLUMN_SET) + ";\n"
         query += SQL_insertContainments(tbsNodesToCreate, metaPointersTracker)
 
-        // INSERT Properties
+        // INSERT Properties, filter out null values, as that means that there is no property
         const insertProperties = tbsNodesToCreate.flatMap(node =>
-            node.properties.map(prop => ({
+            node.properties.filter(p => p.value !== null).map(prop => ({
                 node_id: node.id,
                 property: TableHelpers.pgp.as.format(metaPointersTracker.forMetaPointer(prop.property).toString()),
                 value: prop.value
@@ -40,9 +41,9 @@ export function SQL_insertNodeArray(tbsNodesToCreate: LionWebJsonNode[], metaPoi
             query += TableHelpers.pgp.helpers.insert(insertProperties, TableHelpers.PROPERTIES_COLUMN_SET) + ";\n"
         }
 
-        // INSERT References
+        // INSERT References, filter out empty targets arrays, as that means that there is no reference
         const insertReferences = tbsNodesToCreate.flatMap(node =>
-            node.references.map(reference => ({
+            node.references.filter(ref => ref.targets.length !== 0).map(reference => ({
                 node_id: node.id,
                 reference: TableHelpers.pgp.as.format(metaPointersTracker.forMetaPointer(reference.reference).toString()),
                 targets: reference.targets
@@ -57,9 +58,9 @@ export function SQL_insertNodeArray(tbsNodesToCreate: LionWebJsonNode[], metaPoi
 
 export function SQL_insertContainments(tbsNodesToCreate: LionWebJsonNode[], metaPointersTracker: MetaPointersTracker): string {
     let query = "-- insert containments for new node\n"
-    // INSERT Containments
+    // INSERT Containments, , filter out empty children arrays, as that means that there is no containment
     const insertRowData = tbsNodesToCreate.flatMap(node =>
-        node.containments.map(c => ({
+        node.containments.filter(con => con.children.length !== 0).map(c => ({
             node_id: node.id,
             containment: TableHelpers.pgp.as.format(metaPointersTracker.forMetaPointer(c.containment).toString()),
             children: c.children
