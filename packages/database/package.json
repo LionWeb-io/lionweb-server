@@ -1,6 +1,6 @@
 {
     "name": "@lionweb/server-database",
-    "version": "0.4.2-beta.2",
+    "version": "0.4.2-beta.3",
     "private": false,
     "description": "Database specific code for the lionweb server",
     "main": "dist/index.js",
@@ -28,13 +28,13 @@
     "devDependencies": {
     },
     "dependencies": {
-        "@lionweb/json": "0.10.0-alpha.10",
-        "@lionweb/json-diff": "0.10.0-alpha.10",
-        "@lionweb/json-utils": "0.10.0-alpha.10",
-        "@lionweb/server-delta-shared": "0.4.2-beta.2",
-        "@lionweb/server-shared": "0.4.2-beta.2",
-        "@lionweb/server-logging": "0.4.2-beta.2",
-        "@lionweb/validation": "0.10.0-alpha.10",
+        "@lionweb/json": "0.10.0-alpha.11",
+        "@lionweb/json-diff": "0.10.0-alpha.11",
+        "@lionweb/json-utils": "0.10.0-alpha.11",
+        "@lionweb/server-delta-shared": "0.4.2-beta.3",
+        "@lionweb/server-shared": "0.4.2-beta.3",
+        "@lionweb/server-logging": "0.4.2-beta.3",
+        "@lionweb/validation": "0.10.0-alpha.11",
         "@types/express": "4.17.21",
         "express": "4.22.2",
         "json-stream-stringify": "3.1.6",

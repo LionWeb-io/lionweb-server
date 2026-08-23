@@ -527,12 +527,17 @@ collection.forEach(withoutHistory => {
             const changesChunk = readModel(changesFile) as LionWebJsonChunk
 
             const result = await client.bulk.store(changesChunk)
-            console.log(`============ ${JSON.stringify(result)}`)
+            console.log(`============ ${JSON.stringify(result, null, 4)}`)
             expect(result.status).toEqual(HttpSuccessCodes.Ok)
 
             const jsonModelFull = readModel(originalJsonFile) as LionWebJsonChunk
             const afterRetrieve = await client.bulk.retrieve(["ID-2"])
             console.log("Retrieve Result: " + afterRetrieve.status + " messages " + JSON.stringify(afterRetrieve.body.messages))
+            console.log("Original")
+            console.log(JSON.stringify(jsonModelFull, null, 4))
+            console.log("Retrieved")
+            console.log(JSON.stringify(afterRetrieve.body.chunk, null, 4))
+            console.log("+++++")
             const retrieveResponse = afterRetrieve.body as RetrieveResponse
             if (!retrieveResponse.success) {
                 console.log(retrieveResponse.messages)

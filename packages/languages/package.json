@@ -1,6 +1,6 @@
 {
     "name": "@lionweb/server-languages",
-    "version": "0.4.2-beta.2",
+    "version": "0.4.2-beta.3",
     "private": false,
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -27,12 +27,12 @@
         "manualtest": "node dist/test/ManualTests.js"
     },
     "dependencies": {
-        "@lionweb/server-common": "0.4.2-beta.2",
-        "@lionweb/server-database": "0.4.2-beta.2",
-        "@lionweb/server-dbadmin": "0.4.2-beta.2",
-        "@lionweb/server-shared": "0.4.2-beta.2",
-        "@lionweb/server-logging": "0.4.2-beta.2",
-        "@lionweb/validation": "0.10.0-alpha.10",
+        "@lionweb/server-common": "0.4.2-beta.3",
+        "@lionweb/server-database": "0.4.2-beta.3",
+        "@lionweb/server-dbadmin": "0.4.2-beta.3",
+        "@lionweb/server-shared": "0.4.2-beta.3",
+        "@lionweb/server-logging": "0.4.2-beta.3",
+        "@lionweb/validation": "0.10.0-alpha.11",
         "@types/express": "4.17.21",
         "body-parser": "2.3.0",
         "cors": "2.8.5",

@@ -3,7 +3,6 @@
  */
 import "./test.test.js"
 import "./history.test.js"
-import "./sequentialize-requests.test.js"
 import "./additional-api.test.js"
 import "./bulk-import.test.js"
 import "./inspectionTests.test.js"
@@ -20,3 +19,4 @@ import "./delta/ReferenceCommands.test.js"
 import "./delta/ChangeClassifier.test.js"
 import "./delta/CompositeCommand.test.js"
 import "./delta/ContinuedCommand.test.js"
+import "./sequentialize-requests.test.js"
