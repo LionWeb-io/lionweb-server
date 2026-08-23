@@ -8,6 +8,7 @@ To run the server you need two applications
 1. Run a Postgres server, easiest done through using docker.
    There are postgres images available, we are using Postgres 16.1
 2. Run the LionWeb server, easiest done through using `npx`:
+
 ```asciidoc
 npx  @lionweb/server-server@0.4.0 --run --config server-config.json 
 ```
@@ -30,14 +31,35 @@ We use `pgAdmin 4` or the database plugin in WebStorm to test queries and look d
 
 ### How to start Postgres through docker
 
-```
-# download docker image of postgres
+Download docker image of postgres
+```bash
 docker pull postgres:16.1
-
-# create a container and run it
+```
+Create a container and run it
+```bash
 docker run --shm-size=1g -d --name lionwebrepodb -p 5432:5432 -e POSTGRES_PASSWORD=lionweb postgres:16.1
 ```
 
+If you start the Postgres container from Docker Desktop, ensure to give the following parameters:
+* host port is 5432
+* POSTGRES_PASSWORD = lionweb
+
+Then initialize the lionweb-server from a terminal in the `packages/server` folder,
+and run the server:
+```bash
+npm run dev-local-setup
+npm run dev-local-dev
+```
+### Running Postgres + lionweb-server though docker compose
+
+Build the docker image for the lionweb-server
+```bash
+docker build  . -t lionweb-server
+```
+Run docker images for postgres and lionweb-server
+```bash
+docker compose -f docker-local/compose.yaml up
+```
 ### How to build
 
 ```
