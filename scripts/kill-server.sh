@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 if [[ -z "${NODE_PORT}" ]]; then
-  PORT="3005"
+  PORT="45432"
 else
   PORT="${NODE_PORT}"
 fi

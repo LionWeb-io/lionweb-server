@@ -3,8 +3,9 @@ import {
     AnnotationAdded,
     AnnotationChange,
     Change,
+    ChildRemoved,
     ContainmentChange,
-    Missing,
+    FeatureMissing,
     NodeClassifierChanged,
     NodeRemoved,
     ParentChanged,
@@ -18,13 +19,13 @@ import pg from "pg-promise/typescript/pg-subset.d.js"
 import { UnknownObjectType } from "../apiutil/index.js"
 import { CONTAINMENTS_TABLE, NODES_TABLE, PROPERTIES_TABLE, REFERENCES_TABLE } from "../database/index.js"
 import { TableHelpers } from "../main.js"
-import {  MetaPointersTracker } from "../metapointers/MetaPointers.js"
+import { MetaPointersTracker } from "../metapointers/MetaPointers.js"
 import { InitializedMapToArray } from "./InitializedMapToArray.js"
 import { sqlArrayFromNodeIdArray } from "./PgHelpers.js"
 
 export type DbNodeUpdate = {
     id: string
-    column: "annotations" | "parent" | "classifier" 
+    column: "annotations" | "parent" | "classifier"
     newValue: string[] | string | LionWebJsonMetaPointer
 }
 
@@ -34,7 +35,7 @@ export type DbNodeDelete = {
 
 export type FeatureUpdate = {
     node_id: string
-    missing: Missing
+    missing: FeatureMissing
 }
 
 export type DbPropertyUpdate = FeatureUpdate & {
@@ -119,26 +120,61 @@ export class DbChanges {
                     this.updatesOnNodeTable.add(update.id, update)
                     break
                 }
-                case "PropertyValueChanged": {
+                case "PropertyAdded": {
+                    // ignore when null value is added, this means the property does not exist.
+                    if ((change as PropertyValueChanged).newValue !== null) {
+                        const update: DbPropertyUpdate = {
+                            node_id: (change as PropertyValueChanged).nodeId,
+                            property: (change as PropertyValueChanged).property,
+                            column: "value",
+                            newValue: (change as PropertyValueChanged).newValue,
+                            missing: FeatureMissing.MissingBefore
+                        }
+                        this.updatesPropertyTable.add({ nodeId: update.node_id, property: update.property }, update)
+                    }
+                    break
+                }
+                case "PropertyDeleted": {
                     const update: DbPropertyUpdate = {
                         node_id: (change as PropertyValueChanged).nodeId,
                         property: (change as PropertyValueChanged).property,
                         column: "value",
                         newValue: (change as PropertyValueChanged).newValue,
-                        missing: (change as PropertyValueChanged).missing
+                        missing: FeatureMissing.MissingAfter
+                    }
+                    this.updatesPropertyTable.add({ nodeId: update.node_id, property: update.property }, update)
+                    break
+                }
+                case "PropertyValueChanged": {
+                    let missing: FeatureMissing = FeatureMissing.NotMissing
+                    if ((change as PropertyValueChanged).newValue === null) {
+                        // newValue is null means this property is deleted.
+                        missing = FeatureMissing.MissingAfter
+                    }
+                    const update: DbPropertyUpdate = {
+                        node_id: (change as PropertyValueChanged).nodeId,
+                        property: (change as PropertyValueChanged).property,
+                        column: "value",
+                        newValue: (change as PropertyValueChanged).newValue,
+                        missing: FeatureMissing.NotMissing
                     }
                     this.updatesPropertyTable.add({ nodeId: update.node_id, property: update.property }, update)
                     break
                 }
                 case "ChildRemoved":
-                case "ChildAdded":
+                case "ChildAdded": 
                 case "ChildOrderChanged": {
+                    let missing: FeatureMissing = (change as ContainmentChange).missing
+                    if ((change as ChildRemoved).afterContainment?.children?.length === 0) {
+                        // no Children left is null means this containment is deleted.
+                        missing = FeatureMissing.MissingAfter
+                    }
                     const update: DbContainmentUpdate = {
                         node_id: (change as ContainmentChange).parentNode.id,
                         containment: (change as ContainmentChange).containment,
                         column: "children",
                         children: (change as ContainmentChange).afterContainment?.children ?? [],
-                        missing: (change as ContainmentChange).missing
+                        missing: missing
                     }
                     this.updatesContainmentTable.add({ nodeId: update.node_id, containment: update.containment }, update)
                     break
@@ -150,12 +186,17 @@ export class DbChanges {
                     queryLogger.info(
                         `==> ${change.changeType}: ${change.changeMsg()} targets '{targets}'`, {targets}
                     )
+                    let missing: FeatureMissing = (change as ReferenceChange).missing
+                    if (targets.length === 0) {
+                        // no References left is null means this reference is deleted.
+                        missing = FeatureMissing.MissingAfter
+                    }
                     const update: DbReferenceUpdate = {
                         node_id: (change as ReferenceChange).node.id,
                         reference: (change as ReferenceChange).beforeReference.reference,
                         column: "targets",
                         targets: (change as ReferenceChange).afterReference?.targets ?? [],
-                        missing: (change as ReferenceChange).missing
+                        missing: missing
                     }
                     this.updatesReferenceTable.add({ nodeId: update.node_id, reference: update.reference }, update)
                     break
@@ -317,11 +358,11 @@ export class DbChanges {
         metapointerColumn: string,
         tableName: string,
         columnSet: ColumnSet,
-        missing: Missing
+        missing: FeatureMissing
     ): string {
         let result = ""
         switch (missing) {
-            case Missing.MissingBefore:
+            case FeatureMissing.MissingBefore:
                 result += `-- insert new feature for existing node
                                 ${this.pgp.helpers.insert(data, columnSet)};`
                 // result += `-- insert new feature for existing node
@@ -333,7 +374,7 @@ export class DbChanges {
                 //                     ${tableName}.node_id = '${data["node_id"]}' AND
                 //                     ${tableName}.${metapointerColumn} = ${data[metapointerColumn]};`
                 break
-            case Missing.MissingAfter:
+            case FeatureMissing.MissingAfter:
                 result += `-- delete feature for existing node
                                 -- table is a reserved word, so we use tabl instead
                                 DELETE FROM ${tableName} tabl
@@ -341,7 +382,7 @@ export class DbChanges {
                                     tabl.node_id = '${data["node_id"]}' AND tabl.${metapointerColumn} = ${data[metapointerColumn]};
                     `
                 break
-            case Missing.NotMissing:
+            case FeatureMissing.NotMissing:
                 result += `-- update feature for existing node
                                 UPDATE ${tableName} tabl
                                     SET ${this.pgp.helpers.sets(data, columnSet)}

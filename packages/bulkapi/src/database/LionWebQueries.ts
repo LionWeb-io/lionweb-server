@@ -158,7 +158,8 @@ export class LionWebQueries {
         const removedChildren = diff.diffResult.changes.filter((ch): ch is ChildRemoved => ch.changeType === "ChildRemoved")
         const childrenOrderChanged = diff.diffResult.changes.filter((ch): ch is ChildOrderChanged => ch instanceof ChildOrderChanged)
         const parentChanged = diff.diffResult.changes.filter((ch): ch is ParentChanged => ch.changeType === "ParentChanged")
-        const propertyChanged = diff.diffResult.changes.filter((ch): ch is PropertyValueChanged => ch.changeType === "PropertyValueChanged")
+        const propertyChanged = diff.diffResult.changes.filter((ch): ch is PropertyValueChanged => 
+            ch.changeType === "PropertyValueChanged" || ch.changeType === "PropertyAdded" || ch.changeType === "PropertyDeleted")
         const targetsChanged = diff.diffResult.changes.filter((ch): ch is ReferenceChange => ch instanceof ReferenceChange)
         const addedAnnotations = diff.diffResult.changes.filter((ch): ch is AnnotationAdded => ch instanceof AnnotationAdded)
         const removedAnnotations = diff.diffResult.changes.filter((ch): ch is AnnotationRemoved => ch instanceof AnnotationRemoved)
@@ -331,6 +332,7 @@ export class LionWebQueries {
         implicitlyRemovedChildNodes: LionWebJsonChunk,
         parentsOfImplicitlyRemovedChildNodes: LionWebJsonChunk
     ) {
+        // TODO This is incorrect if there are multiple children within the same containment implicitly removed.
         implicitlyRemovedChildNodes.nodes.forEach(child => {
             const previousParentNode = parentsOfImplicitlyRemovedChildNodes.nodes.find(p => (p.id = child.parent))
             const changedContainment = NodeUtils.findContainmentContainingChild(previousParentNode.containments, child.id)
@@ -385,7 +387,7 @@ export class LionWebQueries {
      * @param repositoryData
      * @param idList
      */
-    // TODO Does three separate queries to Postgress, should be combined into one for performance
+    // TODO Does three separate queries to Postgres, should be combined into one for performance
     async deletePartitions(
         task: LionWebTask,
         repositoryData: RepositoryData,

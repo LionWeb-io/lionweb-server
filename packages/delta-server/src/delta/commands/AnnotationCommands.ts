@@ -1,4 +1,4 @@
-import { AnnotationAdded, AnnotationOrderChanged, AnnotationRemoved, ChildAdded, Missing, ParentChanged } from "@lionweb/json-diff"
+import { AnnotationAdded, AnnotationOrderChanged, AnnotationRemoved, ChildAdded, FeatureMissing, ParentChanged } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
 import {
     DB_retrieveFullNodesFromIdList,

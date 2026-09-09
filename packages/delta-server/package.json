@@ -4,7 +4,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "version": "0.4.2-beta.1",
+    "version": "0.4.2-beta.3",
     "description": "Library with types used in delta protocol between TypeScript/JavaScript client and server",
     "main": "dist/index.js",
     "exports": "./dist/index.js",
@@ -30,17 +30,17 @@
         "lint": "eslint src"
     },
     "dependencies": {
-        "@lionweb/json": "0.10.0-alpha.10",
-        "@lionweb/json-diff": "0.10.0-alpha.10",
-        "@lionweb/json-utils": "0.10.0-alpha.10",
-        "@lionweb/validation": "0.10.0-alpha.10",
-        "@lionweb/server-shared": "0.4.2-beta.1",
-        "@lionweb/server-logging": "0.4.2-beta.1",
-        "@lionweb/server-database": "0.4.2-beta.1",
-        "@lionweb/server-common": "0.4.2-beta.1",
-        "@lionweb/server-dbadmin": "0.4.2-beta.1",
-        "@lionweb/server-delta-shared": "0.4.2-beta.1",
-        "@lionweb/server-delta-definitions": "0.4.2-beta.1",
+        "@lionweb/json": "0.10.0-alpha.11",
+        "@lionweb/json-diff": "0.10.0-alpha.11",
+        "@lionweb/json-utils": "0.10.0-alpha.11",
+        "@lionweb/validation": "0.10.0-alpha.11",
+        "@lionweb/server-shared": "0.4.2-beta.3",
+        "@lionweb/server-logging": "0.4.2-beta.3",
+        "@lionweb/server-database": "0.4.2-beta.3",
+        "@lionweb/server-common": "0.4.2-beta.3",
+        "@lionweb/server-dbadmin": "0.4.2-beta.3",
+        "@lionweb/server-delta-shared": "0.4.2-beta.3",
+        "@lionweb/server-delta-definitions": "0.4.2-beta.3",
         "es-toolkit": "1.46.1",
         "pg-promise": "11.7.8",
         "ws": "8.20.0"

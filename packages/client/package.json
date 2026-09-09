@@ -4,7 +4,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "version": "0.4.2-beta.1",
+    "version": "0.4.2-beta.3",
     "description": "Library to access LionWeb server from a TypeScript/JavaScript client",
     "main": "dist/index.js",
     "exports": "./dist/index.js",
@@ -30,8 +30,8 @@
         "republish-local": "npm run unpublish-local && npm run publish-local"
     },
     "dependencies": {
-        "@lionweb/json": "0.10.0-alpha.10",
-        "@lionweb/server-shared": "0.4.2-beta.1"
+        "@lionweb/json": "0.10.0-alpha.11",
+        "@lionweb/server-shared": "0.4.2-beta.3"
     },
     "devDependencies": {
     },

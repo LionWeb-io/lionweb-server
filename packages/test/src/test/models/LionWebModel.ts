@@ -43,7 +43,9 @@ import { pull } from "es-toolkit"
 
 /**
  * Represents a complete model consisting of LionWebJsonNode objects.
- * Allows us to use a collection of LionWebJsonNodes to be accessed as a tree.
+ * Allows us to manage a collection of LionWebJsonNodes and it to be accessed as a tree.
+ * 
+ * Contains function to apply Delta Commands to the model.
  */
 export class LionWebModel {
     /**
@@ -70,17 +72,26 @@ export class LionWebModel {
     /** Add `nodes` to the model.
      *  It is ok for a node to be in the model already.
      */
-    private addNodes(nodes: LionWebJsonNode[]) {
+    private addNodes(nodes: LionWebJsonNode[]): void {
         nodes.forEach((node) => {
-            // console.log(`Add node ${node.id} cls: ${JSON.stringify(node.classifier)}`)
             this.nodesIdMap.set(node.id, node)
         })
     }
 
+    /**
+     * Get node with node id `id`
+     * @param id
+     * @returns The node found or `undefined` if no node with `id` is found. 
+     */
     getNode(id: LionWebId): LionWebJsonNode | undefined {
         return this.nodesIdMap.get(id)
     }
 
+    /**
+     * Find all nodes with classifier `concept`
+     * @param concept The classifier to look for
+     * @returns The (potential empty) list of nodes with classifier = `concept`.
+     */
     findNodesOfClassifier(concept: LionWebJsonMetaPointer): LionWebJsonNode[] {
         return this.nodes().filter((node) => isEqualMetaPointer(node.classifier, concept))
     }
@@ -89,7 +100,7 @@ export class LionWebModel {
      * Return the target nodes inside `reference` as a list of actual nodes (LionWebJsonNode[])
      * @param reference
      */
-    getReferredNodes(reference: LionWebJsonReference | undefined) {
+    getReferredNodes(reference: LionWebJsonReference | undefined): LionWebJsonNode[] {
         if (reference === undefined) {
             return []
         }
@@ -341,6 +352,11 @@ export class LionWebModel {
         return this.nodes().filter(node => node.parent === null)
     }
 
+    /**
+     * Apply `delta` command to the model.
+     * NOTE: There is no checking done, it is assumed the `delta` is correct.
+     * @param delta The delta to apply.
+     */
     applyDelta(delta: DeltaCommand): void {
         switch (delta.messageKind) {
             case "AddPartition": {

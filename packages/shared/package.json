@@ -1,6 +1,6 @@
 {
     "name": "@lionweb/server-shared",
-    "version": "0.4.2-beta.1",
+    "version": "0.4.2-beta.3",
     "private": false,
     "description": "Shared code between client and server",
     "main": "dist/index.js",
@@ -27,7 +27,7 @@
         "republish-local": "npm run unpublish-local && npm run publish-local"
     },
     "dependencies": {
-        "@lionweb/json": "0.10.0-alpha.10",
+        "@lionweb/json": "0.10.0-alpha.11",
         "protobufjs": "8.6.3",
         "source-map-support": "0.5.21"
     }

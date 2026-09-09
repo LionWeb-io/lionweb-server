@@ -5,7 +5,7 @@ import {
     SQL_nextRepoVersion,
     TableHelpers
 } from "@lionweb/server-common"
-import { TargetAdded, TargetRemoved, Missing } from "@lionweb/json-diff"
+import { TargetAdded, TargetRemoved, FeatureMissing } from "@lionweb/json-diff"
 import { JsonContext } from "@lionweb/json-utils"
 import { isEqualMetaPointer } from "@lionweb/json"
 import { LionWebTask } from "@lionweb/server-database"
@@ -38,7 +38,7 @@ const AddReference = async (participation: Participation, msg: AddReferenceComma
         afterReference.targets.splice(msg.index, 0, { resolveInfo: msg.newResolveInfo ?? null, reference: msg.newReference!})
 
         const changes = new DbChanges(TableHelpers.pgp)
-        const missing: Missing = parentNode.references.find(c => isEqualMetaPointer(c.reference, msg.reference)) === undefined ? Missing.MissingBefore : Missing.NotMissing
+        const missing: FeatureMissing = parentNode.references.find(c => isEqualMetaPointer(c.reference, msg.reference)) === undefined ? FeatureMissing.MissingBefore : FeatureMissing.NotMissing
 
         deltaLogger.debug(`AddReference missing ${missing}`)
         changes.addChanges(
@@ -81,7 +81,7 @@ const DeleteReference = async (participation: Participation, msg: DeleteReferenc
         deltaLogger.debug(`REFERENCE DEL index ${msg.index} before {beforeReference.targets} after {afterReference.targets}`, {beforeReference, afterReference})
         const changes = new DbChanges(TableHelpers.pgp)
         changes.addChanges(
-            [new TargetRemoved(new JsonContext(null, ["delta"]), parentNode, beforeReference, afterReference, { resolveInfo: msg.deletedResolveInfo ?? null, reference: msg.deletedReference!}, Missing.NotMissing)]
+            [new TargetRemoved(new JsonContext(null, ["delta"]), parentNode, beforeReference, afterReference, { resolveInfo: msg.deletedResolveInfo ?? null, reference: msg.deletedReference!}, FeatureMissing.NotMissing)]
         )
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)
         await changes.populateMetaPointersFromDbChanges(metaPointerTracker, [], task)
@@ -129,7 +129,7 @@ const ChangeReference = async (participation: Participation, msg: ChangeReferenc
         const changes = new DbChanges(TableHelpers.pgp)
         changes.addChanges(
             [
-                new TargetAdded(new JsonContext(null, ["delta"]), parentNode, beforeReference, afterReference, { resolveInfo: msg.newResolveInfo ?? null, reference: msg.newReference!}, Missing.NotMissing)
+                new TargetAdded(new JsonContext(null, ["delta"]), parentNode, beforeReference, afterReference, { resolveInfo: msg.newResolveInfo ?? null, reference: msg.newReference!}, FeatureMissing.NotMissing)
             ]
         )
         const metaPointerTracker = new MetaPointersTracker(participation.repositoryData!)

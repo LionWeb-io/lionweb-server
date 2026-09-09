@@ -1,8 +1,22 @@
-import { CLASSIFIER, GreaterThan, If, Left, Library, MoveCommand, NumbericLiteral, Procedure, Program } from "./keys.js"
+import {
+    CLASSIFIER,
+    CONTAINMENT,
+    GreaterThan,
+    If,
+    Left,
+    Library,
+    MoveCommand,
+    NumbericLiteral,
+    Procedure,
+    Program,
+    PROPERTY,
+    REFERENCE
+} from "./keys.js"
 import { LionWebModel } from "./LionWebModel.js"
 import { LionWebTree, LionWebTreeConverter } from "./LionWebTree.js"
 
-export const ProgramTree: LionWebTree = {
+type LionWebLogoTree = LionWebTree<typeof PROPERTY, typeof CONTAINMENT, typeof REFERENCE>
+export const ProgramTree: LionWebLogoTree = {
     type: Program,
     id: "id-program",
     INamedName: "Program",
@@ -59,7 +73,7 @@ export const ProgramTree: LionWebTree = {
     ]
 }
 
-export const LibraryTree: LionWebTree = {
+export const LibraryTree: LionWebLogoTree = {
     type: Library,
     id: "id-library",
     INamedName: "Library One",
