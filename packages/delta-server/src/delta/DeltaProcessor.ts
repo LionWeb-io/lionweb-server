@@ -296,7 +296,7 @@ class DeltaProcessor {
         responseOrEvent: MessageToClient
     ) {
         deltaLogger.info(`Send delta ${responseOrEvent.messageKind} to ${participation?.repositoryData?.clientId}`)
-        this.monitor(participation, responseOrEvent)
+        // this.monitor(participation, responseOrEvent)
         if (responseOrEvent.messageKind === "ErrorEvent") {
             deltaLogger.info("Sending ERROR message { responseOrEvent } ", { responseOrEvent })
         }
@@ -317,6 +317,7 @@ class DeltaProcessor {
         } else {
             // deltaLogger.info(`    Buffer sending event/response ${JSON.stringify(responseOrEvent)}`)
             this.applySequenceNumbers(participation!, responseOrEvent)
+            this.monitor(participation, responseOrEvent)
             socket.send(JSON.stringify(responseOrEvent))
         }
     }
